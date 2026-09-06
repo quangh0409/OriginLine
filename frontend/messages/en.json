@@ -1,0 +1,503 @@
+{
+  "common": {
+    "appName": "Clan Genealogy Portal",
+    "appNameShort": "Clan Genealogy",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "nav": {
+    "home": "Home",
+    "tree": "Family tree",
+    "kinship": "Kinship lookup",
+    "search": "Search",
+    "events": "Events & anniversaries",
+    "notifications": "Notifications",
+    "login": "Log in",
+    "primary": "Main navigation",
+    "settings": "Settings"
+  },
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out",
+    "checking": "Checking your session…",
+    "account": "Account",
+    "signedInAs": "Signed in as {name}",
+    "mockModeHint": "Running on mock data — use the role switcher next to this button instead of a real login.",
+    "role": {
+      "ADMIN": "System administrator",
+      "COUNCIL": "Clan council",
+      "BRANCH_HEAD": "Branch head",
+      "MEMBER": "Member"
+    }
+  },
+  "home": {
+    "heading": "Clan Genealogy",
+    "subheading": "Preserving our roots, connecting descendants near and far",
+    "welcomeBody": "The portal is under construction. The interactive family tree, kinship lookup, and anniversary reminders are coming soon.",
+    "cards": {
+      "tree": {
+        "title": "Family tree",
+        "desc": "Browse the multi-generation tree, collapse or expand each branch."
+      },
+      "kinship": {
+        "title": "Kinship lookup",
+        "desc": "Find the correct traditional form of address between two members."
+      },
+      "events": {
+        "title": "Anniversaries & events",
+        "desc": "Never miss an ancestor's death anniversary, wherever you live."
+      }
+    },
+    "comingSoon": "Coming soon"
+  },
+  "notifications": {
+    "title": "Notification center",
+    "empty": "No notifications yet",
+    "markRead": "Mark as read",
+    "unread": "{count} unread",
+    "loadError": "Failed to load notifications",
+    "accountNotLinked": "Your account is not linked to anyone in the genealogy yet.",
+    "accountNotLinkedHint": "That is why this inbox is empty. Please ask the clan council (Hội đồng Tộc biểu) or your branch head to link your account to your record; you will then receive your chi/nhánh's giỗ reminders.",
+    "pageSubtitle": "Every death-anniversary reminder arrives here first.",
+    "settingsLink": "Notification settings",
+    "viewAll": "View all notifications",
+    "unreadDot": "Unread",
+    "offsetTag": "{n} days ahead",
+    "filter": {
+      "ALL": "All",
+      "UNREAD": "Unread",
+      "READ": "Read",
+      "anyCategory": "Any category"
+    },
+    "category": {
+      "GIO_REMINDER": "Giỗ reminder",
+      "EVENT": "Clan event",
+      "CHANGE_REQUEST": "Correction request",
+      "SYSTEM": "System"
+    }
+  },
+  "tree": {
+    "loading": "Building the family tree…",
+    "loadError": "Could not load the family tree",
+    "rootNotFound": "The root person of this tree was not found",
+    "loadedCount": "{count} people shown",
+    "fitWholeTree": "Fit whole tree",
+    "fitWholeTreeHint": "Zoom out to see the whole loaded phả đồ at once. Text becomes small; pinch or zoom in to read details again.",
+    "truncatedBanner": "This view is incomplete: {count} branch(es) still have people that have not been loaded. Expand a branch to see more.",
+    "generationShort": "Gen. {n}",
+    "statusAlive": "Living",
+    "statusDeceased": "Deceased",
+    "expandBranch": "Expand this branch",
+    "collapseBranch": "Collapse this branch",
+    "viewMode": {
+      "hierarchical": "Hierarchical",
+      "radial": "Radial",
+      "matrix": "Generation matrix"
+    },
+    "direction": {
+      "descendants": "Descendants",
+      "ancestors": "Ancestors",
+      "both": "Both ways"
+    },
+    "legend": {
+      "title": "Legend",
+      "alive": "Living person",
+      "deceased": "Deceased person",
+      "adoptedOrEnded": "Adoption, or a relationship that has ended",
+      "spouse": "Spouses",
+      "bioChild": "Biological child",
+      "adoptedChild": "Adopted child (con nuôi)",
+      "marriageEnded": "Marriage ended",
+      "heir": "Heirship (kế tự)",
+      "lineageEnd": "Line ended (tuyệt tự)",
+      "detour": "Re-routed relationship",
+      "showAll": "Show all marks",
+      "showLess": "Show fewer marks"
+    },
+    "authRequired": "Please log in to view the family tree",
+    "authRequiredHint": "Under Decree 13/2023, visitors who are not logged in cannot see person records. Please log in with your clan account."
+  },
+  "person": {
+    "profileTitle": "Person profile",
+    "names": "Name layers",
+    "nameType": {
+      "HUY": "Taboo name (húy)",
+      "TU": "Courtesy name (tự)",
+      "HIEU": "Art name (hiệu)",
+      "THUY": "Posthumous name (thụy)",
+      "THUONG_GOI": "Everyday name",
+      "PHAP_DANH": "Dharma name"
+    },
+    "primaryName": "Primary",
+    "hanNom": "Hán-Nôm script",
+    "alive": "Living",
+    "deceased": "Deceased",
+    "generation": "Generation",
+    "generationValue": "Generation {n}",
+    "branch": "Branch (chi / ngành)",
+    "lifeDates": "Birth and death",
+    "birth": "Date of birth",
+    "death": "Date of death",
+    "solarSuffix": "solar",
+    "lunarDayMonth": "Day {day}, month {month} of the lunar calendar",
+    "lunarMonth": "Month {month} of the lunar calendar",
+    "lunarYear": "year {year}",
+    "lunarLeap": "(leap month)",
+    "gioNote": "The giỗ (death anniversary) follows the lunar date above.",
+    "origin": "Origin and lineage",
+    "nativePlace": "Native place",
+    "occupation": "Occupation",
+    "currentPlace": "Current residence",
+    "contact": "Contact",
+    "phone": "Phone",
+    "email": "Email",
+    "zalo": "Zalo",
+    "biography": "Biography and notes",
+    "edit": "Edit profile",
+    "viewOnTree": "View on the family tree",
+    "lookupKinship": "Look up kinship with this person",
+    "notFound": "This person was not found.",
+    "loadError": "Could not load this profile. Please try again.",
+    "pickerPlaceholder": "Type a name to search (accents optional)",
+    "pickerEmpty": "No matching person"
+  },
+  "kinship": {
+    "title": "Kinship lookup",
+    "subtitle": "Pick two people in the clan to see how they should properly address each other.",
+    "fromLabel": "Speaker (I am…)",
+    "toLabel": "Person being addressed",
+    "swap": "Swap the two people",
+    "hint": "Titles come from the clan's own rule set and are always given in Vietnamese. If one looks wrong, tell the clan council so the rule can be corrected.",
+    "emptyPrompt": "Choose both people to see the kinship title.",
+    "sentence": "{from} addresses {to} as",
+    "selfAddress": "and refers to self as",
+    "reverseTitle": "The other direction",
+    "reverseSentence": "{to} addresses {from} as {title}.",
+    "pathTitle": "Relationship path",
+    "pathSummary": "Up {up} generation(s) to the common ancestor {lca}, then down {down}.",
+    "lcaTag": "Common ancestor",
+    "generationValue": "Generation {n}",
+    "notFound": "One of the two people was not found.",
+    "loadError": "Could not resolve the kinship title. Please try again.",
+    "cached": "cached",
+    "direction": {
+      "SELF": "Starting point",
+      "UP": "Up one generation",
+      "DOWN": "Down one generation",
+      "ACROSS": "Across by marriage"
+    },
+    "facts": {
+      "genDelta": "Generation difference",
+      "side": "Side of the family",
+      "collateral": "Collateral degree",
+      "birthOrder": "Seniority within the generation",
+      "via": "Through",
+      "ruleSet": "Rule set applied"
+    },
+    "genDelta": {
+      "same": "Same generation",
+      "above": "{n} generation(s) above",
+      "below": "{n} generation(s) below"
+    },
+    "side": {
+      "PATERNAL": "Paternal (bên nội)",
+      "MATERNAL": "Maternal (bên ngoại)",
+      "BLOOD": "Blood relation",
+      "IN_LAW": "By marriage (thông gia)"
+    },
+    "collateral": {
+      "0": "Direct line (ancestor to descendant)",
+      "1": "Close (ruột)",
+      "2": "Extended (họ — first cousins' line)",
+      "far": "Distant (họ xa, degree {n})"
+    },
+    "birthOrder": {
+      "elder": "Senior line",
+      "younger": "Junior line"
+    },
+    "via": {
+      "marriage": "Marriage",
+      "adoption": "Adoption"
+    },
+    "ruleScope": {
+      "DEFAULT": "System default",
+      "REGION": "Regional",
+      "CLAN": "Clan-specific",
+      "BRANCH": "Branch-specific"
+    },
+    "status": {
+      "SELF": {
+        "title": "Both fields hold the same person",
+        "body": "Please choose two different people."
+      },
+      "NO_COMMON_ANCESTOR": {
+        "title": "No common ancestor found",
+        "body": "In the records we hold, these two are not yet linked through a shared ancestor. The connection may run through the maternal line or a marriage that has not been recorded."
+      },
+      "NO_MATCHING_RULE": {
+        "title": "The rule set does not cover this case yet",
+        "body": "The relationship was resolved, but no form of address has been defined for it. The facts below are exactly what the clan council needs in order to add the missing rule."
+      }
+    }
+  },
+  "personForm": {
+    "createTitle": "Add a person",
+    "editTitle": "Edit {name}",
+    "create": "Add to the genealogy",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "unsaved": "Unsaved changes",
+    "savedCreate": "The person has been added to the genealogy.",
+    "savedEdit": "Changes saved.",
+    "savedWithOverride": "Saved, with a note recording the taboo-name collision.",
+    "sections": {
+      "names": "Names",
+      "identity": "Gender and status",
+      "dates": "Birth and death",
+      "origin": "Origin and occupation",
+      "contact": "Contact",
+      "biography": "Biography and notes",
+      "relation": "Link into the family tree",
+      "note": "Note for this change"
+    },
+    "gender": "Gender",
+    "genderOption": {
+      "MALE": "Male",
+      "FEMALE": "Female",
+      "UNKNOWN": "Unknown"
+    },
+    "status": "Status",
+    "statusHint": "Switch off for someone who has passed away. Entering a date of death also marks them as deceased — you will be asked to confirm.",
+    "currentPlaceProvince": "Province / city of residence",
+    "currentPlaceFull": "Full address",
+    "privacyLevel": "Sharing level",
+    "privacyLevelHint": "Living people are hidden by default. Widen this only with the person's own consent.",
+    "privacyOption": {
+      "DEFAULT": "Default rules",
+      "BRANCH_OPT_IN": "Visible within the branch",
+      "CLAN_OPT_IN": "Visible across the clan",
+      "RESTRICTED": "Maximally restricted"
+    },
+    "contactHint": "Contact details are the most sensitive tier and are visible only to the person themselves and to administrators.",
+    "note": "Reason / note",
+    "noteHint": "This is written to the edit history so future generations can trace the change.",
+    "names": {
+      "type": "Name type",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "e.g. Nguyễn Văn An",
+      "hanNom": "Hán-Nôm script",
+      "hanNomHint": "Fill in if the old clan book records it.",
+      "note": "Note",
+      "primary": "Use as the primary name",
+      "add": "Add a name layer",
+      "remove": "Remove this name layer"
+    },
+    "date": {
+      "solar": "Solar (Gregorian) date",
+      "precision": "Precision",
+      "precisionHint": "Pick what is actually known — do not guess a day.",
+      "precisionOption": {
+        "DAY": "Exact day known",
+        "MONTH": "Month only",
+        "YEAR": "Year only",
+        "UNKNOWN": "Unknown"
+      },
+      "lunar": "Lunar date",
+      "lunarDay": "Day",
+      "lunarMonth": "Month",
+      "lunarYear": "Year",
+      "lunarLeap": "Leap month",
+      "lunarHint": "Enter exactly what the clan book records. Nothing is converted here; lunar–solar conversion is done on the server.",
+      "lunarDeathHint": "This lunar date is what the giỗ is calculated from, so enter it carefully. If it fell in a leap month, tick the box above."
+    },
+    "relation": {
+      "enable": "Link this person to someone already in the genealogy",
+      "hint": "Without a link the system cannot work out the generation, and the person will not appear on the tree.",
+      "person": "Existing person",
+      "type": "Relationship type",
+      "relType": {
+        "PARENT_BIO": "Parent – biological child",
+        "PARENT_ADOPT": "Parent – adopted child",
+        "SPOUSE": "Spouses"
+      },
+      "direction": "Direction",
+      "otherIsParent": "The selected person is the new record's parent",
+      "otherIsChild": "The selected person is the new record's child",
+      "spouseOrder": "Spouse order",
+      "spouseOrderHint": "1 means the first/senior spouse."
+    },
+    "taboo": {
+      "title": "Taboo-name warning (kỵ húy)",
+      "lead": "The name entered collides with the taboo name of {count} ancestor(s).",
+      "explain": "By clan custom, naming someone after an ancestor's taboo name is forbidden. Please change the name, or state your reason if you intend to keep it.",
+      "matchKind": {
+        "EXACT": "Exact match",
+        "GIVEN_NAME": "Given name matches",
+        "UNACCENTED": "Matches without diacritics"
+      },
+      "generation": "Generation {n}",
+      "collidesWith": "Taboo name: {name}",
+      "reasonLabel": "Reason for keeping this name",
+      "reasonPlaceholder": "e.g. approved by the clan council at the meeting on…",
+      "reasonHint": "The reason is written to the edit history alongside the override.",
+      "rename": "Go back and rename",
+      "confirm": "Keep this name anyway"
+    },
+    "deathConfirm": {
+      "title": "You are recording a death",
+      "lead": "You are about to record {name} as deceased.",
+      "question": "Are you sure? Please read this through before saving.",
+      "dateLabel": "Date of death entered",
+      "dateHint": "Please read this date again. One mistyped digit sends the whole chi/nhánh the wrong news.",
+      "consequencesTitle": "On saving, the system will:",
+      "consequencePublic": "Make {name}'s record public — by genealogy custom a deceased person's record is open to everyone, including guests who are not signed in.",
+      "consequenceGio": "Schedule giỗ (death anniversary) reminders from the lunar date of death and send them to the person's chi/nhánh.",
+      "consequenceIrreversible": "A mistake can be corrected afterwards, but anything already made public cannot be taken back.",
+      "cancel": "Go back and check",
+      "confirm": "Yes, this person has died"
+    },
+    "errors": {
+      "nameRequired": "Please enter a full name.",
+      "nameTooLong": "That name is too long (120 characters maximum).",
+      "hanNomTooLong": "The Hán-Nôm entry is too long.",
+      "noteTooLong": "That note is too long.",
+      "atLeastOneName": "At least one name layer is required.",
+      "exactlyOnePrimary": "Choose exactly one name layer as the primary name.",
+      "biographyTooLong": "The biography is too long.",
+      "phone": "That phone number does not look valid.",
+      "email": "That email address does not look valid.",
+      "lunarDay": "The lunar day must be between 1 and 30.",
+      "lunarMonth": "The lunar month must be between 1 and 12.",
+      "lunarMonthRequired": "If you enter a lunar day, the lunar month is required too.",
+      "lunarYear": "That lunar year is not valid.",
+      "deathBeforeBirth": "The date of death cannot precede the date of birth.",
+      "relationPersonRequired": "Please choose the person to link to.",
+      "staleRecord": "Someone else changed this record while you were editing. Please reload and re-apply your changes.",
+      "forbidden": "You do not have permission to edit this record.",
+      "serverValidation": "The server rejected this data as invalid.",
+      "submitFailed": "Could not save. Please try again.",
+      "notFound": "This person was not found.",
+      "loadFailed": "Could not load this record for editing.",
+      "notEditable": "You can only view this record.",
+      "missingEtag": "The record version could not be read, so it cannot be edited safely. Please reload the page."
+    }
+  },
+  "dev": {
+    "roleLabel": "Simulated role (development only)",
+    "roleTooltip": "Only available when running against mock data. Switch roles to see how privacy tiering behaves.",
+    "role": {
+      "guest": "Guest",
+      "member": "Member",
+      "branch-head": "Branch head",
+      "admin": "Administrator"
+    }
+  },
+  "language": {
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "search": {
+    "title": "Search people",
+    "subtitle": "Type a name with or without diacritics; results appear as you type.",
+    "inputLabel": "Name to search for",
+    "inputPlaceholder": "e.g. nguyen van duc",
+    "unaccentedHint": "Diacritics are optional. Every name layer is searched: húy, tự, hiệu, thụy, everyday and Buddhist names.",
+    "idlePrompt": "Type a name to start searching.",
+    "noResults": "No one matched that search.",
+    "loadError": "Search failed. Please try again.",
+    "resultCount": "{count, plural, one {# result} other {# results}}",
+    "matchedOn": "Matched on {layer}",
+    "filters": {
+      "generation": "Generation",
+      "anyGeneration": "Any generation",
+      "generationOption": "Generation {n}",
+      "branch": "Branch (chi / ngành)",
+      "anyBranch": "Any branch",
+      "nativePlace": "Native place",
+      "nativePlacePlaceholder": "e.g. Nam Định",
+      "clear": "Clear filters"
+    }
+  },
+  "events": {
+    "title": "Anniversaries & clan events",
+    "subtitle": "Giỗ dates are kept in the lunar calendar; the solar date beside each one is converted by the server.",
+    "upcomingTitle": "Coming up",
+    "calendarTitle": "The next twelve months",
+    "empty": "No anniversaries fall in this period.",
+    "loadError": "Could not load the anniversary list. Please try again.",
+    "branchFilter": "Filter by branch",
+    "anyBranch": "Whole clan",
+    "branchFilterHint": "Clan-wide rites always appear, whichever branch you filter by.",
+    "monthLabel": "Month {month}",
+    "monthEmpty": "Nothing this month",
+    "moreInMonth": "and {n} more",
+    "unscheduledCount": "{n} event(s) have no matching solar date yet.",
+    "lunarDayMonth": "Lunar day {day}, month {month}",
+    "lunarLeap": "(leap month)",
+    "lunarYear": "year {year}",
+    "solarDate": "Solar: {date}",
+    "today": "Today",
+    "daysUntil": "In {n} days",
+    "daysAgo": "{n} days ago",
+    "clanLevel": "Whole clan",
+    "viewPerson": "View profile",
+    "reminderOffsets": "Reminders {days} days ahead",
+    "eventType": {
+      "GIO_TO": "Founding ancestor giỗ",
+      "GIO_HO": "Clan giỗ",
+      "GIO_CHI": "Branch giỗ",
+      "GIO_THUONG": "Ordinary giỗ",
+      "TIEU_TUONG": "Tiểu tường (first year)",
+      "DAI_TUONG": "Đại tường (second year)",
+      "CHAP_MA": "Grave tending (chạp mả)",
+      "MUNG_THO": "Longevity celebration",
+      "KHAC": "Other rite"
+    }
+  },
+  "push": {
+    "inAppAlways": "Either way, every giỗ reminder is waiting in full in your notification centre when you open the app.",
+    "prompt": {
+      "title": "Get anniversary reminders on this device?",
+      "body": "Turn on push notifications to be reminded 7, 3 and 1 days ahead, even when the app is closed.",
+      "iosBody": "On iPhone you must add the app to your Home Screen before push notifications can be enabled.",
+      "enable": "Turn on reminders",
+      "later": "Not now"
+    },
+    "settings": {
+      "title": "Push notifications on this device",
+      "body": "Reminders appear on the device itself, even with the app closed. This switch covers only the device and browser you are using now.",
+      "onThisDevice": "On for this device",
+      "inAppTitle": "In-app notifications",
+      "inAppBody": "Always on and cannot be turned off. This is the primary reminder channel: open the app and everything is there."
+    },
+    "status": {
+      "DENIED": "Your browser has blocked notification permission. Re-enable it in browser settings — the app cannot ask again.",
+      "UNSUPPORTED": "This browser does not support push notifications.",
+      "NO_SERVICE_WORKER": "This build has no service worker registered, so push cannot be enabled."
+    },
+    "error": {
+      "PERMISSION_DENIED": "You declined notification permission. Every reminder still waits in the notification centre.",
+      "NO_SERVICE_WORKER": "Could not enable push: no service worker.",
+      "SERVER_NOT_CONFIGURED": "The server has no push key configured yet, so this cannot be switched on. Please tell an administrator; every giỗ reminder still waits in the notification centre.",
+      "SUBSCRIBE_FAILED": "Could not register for push notifications. Please try again later."
+    },
+    "ios": {
+      "title": "Add to Home Screen (iPhone / iPad)",
+      "why": "On iOS, push notifications only work once the app has been added to the Home Screen.",
+      "steps": {
+        "share": "Open the site in Safari and tap the Share button.",
+        "addToHome": "Choose “Add to Home Screen”.",
+        "confirm": "Tap “Add” to confirm.",
+        "reopen": "Reopen the app from its Home Screen icon, then turn reminders on."
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Choose how you would like to receive clan reminders and notifications."
+  }
+}

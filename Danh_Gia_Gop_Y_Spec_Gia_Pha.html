@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đánh Giá & Góp Ý Cải Tiến - Đặc Tả Hệ Thống Gia Phả Dòng Họ</title>
+<style>
+  :root {
+    --primary: #8c2d19;
+    --primary-dark: #661e0f;
+    --primary-light: #fbeee9;
+    --secondary: #2c3e50;
+    --text-main: #2b2825;
+    --text-muted: #5e564d;
+    --bg-page: #f8f6f2;
+    --bg-card: #ffffff;
+    --border: #e6dfd5;
+    --border-dark: #cdbeaa;
+    --accent: #d97706;
+    --green: #15803d;
+    --green-bg: #eaf6ee;
+    --red: #b91c1c;
+    --red-bg: #fbeae9;
+    --amber-bg: #fdf6e7;
+    --blue: #1d4ed8;
+    --blue-bg: #eaf0fb;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    line-height: 1.65;
+    padding: 30px 15px;
+  }
+  .container {
+    max-width: 1040px; margin: 0 auto; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; padding: 35px; border-bottom: 3px solid var(--accent);
+  }
+  .badge {
+    display: inline-block; background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4); color: #fff; font-size: 11px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 12px;
+  }
+  .header h1 { font-size: 24px; font-weight: 800; line-height: 1.3; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .header p { font-size: 14px; opacity: 0.92; color: #fcece8; }
+  .meta-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px; background: #f1ebd8; padding: 12px 35px;
+    border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-muted);
+  }
+  .meta-bar strong { color: var(--text-main); }
+  .content { padding: 35px; }
+  h2 {
+    font-size: 17px; color: var(--primary); border-left: 4px solid var(--primary);
+    padding-left: 10px; margin: 34px 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  h2:first-of-type { margin-top: 0; }
+  h3 { font-size: 15px; color: var(--secondary); margin: 20px 0 8px 0; }
+  p { margin-bottom: 12px; font-size: 14px; }
+  ul, ol { margin: 0 0 16px 22px; font-size: 14px; }
+  li { margin-bottom: 6px; }
+  .lead {
+    background: var(--primary-light); border: 1px solid var(--border-dark);
+    border-radius: 6px; padding: 16px 20px; font-size: 14px; margin-bottom: 8px;
+  }
+  .card {
+    background: #faf8f5; border: 1px solid var(--border);
+    border-radius: 6px; padding: 18px 20px; margin-bottom: 18px;
+  }
+  .card-title {
+    font-size: 15px; font-weight: 700; color: var(--primary);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .tag {
+    display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 2px 8px; border-radius: 4px; vertical-align: middle;
+  }
+  .tag-high { background: var(--red-bg); color: var(--red); border: 1px solid #e7b7b3; }
+  .tag-med  { background: var(--amber-bg); color: var(--accent); border: 1px solid #ecd39a; }
+  .tag-low  { background: var(--blue-bg); color: var(--blue); border: 1px solid #b8c8ee; }
+  .tag-keep { background: var(--green-bg); color: var(--green); border: 1px solid #b3d9c1; }
+  .table-responsive { overflow-x: auto; margin: 18px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
+  th, td { padding: 11px 13px; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--secondary); color: #fff; font-weight: 600; white-space: nowrap; }
+  tr:nth-child(even) td { background-color: #faf7f0; }
+  .verdict {
+    display: flex; gap: 12px; align-items: flex-start; padding: 14px 18px;
+    border-radius: 6px; margin: 14px 0; font-size: 13.5px; border: 1px solid var(--border);
+  }
+  .verdict.keep { background: var(--green-bg); border-color: #b3d9c1; }
+  .verdict.change { background: var(--amber-bg); border-color: #ecd39a; }
+  .verdict.watch { background: var(--blue-bg); border-color: #b8c8ee; }
+  .verdict .mark { font-size: 20px; line-height: 1.2; }
+  code {
+    background: #ece5da; padding: 1px 6px; border-radius: 4px;
+    font-family: Consolas, Monaco, monospace; font-size: 12.5px; color: var(--primary-dark);
+  }
+  .arch-diagram {
+    background: #1e2430; color: #e2e8f0; font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12.5px; line-height: 1.55; padding: 20px; border-radius: 6px;
+    overflow-x: auto; margin: 15px 0 22px 0; border-left: 4px solid var(--accent); white-space: pre;
+  }
+  .footer {
+    text-align: center; padding: 20px; border-top: 1px solid var(--border);
+    font-size: 12.5px; color: var(--text-muted); background: #fbf9f6;
+  }
+  .num { color: var(--accent); font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="badge">Technical & Business Review — Phản biện Đặc tả</div>
+    <h1>ĐÁNH GIÁ &amp; GÓP Ý CẢI TIẾN<br>Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ</h1>
+    <p>Rà soát yêu cầu nghiệp vụ theo đặc trưng dòng họ Việt Nam &amp; thẩm định độ hiện đại của kiến trúc công nghệ</p>
+  </div>
+
+  <div class="meta-bar">
+    <div><strong>Tài liệu nguồn:</strong> Spec_Du_An_Gia_Pha_Dong_Ho.html</div>
+    <div><strong>Loại:</strong> Review &amp; Recommendation</div>
+    <div><strong>Chú thích mức độ:</strong>
+      <span class="tag tag-high">Ưu tiên cao</span>
+      <span class="tag tag-med">Nên có</span>
+      <span class="tag tag-low">Tùy chọn</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <h2>0. Tổng Quan Nhận Định</h2>
+    <div class="lead">
+      <p style="margin-bottom:8px"><strong>Kết luận nhanh:</strong> Đặc tả gốc <strong>vững về khung</strong> (4 module rõ ràng, kiến trúc modular monolith hợp lý, chọn công nghệ nhìn chung <em>không lỗi thời</em> cho năm 2026). Tuy nhiên còn <strong>thiếu nhiều đặc trưng bản địa cốt lõi</strong> của gia phả Việt (danh xưng đa lớp, kỵ húy, thừa tự/đích tôn, mộ phần &amp; từ đường, phân loại giỗ) và <strong>bỏ sót một số hạng mục kỹ thuật thời đại</strong> (lưu trữ ảnh/file di sản, full-text search tiếng Việt, tuân thủ Nghị định 13/2023 về dữ liệu cá nhân, quan sát hệ thống, và lớp AI).</p>
+      <p style="margin-bottom:0">Phần A góp ý nghiệp vụ; Phần B thẩm định công nghệ; Phần C tổng hợp khuyến nghị ưu tiên &amp; MVP.</p>
+    </div>
+
+    <h2>A. Góp Ý Nghiệp Vụ Theo Đặc Trưng Dòng Họ Việt Nam</h2>
+
+    <div class="card">
+      <div class="card-title">A1. Hệ thống Danh xưng &amp; Định danh đa lớp <span class="tag tag-high">Ưu tiên cao</span></div>
+      <p>Người Việt xưa mang <strong>nhiều loại tên</strong> mà mô hình dữ liệu hiện tại (chỉ "họ tên") không diễn đạt được. Cần đa trường tên:</p>
+      <ul>
+        <li><strong>Tên húy</strong> (tên thật, kiêng gọi), <strong>tên tự</strong>, <strong>tên hiệu</strong>, <strong>tên thụy</strong> (đặt sau khi mất), <strong>tên thường gọi</strong>, <strong>pháp danh</strong> (nếu quy y).</li>
+        <li><strong>Tên chữ Hán/Nôm</strong> gốc bên cạnh tên Quốc ngữ — nhiều gia phả cổ ghi Hán Nôm.</li>
+        <li><strong>Tên không dấu / phiên âm</strong> phục vụ con cháu kiều bào (đã nêu ở tầm nhìn nhưng chưa cụ thể hóa).</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A2. Kỵ húy &amp; Chữ đệm theo đời (Biểu tự thế hệ) <span class="tag tag-high">Ưu tiên cao</span></div>
+      <ul>
+        <li><strong>Kỵ húy:</strong> nhiều dòng họ kiêng đặt tên con trùng tên húy tổ tiên. Hệ thống nên <em>cảnh báo khi khai sinh/thêm thành viên</em> nếu tên trùng bậc trên — một tính năng rất "Việt" mà phần mềm ngoại không có.</li>
+        <li><strong>Chữ đệm/tên lót theo thế hệ</strong> (nhiều họ có "bài thơ đặt tên" quy định chữ lót cho từng đời). Nên cho phép khai báo <em>quy tắc chữ đệm theo đời</em> và gợi ý khi đặt tên.</li>
+        <li><strong>Thế thứ / vai vế (hàng):</strong> hiển thị rõ "đời thứ mấy" và thứ bậc — cốt lõi để xưng hô đúng, gắn trực tiếp với Kinship Engine.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A3. Thừa tự, Đích tôn &amp; Vai trò Trưởng tộc <span class="tag tag-high">Ưu tiên cao</span></div>
+      <ul>
+        <li>Bổ sung khái niệm <strong>trưởng nam đích tôn / thừa tự / kế tự / con cầu tự</strong> — người nối dõi hương hỏa. Đây là thuộc tính quan hệ, không chỉ là "con ruột".</li>
+        <li>Vai trò <strong>Tộc trưởng (Trưởng họ)</strong> tách khỏi "Admin kỹ thuật": Tộc trưởng là <em>chức danh dòng tộc</em> (thường theo đích tôn), khác người quản trị phần mềm. RBAC hiện gộp hai khái niệm này.</li>
+        <li>Ghi nhận <strong>người phụng tự</strong> (ai chịu trách nhiệm cúng giỗ) cho từng chi/nhánh.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A4. Bình đẳng giới &amp; Bên ngoại <span class="tag tag-med">Nên có</span></div>
+      <ul>
+        <li>Gia phả truyền thống thiên "nội tộc" (nam giới nối dõi), con gái thường ghi mờ nhạt. Hệ thống hiện đại nên <strong>tùy chọn ghi nhận đầy đủ con gái, cháu ngoại, dâu rể</strong> — cấu hình theo mong muốn từng dòng họ để tránh vừa mất bản sắc vừa không lỗi thời về giới.</li>
+        <li>Hỗ trợ <strong>liên kết thông gia</strong> (kết nối sang gia phả họ khác qua hôn nhân).</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A5. Mộ phần, Từ đường &amp; Không gian tâm linh <span class="tag tag-high">Ưu tiên cao</span></div>
+      <ul>
+        <li><strong>Quản lý mộ phần:</strong> vị trí GPS lăng mộ, sơ đồ nghĩa trang/khu mộ, ảnh mộ chí, tình trạng (đã cải táng/chưa), lịch <strong>chạp mả – tảo mộ</strong>. Con cháu xa quê rất cần bản đồ mộ.</li>
+        <li><strong>Từ đường / Nhà thờ họ:</strong> hồ sơ di tích, hoành phi câu đối, ban thờ, lịch tế lễ, sơ đồ bài vị.</li>
+        <li>Gắn <strong>gia phả ↔ mộ chí ↔ bài vị</strong> thành một thể liên kết.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A6. Phân loại Giỗ &amp; Lễ theo tập tục <span class="tag tag-med">Nên có</span></div>
+      <p>Module 2 mới nói "nhắc ngày giỗ" chung chung. Thực tế cần phân loại:</p>
+      <ul>
+        <li><strong>Giỗ Tổ / Giỗ Họ / Giỗ Chi</strong> (cấp dòng tộc) vs <strong>giỗ thường</strong> (từng gia đình).</li>
+        <li><strong>Tiểu tường (giỗ đầu), Đại tường (giỗ hết), lễ trừ phục</strong>, cải táng, khao lão, mừng thọ.</li>
+        <li>Tính ngày theo <strong>can chi</strong> và tiết khí (Thanh minh, Đông chí…), không chỉ ngày âm.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A7. Quỹ họ &amp; Sổ vàng công đức <span class="tag tag-med">Nên có</span></div>
+      <ul>
+        <li>Đã nhắc "công đức" trong DB nhưng thiếu nghiệp vụ: <strong>quỹ khuyến học, quỹ xây từ đường, thu – chi minh bạch, biên nhận, báo cáo tài chính công khai cho họ tộc</strong>. Đây là nhu cầu nhạy cảm &amp; cần audit chặt.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A8. Số hóa gia phả cũ &amp; Chuẩn dữ liệu <span class="tag tag-med">Nên có</span></div>
+      <ul>
+        <li><strong>Nhập liệu từ gia phả giấy/Hán Nôm:</strong> quy trình OCR + phiên dịch Hán-Nôm, đối chiếu bản gốc scan.</li>
+        <li><strong>Chuẩn GEDCOM</strong> (định dạng gia phả quốc tế): hỗ trợ <em>import/export</em> để tương thích phần mềm khác &amp; chống khóa nhà cung cấp. Hiện spec không nhắc — nên đưa vào để dữ liệu không bị "nhốt".</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A9. Quyền riêng tư &amp; Tuân thủ pháp lý <span class="tag tag-high">Ưu tiên cao</span></div>
+      <ul>
+        <li><strong>Nghị định 13/2023/NĐ-CP (PDPD)</strong> về bảo vệ dữ liệu cá nhân: cần cơ chế <em>đồng ý (consent)</em>, quyền chỉnh sửa/xóa của người còn sống. Đây là điểm pháp lý quan trọng bị bỏ sót hoàn toàn.</li>
+        <li><strong>Tách bạch dữ liệu người còn sống vs người đã mất:</strong> thông tin người sống (SĐT, địa chỉ, ảnh) là dữ liệu cá nhân nhạy cảm, cần ẩn mặc định; người đã khuất mới công khai rộng. Điều này cũng va chạm với "soft delete/lưu vĩnh viễn" — cần cơ chế <strong>ẩn danh hóa</strong> thay vì xóa.</li>
+      </ul>
+    </div>
+
+    <h2>B. Thẩm Định Công Nghệ — Có Lỗi Thời Không?</h2>
+    <div class="lead">
+      <strong>Nhận định chung:</strong> Stack <em>không lỗi thời</em>. Spring Boot 3.x, React/Next.js, PostgreSQL, Redis, RabbitMQ đều là lựa chọn dòng chính, còn được hỗ trợ dài hạn tới sau 2026. Vấn đề không nằm ở "cũ", mà ở <strong>độ phức tạp vận hành chưa cân xứng quy mô</strong> và <strong>vài mảnh còn thiếu</strong>.
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">Thành phần</th>
+            <th style="width:12%">Đánh giá</th>
+            <th>Phân tích &amp; Khuyến nghị</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Spring Boot 3.x + DDD Modular Monolith</strong></td>
+            <td><span class="tag tag-keep">Giữ</span></td>
+            <td>Chuẩn xác. Modular monolith đúng đắn cho giai đoạn này — <em>đừng vội microservices</em>. Cân nhắc Java 21 LTS (virtual threads) để tối ưu I/O gửi thông báo hàng loạt.</td>
+          </tr>
+          <tr>
+            <td><strong>Neo4j (Graph DB cho cây phả hệ)</strong></td>
+            <td><span class="tag tag-med">Cân nhắc</span></td>
+            <td>
+              Graph hợp về mặt mô hình, nhưng lý do "SQL recursive CTE dễ timeout" bị <strong>phóng đại ở quy mô hàng vạn node</strong> — đó không phải big graph. Chi phí thật của Neo4j là: thêm một hệ CSDL phải vận hành/sao lưu/đồng bộ, license Enterprise, và đội ngũ phải biết Cypher.<br>
+              <strong>Phương án A (giảm phức tạp):</strong> chỉ dùng PostgreSQL + extension <code>ltree</code> hoặc <strong>Apache AGE</strong> (chạy Cypher ngay trên Postgres) → còn <em>một</em> CSDL, LCA/truy vấn tổ tiên vẫn nhanh.<br>
+              <strong>Phương án B (giữ Neo4j):</strong> chấp nhận nếu team đã mạnh Cypher &amp; muốn dùng sẵn thuật toán GDS. Dù chọn hướng nào, hãy nêu rõ đây là đánh đổi có ý thức.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>PostgreSQL (+ JSONB)</strong></td>
+            <td><span class="tag tag-keep">Giữ</span></td>
+            <td>Lựa chọn tốt. Tận dụng thêm <strong>Full-Text Search có dấu tiếng Việt</strong> (unaccent) ngay trong Postgres để tra cứu nhân khẩu trước khi nghĩ tới Elasticsearch.</td>
+          </tr>
+          <tr>
+            <td><strong>RabbitMQ + Spring Scheduler</strong></td>
+            <td><span class="tag tag-keep">Giữ</span></td>
+            <td>Hợp lý cho retry/DLQ khi gửi Zalo/SMS. Với volume "hàng nghìn/mùa giỗ" thì đủ và không dư thừa. Không cần Kafka (overkill). Lưu ý dùng job store bền (Quartz/DB) để lịch nhắc không mất khi restart.</td>
+          </tr>
+          <tr>
+            <td><strong>Redis (cache + session)</strong></td>
+            <td><span class="tag tag-keep">Giữ</span></td>
+            <td>Ổn. "Search" trong sơ đồ gốc hơi mơ hồ — Redis không phải công cụ search chính; nên tách rõ vai trò cache/session với vai trò tìm kiếm.</td>
+          </tr>
+          <tr>
+            <td><strong>React + D3.js / React Flow</strong></td>
+            <td><span class="tag tag-keep">Giữ</span></td>
+            <td>Đúng cho canvas cây lớn. Với hàng nghìn node cần <strong>ảo hóa/lazy render</strong> và cân nhắc Canvas/WebGL thay vì SVG thuần khi cây rất lớn. React Flow tốt cho tương tác kéo-thả.</td>
+          </tr>
+          <tr>
+            <td><strong>REST / GraphQL</strong></td>
+            <td><span class="tag tag-low">Chọn rõ</span></td>
+            <td>Với truy vấn cây lồng sâu, <strong>GraphQL</strong> thực sự có lợi (client tự chọn độ sâu). Nên chốt hẳn một hướng thay vì để "REST/GraphQL" nước đôi.</td>
+          </tr>
+          <tr>
+            <td><strong>Thuật toán Hồ Ngọc Đức (âm lịch)</strong></td>
+            <td><span class="tag tag-keep">Giữ</span></td>
+            <td>Chuẩn de-facto ở VN, tốt. Đóng gói thành service/thư viện riêng có <strong>bộ test đối chiếu</strong> nhiều năm nhuận &amp; tiết khí; tách để tái dùng cho cả nhắc giỗ lẫn tra sao hạn/phong thủy.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>B+. Những mảnh còn thiếu trong kiến trúc <span class="tag tag-high">Bổ sung</span></h3>
+    <ul>
+      <li><strong>Lưu trữ file/ảnh di sản:</strong> văn bia, gia phả scan, ảnh chân dung, ảnh mộ → cần <strong>Object Storage (MinIO/S3) + CDN</strong>. Không nên nhét ảnh vào DB. Hiện sơ đồ hoàn toàn không có tầng lưu trữ media.</li>
+      <li><strong>Tìm kiếm nhân khẩu:</strong> "hàng vạn người" cần search theo tên có dấu/không dấu, quê quán, đời. Dùng Postgres FTS (unaccent) trước; nâng lên <strong>OpenSearch/Meilisearch</strong> nếu cần fuzzy/gõ sai.</li>
+      <li><strong>Xác thực &amp; đăng nhập:</strong> cân nhắc <strong>Keycloak</strong> hoặc social login (Google/Zalo/Facebook) để kiều bào đăng nhập dễ, thay vì tự xây toàn bộ auth.</li>
+      <li><strong>Quan sát hệ thống (Observability):</strong> logging tập trung, metrics, tracing (OpenTelemetry + Prometheus + Grafana) — thiếu hẳn, rất cần cho vận hành mùa cao điểm giỗ chạp.</li>
+      <li><strong>Hạ tầng triển khai:</strong> Docker + CI/CD, IaC; K8s là tùy chọn (có thể chỉ cần Docker Compose/VPS cho quy mô này). Spec chưa nói cách deploy/backup.</li>
+      <li><strong>Đa nền tảng:</strong> kiều bào chủ yếu dùng điện thoại → làm <strong>PWA</strong> (hoặc React Native về sau). Spec mới nhắm web desktop.</li>
+    </ul>
+
+    <div class="card" style="background:var(--primary-light); border-color:var(--border-dark)">
+      <div class="card-title">B★. Cơ hội lớn nhất bị bỏ lỡ: Lớp AI/LLM <span class="tag tag-high">Khuyến nghị mạnh</span></div>
+      <p>Năm 2026, một hệ gia phả không tận dụng AI là bỏ phí. Đề xuất thêm một lớp AI (gọi model như Claude qua API):</p>
+      <ul>
+        <li><strong>Trợ lý tra cứu quan hệ bằng ngôn ngữ tự nhiên:</strong> "Tôi gọi ông Nguyễn Văn A là gì?" → hệ thống chạy LCA rồi để LLM diễn giải danh xưng &amp; cách xưng hô.</li>
+        <li><strong>OCR + phiên dịch Hán-Nôm</strong> gia phả cổ, hỗ trợ nhập liệu bán tự động.</li>
+        <li><strong>Tự sinh văn khấn / sớ / bài vị</strong> đúng văn phong, điền sẵn thông tin gia chủ (nâng cấp Module 3).</li>
+        <li><strong>Chuẩn hóa &amp; phát hiện trùng lặp</strong> khi nhập hàng vạn nhân khẩu.</li>
+      </ul>
+    </div>
+
+    <h2>C. Tổng Hợp Khuyến Nghị &amp; Đề Xuất MVP</h2>
+
+    <h3>Ưu tiên đưa vào ngay (đặc trưng Việt + rủi ro pháp lý)</h3>
+    <div class="verdict change">
+      <div class="mark">⚑</div>
+      <div>Danh xưng đa lớp &amp; kỵ húy (A1–A2) · Thừa tự/đích tôn &amp; tách vai Tộc trưởng khỏi Admin (A3) · Mộ phần &amp; từ đường (A5) · Tuân thủ Nghị định 13/2023 &amp; tách dữ liệu người sống/mất (A9) · Tầng lưu trữ media + full-text search tiếng Việt (B+).</div>
+    </div>
+
+    <h3>Quyết định kiến trúc cần chốt sớm</h3>
+    <div class="verdict watch">
+      <div class="mark">◇</div>
+      <div>(1) Neo4j hay Postgres+AGE/ltree — cân nhắc lại chi phí vận hành; (2) REST hay GraphQL — chốt một; (3) Có đưa lớp AI/LLM vào roadmap không (khuyến nghị: có).</div>
+    </div>
+
+    <h3>Giữ nguyên (đã tốt)</h3>
+    <div class="verdict keep">
+      <div class="mark">✓</div>
+      <div>Modular monolith + Spring Boot 3.x · PostgreSQL/JSONB · Redis · RabbitMQ + DLQ · React + React Flow · Thuật toán Hồ Ngọc Đức. Đây là nền tảng hiện đại, không cần thay.</div>
+    </div>
+
+    <h3>Gợi ý điều chỉnh lộ trình (thêm MVP)</h3>
+    <p>Roadmap 8 tháng cho quy mô này khá tham vọng. Đề xuất chèn một <strong>MVP ở cuối Giai đoạn 1</strong>: cây phả hệ + danh xưng + hồ sơ nhân khẩu cơ bản + nhắc giỗ đơn kênh, để có sản phẩm dùng thật sớm rồi mở rộng RBAC/tự động hóa/tiện ích văn hóa ở các giai đoạn sau.</p>
+
+    <h3>Sơ đồ kiến trúc đề xuất (bổ sung phần thiếu, in đậm là thêm mới)</h3>
+    <div class="arch-diagram">
+[ CLIENT ]     React/Next.js (PWA) + React Flow/D3   ← thêm: PWA cho mobile kiều bào
+                        │  GraphQL
+                        ▼
+[ BACKEND ]    Java 21 + Spring Boot 3.x (Modular Monolith / DDD)
+                        │
+   ┌──────────┬─────────┼──────────┬───────────┬─────────────┐
+   ▼          ▼         ▼          ▼           ▼             ▼
+[GRAPH]   [RELATIONAL] [ASYNC]   [CACHE]   **[OBJECT       **[AI/LLM
+Neo4j      PostgreSQL  RabbitMQ   Redis      STORAGE]         LAYER]**
+ hoặc      + JSONB      + DLQ                 MinIO/S3       tra cứu danh xưng,
+**Postgres +FTS(vi)                          + CDN          OCR Hán-Nôm,
+ +AGE**                                      (ảnh, văn bia,  sinh văn khấn
+                                              mộ, scan)
+                        │
+              **Keycloak / Social login (Google, Zalo)**
+              **Observability: OpenTelemetry + Prometheus + Grafana**
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Tài liệu Đánh giá &amp; Góp ý Cải tiến — Hệ Thống Gia Phả Dòng Họ &copy; 2026. Phản biện dựa trên đặc tả gốc <em>Spec_Du_An_Gia_Pha_Dong_Ho.html</em>.
+  </div>
+</div>
+</body>
+</html>

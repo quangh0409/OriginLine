@@ -1,0 +1,3 @@
+# Testcontainers nap cac chien luoc tim Docker qua ServiceLoader.
+# Dang ky chien luoc doc "docker context" - xem javadoc cua lop de biet bay tren Docker Desktop.
+vn.giapha.DockerContextClientProviderStrategy

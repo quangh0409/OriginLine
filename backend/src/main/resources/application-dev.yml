@@ -1,0 +1,59 @@
+# =====================================================================================
+# Profile `dev` - chay tren may lap trinh vien, khop 1-1 voi infra/docker-compose.yml
+#   Postgres  localhost:5432  db/user/pass = giapha/giapha/giapha  (image co Apache AGE)
+#   Redis     localhost:6379
+#   RabbitMQ  localhost:5672  (UI 15672)    user/pass = giapha/giapha
+#   MinIO     localhost:9000  (console 9001) key/secret = giapha/giapha123
+#   Keycloak  localhost:8081  realm = giapha
+#   Backend   localhost:8080
+# Day la thong tin dang nhap CUA MOI TRUONG DEV. Moi truong that lay tu bien moi truong.
+# =====================================================================================
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    # Cho phep `flyway:clean` khi dang lam W1 (dung lai schema tu con so 0).
+    # KHONG BAO GIO bat o staging/prod.
+    clean-disabled: false
+
+  graphql:
+    graphiql:
+      # Cong thu nghiem GraphQL: http://localhost:8080/graphiql
+      enabled: true
+
+  devtools:
+    restart:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+giapha:
+  cors:
+    allowed-origins: http://localhost:3000,http://127.0.0.1:3000
+  storage:
+    # MinIO (S3-compatible). Media KHONG BAO GIO luu blob trong CSDL - chi luu key o bang media_asset.
+    # Client MinIO se duoc them o Giai doan 3 (context heritage/infrastructure); o day chi chot quy uoc.
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:giapha}
+    secret-key: ${MINIO_SECRET_KEY:giapha123}
+    bucket: ${MINIO_BUCKET:giapha-media}
+
+logging:
+  level:
+    vn.giapha: DEBUG
+    org.flywaydb: INFO
+    org.springframework.security: INFO
+    # Bo comment hai dong duoi khi can soi cau SQL/Cypher thuc te:
+    # org.hibernate.SQL: DEBUG
+    # org.springframework.jdbc.core.JdbcTemplate: DEBUG

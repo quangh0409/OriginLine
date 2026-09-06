@@ -1,0 +1,503 @@
+{
+  "common": {
+    "appName": "Cổng Thông Tin Dòng Họ",
+    "appNameShort": "Gia Phả Dòng Họ",
+    "loading": "Đang tải…",
+    "error": "Đã có lỗi xảy ra",
+    "retry": "Thử lại",
+    "close": "Đóng",
+    "save": "Lưu",
+    "cancel": "Hủy"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "tree": "Cây phả đồ",
+    "kinship": "Tra danh xưng",
+    "search": "Tìm kiếm",
+    "events": "Sự kiện & Giỗ",
+    "notifications": "Thông báo",
+    "login": "Đăng nhập",
+    "primary": "Điều hướng chính",
+    "settings": "Cài đặt"
+  },
+  "auth": {
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "checking": "Đang kiểm tra phiên đăng nhập…",
+    "account": "Tài khoản",
+    "signedInAs": "Đang đăng nhập: {name}",
+    "mockModeHint": "Đang chạy với dữ liệu giả lập — dùng bộ chọn vai trò bên cạnh thay cho đăng nhập thật.",
+    "role": {
+      "ADMIN": "Quản trị hệ thống",
+      "COUNCIL": "Hội đồng Tộc biểu",
+      "BRANCH_HEAD": "Trưởng chi / ngành",
+      "MEMBER": "Thành viên"
+    }
+  },
+  "home": {
+    "heading": "Gia Phả Dòng Họ",
+    "subheading": "Nơi lưu giữ cội nguồn, kết nối con cháu khắp bốn phương",
+    "welcomeBody": "Cổng thông tin đang được xây dựng. Cây phả đồ tương tác, tra cứu danh xưng và nhắc giỗ sẽ sớm ra mắt.",
+    "cards": {
+      "tree": {
+        "title": "Cây phả đồ",
+        "desc": "Xem cây phả hệ nhiều đời, thu gọn/mở rộng từng nhánh."
+      },
+      "kinship": {
+        "title": "Tra danh xưng",
+        "desc": "Tìm cách xưng hô đúng chuẩn giữa hai thành viên."
+      },
+      "events": {
+        "title": "Giỗ & Sự kiện",
+        "desc": "Không bỏ lỡ ngày giỗ tổ tiên, dù ở xa quê hương."
+      }
+    },
+    "comingSoon": "Sắp ra mắt"
+  },
+  "notifications": {
+    "title": "Trung tâm thông báo",
+    "empty": "Chưa có thông báo nào",
+    "markRead": "Đánh dấu đã đọc",
+    "unread": "{count} chưa đọc",
+    "loadError": "Không tải được thông báo",
+    "accountNotLinked": "Tài khoản của bạn chưa được ghép với nhân khẩu nào trong gia phả.",
+    "accountNotLinkedHint": "Vì vậy hộp thư còn trống. Xin liên hệ Hội đồng Tộc biểu hoặc Trưởng chi của bạn để ghép tài khoản với hồ sơ; sau đó bạn sẽ nhận được nhắc giỗ của chi/nhánh mình.",
+    "pageSubtitle": "Mọi lời nhắc giỗ đều tới đây trước tiên.",
+    "settingsLink": "Cài đặt thông báo",
+    "viewAll": "Xem tất cả thông báo",
+    "unreadDot": "Chưa đọc",
+    "offsetTag": "Nhắc trước {n} ngày",
+    "filter": {
+      "ALL": "Tất cả",
+      "UNREAD": "Chưa đọc",
+      "READ": "Đã đọc",
+      "anyCategory": "Mọi loại thông báo"
+    },
+    "category": {
+      "GIO_REMINDER": "Nhắc giỗ",
+      "EVENT": "Sự kiện dòng họ",
+      "CHANGE_REQUEST": "Yêu cầu đính chính",
+      "SYSTEM": "Hệ thống"
+    }
+  },
+  "tree": {
+    "loading": "Đang dựng cây phả đồ…",
+    "loadError": "Không tải được cây phả đồ",
+    "rootNotFound": "Không tìm thấy nhân khẩu gốc của cây",
+    "loadedCount": "{count} nhân khẩu đang hiển thị",
+    "fitWholeTree": "Thu toàn cây",
+    "fitWholeTreeHint": "Thu nhỏ để thấy trọn phả đồ đang tải. Chữ sẽ nhỏ đi; chụm hai ngón hoặc bấm phóng to để xem lại chi tiết.",
+    "truncatedBanner": "Cây đang hiển thị chưa đầy đủ: {count} nhánh còn người chưa được tải. Mở rộng từng nhánh để xem thêm.",
+    "generationShort": "Đời {n}",
+    "statusAlive": "Còn sống",
+    "statusDeceased": "Đã khuất",
+    "expandBranch": "Mở rộng nhánh này",
+    "collapseBranch": "Thu gọn nhánh này",
+    "viewMode": {
+      "hierarchical": "Phân cấp",
+      "radial": "Tỏa tròn",
+      "matrix": "Ma trận đời"
+    },
+    "direction": {
+      "descendants": "Hậu duệ",
+      "ancestors": "Tổ tiên",
+      "both": "Cả hai chiều"
+    },
+    "legend": {
+      "title": "Chú giải",
+      "alive": "Người còn sống",
+      "deceased": "Người đã khuất",
+      "adoptedOrEnded": "Con nuôi hoặc quan hệ đã kết thúc",
+      "spouse": "Vợ chồng",
+      "bioChild": "Con đẻ",
+      "adoptedChild": "Con nuôi",
+      "marriageEnded": "Hôn phối đã kết thúc",
+      "heir": "Kế tự / thừa tự",
+      "lineageEnd": "Tuyệt tự",
+      "detour": "Quan hệ vẽ vòng",
+      "showAll": "Xem đủ quy ước",
+      "showLess": "Thu gọn chú giải"
+    },
+    "authRequired": "Xin đăng nhập để xem phả đồ",
+    "authRequiredHint": "Theo Nghị định 13/2023, khách chưa đăng nhập không được xem thông tin nhân khẩu. Xin đăng nhập bằng tài khoản dòng họ của bạn."
+  },
+  "person": {
+    "profileTitle": "Hồ sơ nhân khẩu",
+    "names": "Các lớp tên",
+    "nameType": {
+      "HUY": "Tên húy",
+      "TU": "Tên tự",
+      "HIEU": "Tên hiệu",
+      "THUY": "Tên thụy",
+      "THUONG_GOI": "Tên thường gọi",
+      "PHAP_DANH": "Pháp danh"
+    },
+    "primaryName": "Tên chính",
+    "hanNom": "Chữ Hán-Nôm",
+    "alive": "Còn sống",
+    "deceased": "Đã khuất",
+    "generation": "Đời thứ",
+    "generationValue": "Đời thứ {n}",
+    "branch": "Chi / Ngành",
+    "lifeDates": "Ngày sinh – ngày mất",
+    "birth": "Ngày sinh",
+    "death": "Ngày mất",
+    "solarSuffix": "dương lịch",
+    "lunarDayMonth": "Ngày {day} tháng {month} âm lịch",
+    "lunarMonth": "Tháng {month} âm lịch",
+    "lunarYear": "năm {year}",
+    "lunarLeap": "(tháng nhuận)",
+    "gioNote": "Ngày giỗ tính theo ngày âm lịch ở trên.",
+    "origin": "Quê quán & dòng dõi",
+    "nativePlace": "Quê quán",
+    "occupation": "Nghề nghiệp",
+    "currentPlace": "Nơi ở hiện nay",
+    "contact": "Liên hệ",
+    "phone": "Điện thoại",
+    "email": "Thư điện tử",
+    "zalo": "Zalo",
+    "biography": "Tiểu sử & ghi chép",
+    "edit": "Sửa hồ sơ",
+    "viewOnTree": "Xem trên cây phả đồ",
+    "lookupKinship": "Tra danh xưng với người này",
+    "notFound": "Không tìm thấy nhân khẩu này.",
+    "loadError": "Không tải được hồ sơ. Vui lòng thử lại.",
+    "pickerPlaceholder": "Gõ tên để tìm (không cần bỏ dấu)",
+    "pickerEmpty": "Không tìm thấy ai phù hợp"
+  },
+  "kinship": {
+    "title": "Tra cứu danh xưng",
+    "subtitle": "Chọn hai người trong dòng họ để biết cách xưng hô cho đúng phép.",
+    "fromLabel": "Người xưng hô (tôi là…)",
+    "toLabel": "Người được gọi",
+    "swap": "Đảo chiều hai người",
+    "hint": "Danh xưng do bộ luật của dòng họ quy định và luôn ghi bằng tiếng Việt. Nếu thấy chưa đúng, xin báo Hội đồng Tộc biểu để chỉnh lại bộ luật.",
+    "emptyPrompt": "Chọn đủ hai người để xem danh xưng.",
+    "sentence": "{from} gọi {to} là",
+    "selfAddress": "và xưng là",
+    "reverseTitle": "Chiều ngược lại",
+    "reverseSentence": "{to} gọi {from} là {title}.",
+    "pathTitle": "Đường quan hệ",
+    "pathSummary": "Đi lên {up} đời tới tổ chung {lca}, rồi đi xuống {down} đời.",
+    "lcaTag": "Tổ chung",
+    "generationValue": "Đời thứ {n}",
+    "notFound": "Không tìm thấy một trong hai người.",
+    "loadError": "Không tra được danh xưng. Vui lòng thử lại.",
+    "cached": "từ bộ nhớ đệm",
+    "direction": {
+      "SELF": "Điểm xuất phát",
+      "UP": "Lên một đời",
+      "DOWN": "Xuống một đời",
+      "ACROSS": "Sang ngang qua hôn nhân"
+    },
+    "facts": {
+      "genDelta": "Chênh lệch đời",
+      "side": "Bên",
+      "collateral": "Bậc bàng hệ",
+      "birthOrder": "Vai vế trong cùng đời",
+      "via": "Đi qua",
+      "ruleSet": "Bộ luật áp dụng"
+    },
+    "genDelta": {
+      "same": "Cùng một đời",
+      "above": "Trên {n} đời",
+      "below": "Dưới {n} đời"
+    },
+    "side": {
+      "PATERNAL": "Bên nội",
+      "MATERNAL": "Bên ngoại",
+      "BLOOD": "Cùng huyết thống",
+      "IN_LAW": "Bên thông gia"
+    },
+    "collateral": {
+      "0": "Trực hệ (đời trên – đời dưới thẳng dòng)",
+      "1": "Ruột",
+      "2": "Họ (con chú con bác)",
+      "far": "Họ xa (bậc {n})"
+    },
+    "birthOrder": {
+      "elder": "Vai trên",
+      "younger": "Vai dưới"
+    },
+    "via": {
+      "marriage": "Hôn nhân",
+      "adoption": "Con nuôi"
+    },
+    "ruleScope": {
+      "DEFAULT": "Mặc định của hệ thống",
+      "REGION": "Theo vùng miền",
+      "CLAN": "Riêng dòng họ",
+      "BRANCH": "Riêng chi/ngành"
+    },
+    "status": {
+      "SELF": {
+        "title": "Hai ô đang chọn cùng một người",
+        "body": "Xin chọn hai người khác nhau để tra danh xưng."
+      },
+      "NO_COMMON_ANCESTOR": {
+        "title": "Chưa tìm được tổ chung giữa hai người",
+        "body": "Trong dữ liệu hiện có, hai người này chưa nối được với nhau qua một vị tổ chung. Có thể quan hệ đi qua bên ngoại hoặc qua hôn nhân chưa được ghi vào gia phả."
+      },
+      "NO_MATCHING_RULE": {
+        "title": "Bộ luật danh xưng chưa phủ trường hợp này",
+        "body": "Hệ thống đã xác định được quan hệ nhưng chưa có luật xưng hô tương ứng. Các dữ kiện bên dưới là thứ Hội đồng Tộc biểu cần để bổ sung luật cho đúng lệ của dòng họ."
+      }
+    }
+  },
+  "personForm": {
+    "createTitle": "Thêm nhân khẩu",
+    "editTitle": "Sửa hồ sơ {name}",
+    "create": "Thêm vào gia phả",
+    "save": "Lưu thay đổi",
+    "cancel": "Hủy",
+    "unsaved": "Có thay đổi chưa lưu",
+    "savedCreate": "Đã thêm nhân khẩu vào gia phả.",
+    "savedEdit": "Đã lưu thay đổi.",
+    "savedWithOverride": "Đã lưu kèm ghi chú về việc trùng tên húy.",
+    "sections": {
+      "names": "Tên gọi",
+      "identity": "Giới tính & tình trạng",
+      "dates": "Ngày sinh – ngày mất",
+      "origin": "Quê quán & nghề nghiệp",
+      "contact": "Liên hệ",
+      "biography": "Tiểu sử & ghi chép",
+      "relation": "Nối vào cây phả đồ",
+      "note": "Ghi chú cho lần sửa này"
+    },
+    "gender": "Giới tính",
+    "genderOption": {
+      "MALE": "Nam",
+      "FEMALE": "Nữ",
+      "UNKNOWN": "Chưa rõ"
+    },
+    "status": "Tình trạng",
+    "statusHint": "Tắt công tắc khi người này đã khuất. Nhập ngày mất cũng có nghĩa là người này đã mất — hệ thống sẽ hỏi lại để bạn xác nhận.",
+    "currentPlaceProvince": "Tỉnh/Thành phố đang ở",
+    "currentPlaceFull": "Địa chỉ đầy đủ",
+    "privacyLevel": "Mức chia sẻ thông tin",
+    "privacyLevelHint": "Người còn sống mặc định được ẩn. Chỉ nới rộng khi chính người đó đồng ý.",
+    "privacyOption": {
+      "DEFAULT": "Mặc định theo quy định",
+      "BRANCH_OPT_IN": "Cho phép trong chi/ngành",
+      "CLAN_OPT_IN": "Cho phép trong cả dòng họ",
+      "RESTRICTED": "Hạn chế tối đa"
+    },
+    "contactHint": "Thông tin liên hệ thuộc tầng riêng tư cao nhất, chỉ người trong cuộc và quản trị viên xem được.",
+    "note": "Lý do / ghi chú",
+    "noteHint": "Nội dung này được lưu vào nhật ký chỉnh sửa để con cháu về sau còn tra được.",
+    "names": {
+      "type": "Loại tên",
+      "fullName": "Họ và tên",
+      "fullNamePlaceholder": "Ví dụ: Nguyễn Văn An",
+      "hanNom": "Chữ Hán-Nôm",
+      "hanNomHint": "Nhập nếu gia phả cũ có ghi.",
+      "note": "Ghi chú",
+      "primary": "Dùng làm tên chính",
+      "add": "Thêm một lớp tên",
+      "remove": "Xóa lớp tên này"
+    },
+    "date": {
+      "solar": "Ngày dương lịch",
+      "precision": "Mức chính xác",
+      "precisionHint": "Chọn đúng mức đã biết, đừng đoán ngày.",
+      "precisionOption": {
+        "DAY": "Biết rõ ngày",
+        "MONTH": "Chỉ biết tháng",
+        "YEAR": "Chỉ biết năm",
+        "UNKNOWN": "Không rõ"
+      },
+      "lunar": "Ngày âm lịch",
+      "lunarDay": "Ngày",
+      "lunarMonth": "Tháng",
+      "lunarYear": "Năm",
+      "lunarLeap": "Tháng nhuận",
+      "lunarHint": "Nhập đúng như gia phả ghi. Hệ thống không tự quy đổi âm – dương; việc quy đổi do máy chủ đảm nhận.",
+      "lunarDeathHint": "Ngày âm lịch ở đây là căn cứ tính ngày giỗ, xin nhập cẩn thận. Nếu là tháng nhuận thì nhớ tích ô bên trên."
+    },
+    "relation": {
+      "enable": "Nối người này với một người đã có trong gia phả",
+      "hint": "Nếu không nối, hệ thống chưa xác định được đời thứ mấy và người này sẽ chưa xuất hiện trên cây phả đồ.",
+      "person": "Người đã có trong gia phả",
+      "type": "Loại quan hệ",
+      "relType": {
+        "PARENT_BIO": "Cha/mẹ – con ruột",
+        "PARENT_ADOPT": "Cha/mẹ – con nuôi",
+        "SPOUSE": "Vợ chồng"
+      },
+      "direction": "Chiều quan hệ",
+      "otherIsParent": "Người đã chọn là cha/mẹ của người mới",
+      "otherIsChild": "Người đã chọn là con của người mới",
+      "spouseOrder": "Thứ bậc vợ/chồng",
+      "spouseOrderHint": "1 là vợ cả / chồng cả."
+    },
+    "taboo": {
+      "title": "Cảnh báo trùng tên húy (kỵ húy)",
+      "lead": "Tên vừa nhập trùng với tên húy của {count} bậc trên.",
+      "explain": "Theo lệ dòng họ, đặt tên trùng tên húy của bậc trên là điều kiêng kỵ. Xin đổi tên, hoặc nêu rõ lý do nếu vẫn muốn giữ nguyên.",
+      "matchKind": {
+        "EXACT": "Trùng khít",
+        "GIVEN_NAME": "Trùng tên riêng",
+        "UNACCENTED": "Trùng khi bỏ dấu"
+      },
+      "generation": "Đời thứ {n}",
+      "collidesWith": "Tên húy: {name}",
+      "reasonLabel": "Lý do vẫn giữ tên này",
+      "reasonPlaceholder": "Ví dụ: đã được Hội đồng Tộc biểu chấp thuận trong phiên họp ngày…",
+      "reasonHint": "Lý do sẽ được lưu vào nhật ký chỉnh sửa cùng với việc bỏ qua cảnh báo.",
+      "rename": "Quay lại đổi tên",
+      "confirm": "Vẫn giữ tên này"
+    },
+    "deathConfirm": {
+      "title": "Bạn đang nhập thông tin người mất",
+      "lead": "Bạn sắp ghi nhận {name} là đã mất.",
+      "question": "Bạn chắc chắn chứ? Xin đọc lại một lượt trước khi lưu.",
+      "dateLabel": "Ngày mất vừa nhập",
+      "dateHint": "Xin soi lại ngày này. Chỉ gõ nhầm một con số là cả chi/nhánh nhận nhầm tin.",
+      "consequencesTitle": "Khi lưu, hệ thống sẽ:",
+      "consequencePublic": "Chuyển hồ sơ của {name} thành thông tin công khai — theo lệ gia phả, hồ sơ người đã khuất thì ai cũng xem được, kể cả Khách chưa đăng nhập.",
+      "consequenceGio": "Lập lịch nhắc giỗ theo ngày mất âm lịch và gửi cho người trong cùng chi/nhánh.",
+      "consequenceIrreversible": "Ghi nhầm thì sửa lại được, nhưng thông tin đã công khai thì không thu về được.",
+      "cancel": "Quay lại kiểm tra",
+      "confirm": "Đúng, người này đã mất"
+    },
+    "errors": {
+      "nameRequired": "Xin nhập họ và tên.",
+      "nameTooLong": "Tên quá dài (tối đa 120 ký tự).",
+      "hanNomTooLong": "Chữ Hán-Nôm quá dài.",
+      "noteTooLong": "Ghi chú quá dài.",
+      "atLeastOneName": "Cần ít nhất một lớp tên.",
+      "exactlyOnePrimary": "Chọn đúng một lớp tên làm tên chính.",
+      "biographyTooLong": "Tiểu sử quá dài.",
+      "phone": "Số điện thoại không hợp lệ.",
+      "email": "Thư điện tử không hợp lệ.",
+      "lunarDay": "Ngày âm lịch phải từ 1 đến 30.",
+      "lunarMonth": "Tháng âm lịch phải từ 1 đến 12.",
+      "lunarMonthRequired": "Đã nhập ngày thì phải nhập cả tháng âm lịch.",
+      "lunarYear": "Năm âm lịch không hợp lệ.",
+      "deathBeforeBirth": "Ngày mất không thể trước ngày sinh.",
+      "relationPersonRequired": "Xin chọn người để nối quan hệ.",
+      "staleRecord": "Hồ sơ đã được người khác sửa trong lúc bạn đang nhập. Xin tải lại và nhập lại thay đổi.",
+      "forbidden": "Bạn không có quyền sửa hồ sơ này.",
+      "serverValidation": "Dữ liệu chưa hợp lệ theo kiểm tra của máy chủ.",
+      "submitFailed": "Không lưu được. Vui lòng thử lại.",
+      "notFound": "Không tìm thấy nhân khẩu này.",
+      "loadFailed": "Không tải được hồ sơ để sửa.",
+      "notEditable": "Bạn chỉ có thể xem hồ sơ này.",
+      "missingEtag": "Không lấy được phiên bản hồ sơ nên chưa thể sửa an toàn. Xin tải lại trang."
+    }
+  },
+  "dev": {
+    "roleLabel": "Vai trò giả lập (chỉ dùng khi phát triển)",
+    "roleTooltip": "Chỉ có khi chạy với dữ liệu giả lập. Đổi vai trò để xem phân tầng riêng tư hoạt động ra sao.",
+    "role": {
+      "guest": "Khách",
+      "member": "Thành viên",
+      "branch-head": "Trưởng chi",
+      "admin": "Quản trị"
+    }
+  },
+  "language": {
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "search": {
+    "title": "Tìm kiếm nhân khẩu",
+    "subtitle": "Gõ tên có dấu hay không dấu đều được; kết quả hiện ngay khi bạn gõ.",
+    "inputLabel": "Tên người cần tìm",
+    "inputPlaceholder": "Ví dụ: nguyen van duc",
+    "unaccentedHint": "Không cần bỏ dấu. Hệ thống tìm trên mọi lớp tên: húy, tự, hiệu, thụy, thường gọi, pháp danh.",
+    "idlePrompt": "Nhập tên để bắt đầu tìm.",
+    "noResults": "Không tìm thấy ai phù hợp.",
+    "loadError": "Không tìm được. Vui lòng thử lại.",
+    "resultCount": "{count} kết quả",
+    "matchedOn": "Khớp ở {layer}",
+    "filters": {
+      "generation": "Đời thứ",
+      "anyGeneration": "Mọi đời",
+      "generationOption": "Đời thứ {n}",
+      "branch": "Chi / Ngành",
+      "anyBranch": "Mọi chi/ngành",
+      "nativePlace": "Quê quán",
+      "nativePlacePlaceholder": "Ví dụ: Nam Định",
+      "clear": "Xóa bộ lọc"
+    }
+  },
+  "events": {
+    "title": "Giỗ & Sự kiện dòng họ",
+    "subtitle": "Ngày giỗ ghi theo âm lịch, kèm ngày dương tương ứng do máy chủ quy đổi.",
+    "upcomingTitle": "Sắp tới",
+    "calendarTitle": "Lịch mười hai tháng tới",
+    "empty": "Chưa có ngày giỗ nào trong khoảng thời gian này.",
+    "loadError": "Không tải được danh sách giỗ. Vui lòng thử lại.",
+    "branchFilter": "Lọc theo chi / ngành",
+    "anyBranch": "Cả dòng họ",
+    "branchFilterHint": "Giỗ cấp dòng họ luôn hiện, dù bạn lọc theo chi nào.",
+    "monthLabel": "Tháng {month}",
+    "monthEmpty": "Không có giỗ",
+    "moreInMonth": "và {n} ngày nữa",
+    "unscheduledCount": "{n} sự kiện chưa có ngày dương tương ứng.",
+    "lunarDayMonth": "Ngày {day} tháng {month} âm lịch",
+    "lunarLeap": "(tháng nhuận)",
+    "lunarYear": "năm {year}",
+    "solarDate": "Dương lịch: {date}",
+    "today": "Hôm nay",
+    "daysUntil": "Còn {n} ngày",
+    "daysAgo": "Đã qua {n} ngày",
+    "clanLevel": "Cả dòng họ",
+    "viewPerson": "Xem hồ sơ",
+    "reminderOffsets": "Nhắc trước {days} ngày",
+    "eventType": {
+      "GIO_TO": "Giỗ Tổ",
+      "GIO_HO": "Giỗ họ",
+      "GIO_CHI": "Giỗ chi",
+      "GIO_THUONG": "Giỗ thường",
+      "TIEU_TUONG": "Tiểu tường",
+      "DAI_TUONG": "Đại tường",
+      "CHAP_MA": "Chạp mả",
+      "MUNG_THO": "Mừng thọ",
+      "KHAC": "Lễ khác"
+    }
+  },
+  "push": {
+    "inAppAlways": "Dù bật hay không, mọi lời nhắc giỗ vẫn nằm đầy đủ trong trung tâm thông báo khi bạn mở ứng dụng.",
+    "prompt": {
+      "title": "Nhận nhắc giỗ trên điện thoại?",
+      "body": "Bật thông báo đẩy để được nhắc trước 7, 3 và 1 ngày, kể cả khi bạn không mở ứng dụng.",
+      "iosBody": "Trên iPhone, cần thêm ứng dụng vào màn hình chính trước thì mới bật được thông báo đẩy.",
+      "enable": "Bật nhắc giỗ",
+      "later": "Để sau"
+    },
+    "settings": {
+      "title": "Thông báo đẩy trên thiết bị này",
+      "body": "Nhắc giỗ sẽ hiện ngay trên máy, kể cả khi ứng dụng đang đóng. Công tắc này chỉ áp dụng cho thiết bị và trình duyệt bạn đang dùng.",
+      "onThisDevice": "Đang bật trên thiết bị này",
+      "inAppTitle": "Thông báo trong ứng dụng",
+      "inAppBody": "Luôn bật và không thể tắt. Đây là kênh nhắc giỗ chính: mở ứng dụng là thấy đủ mọi lời nhắc."
+    },
+    "status": {
+      "DENIED": "Trình duyệt đã chặn quyền thông báo. Xin mở phần cài đặt của trình duyệt để cho phép lại — ứng dụng không tự hỏi lại được.",
+      "UNSUPPORTED": "Trình duyệt này chưa hỗ trợ thông báo đẩy.",
+      "NO_SERVICE_WORKER": "Bản chạy thử này chưa cài service worker nên chưa bật được thông báo đẩy."
+    },
+    "error": {
+      "PERMISSION_DENIED": "Bạn đã từ chối quyền thông báo. Mọi lời nhắc vẫn còn trong trung tâm thông báo.",
+      "NO_SERVICE_WORKER": "Chưa bật được vì thiếu service worker.",
+      "SERVER_NOT_CONFIGURED": "Máy chủ chưa cấu hình khoá thông báo đẩy nên chưa bật được. Xin báo quản trị viên; mọi lời nhắc giỗ vẫn nằm đủ trong trung tâm thông báo.",
+      "SUBSCRIBE_FAILED": "Không đăng ký được thông báo đẩy. Vui lòng thử lại sau."
+    },
+    "ios": {
+      "title": "Thêm vào màn hình chính (iPhone / iPad)",
+      "why": "Trên iOS, thông báo đẩy chỉ hoạt động khi ứng dụng đã được thêm vào màn hình chính.",
+      "steps": {
+        "share": "Mở Safari, bấm nút Chia sẻ ở thanh dưới.",
+        "addToHome": "Chọn “Thêm vào MH chính” (Add to Home Screen).",
+        "confirm": "Bấm “Thêm” để xác nhận.",
+        "reopen": "Mở lại ứng dụng từ biểu tượng ngoài màn hình chính rồi bật nhắc giỗ."
+      }
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "subtitle": "Chọn cách bạn muốn nhận nhắc giỗ và thông báo của dòng họ."
+  }
+}

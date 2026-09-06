@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kiểm tra phiên đăng nhập</title>
+  </head>
+  <body>
+    <!--
+      Trang tĩnh cho `check-sso` chạy trong iframe (F8).
+
+      Keycloak chuyển hướng iframe này về đây kèm kết quả trên URL; đoạn mã
+      dưới chuyển nguyên URL đó lên khung cha, nơi keycloak-js đọc token.
+
+      VÌ SAO PHẢI CÓ TỆP NÀY: không có nó, `check-sso` sẽ điều hướng CẢ TAB
+      sang Keycloak rồi quay lại ở mỗi lần tải trang — người dùng thấy một cú
+      nháy trắng mỗi lần F5 và mất sạch trạng thái phía client (viewport phả
+      đồ, nhánh đang mở).
+
+      Chỉ postMessage về đúng `location.origin` — không bao giờ "*" — để mã
+      uỷ quyền không rơi sang một khung lạ.
+
+      Đây là tệp tĩnh trong `public/`: middleware next-intl bỏ qua mọi đường
+      dẫn có phần mở rộng nên nó không bị thêm tiền tố ngôn ngữ.
+    -->
+    <script>
+      parent.postMessage(location.href, location.origin);
+    </script>
+  </body>
+</html>

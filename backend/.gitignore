@@ -1,0 +1,7 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.log
+.flattened-pom.xml
+.idea/
+*.iml
+.vscode/

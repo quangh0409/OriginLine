@@ -1,0 +1,21 @@
+# historical-zone.csv - Nhung nam ma lich am chinh thuc cua Viet Nam KHONG tinh theo GMT+7.
+#
+# NGUON: Ho Ngoc Duc, "Am lich Viet Nam qua cac thoi ky lich su" (histcal):
+#   - 1813-1945: lich Viet Nam trung voi lich Trung Quoc (lich Hiep Ky / Thoi Hien) -> mui gio thu 8.
+#   - 1946-1967: mien Bac dung mui gio thu 8; mien Nam dung mui gio thu 8.
+#   - Tu 8/8/1967 mien Bac chuyen sang mui gio thu 7; tu 1968 am lich mien Bac tinh theo +7.
+#   - Tu 1976 ca nuoc tinh theo mui gio thu 7.
+# Ngay tham chieu lay tu [HND-TABLE] (bang tra 1800-2199 cua Ho Ngoc Duc, la lich phap dinh).
+#
+# Y NGHIA NGHIEP VU: cu mat nam 1965 co ngay gio ghi theo lich luu hanh nam 1965. Neu he thong
+# quy doi ngay duong sang am bang GMT+7 cho moi nam thi ngay gio cua cac cu se lech 1 ngay.
+# Bo test nay khoa lai hanh vi cua VietnamLunarZone.
+#
+# verified=yes: [HND-TABLE] va thuat toan chay o dung mui gio lich su cho cung mot ket qua,
+#               dong thoi ket qua GMT+7 khac han -> chung minh mui gio la yeu to quyet dinh.
+solar_date,expected_lunar_day,expected_lunar_month,expected_lunar_year,zone_offset_hours,wrong_if_gmt7,source,verified,note
+1892-01-30,1,1,1892,8,1/2/1892,HND-TABLE+HND-HIST,yes,Tet 1892 - thoi Nguyen, lich VN trung lich TQ (mui gio 8)
+1893-02-17,1,1,1893,8,1/2/1893,HND-TABLE+HND-HIST,yes,Tet 1893 - nhu tren
+1903-01-29,1,1,1903,8,1/2/1903,HND-TABLE+HND-HIST,yes,Tet 1903 - nhu tren
+1935-02-04,1,1,1935,8,1/2/1935,HND-TABLE+HND-HIST,yes,Tet 1935 - thoi Phap thuoc, mui gio 8
+1965-02-02,1,1,1965,8,1/2/1965,HND-TABLE+HND-HIST,yes,Tet 1965 - mien Bac van dung mui gio 8 (den 1967)

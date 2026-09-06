@@ -1,0 +1,121 @@
+# ===========================================================================
+# Gia Phả Dòng Họ — monorepo: backend/ (Java 21 + Maven) · frontend/ (Next.js)
+#                              contracts/ · infra/ · docs/
+# ===========================================================================
+
+# --- Secrets & môi trường (ƯU TIÊN CAO NHẤT) -------------------------------
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+*.truststore
+secrets/
+**/secrets/
+*credentials*.json
+!**/realm-giapha.json
+vapid*.json
+vapid-private*
+service-account*.json
+
+# --- Java / Maven ----------------------------------------------------------
+target/
+build/
+out/
+*.class
+*.jar
+# giữ lại Maven wrapper (phải đặt SAU *.jar thì phủ định mới có hiệu lực)
+!.mvn/wrapper/maven-wrapper.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+replay_pid*
+dependency-reduced-pom.xml
+release.properties
+pom.xml.versionsBackup
+pom.xml.releaseBackup
+pom.xml.tag
+pom.xml.next
+buildNumber.properties
+
+# --- Node / Next.js --------------------------------------------------------
+node_modules/
+.next/
+out/
+.turbo/
+.swc/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/versions
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+coverage/
+storybook-static/
+# Service worker sinh tự động bởi next-pwa (PWA — Web Push GĐ1)
+frontend/public/sw.js
+frontend/public/sw.js.map
+frontend/public/workbox-*.js
+frontend/public/workbox-*.js.map
+frontend/public/fallback-*.js
+
+# --- Test / báo cáo --------------------------------------------------------
+surefire-reports/
+failsafe-reports/
+jacoco.exec
+.allure/
+playwright-report/
+test-results/
+
+# --- IDE -------------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+.eclipse/
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+nbproject/private/
+*.sublime-workspace
+
+# --- Hệ điều hành ----------------------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*~
+*.swp
+*.swo
+
+# --- Hạ tầng cục bộ --------------------------------------------------------
+# Volume Docker do Docker quản lý (named volume), nhưng nếu ai đó đổi sang
+# bind mount thì chặn luôn dữ liệu DB/MinIO khỏi lọt vào repo.
+infra/data/
+infra/**/data/
+infra/*.override.yml
+docker-compose.override.yml
+
+# --- Tạm ------------------------------------------------------------------
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+*.rej

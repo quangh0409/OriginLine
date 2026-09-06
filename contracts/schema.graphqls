@@ -1,0 +1,929 @@
+# =============================================================================
+# Hệ Thống Quản Lý Gia Phả & Cổng Thông Tin Dòng Họ — GraphQL Schema
+# Clan Genealogy Management System — GraphQL Schema (SDL)
+#
+# NGUỒN CHÂN LÝ CHUNG cho Backend và Frontend. Xem contracts/README.md.
+# Endpoint: POST /api/v1/graphql   (mô tả lớp HTTP nằm ở contracts/openapi.yaml)
+#
+# VÌ SAO CÓ GRAPHQL Ở ĐÂY
+#   REST trả projection cây **phẳng** với độ sâu cố định. GraphQL để client **tự chọn hình dạng
+#   và độ sâu** của cây lồng nhau — ví dụ "3 đời con cháu, mỗi người kèm vợ/chồng và ngày giỗ,
+#   nhưng không cần tiểu sử". Mọi thao tác **ghi** đi qua REST; schema này **không có Mutation**.
+#
+# HAI KHÁC BIỆT SO VỚI REST — FE PHẢI NHỚ
+#   1. Trường bị ẩn theo phân tầng riêng tư trả `null` (GraphQL không có khái niệm "trường vắng mặt"),
+#      trong khi REST **loại hẳn** trường khỏi JSON. Ngữ nghĩa vẫn như nhau: `null` ở đây có thể là
+#      "không có dữ liệu" **hoặc** "bạn không được xem", và **cố ý không phân biệt được**.
+#   2. Người còn sống mà người gọi không được thấy sẽ **không xuất hiện trong danh sách** và
+#      `person(id:)` trả `null` — giống hệt việc REST trả 404 thay vì 403.
+#
+# GIỚI HẠN TRUY VẤN
+#   Server áp trần độ sâu lồng nhau và độ phức tạp. Vượt trần trả lỗi GraphQL với
+#   `extensions.code = QUERY_TOO_COMPLEX` hoặc `DEPTH_LIMIT_EXCEEDED` — cùng tập mã lỗi với
+#   `Problem.code` của REST.
+# =============================================================================
+
+schema {
+  query: Query
+}
+
+# -----------------------------------------------------------------------------
+# SCALAR
+# -----------------------------------------------------------------------------
+
+"UUID dạng chuỗi, ví dụ `6f1b1d6e-2f8a-4d1c-9a91-9f2c1f0b7a01`."
+scalar UUID
+
+"Ngày dương lịch ISO-8601 `YYYY-MM-DD`."
+scalar Date
+
+"Thời điểm ISO-8601 có offset, ví dụ `2026-03-14T08:00:00+07:00`. Múi giờ nghiệp vụ là GMT+7."
+scalar DateTime
+
+"""
+Object JSON tự do — ánh xạ cột `jsonb`. Dùng cho `Person.attributes` (học vị, chức tước…).
+Khóa do dòng họ tự đặt; schema không ràng buộc.
+"""
+scalar JSON
+
+# -----------------------------------------------------------------------------
+# DIRECTIVE — tài liệu hoá, không đổi hành vi truy vấn
+# -----------------------------------------------------------------------------
+
+"""
+Đánh dấu trường thuộc tầng riêng tư nào (BA v2 §10, Nghị định 13/2023).
+Chỉ để **tài liệu hoá và sinh code**; việc lọc thật do backend làm ở tầng application.
+"""
+directive @privacyTier(tier: PrivacyTier!) on FIELD_DEFINITION | OBJECT
+
+"""
+Vai tối thiểu cần có để đọc trường. Không đủ quyền ⇒ trường trả `null`,
+**không** ném lỗi (ném lỗi sẽ tiết lộ trường đó có dữ liệu).
+"""
+directive @auth(requires: Role!) on FIELD_DEFINITION | OBJECT
+
+"Trường có chi phí truy vấn cao; server tính vào ngân sách độ phức tạp."
+directive @costly(weight: Int! = 10) on FIELD_DEFINITION
+
+# -----------------------------------------------------------------------------
+# ENUM
+# -----------------------------------------------------------------------------
+
+enum Gender {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+"""
+Lớp tên của người Việt truyền thống — một nhân khẩu có **nhiều tên**.
+"""
+enum NameType {
+  "Tên húy — tên thật, kiêng gọi khi là bậc trên. Căn cứ cho cảnh báo kỵ húy."
+  HUY
+  "Tên tự — tên chữ, đặt khi trưởng thành."
+  TU
+  "Tên hiệu — bút hiệu, biệt hiệu tự đặt."
+  HIEU
+  "Tên thụy — đặt **sau khi mất**, dùng trong tế lễ và văn khấn."
+  THUY
+  "Tên thường gọi hằng ngày."
+  THUONG_GOI
+  "Pháp danh (người quy y Phật giáo)."
+  PHAP_DANH
+}
+
+enum PrivacyTier {
+  "Người đã khuất — công khai theo mục đích gia phả."
+  PUBLIC
+  "Tầng 1 — tên, đời/vai vế, quan hệ lõi. Thành viên đã đăng nhập; Khách không thấy."
+  T1
+  "Tầng 2 — năm sinh, nghề nghiệp, nơi ở cấp tỉnh. Cùng chi/ngành hoặc được cấp quyền."
+  T2
+  "Tầng 3 — SĐT, email, địa chỉ đầy đủ, ngày sinh đầy đủ, ảnh. Bản thân + Admin + opt-in."
+  T3
+}
+
+"""
+Mức chia sẻ do **chính chủ thể** chọn, ghi đè mặc định.
+"""
+enum PrivacyLevel {
+  DEFAULT
+  "Mở Tầng 3 cho thành viên cùng chi/ngành."
+  BRANCH_OPT_IN
+  "Mở Tầng 3 cho mọi thành viên đã đăng nhập."
+  CLAN_OPT_IN
+  "Siết chặt hơn mặc định — chỉ Tầng 1. Mặc định của trẻ vị thành niên."
+  RESTRICTED
+}
+
+"""
+Vai kỹ thuật lấy từ JWT. **Tách khỏi** chức danh dòng tộc (Tộc trưởng, Trưởng chi theo
+huyết thống/đích tôn) — một người có thể giữ cả hai.
+"""
+enum Role {
+  ADMIN
+  "Hội đồng Tộc biểu / Tộc trưởng — phạm vi toàn dòng họ."
+  COUNCIL
+  "Trưởng Chi/Ngành — **chỉ trong chi được giao** (kiểm theo `ltree`)."
+  BRANCH_HEAD
+  MEMBER
+  "Không đăng nhập. Không nhận bất kỳ người còn sống nào."
+  GUEST
+}
+
+enum Region {
+  BAC
+  TRUNG
+  NAM
+}
+
+"""
+Loại cạnh quan hệ. Hướng luôn là `from → to`.
+**Dâu/rể không phải loại cạnh** — chúng được suy ra từ `SPOUSE` cộng huyết thống.
+"""
+enum RelType {
+  "Cha/mẹ ruột → con."
+  PARENT_BIO
+  "Cha/mẹ nuôi → con nuôi."
+  PARENT_ADOPT
+  "Vợ/chồng. `spouseOrder` cho đa thê/đa phu; `validFrom`/`validTo` cho tái hôn, ly hôn."
+  SPOUSE
+  "Thừa kế hương hỏa: `from` là người để lại, `to` là người nối dõi. Xem `heirKind`."
+  HEIR
+}
+
+enum HeirKind {
+  "Đích tôn — cháu trưởng của con trai trưởng, chịu trách nhiệm thờ tự chính."
+  DICH_TON
+  "Thừa tự — người được chỉ định tiếp nối việc thờ cúng."
+  THUA_TU
+  "Kế tự — lập người nối dõi khi một chi tuyệt tự."
+  KE_TU
+}
+
+enum RelationSide {
+  "Bên nội (đường cha)."
+  PATERNAL
+  "Bên ngoại (đường mẹ) — ghi nhận đầy đủ, ngang bằng bên nội (FR-1.8)."
+  MATERNAL
+  "Huyết thống trực hệ."
+  BLOOD
+  "Qua hôn nhân (dâu, rể, thông gia)."
+  IN_LAW
+}
+
+enum ParentKind {
+  BIOLOGICAL
+  ADOPTIVE
+  ANY
+}
+
+enum TreeDirection {
+  DESCENDANTS
+  ANCESTORS
+  BOTH
+}
+
+enum RuleScope {
+  DEFAULT
+  REGION
+  CLAN
+  BRANCH
+}
+
+enum KinshipStatus {
+  "Có danh xưng."
+  RESOLVED
+  "Không tìm được tổ chung trong dữ liệu hiện có."
+  NO_COMMON_ANCESTOR
+  "Có LCA nhưng bộ luật chưa phủ trường hợp này — không phải lỗi hệ thống."
+  NO_MATCHING_RULE
+  "`from` trùng `to`."
+  SELF
+}
+
+enum EventType {
+  GIO_TO
+  GIO_HO
+  GIO_CHI
+  GIO_THUONG
+  "Giỗ đầu — tròn 1 năm."
+  TIEU_TUONG
+  "Giỗ hết — tròn 2 năm."
+  DAI_TUONG
+  "Chạp mả — tảo mộ cuối năm."
+  CHAP_MA
+  "Mừng thọ — người **còn sống**, chịu phân tầng riêng tư."
+  MUNG_THO
+  KHAC
+}
+
+enum NotificationCategory {
+  GIO_REMINDER
+  EVENT
+  CHANGE_REQUEST
+  SYSTEM
+}
+
+enum ReadStatus {
+  ALL
+  UNREAD
+  READ
+}
+
+enum DatePrecision {
+  DAY
+  MONTH
+  YEAR
+  UNKNOWN
+}
+
+enum PathDirection {
+  SELF
+  UP
+  DOWN
+  "Sang ngang qua hôn nhân."
+  ACROSS
+}
+
+"Nhãn nghiệp vụ để canvas phả đồ vẽ badge — backend tính sẵn."
+enum PersonBadge {
+  DICH_TON
+  THUA_TU
+  KE_TU
+  CON_NUOI
+  DAU
+  RE
+  TUYET_TU
+  TRUONG_CHI
+  DECEASED
+}
+
+# -----------------------------------------------------------------------------
+# VALUE OBJECT — NGÀY SONG LỊCH & TÊN ĐA LỚP
+# -----------------------------------------------------------------------------
+
+"""
+Ngày âm lịch Việt Nam, quy đổi theo thuật toán **Hồ Ngọc Đức** ở **GMT+7**.
+Lịch âm Việt Nam có năm lệch lịch âm Trung Quốc do khác múi giờ — mọi quy đổi do backend làm,
+client **không tự tính**.
+"""
+type LunarDate {
+  year: Int!
+  month: Int!
+  day: Int!
+  "`true` nếu là **tháng nhuận**. Bỏ qua cờ này thì giỗ lệch nguyên một tháng mà không có lỗi nào."
+  leap: Boolean!
+  "Can chi của năm, ví dụ `Đinh Dậu`."
+  canChi: String
+  "Nhãn hiển thị đầy đủ, ví dụ `Mùng 3 tháng 8 nhuận, năm Đinh Dậu`."
+  yearLabel: String
+}
+
+"""
+Một mốc thời gian ghi **cả hai lịch**. Với ngày mất, `lunar` là **nguồn chân lý để tính giỗ**.
+Dữ liệu gia phả cổ thường chỉ có ngày âm, đôi khi chỉ có năm — xem `precision`.
+"""
+type DateDual {
+  solar: Date
+  lunar: LunarDate
+  "Mức chính xác của dữ liệu gốc. Đừng bịa ngày `01` rồi trình bày như đã biết chắc."
+  precision: DatePrecision!
+}
+
+"Một lớp tên của nhân khẩu (bảng `person_name`)."
+type PersonName {
+  id: UUID!
+  nameType: NameType!
+  "Tên Quốc ngữ, có dấu."
+  fullName: String!
+  "Tên chữ Hán–Nôm nếu có (từ gia phả giấy, bia đá, hoành phi)."
+  nameHanNom: String
+  "Dạng không dấu do backend sinh, phục vụ tìm kiếm. Chỉ đọc."
+  nameUnaccented: String
+  "Tên hiển thị mặc định. Mỗi nhân khẩu có **đúng một** tên `isPrimary = true`."
+  isPrimary: Boolean!
+  "Ghi chú xuất xứ tên, ví dụ 'chép theo bia mộ'."
+  note: String
+}
+
+"Liên hệ — **toàn bộ type này là Tầng 3**."
+type ContactInfo @privacyTier(tier: T3) {
+  phone: String
+  email: String
+  "Zalo id — kênh nhắc giỗ ở Giai đoạn 2."
+  zaloId: String
+}
+
+# -----------------------------------------------------------------------------
+# CHI / NGÀNH — BRANCH
+# -----------------------------------------------------------------------------
+
+"""
+**Chi / ngành / cành / nhánh** — bốn cấp phân nhánh của gia phả Việt, lưu bằng `ltree`.
+Cố ý không dịch sang "branch/sub-branch" vì thứ bậc bốn cấp không có tương đương tiếng Anh.
+"""
+type Branch {
+  id: UUID!
+  "Tên hiển thị, **có dấu**."
+  name: String!
+  """
+  Đường dẫn `ltree`, ví dụ `root.chi_nhat.nganh_truong`. Dùng cho phạm vi RBAC.
+  Nhãn `ltree` không nhận dấu tiếng Việt nên path sinh từ slug không dấu; tên có dấu ở `name`.
+  """
+  path: String!
+  "Vùng miền — chọn bộ quy tắc danh xưng cấp `REGION`."
+  region: Region
+  parent: Branch
+  children: [Branch!]!
+  "Trưởng chi — **chức danh dòng tộc**, không phải vai kỹ thuật `BRANCH_HEAD`."
+  head: Person
+  "Số nhân khẩu trong chi và các nhánh con, **sau khi lọc phân tầng riêng tư**."
+  memberCount: Int!
+  persons(page: PageInput): PersonPage! @costly(weight: 20)
+}
+
+# -----------------------------------------------------------------------------
+# QUAN HỆ — RELATIONSHIP
+# -----------------------------------------------------------------------------
+
+"""
+Một cạnh quan hệ. Nguồn chân lý là cạnh trong đồ thị AGE; bảng `relationship` là bản chiếu,
+ghi trong **cùng một transaction**.
+"""
+type Relationship {
+  id: UUID!
+  from: Person!
+  to: Person!
+  relType: RelType!
+  "Chỉ có nghĩa khi `relType = HEIR`."
+  heirKind: HeirKind
+  "Thứ tự vợ/chồng cho **đa thê/đa phu** — `1` là vợ cả/chồng cả. Chỉ có nghĩa với `SPOUSE`."
+  spouseOrder: Int
+  "Hiệu lực từ (ngày cưới)."
+  validFrom: Date
+  "Hiệu lực đến (ly hôn hoặc một bên mất). `null` = còn hiệu lực."
+  validTo: Date
+  note: String
+}
+
+"""
+Vợ/chồng kèm dữ liệu của chính cạnh hôn nhân — tránh việc client phải tự dò trong `relationships`.
+"""
+type SpouseLink {
+  person: Person!
+  "`1` = vợ cả/chồng cả; `2`, `3`… cho đa thê/đa phu."
+  spouseOrder: Int
+  validFrom: Date
+  validTo: Date
+  "`false` khi `validTo` đã có giá trị — ly hôn hoặc một bên đã mất."
+  isCurrent: Boolean!
+  "Con dâu / con rể xét theo dòng họ này."
+  inLawRole: PersonBadge
+}
+
+# -----------------------------------------------------------------------------
+# NHÂN KHẨU — PERSON
+# -----------------------------------------------------------------------------
+
+"""
+Hồ sơ nhân khẩu — **aggregate root** của context `genealogy`.
+
+### Phân tầng riêng tư (Nghị định 13/2023 · BA v2 §10)
+
+Trường được đánh dấu `@privacyTier` trả `null` khi người gọi không đủ quyền.
+`null` ở đây có **hai nghĩa không phân biệt được**, và đó là chủ ý:
+
+1. Dữ liệu không tồn tại (gia phả cổ thiếu thông tin).
+2. Người gọi không được phép xem.
+
+FE **không được** render placeholder kiểu "dữ liệu bị ẩn" cho trường `null` —
+làm thế là tự tay tiết lộ điều mà việc lọc đang cố giấu.
+
+Với Khách (không token), người còn sống **không xuất hiện**: `person(id:)` trả `null`,
+và họ bị loại khỏi mọi danh sách kể cả dưới dạng node ẩn danh.
+"""
+type Person {
+  id: UUID!
+
+  # --- Tầng 1: tên, vai vế, quan hệ lõi -------------------------------------
+  "Các lớp tên. Lọc theo `type` để lấy đúng lớp cần, ví dụ chỉ tên thụy cho văn khấn."
+  names(type: NameType): [PersonName!]!
+  "Tên chính (`isPrimary = true`) — tiện dụng, khỏi phải tự dò trong `names`."
+  displayName: String!
+  gender: Gender!
+  "Đời thứ, tính từ **Thủy tổ = 1**. `null` khi chưa được nối vào cây."
+  generation: Int
+  "Còn sống hay đã khuất — quyết định toàn bộ tầng hiển thị."
+  isAlive: Boolean!
+  """
+  Đã **xóa mềm**. Chỉ `ADMIN`/`COUNCIL` thấy. Node vẫn nằm trong đồ thị để cây không gãy —
+  hệ thống **không bao giờ** xóa cứng một nhân khẩu.
+  """
+  isDeleted: Boolean @auth(requires: COUNCIL)
+  "Chi/ngành chính — quyết định phạm vi RBAC."
+  branch: Branch
+  "Nhãn nghiệp vụ tính sẵn (đích tôn, con nuôi, dâu/rể, tuyệt tự…) cho canvas phả đồ."
+  badges: [PersonBadge!]!
+
+  # --- Ngày tháng ------------------------------------------------------------
+  """
+  Ngày sinh song lịch. Với **người còn sống**, Tầng 2 chỉ thấy phần **năm**
+  (`precision = YEAR`); ngày đầy đủ là Tầng 3.
+  """
+  birth: DateDual @privacyTier(tier: T2)
+  """
+  Ngày mất song lịch. `death.lunar` là **nguồn chân lý để tính giỗ**.
+  Luôn `null` khi `isAlive = true`.
+  """
+  death: DateDual
+
+  # --- Tầng 2 ----------------------------------------------------------------
+  "**Nguyên quán** — quê gốc của dòng họ, khác nơi ở hiện tại."
+  nativePlace: String @privacyTier(tier: T2)
+  "Nơi ở hiện tại **cấp tỉnh/thành** — tách khỏi địa chỉ đầy đủ một cách có chủ ý."
+  currentPlaceProvince: String @privacyTier(tier: T2)
+  occupation: String @privacyTier(tier: T2)
+
+  # --- Tầng 3 ----------------------------------------------------------------
+  "Địa chỉ trú quán **đầy đủ**."
+  currentPlaceFull: String @privacyTier(tier: T3)
+  "Tiểu sử. Công khai với người đã khuất; Tầng 3 với người còn sống."
+  biography: String @privacyTier(tier: T3)
+  """
+  Ảnh chân dung — **presigned URL trỏ tới MinIO**, có hạn dùng. Không bao giờ là blob trong CSDL.
+  Ảnh người còn sống là Tầng 3.
+  """
+  avatarUrl: String @privacyTier(tier: T3)
+  contact: ContactInfo @privacyTier(tier: T3)
+  """
+  Thuộc tính mở rộng dạng `jsonb` (học vị, chức tước, khoa bảng…).
+  Là Tầng 3 với người còn sống vì nội dung không kiểm soát trước được.
+  """
+  attributes: JSON @privacyTier(tier: T3)
+  "Mức chia sẻ do chủ thể chọn. Chỉ **chính chủ** và `ADMIN` thấy trường này."
+  privacyLevel: PrivacyLevel @privacyTier(tier: T3)
+
+  # --- Quan hệ lồng nhau — lý do chính để dùng GraphQL ------------------------
+  "Cha/mẹ. `kind` để tách cha mẹ ruột khỏi cha mẹ nuôi."
+  parents(kind: ParentKind = ANY): [Person!]!
+  """
+  Con. Sắp theo thứ tự sinh khi biết được. `kind = ADOPTIVE` để lấy riêng con nuôi.
+  Danh sách này **đã lọc phân tầng** nên có thể ngắn hơn `childCount`.
+  """
+  children(kind: ParentKind = ANY, limit: Int = 50, offset: Int = 0): [Person!]! @costly(weight: 5)
+  "Tổng số con trong CSDL sau khi lọc — dùng cho nút 'mở rộng' trên canvas."
+  childCount: Int!
+  """
+  Vợ/chồng kèm `spouseOrder` cho **đa thê/đa phu**.
+  `includeFormer = true` lấy cả quan hệ đã kết thúc (ly hôn, goá) — cần cho tái hôn và con riêng.
+  """
+  spouses(includeFormer: Boolean = true): [SpouseLink!]!
+  "Anh chị em. `includeHalf = true` gồm cả anh chị em cùng cha khác mẹ / cùng mẹ khác cha."
+  siblings(includeHalf: Boolean = true): [Person!]!
+  """
+  Toàn bộ cạnh quan hệ trực tiếp một bậc. Chỉ chứa cạnh mà **đầu kia cũng được phép hiển thị**
+  với người gọi.
+  """
+  relationships: [Relationship!]!
+  """
+  Con cháu **làm phẳng** tới `depth` đời. Tiện khi client cần danh sách chứ không cần cấu trúc cây;
+  cần cấu trúc thì lồng `children` hoặc gọi `tree`.
+  Server áp trần độ sâu; vượt trần trả lỗi `DEPTH_LIMIT_EXCEEDED`.
+  """
+  descendants(depth: Int! = 1, limit: Int = 200): [Person!]! @costly(weight: 30)
+  "Tổ tiên **làm phẳng** tới `depth` đời, gần nhất trước."
+  ancestors(depth: Int! = 1): [Person!]! @costly(weight: 10)
+  "Người nối dõi (đích tôn / thừa tự / kế tự) nếu có."
+  heirs: [Relationship!]!
+
+  # --- Tiện ích --------------------------------------------------------------
+  """
+  **Danh xưng** giữa người này và `personId` — tương đương `GET /kinship?from=…&to=…`.
+  Đặt ngay trên `Person` để màn hình hồ sơ hỏi một lượt cùng phần còn lại, khỏi round-trip thứ hai.
+  """
+  kinshipTo(personId: UUID!): KinshipResult! @costly(weight: 15)
+  "Giỗ và các sự kiện gắn với nhân khẩu này."
+  events: [Event!]!
+
+  # --- Siêu dữ liệu ----------------------------------------------------------
+  createdAt: DateTime
+  updatedAt: DateTime
+  "Phiên bản optimistic locking — gửi lại qua `If-Match` khi `PATCH` bằng REST."
+  version: Int
+  "Người gọi hiện tại được làm gì với hồ sơ này."
+  access: PersonAccess!
+}
+
+"""
+Ngữ cảnh **quyền của người gọi** với một hồ sơ — để FE render đúng affordance thay vì
+gọi thử rồi ăn lỗi. Không tiết lộ trường nào đang bị giấu.
+"""
+type PersonAccess {
+  visibleTier: PrivacyTier!
+  canEdit: Boolean!
+  canDelete: Boolean!
+  "Giai đoạn 1 luôn `false` — luồng duyệt đính chính thuộc Giai đoạn 2."
+  canRequestCorrection: Boolean!
+  isSelf: Boolean!
+  callerRole: Role!
+}
+
+# -----------------------------------------------------------------------------
+# PHẢ ĐỒ — TREE PROJECTION
+# -----------------------------------------------------------------------------
+
+"""
+Đồ thị **phẳng** (`nodes` + `edges`) cho canvas React Flow — song song với
+`GET /api/v1/tree` bên REST, cùng ngữ nghĩa.
+
+Dùng `tree` khi cần nạp cả nhánh để vẽ; dùng `person { children { children } }` khi cần
+cấu trúc lồng theo hình dạng tự chọn.
+"""
+type TreeProjection {
+  root: Person!
+  nodes: [TreeNode!]!
+  """
+  Chỉ chứa cạnh mà **cả hai đầu** đều nằm trong `nodes`. Cạnh có một đầu bị lọc vì phân tầng
+  sẽ không xuất hiện — cây mà Khách thấy có thể **đứt đoạn** một cách hợp lệ.
+  """
+  edges: [TreeEdge!]!
+  meta: TreeMeta!
+}
+
+type TreeNode {
+  id: UUID!
+  person: Person!
+  "Khoảng cách đời từ gốc: `0` là gốc, dương là đời dưới, **âm là đời trên**."
+  depth: Int!
+  parentIds: [UUID!]!
+  spouseIds: [UUID!]!
+  childCount: Int!
+  "`true` ⇒ còn con cháu **chưa nạp** vì chạm `depth` hoặc `maxNodes`. FE hiện nút mở rộng."
+  hasMoreDescendants: Boolean!
+  badges: [PersonBadge!]!
+}
+
+type TreeEdge {
+  id: ID!
+  source: UUID!
+  target: UUID!
+  relType: RelType!
+  heirKind: HeirKind
+  spouseOrder: Int
+  "Có giá trị ⇒ quan hệ **đã kết thúc**; canvas nên vẽ nét đứt."
+  validTo: Date
+}
+
+type TreeMeta {
+  depth: Int!
+  direction: TreeDirection!
+  nodeCount: Int!
+  edgeCount: Int!
+  "`true` ⇒ projection **đã bị cắt** vì chạm `maxNodes`. Đừng coi là đã nhận đủ cây."
+  truncated: Boolean!
+  truncatedNodeIds: [UUID!]!
+  generatedAt: DateTime!
+  fromCache: Boolean!
+}
+
+# -----------------------------------------------------------------------------
+# DANH XƯNG — KINSHIP
+# -----------------------------------------------------------------------------
+
+"""
+Kết quả tra **danh xưng** — cách `from` gọi `to`, kèm bằng chứng qua tổ chung gần nhất (LCA).
+
+Danh xưng đến từ dữ liệu `kinship_rule_set`, **không hard-code** (FR-1.3a).
+`title` `null` cùng `status` khác `RESOLVED` **không phải lỗi hệ thống** — FE hiện thông điệp
+theo `status`.
+"""
+type KinshipResult {
+  status: KinshipStatus!
+  from: Person!
+  to: Person!
+  "**Danh xưng**, ví dụ `Bác họ`, `Cô ruột`, `Chú`. Luôn tiếng Việt — đây là dữ liệu nghiệp vụ."
+  title: String
+  "Danh xưng chiều ngược lại, ví dụ `Cháu`."
+  reciprocalTitle: String
+  """
+  Diễn giải tiếng Anh gần đúng cho giao diện EN. **Chỉ tham khảo** — hệ danh xưng Việt
+  không ánh xạ 1–1 sang tiếng Anh.
+  """
+  titleEn: String
+  facts: RelationFacts
+  lca: LcaInfo
+  "Đường quan hệ từ `from` lên LCA rồi xuống `to` — vẽ ra để người dùng tự kiểm chứng."
+  path: [KinshipPathStep!]!
+  "Bộ luật đã dùng — truy vết khi dòng họ báo danh xưng sai."
+  ruleSet: KinshipRuleSet
+  "Luật cụ thể đã khớp."
+  matchedRule: KinshipRule
+  ruleSetChain: [RuleScope!]!
+  cached: Boolean!
+}
+
+"Dữ kiện quan hệ chuẩn hoá — đầu vào của rule engine danh xưng."
+type RelationFacts {
+  """
+  `distFrom - distTo` tính tới LCA: **dương** = `to` ở đời TRÊN (bố, bác, ông…),
+  `0` = cùng đời, **âm** = `to` ở đời DƯỚI (con, cháu, chắt…).
+  Quy ước dấu do `V3__kinship_rules.sql` định nghĩa; 111 luật đã seed theo đúng nó.
+  """
+  genDelta: Int!
+  side: RelationSide!
+  targetGender: Gender!
+  "Vai trên/dưới **trong cùng đời** — phân biệt `bác` (anh của cha) với `chú` (em của cha)."
+  isElder: Boolean
+  "Quan hệ đi qua hôn nhân (dâu/rể/thông gia) chứ không thuần huyết thống."
+  throughMarriage: Boolean!
+  "Đường quan hệ có ít nhất một cạnh `PARENT_ADOPT`."
+  throughAdoption: Boolean!
+  """
+  Bậc bàng hệ `min(dist_a, dist_b)` — suy thẳng từ LCA.
+  `0` = trực hệ · `1` = ruột · `2` = họ (con chú con bác) · `>=3` = họ xa.
+  Khớp cột `kinship_rule.collateral_degree` (migration V3).
+  """
+  collateralDegree: Int
+}
+
+"Tổ chung gần nhất — kết quả truy vấn LCA bằng Cypher trên Apache AGE."
+type LcaInfo {
+  person: Person
+  "Số bậc từ `from` lên tới LCA."
+  distanceFrom: Int!
+  "Số bậc từ `to` lên tới LCA."
+  distanceTo: Int!
+}
+
+type KinshipPathStep {
+  person: Person
+  """
+  Tên hiển thị. Với người còn sống bị ẩn theo phân tầng, backend trả nhãn chung thay vì tên thật
+  nhưng **vẫn giữ chặng** — bỏ chặng sẽ làm sai độ dài đường quan hệ.
+  """
+  displayName: String
+  direction: PathDirection!
+  viaRelType: RelType
+}
+
+# -----------------------------------------------------------------------------
+# BỘ QUY TẮC DANH XƯNG — KINSHIP RULE ENGINE
+# -----------------------------------------------------------------------------
+
+"""
+Bộ quy tắc danh xưng (FR-1.3a). Hợp nhất theo `DEFAULT → REGION → CLAN → BRANCH`,
+cấp sau **ghi đè** cấp trước khi trùng khoá luật.
+
+Chỉ **đọc** qua GraphQL. Sửa bằng `PUT /api/v1/kinship-rules` và **chỉ Hội đồng Tộc biểu**.
+"""
+type KinshipRuleSet {
+  id: UUID!
+  scope: RuleScope!
+  name: String
+  region: Region
+  branch: Branch
+  parent: KinshipRuleSet
+  "Bộ `DEFAULT` do hệ thống seed (**miền Bắc**) — không sửa được."
+  isSystemDefault: Boolean!
+  rules: [KinshipRule!]!
+  version: Int!
+  updatedAt: DateTime
+}
+
+"""
+Một luật danh xưng. **Khoá khớp** là bộ `(genDelta, side, gender, isElder)`;
+nhiều luật cùng khớp thì `priority` **nhỏ hơn thắng**.
+"""
+type KinshipRule {
+  id: UUID!
+  "Chênh lệch đời cần khớp — cùng quy ước dấu với `RelationFacts.genDelta` (dương = đời trên)."
+  genDelta: Int!
+  side: RelationSide!
+  "Giới tính **người được gọi**. `null` = áp cho mọi giới."
+  gender: Gender
+  "Vai trên/dưới trong cùng đời. `null` = luật không phân biệt."
+  isElder: Boolean
+  "Áp cho một bậc bàng hệ cụ thể; `null` = mọi bậc. `0` = trực hệ · `1` = ruột · `2` = họ."
+  collateralDegree: Int
+  "Áp riêng cho quan hệ qua hôn nhân (dâu/rể). `null` = không phân biệt."
+  throughMarriage: Boolean
+  "**Danh xưng kết quả**, ví dụ `Bác họ`."
+  title: String!
+  reciprocalTitle: String
+  "Số **nhỏ hơn thắng**."
+  priority: Int!
+  note: String
+}
+
+"Bộ luật đã hợp nhất cho một chi — chính là bộ mà `kinship` thực sự dùng."
+type EffectiveKinshipRuleSet {
+  branch: Branch!
+  "Các bộ luật đã hợp nhất, theo thứ tự áp dụng."
+  chain: [KinshipRuleSet!]!
+  rules: [EffectiveKinshipRule!]!
+}
+
+type EffectiveKinshipRule {
+  rule: KinshipRule!
+  inheritedFromScope: RuleScope!
+  inheritedFromRuleSet: KinshipRuleSet!
+  "`true` ⇒ luật này đã bị cấp thấp hơn ghi đè và **không** còn hiệu lực; trả về để UI hiện lịch sử."
+  overridden: Boolean!
+}
+
+# -----------------------------------------------------------------------------
+# SỰ KIỆN & THÔNG BÁO
+# -----------------------------------------------------------------------------
+
+"Sự kiện giỗ/lễ. Ngày **âm** là dữ liệu gốc; ngày dương là kết quả quy đổi của backend."
+type Event {
+  id: UUID!
+  eventType: EventType!
+  "Tên hiển thị do backend sinh theo `Accept-Language` — đừng ghép chuỗi ở client."
+  title: String!
+  "Nhân khẩu chủ thể. `null` với sự kiện cấp dòng họ không gắn cá nhân."
+  person: Person
+  lunarDate: LunarDate!
+  """
+  Ngày **dương** của lần xảy ra sắp tới (Hồ Ngọc Đức, GMT+7, có xử lý tháng nhuận).
+  FE **không tự quy đổi**.
+  """
+  nextOccurrenceSolar: Date
+  nextOccurrenceLunarYear: Int
+  "Số ngày còn lại tính từ hôm nay (GMT+7)."
+  daysUntil: Int
+  "Chi/ngành nhận nhắc, gồm cả các nhánh con."
+  targetBranch: Branch
+  "`true` ⇒ cấp **toàn dòng họ**: mọi thành viên đều nhận nhắc, bỏ qua `targetBranch`."
+  isClanLevel: Boolean!
+  "Các mốc nhắc trước, tính bằng ngày. Mặc định `[7, 3, 1]` theo FR-2.2."
+  reminderOffsets: [Int!]!
+  note: String
+}
+
+"""
+Một dòng trong hộp thư in-app. In-app là **nguồn chân lý** của thông báo;
+Web Push chỉ là bản đẩy thêm và có thể không tới nơi.
+"""
+type Notification {
+  id: UUID!
+  category: NotificationCategory!
+  title: String!
+  "Nội dung. **Không bao giờ** chứa dữ liệu Tầng 3 — thông báo có thể hiện trên màn hình khoá."
+  body: String
+  event: Event
+  person: Person
+  "Đường dẫn tương đối trong ứng dụng để mở khi bấm."
+  deepLink: String
+  createdAt: DateTime!
+  isRead: Boolean!
+  readAt: DateTime
+  "Mốc nhắc đã sinh ra thông báo này (7 / 3 / 1)."
+  reminderOffsetDays: Int
+}
+
+"Người đang đăng nhập."
+type Viewer {
+  role: Role!
+  "Nhân khẩu tương ứng trong gia phả (`keycloak_sub → app_user → person`). `null` nếu chưa map."
+  person: Person
+  "Các chi/ngành thuộc phạm vi quản trị của người này (`BRANCH_HEAD`)."
+  branchScope: [Branch!]!
+  "Số thông báo chưa đọc — cho badge chuông."
+  unreadNotificationCount: Int!
+  locale: String!
+}
+
+# -----------------------------------------------------------------------------
+# PHÂN TRANG & BỘ LỌC
+# -----------------------------------------------------------------------------
+
+"""
+Phân trang offset, **thống nhất với REST** (`page` 0-based + `size`).
+Cố ý không dùng Relay cursor connection: quy mô hàng vạn nhân khẩu không cần, và giữ một kiểu
+phân trang duy nhất cho cả REST lẫn GraphQL thì FE đỡ phải viết hai lớp xử lý.
+"""
+input PageInput {
+  "Số trang, **bắt đầu từ 0**."
+  page: Int = 0
+  size: Int = 20
+  "`field,asc|desc`, ví dụ `generation,asc`."
+  sort: String
+}
+
+type PageInfo {
+  page: Int!
+  size: Int!
+  "Tổng số phần tử **sau khi lọc phân tầng riêng tư** — cố ý không phản ánh dữ liệu bị ẩn."
+  totalElements: Int!
+  totalPages: Int!
+  hasNext: Boolean!
+  sort: String
+}
+
+type PersonPage {
+  items: [Person!]!
+  page: PageInfo!
+}
+
+type EventPage {
+  items: [Event!]!
+  page: PageInfo!
+}
+
+type NotificationPage {
+  items: [Notification!]!
+  page: PageInfo!
+  "**Tổng số chưa đọc của toàn hộp thư**, không phụ thuộc bộ lọc hay trang hiện tại."
+  unreadCount: Int!
+}
+
+input PersonFilter {
+  generation: Int
+  "Lọc trong một chi/ngành **và toàn bộ nhánh con** của nó."
+  branchId: UUID
+  gender: Gender
+  "Khách gửi `true` luôn nhận danh sách rỗng."
+  isAlive: Boolean
+  nativePlace: String
+  "Chỉ `ADMIN`/`COUNCIL`. Vai khác gửi `true` sẽ nhận lỗi `FORBIDDEN`."
+  includeDeleted: Boolean = false
+}
+
+input EventFilter {
+  "Ngày dương bắt đầu khoảng lọc (bao gồm)."
+  from: Date
+  "Ngày dương kết thúc khoảng lọc (bao gồm)."
+  to: Date
+  "Đường tắt: lấy sự kiện trong N ngày tới kể từ hôm nay (GMT+7)."
+  upcomingDays: Int
+  eventTypes: [EventType!]
+  branchId: UUID
+  personId: UUID
+}
+
+# -----------------------------------------------------------------------------
+# QUERY ROOT
+# -----------------------------------------------------------------------------
+
+"""
+**Chỉ có Query — schema này không có Mutation.**
+Mọi thao tác ghi (thêm/sửa/xóa mềm nhân khẩu, sửa bộ luật danh xưng, đánh dấu đã đọc,
+đăng ký Web Push) đi qua REST, nơi đã có RFC 7807, `ETag`/`If-Match`, và luồng xác nhận
+kỵ húy hai bước.
+"""
+type Query {
+  """
+  Một nhân khẩu. Trả `null` khi không tồn tại **hoặc** người gọi không được phép biết là nó tồn tại
+  (người còn sống với Khách, bản ghi đã xóa mềm với người không phải quản trị) —
+  hai trường hợp cố ý không phân biệt được, tương đương `404` bên REST.
+  """
+  person(id: UUID!): Person
+
+  "Danh sách nhân khẩu theo bộ lọc."
+  persons(filter: PersonFilter, page: PageInput): PersonPage!
+
+  """
+  Tìm kiếm **không dấu** (FR-4.4) — `"nguyen van duc"` khớp `"Nguyễn Văn Đức"`.
+  Tìm trên **mọi lớp tên**, không chỉ tên chính.
+  """
+  searchPersons(q: String!, filter: PersonFilter, page: PageInput): PersonPage! @costly(weight: 10)
+
+  """
+  Projection cây phẳng cho canvas. `depth` tối đa 10, `maxNodes` tối đa 2000;
+  vượt trần trả lỗi `DEPTH_LIMIT_EXCEEDED`.
+  """
+  tree(
+    rootId: UUID!
+    depth: Int = 3
+    direction: TreeDirection = DESCENDANTS
+    includeSpouses: Boolean = true
+    maxNodes: Int = 500
+  ): TreeProjection! @costly(weight: 50)
+
+  "**Danh xưng** giữa hai người — tương đương `GET /api/v1/kinship`."
+  kinship(from: UUID!, to: UUID!): KinshipResult! @costly(weight: 15)
+
+  "Các bộ quy tắc danh xưng **thô** (chưa hợp nhất)."
+  kinshipRuleSets(scope: RuleScope, region: Region, branchId: UUID): [KinshipRuleSet!]!
+
+  "Bộ luật **đã hợp nhất** đang hiệu lực cho một chi — chính là bộ mà `kinship` dùng."
+  effectiveKinshipRuleSet(branchId: UUID!): EffectiveKinshipRuleSet!
+
+  "Một chi/ngành. Bỏ trống `id` để lấy chi gốc (`root`)."
+  branch(id: UUID): Branch
+
+  "Cây chi/ngành. `rootPath` là `ltree` path để lấy một nhánh con."
+  branches(rootPath: String): [Branch!]!
+
+  "Giỗ, chạp mả, lễ dòng họ."
+  events(filter: EventFilter, page: PageInput): EventPage!
+
+  "Hộp thư in-app của **chính người đang đăng nhập** — cố ý không có tham số `userId`."
+  notifications(status: ReadStatus = ALL, category: NotificationCategory, page: PageInput): NotificationPage!
+
+  "Người đang đăng nhập. Trả `null` với Khách."
+  me: Viewer
+}

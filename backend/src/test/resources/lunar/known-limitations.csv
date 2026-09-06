@@ -1,0 +1,23 @@
+# known-limitations.csv - GIOI HAN DA BIET cua ban hien thuc, ghi lai de khong ai tuong nham la dung.
+#
+# Thuat toan Ho Ngoc Duc ban rut gon dung cong thuc thien van xap xi (Meeus, do chinh xac ~15 phut).
+# Bang tra [HND-TABLE] cua chinh Ho Ngoc Duc duoc tinh bang chuong trinh chinh xac hon. O vai moc,
+# thoi diem Soc (hoac thoi diem tiet khi) roi qua sat nua dem dia phuong nen hai ben lech nhau 1 ngay.
+#
+# Bo test KHONG khang dinh dong nao o day la dung; no khang dinh hanh vi HIEN TAI dung nhu ghi trong
+# cot impl_result. Neu sau nay nang do chinh xac len (VSOP87/ELP hoac nhung bang tra), test se do va
+# nguoi sua PHAI cap nhat file nay - do la muc dich.
+#
+# Pham vi anh huong thuc te: khong co moc nao truoc nam 2054 o mui gio +7. Ngay gio cua nguoi da mat
+# (tinh cho nam hien tai va vai chuc nam toi) khong bi anh huong.
+kind,solar_date,authority,authority_result,impl_result,note
+lunar_month_start,2054-05-07,HND-TABLE,4/1/2054,3/30/2054,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+lunar_month_start,2072-12-09,HND-TABLE,11/1/2072,10/30/2072,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+lunar_month_start,2077-11-15,HND-TABLE,10/1/2077,9/30/2077,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+lunar_month_start,2130-05-07,HND-TABLE,4/1/2130,3/30/2130,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+lunar_month_start,2150-05-26,HND-TABLE,5/1/2150,4/30/2150,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+lunar_month_start,2159-05-17,HND-TABLE,4/1/2159,3/30/2159,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+lunar_month_start,2175-01-22,HND-TABLE,1/1/2175,12/30/2174,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+lunar_month_start,2199-01-26,HND-TABLE,1/1/2199,12/30/2198,diem Soc roi sat nua dem GMT+7; bang tra va thuat toan rut gon lech 1 ngay
+solar_term,2020-12-07,HKO,2020-12-07,2020-12-06,Dai tuyet 2020: thuat toan rut gon tinh ra 2020-12-06 23:49 gio HK, som hon moc that ~11 phut
+historical_calendar,1808-01-28,HND-TABLE,1/1/1808,khong tai lap duoc,giai doan 1645-1812 VN dung lich Dai Thong rieng - khong the tai lap bang thuat toan hien dai o bat ky mui gio nao

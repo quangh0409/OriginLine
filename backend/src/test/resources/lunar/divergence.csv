@@ -1,0 +1,46 @@
+# divergence.csv - CAC KHOANG NGAY LICH AM VIET NAM (GMT+7) LECH LICH TRUNG QUOC (GMT+8).
+#
+# Day la bo test gia tri nhat cua W4: neu hien thuc nham mui gio (+8 thay vi +7) thi moi fixture
+# khac van xanh, chi rieng file nay do.
+# NGUON DU LIEU / DATA PROVENANCE
+#  [HND-TABLE] Bang tra am lich Viet Nam cua Ho Ngoc Duc (amlich.js v0.5, bang TK19-TK22, 1800-2199):
+#              https://raw.githubusercontent.com/nukeviet/NukeViet-2.0/master/js/amlich.js
+#  [HND-ALGO]  Thuat toan thien van Ho Ngoc Duc (calrules), doi chieu ban port Python:
+#              https://raw.githubusercontent.com/vanng822/camlich/master/cal/amlich.py (c) 2006 Ho Ngoc Duc.
+#  [HKO]       Hong Kong Observatory, Gregorian-Lunar Calendar Conversion Table (lich TQ, UTC+8):
+#              https://www.hko.gov.hk/en/gts/time/calendar/text/files/T<YYYY>e.txt
+#
+# verified: yes = khop it nhat 2 nguon doc lap; derived = suy ra tu nguon kem lap luan o cot note;
+#           no = CHUA XAC MINH, khong duoc dung de assert.
+#
+# Cot vn_* lay tu [HND-TABLE] (va da doi chieu voi [HND-ALGO] tz=+7).
+# Cot cn_* lay tu [HKO] - co quan chinh thuc cua lich Trung Quoc, hoan toan doc lap voi nguon VN.
+# Moi dong = mot thang am lich bat dau som hon 1 ngay o VN so voi TQ (tru nam 1985, lech ca thang).
+# Bo test phai kiem: tai from_solar, converter(+7) = vn_* VA converter(+8) = cn_*.
+# Chi lay cac nam tu 1968 tro di - truoc 1968 mien Bac dung mui gio thu 8 nen phep so sanh
+# "+7 vs +8" khong con y nghia lich su (xem [HND-HIST] va VietnamLunarZone).
+from_solar,to_solar,days,vn_month,vn_leap,vn_day,cn_month,cn_leap,cn_day,kind,note,vn_source,cn_source,verified
+1968-01-29,1968-02-27,30,1,false,1,12,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1969-02-16,1969-03-17,30,1,false,1,12,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1984-05-30,1984-06-28,30,5,false,1,4,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1984-11-23,1985-04-19,148,11,false,1,10,true,1,month_name_shift,VN va TQ dat thang nhuan khac nhau nen so hieu thang lech ca thang,HND-TABLE,HKO,yes
+1986-12-01,1986-12-30,30,11,false,1,10,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1995-09-24,1995-10-23,30,8,true,1,8,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1996-07-15,1996-08-13,30,6,false,1,5,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1996-12-10,1997-01-08,30,11,false,1,10,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1997-10-01,1997-10-30,30,9,false,1,8,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+1997-12-29,1998-01-27,30,12,false,1,11,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2006-06-25,2006-07-24,30,6,false,1,5,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2007-02-17,2007-03-18,30,1,false,1,12,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2008-11-27,2008-12-26,30,11,false,1,10,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2009-03-26,2009-04-24,30,3,false,1,2,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2018-11-07,2018-12-06,30,10,false,1,9,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2019-03-06,2019-04-04,30,2,false,1,1,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2020-12-14,2021-01-12,30,11,false,1,10,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2030-02-02,2030-03-03,30,1,false,1,12,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2031-04-21,2031-05-20,30,3,true,1,3,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2032-03-11,2032-04-09,30,2,false,1,1,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2034-09-12,2034-10-11,30,8,false,1,7,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2037-04-15,2037-05-14,30,3,false,1,2,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2038-04-04,2038-05-03,30,3,false,1,2,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes
+2039-12-15,2040-01-13,30,11,false,1,10,false,30,day_shift,thang am lich VN bat dau som hon TQ 1 ngay,HND-TABLE,HKO,yes

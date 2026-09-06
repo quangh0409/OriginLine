@@ -1,0 +1,57 @@
+{
+  "cleanupPeriodDays": 30,
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)",
+      "Bash(./mvnw:*)",
+      "Bash(mvn:*)",
+      "Bash(./gradlew:*)",
+      "Bash(gradle:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm install:*)",
+      "Bash(npx:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker ps:*)",
+      "Bash(psql:*)",
+      "Bash(pg_dump:*)",
+      "Bash(flyway:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)"
+    ],
+    "ask": [],
+    "defaultMode": "acceptEdits"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE_PATH=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.file_path // empty'); if [ -n \"$FILE_PATH\" ] && echo \"$FILE_PATH\" | grep -qE '\\.(env|pem|key|secret|credentials)$'; then echo 'BLOCKED: refusing to write secrets (.env, .pem, .key, .secret, .credentials)' >&2; exit 2; fi; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Mirrors src/styles/tokens.ts. Kept as CSS custom properties too so
+       non-Tailwind, non-AntD code (e.g. the service worker's notification
+       styling hints) can reference the same palette without a JS import. */
+    --color-primary: #8c2d19;
+    --color-primary-dark: #661e0f;
+    --color-primary-light: #fbeee9;
+    --color-bg-page: #f8f6f2;
+    --color-bg-card: #ffffff;
+    --color-accent: #d97706;
+    --color-text-main: #2b2825;
+    --color-text-muted: #5e564d;
+    --color-secondary: #2c3e50;
+    --color-border: #e6dfd5;
+  }
+
+  html {
+    /* Vietnamese diacritics (including stacked tone marks like ữ, ỹ, ặ)
+       render correctly in modern browsers without extra CSS, but we pin
+       text-rendering for crisper combining-mark hinting on small mobile
+       screens, which is this product's primary form factor. */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--color-bg-page);
+    color: var(--color-text-main);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-noto-serif), Georgia, "Times New Roman", serif;
+  }
+}

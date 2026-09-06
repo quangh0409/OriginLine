@@ -1,0 +1,37 @@
+# leap-months.csv - Tat ca nam am lich NHUAN trong 1990-2040 (lich Viet Nam GMT+7).
+# Nam khong co trong file nay la nam thuong (12 thang) - bo test khang dinh ca hai chieu.
+# NGUON DU LIEU / DATA PROVENANCE
+#  [HND-TABLE] Bang tra am lich Viet Nam cua Ho Ngoc Duc (amlich.js v0.5, bang TK19/TK20/TK21/TK22,
+#              phu 1800-2199). Ban sao lay tai https://raw.githubusercontent.com/nukeviet/NukeViet-2.0/master/js/amlich.js
+#              Ho Ngoc Duc ghi ro bang nay do chuong trinh Java chinh xac hon cua ong tinh san.
+#  [HND-ALGO]  Thuat toan thien van cua Ho Ngoc Duc (calrules), doi chieu voi ban port Python
+#              https://raw.githubusercontent.com/vanng822/camlich/master/cal/amlich.py (c) 2006 Ho Ngoc Duc.
+#  [HKO]       Hong Kong Observatory - Gregorian-Lunar Calendar Conversion Table (lich Trung Quoc, UTC+8):
+#              https://www.hko.gov.hk/en/gts/time/calendar/text/files/T<YYYY>e.txt
+#  [HND-HIST]  Ho Ngoc Duc, "Am lich Viet Nam qua cac thoi ky lich su" (histcal) - lich su mui gio.
+#
+# Cot verified: yes = doi chieu duoc voi it nhat 2 nguon doc lap; derived = suy ra tu nguon co
+#               kem lap luan ghi o cot note; no = CHUA XAC MINH DUOC, khong duoc dung de assert.
+#
+# china_leap_month lay tu [HKO]: thang nhuan cua lich Trung Quoc cung nam am lich do.
+# Nam 1995 va 2031: cung so thang nhuan nhung thang nhuan VN bat dau som hon 1 ngay (xem divergence.csv).
+lunar_year,leap_month,leap_month_start_solar,leap_month_days,china_leap_month,china_leap_start_solar,source,verified
+1990,5,1990-06-23,29,5,1990-06-23,HND-TABLE+HND-ALGO+HKO,yes
+1993,3,1993-04-22,29,3,1993-04-22,HND-TABLE+HND-ALGO+HKO,yes
+1995,8,1995-09-24,30,8,1995-09-25,HND-TABLE+HND-ALGO+HKO,yes
+1998,5,1998-06-24,29,5,1998-06-24,HND-TABLE+HND-ALGO+HKO,yes
+2001,4,2001-05-23,29,4,2001-05-23,HND-TABLE+HND-ALGO+HKO,yes
+2004,2,2004-03-21,29,2,2004-03-21,HND-TABLE+HND-ALGO+HKO,yes
+2006,7,2006-08-24,29,7,2006-08-24,HND-TABLE+HND-ALGO+HKO,yes
+2009,5,2009-06-23,29,5,2009-06-23,HND-TABLE+HND-ALGO+HKO,yes
+2012,4,2012-05-21,29,4,2012-05-21,HND-TABLE+HND-ALGO+HKO,yes
+2014,9,2014-10-24,29,9,2014-10-24,HND-TABLE+HND-ALGO+HKO,yes
+2017,6,2017-07-23,30,6,2017-07-23,HND-TABLE+HND-ALGO+HKO,yes
+2020,4,2020-05-23,29,4,2020-05-23,HND-TABLE+HND-ALGO+HKO,yes
+2023,2,2023-03-22,29,2,2023-03-22,HND-TABLE+HND-ALGO+HKO,yes
+2025,6,2025-07-25,29,6,2025-07-25,HND-TABLE+HND-ALGO+HKO,yes
+2028,5,2028-06-23,29,5,2028-06-23,HND-TABLE+HND-ALGO+HKO,yes
+2031,3,2031-04-21,30,3,2031-04-22,HND-TABLE+HND-ALGO+HKO,yes
+2033,11,2033-12-22,29,11,2033-12-22,HND-TABLE+HND-ALGO+HKO,yes
+2036,6,2036-07-23,30,6,2036-07-23,HND-TABLE+HND-ALGO+HKO,yes
+2039,5,2039-06-22,29,5,2039-06-22,HND-TABLE+HND-ALGO+HKO,yes

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kế Hoạch Implement Giai Đoạn 1 — Hệ Thống Gia Phả Dòng Họ</title>
+<style>
+  :root {
+    --primary: #8c2d19; --primary-dark: #661e0f; --primary-light: #fbeee9;
+    --secondary: #2c3e50; --text-main: #2b2825; --text-muted: #5e564d;
+    --bg-page: #f8f6f2; --bg-card: #ffffff; --border: #e6dfd5; --border-dark: #cdbeaa;
+    --accent: #d97706; --green: #15803d; --green-bg: #eaf6ee; --blue: #1d4ed8; --blue-bg: #eaf0fb;
+    --red: #b91c1c; --red-bg: #fbeae9; --amber-bg: #fdf6e7;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg-page); color: var(--text-main); line-height: 1.62; padding: 30px 15px; }
+  .container { max-width: 1120px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden; }
+  .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; padding: 36px 35px 30px; border-bottom: 3px solid var(--accent); }
+  .badge { display: inline-block; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 12px; }
+  .header h1 { font-size: 23px; font-weight: 800; line-height: 1.3; margin-bottom: 6px; text-wrap: balance; }
+  .header p { font-size: 13.5px; opacity: 0.92; color: #fcece8; }
+  .meta-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;
+    background: #f1ebd8; padding: 14px 35px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); }
+  .meta-bar strong { color: var(--text-main); }
+  .toc { background: #faf8f5; border-bottom: 1px solid var(--border); padding: 20px 35px; font-size: 13px; column-count: 2; column-gap: 30px; }
+  .toc a { color: var(--primary); text-decoration: none; display: block; margin-bottom: 5px; }
+  .toc a:hover { text-decoration: underline; }
+  .toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .content { padding: 35px; }
+  h2 { font-size: 17px; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px;
+    margin: 36px 0 12px; text-transform: uppercase; letter-spacing: 0.5px; scroll-margin-top: 20px; text-wrap: balance; }
+  h2:first-of-type { margin-top: 0; }
+  h3 { font-size: 14.5px; color: var(--secondary); margin: 22px 0 8px; }
+  p { margin-bottom: 12px; font-size: 14px; }
+  ul, ol { margin: 0 0 16px 22px; font-size: 14px; }
+  li { margin-bottom: 5px; }
+  .lead { background: var(--primary-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 16px 20px; font-size: 14px; margin: 8px 0 4px; }
+  .card { background: #faf8f5; border: 1px solid var(--border); border-radius: 6px; padding: 16px 18px; margin-bottom: 16px; }
+  .card-title { font-size: 14.5px; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .table-responsive { overflow-x: auto; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+  th, td { padding: 9px 11px; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--secondary); color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #faf7f0; }
+  code { background: #ece5da; padding: 1px 6px; border-radius: 4px; font-family: Consolas, Monaco, monospace; font-size: 12px; color: var(--primary-dark); }
+  .id { font-family: Consolas, Monaco, monospace; font-weight: 700; color: var(--primary-dark); white-space: nowrap; }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 2px 7px; border-radius: 4px; }
+  .tag-in { background: var(--green-bg); color: var(--green); border: 1px solid #b3d9c1; }
+  .tag-out { background: var(--red-bg); color: var(--red); border: 1px solid #e7b7b3; }
+  .tag-must { background: var(--blue-bg); color: var(--blue); border: 1px solid #b8c8ee; }
+  .code-block { background: #1e2430; color: #e2e8f0; font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12px; line-height: 1.55; padding: 18px 20px; border-radius: 6px; overflow-x: auto;
+    margin: 12px 0 20px; border-left: 4px solid var(--accent); white-space: pre; }
+  .code-block .c { color: #7f9cc0; }
+  .note { font-size: 12.5px; color: var(--text-muted); border-left: 3px solid var(--border-dark); padding-left: 10px; margin: 8px 0; }
+  .footer { text-align: center; padding: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); background: #fbf9f6; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* --- bổ sung: mã hoá thông tin thật, không trang trí --- */
+  .pill { display: inline-block; font-family: Consolas, Monaco, monospace; font-size: 11px; font-weight: 700;
+    letter-spacing: .5px; padding: 3px 9px; border-radius: 4px; background: var(--primary); color: #fff; }
+  .pill-fe { background: var(--secondary); }
+  .warn { background: var(--amber-bg); border: 1px solid #e6cf9a; border-left: 4px solid var(--accent);
+    border-radius: 6px; padding: 15px 18px; margin-bottom: 16px; }
+  .warn-title { font-size: 14px; font-weight: 700; color: var(--primary-dark); margin-bottom: 7px; }
+  .warn p { font-size: 13.5px; margin-bottom: 8px; }
+  .warn p:last-child { margin-bottom: 0; }
+  .rec { background: var(--bg-card); border: 1px solid var(--border-dark); border-radius: 5px;
+    padding: 11px 14px; font-size: 13.5px; margin-top: 10px; }
+  .rec strong { color: var(--primary); }
+  .checklist { list-style: none; margin-left: 0; }
+  .checklist li { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; margin-bottom: 8px; }
+  .checklist li::before { content: "\2610"; color: var(--primary); font-size: 15px; line-height: 1; flex: none; }
+  .qlist { margin-left: 20px; font-size: 13.5px; }
+  .qlist li { margin-bottom: 8px; }
+  .crit { background: var(--red-bg); border: 1px solid #e7b7b3; border-radius: 6px; padding: 13px 16px; font-size: 13.5px; margin: 14px 0; }
+  .milestone { font-weight: 700; color: var(--primary-dark); }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .toc { column-count: 1; } .content, .header, .meta-bar, .toc { padding-left: 20px; padding-right: 20px; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="badge">Implementation Plan — Giai đoạn 1</div>
+    <h1>KẾ HOẠCH IMPLEMENT GIAI ĐOẠN 1<br>Core &amp; Phả Đồ + MVP</h1>
+    <p>Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ — kế hoạch code Backend &amp; Frontend</p>
+  </div>
+
+  <div class="meta-bar">
+    <div><strong>Nguồn:</strong> BA v2.0 §11 · TDD v1.0 §3, §5–8, §12</div>
+    <div><strong>Ưu tiên tài liệu:</strong> TDD → BA</div>
+    <div><strong>Thời lượng:</strong> 4 sprint × 2 tuần ≈ 2 tháng</div>
+    <div><strong>Trạng thái:</strong> 7 câu hỏi mở đã chốt — sẵn sàng Sprint 1</div>
+  </div>
+
+  <div class="toc">
+    <a href="#s0">0. Phạm vi chốt</a>
+    <a href="#s1">1. Quyết định đã chốt</a>
+    <a href="#s2">2. Quyết định kỹ thuật</a>
+    <a href="#s3">3. Backend — 8 workstream</a>
+    <a href="#s4">4. Frontend — 10 workstream</a>
+    <a href="#s5">5. Contract-first</a>
+    <a href="#s6">6. Lịch 4 sprint</a>
+    <a href="#s7">7. Bẫy kỹ thuật đã biết</a>
+    <a href="#s8">8. Tiêu chí ra Giai đoạn 1</a>
+    <a href="#s9">9. Dữ liệu đối chiếu lịch âm</a>
+    <a href="#s10">10. Sinh dữ liệu giả</a>
+    <a href="#s11">11. Việc còn treo</a>
+  </div>
+
+  <div class="content">
+
+    <div class="lead">
+      <strong>Mục tiêu kết thúc giai đoạn:</strong> một MVP <em>dùng thật được</em> — cây phả đồ tương tác,
+      tra danh xưng đúng văn hoá, hồ sơ nhân khẩu đa lớp, và nhắc giỗ tự động.
+      Không phải một bản demo kỹ thuật.<br><br>
+      <strong>Toàn bộ 7 câu hỏi mở đã được chốt</strong> — xem §1. Kênh thông báo MVP đổi từ Zalo
+      sang <strong>thông báo trong ứng dụng</strong>, gỡ được phụ thuộc hợp đồng ngoài.
+    </div>
+
+    <h2 id="s0">0. Phạm Vi Chốt</h2>
+
+    <h3>Trong Giai đoạn 1 <span class="tag tag-in">In scope</span></h3>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr><th style="width:90px;">Mã</th><th>Nội dung</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="id">FR-1.1</span></td><td>Cây phân cấp chi/ngành/cành/nhánh; phân biệt con ruột / con nuôi / dâu / rể</td></tr>
+          <tr><td><span class="id">FR-1.2</span></td><td>Quan hệ phức tạp: đa thê/đa phu, tái hôn, con riêng, tuyệt tự/kế tự, đích tôn/thừa tự</td></tr>
+          <tr><td><span class="id">FR-1.3</span></td><td>LCA + suy luận danh xưng</td></tr>
+          <tr><td><span class="id">FR-1.3a</span></td><td>Rule engine danh xưng cấu hình được (<code>DEFAULT → REGION → CLAN → BRANCH</code>)</td></tr>
+          <tr><td><span class="id">FR-1.4</span></td><td>Cây phân cấp + tỏa tròn + ma trận thế hệ; zoom / kéo-thả / thu gọn, lazy-load</td></tr>
+          <tr><td><span class="id">FR-1.5</span></td><td>Xóa mềm + audit versioning</td></tr>
+          <tr><td><span class="id">FR-1.6</span></td><td>Cảnh báo kỵ húy — <strong>đã chốt làm ở GĐ1</strong></td></tr>
+          <tr><td><span class="id">FR-1.8</span></td><td>Ghi nhận con gái &amp; bên ngoại ngang bằng con trai</td></tr>
+          <tr><td><span class="id">FR-2.1</span></td><td>Quy đổi Âm–Dương (thuật toán Hồ Ngọc Đức)</td></tr>
+          <tr><td><span class="id">FR-2.2</span></td><td>Nhắc trước 7 / 3 / 1 ngày — <strong>kênh MVP: thông báo in-app + Web Push</strong></td></tr>
+          <tr><td><span class="id">FR-2.5</span></td><td>Gửi bất đồng bộ có retry + DLQ</td></tr>
+          <tr><td><span class="id">FR-4.4</span></td><td>Tìm kiếm nhân khẩu có dấu / không dấu</td></tr>
+          <tr><td><span class="id">NFR-3</span></td><td>Phân tầng hiển thị người sống <span class="tag tag-must">Bắt buộc</span> — không thể ship MVP mà thiếu</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Ngoài Giai đoạn 1 <span class="tag tag-out">Out of scope</span></h3>
+    <p><span class="id">FR-1.7</span> GEDCOM · <span class="id">FR-1.9</span> thông gia ·
+    <span class="id">FR-2.3</span> phân loại lễ · <span class="id">FR-2.4</span> bản tin &amp; bảng vàng ·
+    <span class="id">FR-3.x</span> di sản / mộ phần / từ đường · <span class="id">FR-4.1</span> luồng duyệt đính chính đầy đủ ·
+    <span class="id">FR-4.2</span> quỹ họ · <span class="id">FR-4.3</span> báo cáo dân số học · <strong>Zalo OA/ZNS &amp; SMS — dời GĐ2, chưa có hợp đồng</strong>.</p>
+
+    <h2 id="s1">1. Quyết Định Đã Chốt</h2>
+
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th style="width:50px;">#</th><th style="width:26%;">Vấn đề</th><th>Quyết định</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Build tool</td><td><strong>Maven</strong></td></tr>
+          <tr><td>2</td><td>Repo layout</td><td><strong>Monorepo</strong> — <code>backend/</code> + <code>frontend/</code></td></tr>
+          <tr><td>3</td><td>Kênh thông báo MVP</td><td><strong>In-app + Web Push</strong> — Web Push đã duyệt đôn lên GĐ1; Zalo dời GĐ2</td></tr>
+          <tr><td>4</td><td>Dữ liệu đối chiếu lịch âm</td><td>Đề xuất ở <a href="#s9" style="color:var(--primary);">§9</a></td></tr>
+          <tr><td>5</td><td>Dữ liệu mẫu</td><td><strong>Sinh dữ liệu giả</strong> — đặc tả ở <a href="#s10" style="color:var(--primary);">§10</a></td></tr>
+          <tr><td>6</td><td>Bộ luật danh xưng DEFAULT</td><td><strong>Miền Bắc</strong></td></tr>
+          <tr><td>7</td><td>Kỵ húy &amp; phạm vi RBAC</td><td>Kỵ húy vào GĐ1 · RBAC chẻ đôi</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>1.3 — Kênh thông báo: hệ quả cần biết</h3>
+    <p>Đổi Zalo sang in-app <strong>gỡ được rủi ro lớn nhất của Sprint 4</strong> (phụ thuộc một hợp đồng
+    ngoài tầm kiểm soát). Kiến trúc không phải sửa: port <code>NotificationProvider</code> giữ nguyên,
+    MVP hiện thực <code>InAppProvider</code>, Zalo sau này chỉ là <strong>thêm một adapter</strong> —
+    đúng lý do đã chọn kiến trúc hexagonal.</p>
+
+    <div class="warn">
+      <div class="warn-title">Nhưng cần nói thẳng: in-app một mình không đạt mục tiêu của FR-2.2</div>
+      <p>Mục tiêu nghiệp vụ là <em>"con cháu xa quê được nhắc giỗ trước 3 ngày"</em> — mà người ta chỉ
+      thấy thông báo in-app khi <strong>chủ động mở web</strong>. Ai đã chủ động mở thì phần lớn đã nhớ
+      ngày giỗ rồi. Thông báo không tự tìm đến người nhận thì không còn là nhắc việc.</p>
+      <div class="rec"><strong>Đã duyệt: Web Push vào Giai đoạn 1.</strong> Không cần hợp đồng với ai
+      (chuẩn VAPID, miễn phí), PWA đã nằm trong phạm vi GĐ1, và nó đẩy thông báo ra thẳng màn hình điện
+      thoại — đúng đối tượng kiều bào dùng mobile. BA v2 xếp Web Push ở GĐ2, nhưng khi Zalo đã lùi thì
+      đôn lên là <em>đổi ngang</em>, không phải phình phạm vi.
+      <br><br><strong>Kênh MVP vì vậy là hai lớp:</strong> <code>InAppProvider</code> luôn ghi vào hộp thư
+      trong ứng dụng (nguồn chân lý, không mất khi người dùng từ chối quyền), <code>WebPushAdapter</code>
+      đẩy thêm ra ngoài cho ai đã cấp quyền. Người từ chối quyền vẫn nhận được thông báo khi mở app.
+      <br><br><em>Lưu ý nền tảng:</em> Web Push trên iOS chỉ hoạt động khi PWA được cài vào màn hình chính
+      (iOS 16.4 trở lên) — cần hướng dẫn cài đặt trong app, nếu không một phần kiều bào dùng iPhone sẽ
+      không bao giờ nhận được push.</div>
+    </div>
+
+    <p class="note"><strong>Giữ RabbitMQ dù chỉ gửi in-app.</strong> FR-2.5 (async + retry/DLQ) vẫn là MUST;
+    mùa giỗ sinh hàng nghìn job cùng lúc; và giữ pipeline thì thêm Zalo ở GĐ2 chỉ là viết adapter,
+    không phải dựng lại luồng.</p>
+
+    <h3>1.7 — Hai mâu thuẫn tài liệu: đánh giá &amp; chốt</h3>
+
+    <div class="card">
+      <div class="card-title">(a) Kỵ húy <span class="id">FR-1.6</span> — làm ở Giai đoạn 1</div>
+      <p style="margin:0;font-size:13.5px;">BA v2 §11 xếp GĐ2, nhưng TDD §12 mục 5 và §8.1 nhúng
+      <code>validateTaboo()</code> ngay trong sequence <code>AddPerson</code>. Theo thứ tự ưu tiên
+      <strong>TDD trước BA</strong>, và vì tách ra GĐ2 nghĩa là phải mở lại <code>AddPersonService</code> đã
+      viết xong. Chi phí thêm nhỏ: một truy vấn tên húy bậc trên cộng dialog xác nhận ghi đè.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">(b) RBAC <span class="id">FR-4.1</span> — chẻ đôi</div>
+      <ul style="margin-bottom:8px;">
+        <li><strong>GĐ1, auth tối thiểu:</strong> Keycloak login, map <code>keycloak_sub → app_user → person</code>,
+        kiểm tra role thô, và <strong>bộ lọc phân tầng hiển thị</strong>.</li>
+        <li><strong>GĐ2, branch scope đầy đủ:</strong> <code>@RequiresBranch</code> soi <code>ltree</code>,
+        luồng duyệt ChangeRequest.</li>
+      </ul>
+      <p style="margin:0;font-size:13.5px;">Lý do chẻ: ship MVP không auth là không chấp nhận được, và
+      "khách không thấy người còn sống" là <strong>nghĩa vụ pháp lý theo Nghị định 13/2023</strong>, không
+      phải tính năng hoãn được. Ngược lại, luồng duyệt đính chính chưa cần cho MVP — GĐ1 chỉ cần Trưởng chi
+      và Admin sửa trực tiếp.</p>
+    </div>
+
+    <h2 id="s2">2. Quyết Định Kỹ Thuật Cần Chốt</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr><th style="width:20%;">Vấn đề</th><th style="width:28%;">Đề xuất</th><th>Lý do</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Build tool</td><td><strong>Maven</strong> <span class="tag tag-in">Đã chốt</span></td><td>Hệ sinh thái Spring enterprise VN quen thuộc hơn; <code>settings.json</code> đã allow cả hai</td></tr>
+          <tr><td>Cấu trúc module</td><td><strong>1 module Maven, package theo context</strong> + <strong>Spring Modulith</strong></td><td>TDD yêu cầu một tiến trình triển khai duy nhất; Modulith <em>ép</em> được ranh giới bounded context bằng test, thay vì chỉ trông vào kỷ luật của người viết</td></tr>
+          <tr><td>Repo layout</td><td><strong>Monorepo</strong> <span class="tag tag-in">Đã chốt</span> — <code>backend/</code> + <code>frontend/</code></td><td>Contract (OpenAPI / GraphQL schema) dùng chung, versioning cùng nhịp</td></tr>
+          <tr><td>Truy cập AGE</td><td><strong>JdbcTemplate + native Cypher</strong>, không qua JPA</td><td>AGE trả kiểu <code>agtype</code>, Hibernate không map được</td></tr>
+          <tr><td>Frontend</td><td><strong>Next.js App Router + PWA</strong></td><td>BA v2 chốt PWA; App Router cho SSR trang công khai (SEO cho hồ sơ người đã khuất)</td></tr>
+          <tr><td>State / data</td><td>React Query + GraphQL client</td><td>Cây lồng sâu dùng GraphQL; phần còn lại REST</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Cấu trúc monorepo</h3>
+    <div class="code-block">OriginLine/
+├── backend/          <span class="c"># Maven, gốc package vn.giapha</span>
+├── frontend/         <span class="c"># Next.js</span>
+├── contracts/        <span class="c"># OpenAPI + GraphQL schema — nguồn chung, chốt Sprint 1</span>
+├── infra/            <span class="c"># docker-compose, cấu hình Keycloak realm</span>
+└── docs/             <span class="c"># BA, TDD, plan</span></div>
+
+    <h2 id="s3">3. Backend — Workstream</h2>
+    <p class="note">Gốc package <code>vn.giapha</code>. Mỗi context bốn lớp <code>domain / application / infrastructure / api</code>.</p>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W0</span> Hạ tầng &amp; khung <span class="note" style="border:0;padding:0;margin:0;">TDD §12 mục 1–2</span></div>
+      <ul>
+        <li><code>docker-compose.yml</code>: Postgres 16 + Apache AGE, Redis, RabbitMQ (management), MinIO, Keycloak.</li>
+        <li>Khung Spring Boot 3.x + Java 21; <code>shared/</code> kernel: <code>DomainEvent</code>, <code>AggregateRoot</code>, <code>Result</code>, VO (<code>PersonId</code>, <code>BranchPath</code>, <code>DateDual</code>, <code>Gender</code>, <code>LunarDate</code>), exception + <code>@RestControllerAdvice</code> trả <strong>RFC 7807</strong>.</li>
+        <li><code>config/</code>: Security · Jpa · Rabbit · Redis · OpenApi · Scheduler · Web (CORS, i18n vi/en).</li>
+        <li><strong>Đầu ra:</strong> <code>docker compose up</code> xong, app khởi động, <code>/actuator/health</code> xanh.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W1</span> Migration &amp; schema (Flyway) <span class="note" style="border:0;padding:0;margin:0;">TDD §12 mục 3, §5</span></div>
+      <ul>
+        <li><code>V1__extensions.sql</code> — <code>age</code>, <code>ltree</code>, <code>unaccent</code>, <code>pg_trgm</code>, <code>pgcrypto</code>.</li>
+        <li><code>V2__core.sql</code> — <code>person</code>, <code>person_name</code>, <code>branch</code> (ltree), <code>relationship</code> + index.</li>
+        <li><code>V3__kinship_rules.sql</code> — <code>kinship_rule_set</code>, <code>kinship_rule</code>.</li>
+        <li><code>V4__events.sql</code> — <code>event</code>, <code>reminder_job</code>, <code>notification_log</code>, <strong><code>notification_inbox</code></strong>, <strong><code>push_subscription</code></strong> (endpoint, khoá p256dh/auth, người dùng, user-agent).</li>
+        <li><code>V5__membership_audit.sql</code> — <code>app_user</code>, <code>role</code>, <code>branch_assignment</code>, <code>change_request</code>, <code>audit_log</code>.</li>
+        <li><code>V6__search.sql</code> — cột <code>name_unaccented</code> generated + GIN index + cấu hình FTS tiếng Việt.</li>
+        <li><code>V7__graph.sql</code> — tạo graph <code>giapha_graph</code> + property index trên <code>id</code>.</li>
+        <li><code>R__seed_kinship_rules_default.sql</code> — <strong>bộ luật danh xưng miền Bắc</strong> (repeatable).</li>
+        <li><strong>Đầu ra:</strong> schema dựng lại được từ số 0; seed rule chạy lại không vỡ.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W2</span> Context <code>genealogy</code> <span class="note" style="border:0;padding:0;margin:0;">TDD §12 mục 4–5</span></div>
+      <ul>
+        <li><strong>domain/</strong> — <code>Person</code> (aggregate root, POJO thuần, không setter trần), <code>PersonName</code>, <code>Branch</code>, <code>Relationship</code>; port <code>PersonRepository</code>, <code>TreeGraphPort</code>.</li>
+        <li><strong>infrastructure/</strong> — <code>PersonJpaEntity</code> + adapter · <strong><code>AgeTreeGraphAdapter</code></strong> (<code>linkParent</code>, <code>ancestors</code>, <code>lca</code>) · mapper.</li>
+        <li><strong>application/</strong> — <code>AddPersonService</code> (validate kỵ húy → tạo Person → link graph → audit → publish event), <code>UpdatePersonService</code>, <code>SoftDeletePersonService</code>, <code>MoveBranchService</code>.</li>
+        <li><strong>api/</strong> — <code>PersonController</code> (REST) + resolver GraphQL.</li>
+        <li><strong>Bất biến phải test:</strong> cạnh AGE và dòng <code>relationship</code> ghi trong <strong>cùng một transaction</strong>; rollback thì cả hai cùng biến mất.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W3</span> Context <code>kinship</code> <span class="note" style="border:0;padding:0;margin:0;">TDD §12 mục 6</span></div>
+      <ul>
+        <li><strong>domain/</strong> — <strong><code>KinshipResolver</code> thuần POJO</strong> (không Spring, không DB), <code>KinshipRuleSet</code>, <code>KinshipRule</code>, <code>RelationFacts</code>; port <code>LcaPort</code> / <code>RuleSetRepository</code>.</li>
+        <li><strong>infrastructure/</strong> — <code>AgeLcaAdapter</code> (Cypher ở TDD §6), <code>RuleSetJpaRepository</code> với hợp nhất <code>DEFAULT → REGION → CLAN → BRANCH</code>.</li>
+        <li><strong>application/</strong> — <code>ResolveKinshipTitleService</code> + cache Redis khoá <code>A:B</code>; <code>RuleAdminService</code>.</li>
+        <li><strong>api/</strong> — <code>GET /api/v1/kinship?from=&amp;to=</code> · <code>GET/PUT /api/v1/kinship-rules</code>.</li>
+        <li><strong>Bộ luật DEFAULT = miền Bắc.</strong> Trung và Nam để trống ở cấp <code>REGION</code>, bổ sung ở GĐ2–3.</li>
+        <li><strong>Đầu ra:</strong> bộ test ca biên chạy dưới 1 giây (không Spring context) — đa thê, con nuôi, dâu/rể, tái hôn, tuyệt tự/kế tự, đích tôn, và <strong>ghi đè rule theo chi</strong>.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W4</span> Context <code>calendar</code> — lịch âm <span class="note" style="border:0;padding:0;margin:0;">TDD §12 mục 7</span></div>
+      <ul>
+        <li><code>LunarConverter</code> (Hồ Ngọc Đức), <code>LunarDate</code>, <code>SolarTerm</code>, can chi. <strong>Zero dependency</strong> — đóng gói như thư viện, tái dùng cho cả nhắc giỗ lẫn tra sao hạn ở Giai đoạn 3.</li>
+        <li><strong>Đầu ra:</strong> xanh toàn bộ fixture đặc tả ở <a href="#s9" style="color:var(--primary);">§9</a> — tháng nhuận, tiết khí, biên GMT+7, và bộ lệch múi giờ với lịch Trung Quốc. <strong>Dựng fixture trước, code sau.</strong></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W5</span> <code>events</code> + <code>notification</code> <span class="note" style="border:0;padding:0;margin:0;">TDD §12 mục 8</span></div>
+      <ul>
+        <li><code>GenerateRemindersService</code> chạy hằng đêm (<code>@Scheduled</code>): với mỗi <code>event</code>, quy đổi ngày âm sang dương của năm nay, sinh <code>ReminderJob</code> cho mốc 7 / 3 / 1 ngày.</li>
+        <li>Topology Rabbit: exchange <code>notify</code> sang <code>notify.inapp</code> và <code>notify.webpush</code>; DLX <code>notify.dlx</code> sang <code>notify.dlq</code>; retry có backoff. Hai queue độc lập — push chết không kéo theo in-app.</li>
+        <li><code>NotificationConsumer</code> <strong>idempotent</strong> (khoá chống trùng = <code>reminder_job_id + recipient</code>); recipient là thành viên cùng chi hoặc nhánh của event.</li>
+        <li>Port <code>NotificationProvider</code>; MVP hiện thực <strong><code>InAppProvider</code></strong> ghi vào <code>notification_inbox</code> (<code>recipient_person_id</code>, <code>event_id</code>, <code>title</code>, <code>body</code>, <code>created_at</code>, <code>read_at</code>).</li>
+        <li><strong><code>WebPushAdapter</code> (GĐ1)</strong> — thư viện <code>web-push</code> chuẩn VAPID; khoá VAPID để trong env, không commit. Subscription hết hạn hoặc bị thu hồi (HTTP 404/410) thì <strong>xoá khỏi <code>push_subscription</code></strong>, không retry vô ích.</li>
+        <li><strong><code>ZaloZnsAdapter</code> là adapter thêm vào ở GĐ2 — không sửa luồng.</strong></li>
+        <li>API: <code>GET /api/v1/notifications</code> (phân trang + số chưa đọc) · <code>POST /{id}/read</code> · <code>POST /api/v1/push/subscriptions</code> · <code>DELETE /api/v1/push/subscriptions/{id}</code>.</li>
+        <li><code>NotificationLog</code> ghi provider, status, <code>retry_count</code> — giữ nguyên cho GĐ2.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W6</span> <code>membership</code> tối thiểu + <code>audit</code> + phân tầng hiển thị</div>
+      <ul>
+        <li>Keycloak realm + client; resource server JWT; map <code>keycloak_sub → app_user → person</code>.</li>
+        <li><code>AuditInterceptor</code> → <code>audit_log</code> (<code>before</code>/<code>after</code> JSONB), <strong>không log giá trị nhạy cảm</strong>.</li>
+        <li><strong><code>PrivacyTierFilter</code></strong> ở tầng serialization: lọc theo <code>is_alive</code> + role + <code>privacy_level</code>. Khách → không trả về người còn sống. <em>Đây là mục dễ bị bỏ quên nhất và là rủi ro pháp lý.</em></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill">W7</span> API cây + cache + tìm kiếm</div>
+      <ul>
+        <li><code>GET /api/v1/tree?rootId=&amp;depth=</code> trả projection, cache Redis, invalidate khi mutation.</li>
+        <li>Schema GraphQL cho truy vấn cây lồng sâu (client tự chọn độ sâu).</li>
+        <li><code>GET /api/v1/persons/search?q=</code> — FTS không dấu (<span class="id">FR-4.4</span>).</li>
+      </ul>
+    </div>
+
+    <h2 id="s4">4. Frontend — Workstream</h2>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F0</span> Khung</div>
+        <p style="margin:0;font-size:13.5px;">Next.js (App Router) + TypeScript + TailwindCSS + Ant Design · <code>next-pwa</code> · i18n vi/en · React Query · GraphQL client · Keycloak adapter. <strong>MSW để mock API</strong> — cho phép FE chạy trước khi BE xong.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F1</span> Design system</div>
+        <p style="margin:0;font-size:13.5px;">Bảng màu ấm truyền thống lấy thẳng từ tài liệu BA/TDD: đỏ trầm <code>#8c2d19</code>, nền kem <code>#f8f6f2</code>, hổ phách <code>#d97706</code>, chữ <code>#2b2825</code>. Typography hỗ trợ dấu tiếng Việt đầy đủ.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="pill pill-fe">F2</span> Canvas phả đồ — <em>hạng mục khó nhất, bắt đầu sớm</em></div>
+      <ul>
+        <li>React Flow + custom node; layout <code>dagre</code>/<code>elk</code> cho chế độ phân cấp.</li>
+        <li>Ba chế độ hiển thị: phân cấp · tỏa tròn (radial) · ma trận thế hệ.</li>
+        <li>Zoom / pan / minimap / kéo-thả; thu gọn – mở rộng từng nhánh.</li>
+        <li><strong>Lazy load theo độ sâu + virtualization</strong>; cân nhắc Canvas/WebGL nếu SVG đuối ở vài nghìn node.</li>
+        <li>Badge dâu/rể, con nuôi, đích tôn; phân biệt thị giác người đã khuất với người còn sống.</li>
+      </ul>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F3</span> Hồ sơ nhân khẩu</div>
+        <p style="margin:0;font-size:13.5px;">Tên đa lớp (húy / tự / hiệu / thụy / thường gọi / pháp danh + Hán-Nôm), ngày sinh–mất <strong>song lịch âm–dương</strong>, quê quán, đời thứ. Render tôn trọng phân tầng — <em>không hiển thị ô trống gợi ý "có dữ liệu bị ẩn"</em>.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F4</span> Form thêm/sửa nhân khẩu</div>
+        <p style="margin:0;font-size:13.5px;">Validation đầy đủ; <strong>dialog cảnh báo kỵ húy</strong> khi trùng tên húy bậc trên, cho phép ghi đè có xác nhận.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F5</span> Tra cứu danh xưng</div>
+        <p style="margin:0;font-size:13.5px;">Chọn 2 người → gọi <code>/kinship</code> → hiển thị danh xưng kèm đường quan hệ qua LCA. Đây là tính năng gây ấn tượng nhất của MVP — làm chỉn chu.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F6</span> Tìm kiếm</div>
+        <p style="margin:0;font-size:13.5px;">Ô tìm không dấu, gợi ý tức thời, lọc theo đời / chi / quê quán.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F7</span> Sự kiện, nhắc giỗ &amp; trung tâm thông báo</div>
+        <p style="margin:0;font-size:13.5px;">Danh sách giỗ sắp tới (âm và dương), lịch năm.
+        <strong>Trung tâm thông báo in-app:</strong> chuông kèm badge số chưa đọc hiện trên toàn app,
+        trang danh sách thông báo, đánh dấu đã đọc. Đây là <em>kênh nhắc giỗ chính của MVP</em> nên phải
+        nổi bật, không giấu trong menu phụ.
+        <br><br><strong>Web Push:</strong> xin quyền <em>đúng lúc</em> (sau khi người dùng xem một hồ sơ hoặc
+        ngày giỗ, không phải ngay khi vào trang), đăng ký subscription qua service worker, và có công tắc
+        bật/tắt trong phần cài đặt. Kèm hướng dẫn "thêm vào màn hình chính" cho người dùng iPhone.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F8</span> Auth &amp; chế độ khách</div>
+        <p style="margin:0;font-size:13.5px;">Đăng nhập Keycloak + social; UI theo role; <strong>chế độ khách chỉ thấy người đã khuất</strong>.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="pill pill-fe">F9</span> PWA &amp; hoàn thiện</div>
+        <p style="margin:0;font-size:13.5px;">Manifest, service worker, offline shell, tối ưu mobile — kiều bào dùng điện thoại là chính.</p>
+      </div>
+    </div>
+
+    <h2 id="s5">5. Contract-First — Mở Khoá Song Song</h2>
+    <p>Chốt <strong>OpenAPI + GraphQL schema ngay Sprint 1</strong> vào <code>contracts/</code>, trước khi
+    BE hiện thực xong. FE dùng MSW mock theo đúng schema đó.
+    <strong>Không làm bước này thì FE sẽ ngồi chờ BE bốn tuần.</strong></p>
+
+    <div class="code-block"><span class="c"># Endpoint tối thiểu cho MVP</span>
+POST   /api/v1/persons
+GET    /api/v1/persons/{id}          PATCH · DELETE (xóa mềm)
+GET    /api/v1/tree?rootId=&amp;depth=
+GET    /api/v1/kinship?from=&amp;to=
+GET    /api/v1/kinship-rules         PUT (Hội đồng Tộc biểu)
+GET    /api/v1/persons/search?q=
+GET    /api/v1/events
+GET    /api/v1/notifications         POST /{id}/read     <span class="c"># trung tâm thông báo</span>
+POST   /api/v1/push/subscriptions    DELETE /{id}        <span class="c"># Web Push (VAPID)</span>
+POST   /api/v1/graphql               <span class="c"># cây lồng sâu</span></div>
+
+    <h2 id="s6">6. Lịch 4 Sprint</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr><th style="width:70px;">Sprint</th><th style="width:24%;">Backend</th><th style="width:24%;">Frontend</th><th>Cột mốc</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td>W0 + W1</td><td>F0 + F1 + <strong>chốt contract</strong></td><td>Hạ tầng chạy, schema dựng được, FE có mock</td></tr>
+          <tr><td><strong>2</strong></td><td>W2 + W7</td><td>F2 canvas (mock sang thật)</td><td class="milestone">Cây phả đồ hiển thị được dữ liệu thật</td></tr>
+          <tr><td><strong>3</strong></td><td>W3 + W4</td><td>F3 + F4 + F5</td><td class="milestone">Tra danh xưng chạy đúng ca biên</td></tr>
+          <tr><td><strong>4</strong></td><td>W5 + W6</td><td>F6 + F7 + F8 + F9</td><td class="milestone">Nhắc giỗ tới được người dùng qua in-app + Web Push; khách không thấy người sống</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="crit">
+      <strong>Đường găng:</strong> <code>W1 → W2 → W3</code>. Trượt một mắt là trượt cả giai đoạn.
+      <br><strong>Cơ hội song song:</strong> <code>W4</code> (lịch âm) <strong>độc lập hoàn toàn</strong> —
+      không phụ thuộc schema hay context nào. Giao ngay từ Sprint 1 nếu có người, vì phần đối chiếu dữ liệu cần thời gian.
+      <br><strong>Rủi ro Sprint 4 đã giảm đáng kể</strong> sau khi bỏ phụ thuộc hợp đồng Zalo.
+    </div>
+
+    <h2 id="s7">7. Bẫy Kỹ Thuật Đã Biết</h2>
+    <ol>
+      <li><strong>AGE cần init mỗi connection</strong> — nạp extension <code>age</code> và đặt
+      <code>search_path</code> chứa <code>ag_catalog</code>, cấu hình qua
+      <code>spring.datasource.hikari.connection-init-sql</code>. Quên là mọi truy vấn Cypher fail rời rạc,
+      rất khó chẩn đoán.</li>
+      <li><strong><code>agtype</code> không map qua JPA</strong> — dùng <code>JdbcTemplate</code>, parse thủ công,
+      và <strong>luôn tham số hoá</strong> (không nối chuỗi vào Cypher).</li>
+      <li><strong>Dual write</strong> graph cộng bảng: dễ viết đúng lần đầu, dễ vỡ khi refactor.
+      Viết test rollback ngay từ đầu.</li>
+      <li><strong><code>ltree</code> label không nhận dấu tiếng Việt</strong> — sinh path từ slug không dấu,
+      giữ tên hiển thị ở cột riêng.</li>
+      <li><strong>Cây vài nghìn node</strong>: SVG của React Flow sẽ đuối. Đo ở Sprint 2, đừng để Sprint 4
+      mới phát hiện.</li>
+      <li><strong>Lịch âm là nơi bug âm thầm nhất</strong> — sai tháng nhuận thì giỗ lệch cả tháng mà hệ thống
+      không báo lỗi gì cả.</li>
+      <li><strong>Thông báo in-app dễ bị tưởng là đã xong</strong> — job sinh đúng, ghi inbox đúng, nhưng không
+      ai thấy vì FE không poll hoặc không hiện badge. Test end-to-end phải chạy tới lúc <em>badge hiện trên UI</em>,
+      không dừng ở "có dòng trong bảng".</li>
+    </ol>
+
+    <h2 id="s8">8. Tiêu Chí Ra Giai Đoạn 1</h2>
+    <ul class="checklist">
+      <li><code>docker compose up</code> cộng chạy backend, hệ thống lên được từ một máy trắng.</li>
+      <li>Seed dữ liệu giả từ 1.500 nhân khẩu và 7 đời trở lên chạy được (xem §10).</li>
+      <li>Cây render dưới 2s cho nhánh hiển thị; truy vấn LCA dưới 500ms (<span class="id">NFR-1</span>).</li>
+      <li>Bộ test danh xưng phủ đủ 6 nhóm ca biên, chạy không cần Spring context.</li>
+      <li>Lịch âm xanh toàn bộ fixture ở §9, gồm cả bộ lệch múi giờ với lịch Trung Quốc.</li>
+      <li>Nhắc giỗ sinh job đúng và hiện lên trung tâm thông báo; provider lỗi thì vào DLQ, không mất tin.</li>
+      <li>Web Push đẩy được tới một thiết bị thật đã cấp quyền; subscription bị thu hồi thì bị dọn khỏi DB.</li>
+      <li>Người <em>từ chối</em> quyền push vẫn nhận đủ thông báo khi mở app — push không phải điều kiện tiên quyết.</li>
+      <li><strong>Khách đăng xuất không truy cập được bất kỳ dữ liệu người còn sống nào</strong> — có test khẳng định.</li>
+      <li>Xóa mềm không làm gãy liên kết cây; audit ghi đủ <code>before</code> và <code>after</code>.</li>
+    </ul>
+
+    <h2 id="s9">9. Bộ Dữ Liệu Đối Chiếu Lịch Âm</h2>
+    <p><strong>Nguồn chuẩn:</strong> thuật toán và bảng tra âm lịch của chính <strong>Hồ Ngọc Đức</strong>
+    làm nguồn gốc; đối chiếu chéo với một cuốn lịch vạn niên in giấy cho vài năm mẫu để bắt lỗi hệ thống.</p>
+    <p>Đặt fixture ở <code>backend/src/test/resources/lunar/</code>, mỗi file một CSV:</p>
+
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th style="width:22%;">File</th><th style="width:34%;">Nội dung</th><th>Vì sao cần</th></tr></thead>
+        <tbody>
+          <tr><td><code>tet.csv</code></td><td>Ngày dương của mùng 1 Tết, 1990–2040 (khoảng 50 dòng)</td><td>Mốc dễ kiểm chứng độc lập nhất — ai cũng biết Tết năm nào rơi vào ngày nào</td></tr>
+          <tr><td><code>leap-months.csv</code></td><td>Mọi năm nhuận và số tháng nhuận trong khoảng đó</td><td>Tháng nhuận là nguồn bug số một</td></tr>
+          <tr><td><code>solar-terms.csv</code></td><td>24 tiết khí cho vài năm mẫu, đặc biệt <strong>Thanh minh</strong> và <strong>Đông chí</strong></td><td>Thanh minh dùng cho chạp mả; Đông chí là mốc thuật toán dùng để xác định tháng nhuận</td></tr>
+          <tr><td><code>divergence.csv</code></td><td><strong>Các năm lịch âm VN (GMT+7) lệch lịch âm Trung Quốc (GMT+8)</strong></td><td>Bộ test giá trị nhất — implement sai múi giờ thì mọi test khác vẫn xanh, chỉ bộ này đỏ</td></tr>
+          <tr><td><em>property test</em></td><td>Mọi ngày dương 1900–2100 đổi sang âm rồi ngược lại phải về đúng chính nó</td><td>Bắt lỗi biên mà fixture viết tay không phủ hết</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warn">
+      <div class="warn-title">Lưu ý khi dựng <code>divergence.csv</code></div>
+      <p>1985 và 2007 là hai năm thường được nhắc tới về việc Tết Việt Nam và Trung Quốc lệch nhau do khác
+      múi giờ. <strong>Phải verify ngày chính xác từ nguồn Hồ Ngọc Đức trước khi đưa vào fixture</strong> —
+      đừng chép theo trí nhớ, vì một fixture sai còn nguy hiểm hơn không có fixture: nó biến bug thành
+      "hành vi đúng".</p>
+    </div>
+
+    <p class="note"><strong>Thứ tự làm:</strong> dựng fixture <em>trước</em>, code <code>LunarConverter</code>
+    sau. Viết thuật toán rồi mới đi tìm dữ liệu đối chiếu là cách chắc chắn nhất để tự thuyết phục mình rằng
+    code đã đúng.</p>
+
+    <h2 id="s10">10. Sinh Dữ Liệu Giả</h2>
+    <p><strong>Cách làm:</strong> generator chạy dưới Spring profile <code>demo</code> (hoặc script sinh file
+    SQL), nạp qua Flyway <code>R__seed_demo_data.sql</code> — <strong>chỉ ở dev và test, không bao giờ ở prod</strong>.
+    Dùng <strong>seed cố định</strong> để mỗi lần sinh ra đúng một bộ dữ liệu, nhờ đó test assert được trên id cụ thể.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Quy mô</div>
+        <p style="margin:0;font-size:13.5px;">Khoảng 1.500 nhân khẩu · 7 đời · 1 thủy tổ · 4 chi · khoảng 12 nhánh ·
+        60% đã khuất và 40% còn sống, để có dữ liệu test phân tầng hiển thị.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Tên &amp; ngày tháng</div>
+        <p style="margin:0;font-size:13.5px;">Họ chính cộng chữ đệm theo đời (mô phỏng bài thơ đặt tên); các đời
+        trên sinh thêm tên húy, tự, hiệu, thụy; kèm cột không dấu để test tìm kiếm. Ngày sinh và mất sinh cả âm
+        lẫn dương <strong>nhất quán qua chính <code>LunarConverter</code></strong> — dữ liệu giả nhờ đó thành một
+        bài kiểm tra chéo cho W4.</p>
+      </div>
+    </div>
+
+    <p><strong>Bắt buộc nhồi sẵn các ca biên</strong> — không có thì bộ test kinship không có gì để chạy:</p>
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th>Ca biên</th><th style="width:150px;">Số lượng tối thiểu</th></tr></thead>
+        <tbody>
+          <tr><td>Đa thê (2–3 vợ, có <code>spouse_order</code>)</td><td>3</td></tr>
+          <tr><td>Con nuôi</td><td>5</td></tr>
+          <tr><td>Dâu / rể</td><td>10</td></tr>
+          <tr><td>Tái hôn cộng con riêng</td><td>2</td></tr>
+          <tr><td>Tuyệt tự</td><td>1</td></tr>
+          <tr><td>Kế tự (lập người nối dõi)</td><td>1</td></tr>
+          <tr><td>Đích tôn</td><td>2</td></tr>
+          <tr><td>Trùng tên húy với bậc trên (test kỵ húy)</td><td>5</td></tr>
+          <tr><td>Nhánh sâu đủ 7 đời (test LCA xa)</td><td>1</td></tr>
+          <tr><td>Người sống có dữ liệu Tầng 3 (SĐT, email)</td><td>20</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="s11">11. Việc Còn Treo</h2>
+    <ol class="qlist">
+      <li><strong>Ai nghiệm thu bộ luật danh xưng miền Bắc?</strong> Đã chốt <em>dùng</em> miền Bắc, nhưng vẫn
+      cần một người trong Hội đồng Tộc biểu đọc và xác nhận bảng danh xưng trước khi khoá lại — sai danh xưng
+      là lỗi mất mặt với dòng họ, không phải bug kỹ thuật.</li>
+      <li><strong>Khi nào khởi động thủ tục Zalo OA/ZNS?</strong> Không còn chặn GĐ1, nhưng nếu muốn có ở GĐ2
+      thì nên bắt đầu xin duyệt template từ giữa GĐ1.</li>
+    </ol>
+
+  </div>
+
+  <div class="footer">
+    Kế hoạch Implement Giai đoạn 1 — Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ © 2026.<br>
+    Dựa trên BA v2.0 §11 và TDD v1.0 §12. Thứ tự ưu tiên khi tài liệu mâu thuẫn: TDD → BA.
+  </div>
+</div>
+
+</body>
+</html>

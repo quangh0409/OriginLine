@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tài Liệu Thiết Kế Kỹ Thuật (TDD) — Hệ Thống Gia Phả Dòng Họ</title>
+<style>
+  :root {
+    --primary: #8c2d19; --primary-dark: #661e0f; --primary-light: #fbeee9;
+    --secondary: #2c3e50; --text-main: #2b2825; --text-muted: #5e564d;
+    --bg-page: #f8f6f2; --bg-card: #ffffff; --border: #e6dfd5; --border-dark: #cdbeaa;
+    --accent: #d97706; --green: #15803d; --green-bg: #eaf6ee; --blue: #1d4ed8; --blue-bg: #eaf0fb;
+    --red: #b91c1c; --red-bg: #fbeae9; --amber-bg: #fdf6e7;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg-page); color: var(--text-main); line-height: 1.62; padding: 30px 15px; }
+  .container { max-width: 1120px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden; }
+  .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; padding: 36px 35px 30px; border-bottom: 3px solid var(--accent); }
+  .badge { display: inline-block; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 12px; }
+  .header h1 { font-size: 23px; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
+  .header p { font-size: 13.5px; opacity: 0.92; color: #fcece8; }
+  .meta-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;
+    background: #f1ebd8; padding: 14px 35px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); }
+  .meta-bar strong { color: var(--text-main); }
+  .toc { background: #faf8f5; border-bottom: 1px solid var(--border); padding: 20px 35px; font-size: 13px; column-count: 2; column-gap: 30px; }
+  .toc a { color: var(--primary); text-decoration: none; display: block; margin-bottom: 5px; }
+  .toc a:hover { text-decoration: underline; }
+  .content { padding: 35px; }
+  h2 { font-size: 17px; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px;
+    margin: 36px 0 12px; text-transform: uppercase; letter-spacing: 0.5px; scroll-margin-top: 20px; }
+  h2:first-of-type { margin-top: 0; }
+  h3 { font-size: 14.5px; color: var(--secondary); margin: 22px 0 8px; }
+  h4 { font-size: 13.5px; color: var(--primary-dark); margin: 16px 0 6px; }
+  p { margin-bottom: 12px; font-size: 14px; }
+  ul, ol { margin: 0 0 16px 22px; font-size: 14px; }
+  li { margin-bottom: 5px; }
+  .lead { background: var(--primary-light); border: 1px solid var(--border-dark); border-radius: 6px; padding: 16px 20px; font-size: 14px; margin: 8px 0; }
+  .card { background: #faf8f5; border: 1px solid var(--border); border-radius: 6px; padding: 16px 18px; margin-bottom: 16px; }
+  .card-title { font-size: 14.5px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+  .table-responsive { overflow-x: auto; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+  th, td { padding: 9px 11px; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--secondary); color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #faf7f0; }
+  code { background: #ece5da; padding: 1px 6px; border-radius: 4px; font-family: Consolas, Monaco, monospace; font-size: 12px; color: var(--primary-dark); }
+  .mono { font-family: Consolas, Monaco, monospace; font-size: 12px; }
+  .id { font-family: Consolas, Monaco, monospace; font-weight: 700; color: var(--primary-dark); white-space: nowrap; }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 2px 7px; border-radius: 4px; }
+  .tag-pk { background: var(--red-bg); color: var(--red); border: 1px solid #e7b7b3; }
+  .tag-fk { background: var(--blue-bg); color: var(--blue); border: 1px solid #b8c8ee; }
+  .tag-idx { background: var(--green-bg); color: var(--green); border: 1px solid #b3d9c1; }
+  .code-block { background: #1e2430; color: #e2e8f0; font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12px; line-height: 1.5; padding: 18px 20px; border-radius: 6px; overflow-x: auto;
+    margin: 12px 0 20px; border-left: 4px solid var(--accent); white-space: pre; }
+  .code-block .c { color: #7f9cc0; }  .code-block .k { color: #e0a458; }  .code-block .s { color: #9ece6a; }
+  .note { font-size: 12.5px; color: var(--text-muted); border-left: 3px solid var(--border-dark); padding-left: 10px; margin: 8px 0; }
+  .footer { text-align: center; padding: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); background: #fbf9f6; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .toc { column-count: 1; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="badge">Technical Design Document — v1.1</div>
+    <h1>TÀI LIỆU THIẾT KẾ KỸ THUẬT<br>Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ</h1>
+    <p>Kiến trúc code · Kiến trúc ứng dụng · Vận hành · Luồng nghiệp vụ · Từ điển dữ liệu · Thiết kế class · Kế hoạch implement</p>
+  </div>
+  <div class="meta-bar">
+    <div><strong>Nguồn / Source:</strong> BA_Gia_Pha_Dong_Ho_v2</div>
+    <div><strong>Stack:</strong> Spring Boot 3.x · Java 21 · React</div>
+    <div><strong>CSDL:</strong> PostgreSQL + Apache AGE</div>
+    <div><strong>Kiểu kiến trúc:</strong> Modular Monolith / DDD</div>
+    <div><strong>Phiên bản:</strong> v1.1 — 3 đính chính, xem dưới</div>
+  </div>
+
+  <div style="background:var(--amber-bg);border-bottom:1px solid var(--border);padding:16px 35px;font-size:13px;">
+    <strong style="color:var(--primary-dark);">Đính chính v1.1 (Sprint 1)</strong> — ba sai lệch trong v1.0
+    được phát hiện khi hiện thực, <em>đã kiểm chứng bằng cách chạy thật trên Apache AGE / PostgreSQL 16</em>.
+    Code trong repo đã theo bản đúng; tài liệu này được vá để bản cũ không dẫn người đọc làm sai lại.
+    <ol style="margin:8px 0 0 20px;">
+      <li><strong>§6 — chiều cạnh <code>PARENT</code>:</strong> truy vấn LCA của v1.0 trả về 0 row với mọi
+      cặp người. Đã sửa sang <code>&lt;-[:PARENT*0..]-</code>.</li>
+      <li><strong>§5.5 — <code>kinship_rule</code> thiếu chiều bàng hệ:</strong> với đúng 4 cột v1.0 nêu
+      (<code>gen_delta, side, gender, is_elder</code>) thì <em>bác ruột</em> và <em>bác họ</em> có giá trị
+      y hệt nhau, không thể phân biệt. Đã thêm <code>collateral_degree</code>.</li>
+      <li><strong>§5.1 — <code>person</code> thiếu <code>birth_order</code>:</strong> thiếu nó thì
+      <code>is_elder</code> không tính được, tức không phân biệt được <em>bác</em> với <em>chú</em>.</li>
+    </ol>
+  </div>
+
+  <div class="toc">
+    <a href="#s1">1. Nguyên tắc &amp; Tổng quan kiến trúc</a>
+    <a href="#s2">2. Kiến trúc code (DDD Modular Monolith)</a>
+    <a href="#s3">3. Phân lớp &amp; cấu trúc package</a>
+    <a href="#s4">4. Kiến trúc ứng dụng &amp; triển khai</a>
+    <a href="#s5">5. Từ điển dữ liệu (Data Dictionary)</a>
+    <a href="#s6">6. Mô hình Graph (Apache AGE)</a>
+    <a href="#s7">7. Thiết kế Class (Domain &amp; Service)</a>
+    <a href="#s8">8. Luồng nghiệp vụ chính (Sequence)</a>
+    <a href="#s9">9. Thiết kế API</a>
+    <a href="#s10">10. Bảo mật &amp; Phân quyền (RBAC)</a>
+    <a href="#s11">11. Vận hành &amp; DevOps</a>
+    <a href="#s12">12. Kế hoạch Implement (checklist)</a>
+  </div>
+
+  <div class="content">
+
+  <!-- 1 -->
+  <h2 id="s1">1. Nguyên Tắc &amp; Tổng Quan Kiến Trúc</h2>
+  <div class="lead">
+    <strong>Modular Monolith theo DDD:</strong> một tiến trình triển khai duy nhất, chia thành các <em>bounded context</em> ranh giới rõ ràng, giao tiếp nội bộ qua interface/domain event. Mỗi module theo <strong>Hexagonal (Ports &amp; Adapters)</strong>: <code>domain</code> thuần nghiệp vụ, <code>application</code> điều phối use-case, <code>infrastructure</code> hiện thực hạ tầng, <code>api</code> phơi bày REST/GraphQL.
+  </div>
+  <ul>
+    <li><strong>Phụ thuộc một chiều:</strong> <code>api → application → domain</code>; <code>infrastructure</code> hiện thực các <code>port</code> do <code>domain/application</code> khai báo (Dependency Inversion). Domain <em>không</em> phụ thuộc Spring/JPA.</li>
+    <li><strong>Ranh giới module giữ sạch</strong> để có thể tách microservice về sau nếu quy mô bùng nổ.</li>
+    <li><strong>Bất biến nghiệp vụ (invariants) từ BA:</strong> xóa mềm bắt buộc · audit versioning · RBAC theo chi/ngành · danh xưng bằng rule engine cấu hình được · gửi thông báo bất đồng bộ có retry/DLQ.</li>
+    <li><strong>CQRS nhẹ:</strong> tách read model (cache cây, báo cáo) khỏi write model để tối ưu truy vấn cây lớn.</li>
+  </ul>
+
+  <!-- 2 -->
+  <h2 id="s2">2. Kiến Trúc Code — Các Bounded Context</h2>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:18%">Module (context)</th><th style="width:30%">Trách nhiệm</th><th>Thực thể/khái niệm lõi</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">genealogy</td><td>Cây phả hệ, thêm/sửa nhân khẩu, xóa mềm, quan hệ</td><td>Person, Relationship, Branch, PersonName</td></tr>
+      <tr><td class="mono">kinship</td><td>LCA + suy luận danh xưng qua rule engine cấu hình</td><td>KinshipRuleSet, KinshipRule, KinshipResolver, LcaService</td></tr>
+      <tr><td class="mono">calendar</td><td>Quy đổi Âm–Dương (Hồ Ngọc Đức), tiết khí, can chi</td><td>LunarDate, LunarConverter, SolarTerm</td></tr>
+      <tr><td class="mono">events</td><td>Giỗ/lễ, sinh lịch nhắc, phân loại lễ</td><td>Event, EventType, ReminderPlan, ReminderJob</td></tr>
+      <tr><td class="mono">notification</td><td>Gửi Zalo/SMS/Push bất đồng bộ, retry, DLQ, log</td><td>NotificationRequest, Channel, NotificationLog, Provider (port)</td></tr>
+      <tr><td class="mono">membership</td><td>Tài khoản, vai trò, phân quyền theo chi/ngành, duyệt</td><td>AppUser, Role, BranchAssignment, ChangeRequest</td></tr>
+      <tr><td class="mono">heritage</td><td>Thư viện di sản, từ đường, mộ phần, media</td><td>HeritageItem, Hall, Grave, MediaAsset</td></tr>
+      <tr><td class="mono">fund</td><td>Quỹ họ, sổ vàng công đức, thu–chi minh bạch</td><td>FundAccount, FundTransaction, Donation</td></tr>
+      <tr><td class="mono">reporting</td><td>Báo cáo dân số học, tài chính, phân bố địa lý</td><td>read-model / projection</td></tr>
+      <tr><td class="mono">audit</td><td>Nhật ký thay đổi (ai/khi/đổi gì), truy vết truy cập</td><td>AuditLog, AuditInterceptor</td></tr>
+      <tr><td class="mono">shared/common</td><td>Value object dùng chung, lỗi, tiện ích, bảo mật</td><td>Gender, DateDual, DomainEvent, Result</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Giao tiếp giữa module: gọi qua <strong>application service (interface public của context)</strong> hoặc phát <strong>domain event</strong> nội bộ (Spring <code>ApplicationEventPublisher</code>), tránh gọi thẳng repository của context khác.</p>
+
+  <!-- 3 -->
+  <h2 id="s3">3. Phân Lớp &amp; Cấu Trúc Package</h2>
+  <div class="code-block"><span class="c"># Gói gốc: vn.giapha</span>
+vn.giapha
+├── <span class="k">GiaPhaApplication.java</span>          <span class="c"># @SpringBootApplication</span>
+├── shared/                          <span class="c"># kernel dùng chung</span>
+│   ├── domain/        (DomainEvent, ValueObject, AggregateRoot, Result)
+│   ├── vo/            (DateDual, Gender, BranchPath, PersonId…)
+│   ├── security/      (CurrentUser, BranchScope, @RequiresBranch)
+│   └── exception/     (DomainException, NotFound, Forbidden)
+│
+├── genealogy/                       <span class="c"># mỗi context có 4 lớp</span>
+│   ├── domain/        (Person, Relationship, Branch, PersonName,
+│   │                   ports: PersonRepository, TreeGraphPort)
+│   ├── application/   (AddPersonService, SoftDeletePersonService,
+│   │                   MoveBranchService, dto/, event/)
+│   ├── infrastructure/(PersonJpaEntity, PersonJpaRepository,
+│   │                   AgeTreeGraphAdapter, mapper/)
+│   └── api/           (PersonController, GenealogyGraphQL)
+│
+├── kinship/
+│   ├── domain/        (KinshipRuleSet, KinshipRule, RelationCode,
+│   │                   KinshipResolver, ports: LcaPort, RuleSetRepository)
+│   ├── application/   (ResolveKinshipTitleService, RuleAdminService)
+│   ├── infrastructure/(AgeLcaAdapter, RuleSetJpaRepository)
+│   └── api/           (KinshipController)
+│
+├── calendar/  · events/  · notification/  · membership/
+├── heritage/  · fund/    · reporting/     · audit/
+│
+└── config/                          <span class="c"># cấu hình cross-cutting</span>
+    ├── SecurityConfig · JpaConfig · RabbitConfig · RedisConfig
+    ├── OpenApiConfig  · SchedulerConfig · ObservabilityConfig
+    └── WebConfig (CORS, i18n VI/EN)</div>
+  <p><strong>Quy ước:</strong> package theo <em>feature</em> (context) trước, theo <em>layer</em> sau. Domain là POJO thuần; annotation JPA/Spring chỉ ở <code>infrastructure</code>. Tên file kebab/PascalCase mô tả rõ, file &gt; 300 dòng cân nhắc tách.</p>
+
+  <!-- 4 -->
+  <h2 id="s4">4. Kiến Trúc Ứng Dụng &amp; Triển Khai</h2>
+  <div class="code-block"><span class="c"># Sơ đồ thành phần triển khai (docker-compose / 1 VPS hoặc K8s về sau)</span>
+
+ [ Người dùng ] ──HTTPS──► [ Nginx / Reverse Proxy + TLS ]
+                                   │
+                 ┌─────────────────┼──────────────────┐
+                 ▼                                     ▼
+   [ Frontend: React/Next.js (PWA) ]      [ Backend: Spring Boot (2+ instance) ]
+     React Flow/D3, GraphQL client              │  REST + GraphQL
+                                                 │
+        ┌──────────────┬──────────────┬─────────┼───────────┬──────────────┐
+        ▼              ▼              ▼          ▼           ▼              ▼
+ [ PostgreSQL 16 ] [ Redis ]   [ RabbitMQ ]  [ MinIO ]  [ Keycloak ]  [ Observability ]
+  + Apache AGE      cache/       queue+DLQ    (self-host  auth/OAuth2   OTel Collector →
+  + ltree + FTS     session      + Scheduler   S3-compat)  social login  Prometheus+Grafana
+                                     │                                    + Loki (logs)
+                                     ▼
+                          [ Worker: NotificationConsumer ]
+                                     │
+                          [ Zalo OA/ZNS Gateway ]  (SMS/Push: Phase 2)</div>
+  <div class="grid2">
+    <div class="card"><div class="card-title">Read/Write path</div>
+      <ul style="margin-bottom:0">
+        <li><strong>Write:</strong> API → application service → domain → repo (Postgres) + graph (AGE) trong 1 transaction.</li>
+        <li><strong>Read cây:</strong> ưu tiên Redis cache; miss thì query AGE, dựng projection, cache lại.</li>
+        <li><strong>Async:</strong> scheduler sinh <code>ReminderJob</code> → publish RabbitMQ → worker gửi Zalo → ghi <code>NotificationLog</code>.</li>
+      </ul>
+    </div>
+    <div class="card"><div class="card-title">Môi trường</div>
+      <ul style="margin-bottom:0">
+        <li><code>dev</code> (docker-compose local), <code>staging</code>, <code>prod</code>.</li>
+        <li>Cấu hình qua biến môi trường / Spring profiles; secret qua vault/.env không commit.</li>
+        <li>Migration DB bằng <strong>Flyway</strong> (versioned + repeatable cho seed rule danh xưng).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <h2 id="s5">5. Từ Điển Dữ Liệu (Data Dictionary)</h2>
+  <p class="note">Ký hiệu: <span class="tag tag-pk">PK</span> khóa chính · <span class="tag tag-fk">FK</span> khóa ngoại · <span class="tag tag-idx">IDX</span> nên đánh index. Kiểu dữ liệu PostgreSQL.</p>
+
+  <h4>5.1 <code>person</code> — Nhân khẩu (aggregate root)</h4>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:20%">Field</th><th style="width:18%">Kiểu</th><th>Mô tả / Ràng buộc</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">id <span class="tag tag-pk">PK</span></td><td>uuid</td><td>Định danh (dùng UUID để dễ merge/dữ liệu phân tán).</td></tr>
+      <tr><td class="mono">gender</td><td>varchar(10)</td><td>MALE/FEMALE/UNKNOWN.</td></tr>
+      <tr><td class="mono">generation</td><td>int <span class="tag tag-idx">IDX</span></td><td>Đời thứ (tính từ Thủy tổ = 1). Suy ra khi thêm quan hệ cha–con.</td></tr>
+      <tr><td class="mono">birth_order</td><td>int</td><td><strong>Bổ sung v1.1.</strong> Thứ tự sinh trong số các con cùng cha mẹ. Không có trường này thì <code>is_elder</code> không tính được, tức không phân biệt được <em>bác</em> với <em>chú</em>. Nullable — gia phả cổ thường thiếu, khi đó rule engine rơi vào luật "chưa rõ vai".</td></tr>
+      <tr><td class="mono">birth_solar</td><td>date</td><td>Ngày sinh dương (nullable — dữ liệu cổ có thể thiếu).</td></tr>
+      <tr><td class="mono">birth_lunar</td><td>jsonb</td><td>{year, month, day, leap} âm lịch.</td></tr>
+      <tr><td class="mono">death_solar / death_lunar</td><td>date / jsonb</td><td>Ngày mất — <code>death_lunar</code> là gốc để tính giỗ.</td></tr>
+      <tr><td class="mono">is_alive</td><td>boolean <span class="tag tag-idx">IDX</span></td><td>Quyết định tầng hiển thị (mục 10 BA).</td></tr>
+      <tr><td class="mono">native_place / current_place</td><td>varchar</td><td>Nguyên quán / trú quán (cấp tỉnh = Tầng 2).</td></tr>
+      <tr><td class="mono">primary_branch_id <span class="tag tag-fk">FK</span></td><td>uuid → branch</td><td>Chi/nhánh chính (dùng cho RBAC scope).</td></tr>
+      <tr><td class="mono">attributes</td><td>jsonb</td><td>Thuộc tính mở rộng linh động (học vị, chức tước…).</td></tr>
+      <tr><td class="mono">privacy_level</td><td>varchar(12)</td><td>Ghi đè mức chia sẻ do chủ thể chọn (opt-in Tầng 3).</td></tr>
+      <tr><td class="mono">is_deleted</td><td>boolean <span class="tag tag-idx">IDX</span></td><td><strong>Xóa mềm</strong> — không bao giờ DELETE cứng.</td></tr>
+      <tr><td class="mono">created_at / updated_at / version</td><td>timestamptz / bigint</td><td>Audit + optimistic locking (<code>@Version</code>).</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>5.2 <code>person_name</code> — Tên đa lớp (1 person : N tên)</h4>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:20%">Field</th><th style="width:18%">Kiểu</th><th>Mô tả</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">id <span class="tag tag-pk">PK</span></td><td>uuid</td><td></td></tr>
+      <tr><td class="mono">person_id <span class="tag tag-fk">FK</span></td><td>uuid → person</td><td></td></tr>
+      <tr><td class="mono">name_type</td><td>varchar(16)</td><td>HUY / TU / HIEU / THUY / THUONG_GOI / PHAP_DANH.</td></tr>
+      <tr><td class="mono">full_name</td><td>varchar</td><td>Tên Quốc ngữ.</td></tr>
+      <tr><td class="mono">name_hannom</td><td>varchar</td><td>Tên chữ Hán/Nôm (nullable).</td></tr>
+      <tr><td class="mono">name_unaccented</td><td>varchar <span class="tag tag-idx">IDX</span></td><td>Không dấu — phục vụ tìm kiếm &amp; kiều bào. Generated column.</td></tr>
+      <tr><td class="mono">is_primary</td><td>boolean</td><td>Tên hiển thị mặc định.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>5.3 <code>branch</code> — Chi/Ngành (dùng ltree)</h4>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:20%">Field</th><th style="width:18%">Kiểu</th><th>Mô tả</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">id <span class="tag tag-pk">PK</span></td><td>uuid</td><td></td></tr>
+      <tr><td class="mono">name</td><td>varchar</td><td>Tên chi/ngành/cành/nhánh.</td></tr>
+      <tr><td class="mono">path</td><td>ltree <span class="tag tag-idx">IDX</span></td><td>Đường dẫn phân cấp (vd <code>root.chi1.nhanh2</code>) — truy vấn phạm vi RBAC nhanh.</td></tr>
+      <tr><td class="mono">region</td><td>varchar(10)</td><td>BAC/TRUNG/NAM — chọn bộ quy tắc danh xưng.</td></tr>
+      <tr><td class="mono">head_person_id <span class="tag tag-fk">FK</span></td><td>uuid → person</td><td>Trưởng chi (chức danh dòng tộc).</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>5.4 <code>relationship</code> — Quan hệ (mirror quan hệ của graph)</h4>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:20%">Field</th><th style="width:18%">Kiểu</th><th>Mô tả</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">id <span class="tag tag-pk">PK</span></td><td>uuid</td><td></td></tr>
+      <tr><td class="mono">from_person_id <span class="tag tag-fk">FK</span></td><td>uuid</td><td>Nguồn.</td></tr>
+      <tr><td class="mono">to_person_id <span class="tag tag-fk">FK</span></td><td>uuid</td><td>Đích.</td></tr>
+      <tr><td class="mono">rel_type</td><td>varchar(20) <span class="tag tag-idx">IDX</span></td><td>PARENT_BIO / PARENT_ADOPT / SPOUSE / HEIR (đích tôn/thừa/kế tự).</td></tr>
+      <tr><td class="mono">spouse_order</td><td>int</td><td>Thứ tự vợ/chồng (đa thê/đa phu).</td></tr>
+      <tr><td class="mono">valid_from / valid_to</td><td>date</td><td>Khoảng hiệu lực (tái hôn, ly hôn).</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Nguồn chân lý của cạnh là <strong>graph AGE</strong>; bảng <code>relationship</code> là bản chiếu để ràng buộc FK, audit và truy vấn quan hệ SQL thuần. Ghi đồng bộ trong cùng transaction.</p>
+
+  <h4>5.5 <code>kinship_rule_set</code> &amp; <code>kinship_rule</code> — Rule engine danh xưng (FR-1.3a)</h4>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:22%">Field</th><th style="width:18%">Kiểu</th><th>Mô tả</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">rule_set.id <span class="tag tag-pk">PK</span></td><td>uuid</td><td>Một bộ quy tắc.</td></tr>
+      <tr><td class="mono">rule_set.scope</td><td>varchar</td><td>DEFAULT / REGION / CLAN / BRANCH — cấp áp dụng.</td></tr>
+      <tr><td class="mono">rule_set.parent_id <span class="tag tag-fk">FK</span></td><td>uuid</td><td>Kế thừa &amp; ghi đè từ bộ cha.</td></tr>
+      <tr><td class="mono">rule.id <span class="tag tag-pk">PK</span></td><td>uuid</td><td></td></tr>
+      <tr><td class="mono">rule.rule_set_id <span class="tag tag-fk">FK</span></td><td>uuid</td><td></td></tr>
+      <tr><td class="mono">rule.gen_delta</td><td>int</td><td>Chênh lệch đời so với LCA (± bậc).</td></tr>
+      <tr><td class="mono">rule.side</td><td>varchar</td><td>PATERNAL/MATERNAL/BLOOD/IN_LAW — bên nội/ngoại/huyết thống/hôn nhân.</td></tr>
+      <tr><td class="mono">rule.gender</td><td>varchar</td><td>Giới tính đối tượng được gọi.</td></tr>
+      <tr><td class="mono">rule.is_elder</td><td>boolean</td><td>Vai trên/dưới (anh cả vs em của cha…). Tính được nhờ <code>person.birth_order</code> (§5.1).</td></tr>
+      <tr><td class="mono">rule.collateral_degree</td><td>int</td><td><strong>Bổ sung v1.1.</strong> Bậc bàng hệ <code>= min(dist_a, dist_b)</code>, suy thẳng từ kết quả LCA. <code>0</code> = trực hệ · <code>1</code> = ruột · <code>2</code> = họ (con chú con bác) · <code>&gt;=3</code> = họ xa. Có thêm cặp <code>collateral_degree_min/_max</code> cho luật áp theo khoảng.</td></tr>
+      <tr><td class="mono">rule.title</td><td>varchar</td><td>Danh xưng kết quả (vd "bác họ", "cô ruột").</td></tr>
+      <tr><td class="mono">rule.priority</td><td>int</td><td>Thứ tự khớp khi nhiều luật trùng.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>5.6 Các bảng khác (tóm tắt)</h4>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:22%">Bảng</th><th>Field chính</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">event</td><td>id, person_id, event_type, lunar_date(jsonb), target_branch_id, is_clan_level</td></tr>
+      <tr><td class="mono">reminder_job</td><td>id, event_id, fire_at(timestamptz), offset_days(7/3/1), status(PENDING/SENT/FAILED)</td></tr>
+      <tr><td class="mono">notification_log</td><td>id, reminder_job_id, recipient_person_id, channel(ZALO), provider_msg_id, status, retry_count, error</td></tr>
+      <tr><td class="mono">grave</td><td>id, person_id, gps_lat, gps_lng, cemetery_map(jsonb), status(BURIED/RE_BURIED), media…</td></tr>
+      <tr><td class="mono">hall</td><td>id, name, address, gps, ritual_calendar(jsonb), media…</td></tr>
+      <tr><td class="mono">media_asset</td><td>id, owner_type, owner_id, minio_key, mime, size, uploaded_by</td></tr>
+      <tr><td class="mono">app_user</td><td>id, keycloak_sub, person_id, status, locale(vi/en)</td></tr>
+      <tr><td class="mono">role / branch_assignment</td><td>user_id, role(ADMIN/COUNCIL/BRANCH_HEAD/MEMBER/GUEST), branch_id(scope)</td></tr>
+      <tr><td class="mono">change_request</td><td>id, person_id, payload(jsonb), requested_by, status(PENDING/APPROVED/REJECTED), reviewer_id</td></tr>
+      <tr><td class="mono">fund_account / fund_transaction / donation</td><td>ledger thu–chi, biên nhận, người đóng góp, kỳ báo cáo</td></tr>
+      <tr><td class="mono">audit_log</td><td>id, entity_type, entity_id, action, actor_id, before(jsonb), after(jsonb), at</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- 6 -->
+  <h2 id="s6">6. Mô Hình Graph (Apache AGE)</h2>
+  <p>Cây phả hệ lưu trong đồ thị AGE tên <code>giapha_graph</code>. Node <code>Person</code> (chỉ giữ <code>id</code> + vài thuộc tính tra cứu), cạnh mang loại quan hệ. Dữ liệu chi tiết vẫn ở bảng <code>person</code>.</p>
+  <div class="code-block"><span class="c">-- Tạo cạnh cha→con</span>
+SELECT * FROM cypher('giapha_graph', $$
+  MATCH (p:Person {id: $parentId}), (c:Person {id: $childId})
+  CREATE (p)-[:PARENT {type:'BIO'}]->(c)
+$$) AS (v agtype);
+
+<span class="c">-- LCA + khoảng cách đời phục vụ danh xưng</span>
+SELECT * FROM cypher('giapha_graph', $$
+  MATCH path1 = (a:Person {id:$id1})&lt;-[:PARENT*0..]-(anc:Person),
+        path2 = (b:Person {id:$id2})&lt;-[:PARENT*0..]-(anc)
+  RETURN anc.id AS lca,
+         length(path1) AS dist_a,
+         length(path2) AS dist_b
+  ORDER BY (length(path1)+length(path2)) ASC LIMIT 1
+$$) AS (lca agtype, dist_a agtype, dist_b agtype);</div>
+  <p class="note"><strong>Chiều cạnh <code>PARENT</code> là cha→con</strong> (đúng như câu <code>CREATE</code> ở trên: <code>(p)-[:PARENT]-&gt;(c)</code> đọc là "p là cha/mẹ của c"). Vì vậy khi đi ngược lên tổ tiên phải dùng mũi tên ngược <code>&lt;-[:PARENT*0..]-</code>; <code>*0..</code> bao cả chính nó. Kết quả (lca, dist_a, dist_b, collateral_degree, side, gender, is_elder) là input cho <code>KinshipResolver</code> tra <code>kinship_rule</code>.</p>
+  <div class="warn" style="background:var(--amber-bg);border:1px solid #e6cf9a;border-left:4px solid var(--accent);border-radius:6px;padding:13px 16px;margin:12px 0;font-size:13px;">
+    <strong>Đính chính v1.1 —</strong> bản v1.0 viết truy vấn LCA theo chiều xuôi
+    <code>(a)-[:PARENT*0..]-&gt;(anc)</code> và mô tả "cạnh PARENT hướng con→tổ", cả hai đều mâu thuẫn với
+    câu <code>CREATE</code> ngay phía trên. Chạy thử trên Apache AGE cho thấy truy vấn cũ trả về
+    <strong>0 row</strong> với mọi cặp người — tức là engine danh xưng sẽ im lặng không tìm thấy quan hệ
+    nào mà không văng lỗi. Bản đúng ở trên đã được kiểm chứng: với cây
+    <code>A→B, A→C, B→D, C→E</code> thì <code>LCA(D,E)</code> trả về <code>(A, 2, 2)</code>.
+  </div>
+
+  <!-- 7 -->
+  <h2 id="s7">7. Thiết Kế Class (Domain &amp; Service)</h2>
+  <div class="code-block"><span class="c">// ---- genealogy/domain ----</span>
+<span class="k">class</span> Person (AggregateRoot) {
+  PersonId id; Gender gender; int generation;
+  DateDual birth, death; boolean alive, deleted;
+  List&lt;PersonName&gt; names; BranchId primaryBranch;
+  PrivacyLevel privacy; Map&lt;String,Object&gt; attributes;
+  <span class="c">// hành vi nghiệp vụ, không setter trần</span>
+  void softDelete();  void addName(PersonName n);  void markDeceased(DateDual d);
+}
+<span class="k">record</span> PersonName(NameType type, String full, String hannom, boolean primary);
+<span class="k">enum</span>  NameType { HUY, TU, HIEU, THUY, THUONG_GOI, PHAP_DANH }
+<span class="k">record</span> DateDual(LocalDate solar, LunarDate lunar);   <span class="c">// value object</span>
+
+<span class="k">interface</span> PersonRepository { Person byId(id); void save(Person); }
+<span class="k">interface</span> TreeGraphPort  { void linkParent(parentId, childId, type);
+                            LcaResult lca(id1, id2); List&lt;Id&gt; ancestors(id); }
+
+<span class="c">// ---- kinship/domain ----</span>
+<span class="k">class</span> KinshipResolver {
+  <span class="c">// thuần logic: KHÔNG phụ thuộc Spring/DB</span>
+  String resolve(LcaResult lca, PersonView a, PersonView b, KinshipRuleSet rules);
+}
+<span class="k">class</span> KinshipRuleSet { Scope scope; RuleSet parent;   <span class="c">// kế thừa/ghi đè</span>
+  List&lt;KinshipRule&gt; rules;  Optional&lt;String&gt; match(RelationFacts f); }
+
+<span class="c">// ---- application (điều phối use-case, @Transactional) ----</span>
+<span class="k">class</span> AddPersonService {
+  <span class="c">// 1) validate kỵ húy  2) tạo Person  3) link graph  4) audit  5) publish event</span>
+  PersonId handle(AddPersonCommand cmd);
+}
+<span class="k">class</span> ResolveKinshipTitleService {
+  KinshipTitleDto handle(id1, id2) {
+    var lca = treeGraph.lca(id1, id2);
+    var ruleSet = ruleSetRepo.resolveFor(branchOf(id1));  <span class="c">// DEFAULT→REGION→CLAN→BRANCH</span>
+    return resolver.resolve(lca, view(id1), view(id2), ruleSet);
+  }
+}
+<span class="c">// ---- infrastructure (adapter hiện thực port) ----</span>
+<span class="k">class</span> AgeTreeGraphAdapter <span class="k">implements</span> TreeGraphPort { <span class="c">/* chạy Cypher AGE */</span> }
+<span class="k">class</span> PersonJpaRepositoryAdapter <span class="k">implements</span> PersonRepository { }</div>
+  <p class="note">Nguyên tắc: <strong>domain thuần POJO</strong> (test đơn vị không cần Spring context) · application mỏng, chỉ điều phối · adapter cô lập công nghệ. <code>KinshipResolver</code> tách khỏi hạ tầng để test hàng trăm ca danh xưng nhanh.</p>
+
+  <!-- 8 -->
+  <h2 id="s8">8. Luồng Nghiệp Vụ Chính (Sequence)</h2>
+
+  <h3>8.1 Thêm nhân khẩu + kiểm tra kỵ húy + duyệt</h3>
+  <div class="code-block">Member/BranchHead → API(POST /persons) → AddPersonService
+  1. AddPersonService.validateTaboo(name)      <span class="c"># FR-1.6 kỵ húy</span>
+     └─ nếu trùng tên húy bậc trên → cảnh báo (cho phép ghi đè có xác nhận)
+  2. Nếu người tạo là Member (không đủ quyền duyệt):
+     └─ tạo ChangeRequest(status=PENDING) → thông báo Trưởng chi → DỪNG
+  3. Nếu BranchHead/Council (trong scope): tạo Person (is_deleted=false)
+  4. TreeGraphPort.linkParent(...)             <span class="c"># đồng bộ graph AGE</span>
+  5. AuditLog.record(CREATE, before=null, after=person)
+  6. publish PersonAddedEvent → (reporting cập nhật read-model)
+  7. trả 201 + PersonId</div>
+
+  <h3>8.2 Tra cứu danh xưng (LCA + rule engine)</h3>
+  <div class="code-block">User → API(GET /kinship?from=A&to=B) → ResolveKinshipTitleService
+  1. treeGraph.lca(A,B) → (lcaId, distA, distB)          <span class="c"># Cypher AGE</span>
+  2. tính RelationFacts: genDelta, side(nội/ngoại), gender, isElder
+  3. ruleSetRepo.resolveFor(branch(A)) → hợp nhất DEFAULT→REGION→CLAN→BRANCH
+  4. resolver.match(facts) → "Bác họ" (hoặc theo cấu hình dòng họ)
+  5. cache Redis (key A:B) → trả KinshipTitleDto</div>
+
+  <h3>8.3 Nhắc giỗ theo Âm lịch (bất đồng bộ, Zalo)</h3>
+  <div class="code-block">SchedulerJob (chạy hằng đêm) → GenerateRemindersService
+  1. LunarConverter: với mỗi Event, tính ngày dương của giỗ năm nay (nhuận/GMT+7)
+  2. sinh ReminderJob cho mốc 7/3/1 ngày (status=PENDING)
+  Khi tới fire_at:
+  3. publish NotificationRequest → RabbitMQ (exchange=notify)
+  4. NotificationConsumer: chọn recipient = thành viên cùng chi/nhánh của Event
+  5. ZaloProvider.send(...) → thành công: log SENT
+                          → lỗi: retry (backoff) → hết hạn → Dead-Letter Queue
+  6. ghi NotificationLog (provider_msg_id, status, retry_count)</div>
+
+  <h3>8.4 Yêu cầu đính chính → Trưởng chi duyệt (RBAC theo nhánh)</h3>
+  <div class="code-block">Member → API(POST /change-requests) → ChangeRequest(PENDING, payload jsonb)
+BranchHead → API(POST /change-requests/{id}/approve)
+  1. SecurityCheck: branchOf(request.person) ∈ scope(BranchHead)?  <span class="c"># @RequiresBranch</span>
+     └─ không thuộc nhánh → 403 Forbidden
+  2. áp payload vào Person (có optimistic lock @Version)
+  3. AuditLog.record(UPDATE, before, after); request.status=APPROVED
+  4. thông báo người yêu cầu</div>
+
+  <h3>8.5 Xóa mềm / Ẩn danh hóa (PDPD)</h3>
+  <div class="code-block">1. Xóa thành viên → person.softDelete() (is_deleted=true) — GIỮ node graph
+2. Yêu cầu xóa dữ liệu cá nhân hợp pháp (người sống):
+   └─ AnonymizeService: xóa Tầng 3 (SĐT/email/địa chỉ/ảnh), giữ vai vế phả hệ
+   └─ AuditLog ghi hành động (không ghi nội dung nhạy cảm)</div>
+
+  <!-- 9 -->
+  <h2 id="s9">9. Thiết Kế API (trích yếu)</h2>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:30%">Endpoint</th><th style="width:12%">Method</th><th>Mô tả / Quyền</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">/api/persons</td><td>POST</td><td>Thêm nhân khẩu (BranchHead+ trong scope; Member → tạo ChangeRequest).</td></tr>
+      <tr><td class="mono">/api/persons/{id}</td><td>GET/PATCH</td><td>Xem/sửa; áp mô hình phân tầng hiển thị theo vai trò &amp; is_alive.</td></tr>
+      <tr><td class="mono">/api/persons/{id}</td><td>DELETE</td><td>Xóa mềm (không xóa cứng).</td></tr>
+      <tr><td class="mono">/api/tree?rootId=&depth=</td><td>GET</td><td>Lấy nhánh cây (lazy); trả projection cache.</td></tr>
+      <tr><td class="mono">/api/kinship?from=&to=</td><td>GET</td><td>Danh xưng giữa 2 người (LCA + rule engine).</td></tr>
+      <tr><td class="mono">/api/kinship-rules</td><td>GET/PUT</td><td>Quản trị bộ quy tắc danh xưng (Council).</td></tr>
+      <tr><td class="mono">/api/events · /api/reminders</td><td>—</td><td>Quản lý giỗ/lễ &amp; lịch nhắc.</td></tr>
+      <tr><td class="mono">/api/change-requests/{id}/approve</td><td>POST</td><td>Duyệt đính chính (BranchHead trong nhánh).</td></tr>
+      <tr><td class="mono">/api/graphql</td><td>POST</td><td>Truy vấn cây lồng sâu (client chọn độ sâu).</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Chuẩn hóa lỗi qua <code>@RestControllerAdvice</code> (RFC 7807 Problem Details). Versioning URL <code>/api/v1</code>. OpenAPI/Swagger tự sinh.</p>
+
+  <!-- 10 -->
+  <h2 id="s10">10. Bảo Mật &amp; Phân Quyền (RBAC theo chi/ngành)</h2>
+  <ul>
+    <li><strong>AuthN:</strong> Keycloak (OAuth2/OIDC) + social login (Google, Zalo). Backend nhận JWT, map <code>keycloak_sub → app_user → person</code>.</li>
+    <li><strong>AuthZ 2 chiều:</strong> (1) <em>Role</em> (ADMIN/COUNCIL/BRANCH_HEAD/MEMBER/GUEST); (2) <em>Branch scope</em> — annotation <code>@RequiresBranch</code> + <code>BranchScope</code> kiểm tra <code>ltree</code> path đối tượng nằm trong nhánh được giao.</li>
+    <li><strong>Phân tầng dữ liệu:</strong> filter ở tầng application/serialization theo <code>is_alive</code> + role + <code>privacy_level</code> (mục 10 BA).</li>
+    <li><strong>Chống OWASP:</strong> validate input, Cypher/SQL tham số hóa, rate-limit, CORS, mã hóa Tầng 3 at-rest, không log dữ liệu nhạy cảm.</li>
+  </ul>
+  <div class="code-block"><span class="c">// Ví dụ kiểm tra scope theo ltree</span>
+<span class="k">@RequiresBranch</span>(action = APPROVE)
+PersonDto approve(UUID personId, CurrentUser u) {
+  BranchPath target = branchRepo.pathOf(personId);
+  <span class="k">if</span> (!u.branchScopes().anyMatch(target::isDescendantOrSelf))
+      <span class="k">throw new</span> ForbiddenException();
+  ...
+}</div>
+
+  <!-- 11 -->
+  <h2 id="s11">11. Vận Hành &amp; DevOps</h2>
+  <div class="grid2">
+    <div class="card"><div class="card-title">CI/CD</div>
+      <ul style="margin-bottom:0">
+        <li>Pipeline: build → unit test → <strong>integration test (Testcontainers: Postgres+AGE, RabbitMQ)</strong> → scan bảo mật → build image → deploy.</li>
+        <li>Migration Flyway chạy khi khởi động (kiểm soát bằng <code>baseline</code>).</li>
+        <li>Frontend: build → test (Vitest) → E2E (Playwright) → deploy.</li>
+      </ul>
+    </div>
+    <div class="card"><div class="card-title">Quan sát (Observability)</div>
+      <ul style="margin-bottom:0">
+        <li>Logs tập trung (Loki), metrics (Micrometer→Prometheus), tracing (OpenTelemetry), dashboard Grafana.</li>
+        <li>Alert: hàng đợi DLQ tăng, tỉ lệ gửi Zalo lỗi, độ trễ truy vấn cây.</li>
+      </ul>
+    </div>
+    <div class="card"><div class="card-title">Sao lưu &amp; Phục hồi</div>
+      <ul style="margin-bottom:0">
+        <li>PostgreSQL: <code>pg_dump</code> hằng ngày + WAL archiving (PITR).</li>
+        <li>MinIO: versioning + sao lưu định kỳ.</li>
+        <li>Diễn tập phục hồi (restore drill) theo quý.</li>
+      </ul>
+    </div>
+    <div class="card"><div class="card-title">Cấu hình &amp; Scale</div>
+      <ul style="margin-bottom:0">
+        <li>Backend stateless → scale ngang; session ở Redis.</li>
+        <li>Worker notification tách tiến trình → scale theo tải mùa giỗ.</li>
+        <li>Secrets qua vault/env; không commit.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 12 -->
+  <h2 id="s12">12. Kế Hoạch Implement (Checklist theo Giai đoạn 1 — MVP)</h2>
+  <div class="table-responsive"><table>
+    <thead><tr><th style="width:8%">STT</th><th style="width:34%">Hạng mục</th><th>Đầu ra / Ghi chú</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Khởi tạo project Spring Boot 3 + cấu trúc module</td><td>Skeleton các context, config Security/JPA/Rabbit/Redis.</td></tr>
+      <tr><td>2</td><td>Docker Compose hạ tầng dev</td><td>Postgres+AGE, Redis, RabbitMQ, MinIO, Keycloak.</td></tr>
+      <tr><td>3</td><td>Migration Flyway: person, person_name, branch, relationship</td><td>+ index, ltree, FTS unaccent; seed rule danh xưng DEFAULT.</td></tr>
+      <tr><td>4</td><td>Graph AGE + <code>TreeGraphPort</code> adapter</td><td>link quan hệ, ancestors, LCA (Cypher).</td></tr>
+      <tr><td>5</td><td>genealogy: AddPerson, SoftDelete, kỵ húy check</td><td>domain thuần + application + api + test.</td></tr>
+      <tr><td>6</td><td>kinship: RuleSet resolve + KinshipResolver</td><td>bộ test ca biên (đa thê, con nuôi, dâu/rể, tuyệt tự).</td></tr>
+      <tr><td>7</td><td>calendar: LunarConverter (Hồ Ngọc Đức) + test đối chiếu</td><td>tháng nhuận, tiết khí, GMT+7.</td></tr>
+      <tr><td>8</td><td>events + reminder scheduler + RabbitMQ + Zalo provider</td><td>retry/DLQ; MVP chỉ kênh Zalo.</td></tr>
+      <tr><td>9</td><td>membership + Keycloak + RBAC theo nhánh</td><td>@RequiresBranch, ChangeRequest workflow.</td></tr>
+      <tr><td>10</td><td>Frontend: cây tương tác (React Flow) + hồ sơ + tra danh xưng</td><td>lazy load, phân tầng hiển thị.</td></tr>
+      <tr><td>11</td><td>Audit trail + phân tầng hiển thị dữ liệu (PDPD)</td><td>AuditInterceptor, serialization filter.</td></tr>
+      <tr><td>12</td><td>Observability + CI/CD + backup</td><td>OTel/Prometheus/Grafana, pipeline, pg_dump.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Ưu tiên đường trục demo được sớm: <strong>2→3→4→5→6→10</strong> (cây + danh xưng) rồi tới nhắc giỗ (7→8) và RBAC (9).</p>
+
+  </div>
+  <div class="footer">
+    Tài liệu Thiết kế Kỹ thuật (TDD) v1.0 — Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ &copy; 2026.<br>
+    Dựa trên BA v2.0. Kiến trúc: Modular Monolith / DDD · Spring Boot 3.x · PostgreSQL + Apache AGE.
+  </div>
+</div>
+</body>
+</html>

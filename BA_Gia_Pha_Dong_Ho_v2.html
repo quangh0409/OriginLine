@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tài Liệu Phân Tích Nghiệp Vụ (BA) — Hệ Thống Gia Phả Dòng Họ | Business Requirements Document</title>
+<style>
+  :root {
+    --primary: #8c2d19; --primary-dark: #661e0f; --primary-light: #fbeee9;
+    --secondary: #2c3e50; --text-main: #2b2825; --text-muted: #5e564d;
+    --bg-page: #f8f6f2; --bg-card: #ffffff; --border: #e6dfd5; --border-dark: #cdbeaa;
+    --accent: #d97706; --green: #15803d; --green-bg: #eaf6ee; --blue: #1d4ed8; --blue-bg: #eaf0fb;
+    --red: #b91c1c; --red-bg: #fbeae9; --amber-bg: #fdf6e7;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-page); color: var(--text-main); line-height: 1.65; padding: 30px 15px;
+  }
+  .container {
+    max-width: 1080px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; padding: 36px 35px 30px; border-bottom: 3px solid var(--accent);
+  }
+  .badge {
+    display: inline-block; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 12px;
+  }
+  .header h1 { font-size: 23px; font-weight: 800; line-height: 1.3; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .header .en-title { font-size: 15px; font-weight: 500; opacity: 0.85; font-style: italic; margin-bottom: 10px; }
+  .header p { font-size: 13.5px; opacity: 0.92; color: #fcece8; }
+  .meta-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;
+    background: #f1ebd8; padding: 14px 35px; border-bottom: 1px solid var(--border);
+    font-size: 12.5px; color: var(--text-muted);
+  }
+  .meta-bar strong { color: var(--text-main); }
+  .toc {
+    background: #faf8f5; border-bottom: 1px solid var(--border); padding: 20px 35px;
+    font-size: 13px; column-count: 2; column-gap: 30px;
+  }
+  .toc a { color: var(--primary); text-decoration: none; display: block; margin-bottom: 5px; }
+  .toc a:hover { text-decoration: underline; }
+  .content { padding: 35px; }
+  h2 {
+    font-size: 17px; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px;
+    margin: 36px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; scroll-margin-top: 20px;
+  }
+  h2 .en { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: none; font-style: italic; letter-spacing: 0; margin-top: 2px; }
+  h2:first-of-type { margin-top: 0; }
+  h3 { font-size: 14.5px; color: var(--secondary); margin: 20px 0 8px; }
+  h3 .en { font-weight: 400; color: var(--text-muted); font-style: italic; font-size: 12.5px; }
+  p { margin-bottom: 12px; font-size: 14px; }
+  ul, ol { margin: 0 0 16px 22px; font-size: 14px; }
+  li { margin-bottom: 6px; }
+  .en-inline { color: var(--text-muted); font-style: italic; }
+  .lead {
+    background: var(--primary-light); border: 1px solid var(--border-dark); border-radius: 6px;
+    padding: 16px 20px; font-size: 14px; margin: 8px 0 4px;
+  }
+  .card { background: #faf8f5; border: 1px solid var(--border); border-radius: 6px; padding: 18px 20px; margin-bottom: 18px; }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+  .card-title .en { display:block; font-size: 12px; color: var(--text-muted); font-weight: 500; font-style: italic; }
+  .table-responsive { overflow-x: auto; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+  th, td { padding: 10px 12px; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--secondary); color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #faf7f0; }
+  code { background: #ece5da; padding: 1px 6px; border-radius: 4px; font-family: Consolas, Monaco, monospace; font-size: 12px; color: var(--primary-dark); }
+  .id { font-family: Consolas, Monaco, monospace; font-weight: 700; color: var(--primary-dark); white-space: nowrap; }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 2px 7px; border-radius: 4px; }
+  .tag-must { background: var(--red-bg); color: var(--red); border: 1px solid #e7b7b3; }
+  .tag-should { background: var(--amber-bg); color: var(--accent); border: 1px solid #ecd39a; }
+  .tag-could { background: var(--blue-bg); color: var(--blue); border: 1px solid #b8c8ee; }
+  .tag-p1 { background: var(--green-bg); color: var(--green); border: 1px solid #b3d9c1; }
+  .arch-diagram {
+    background: #1e2430; color: #e2e8f0; font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12px; line-height: 1.55; padding: 20px; border-radius: 6px; overflow-x: auto;
+    margin: 14px 0 22px; border-left: 4px solid var(--accent); white-space: pre;
+  }
+  .timeline { border-left: 2px solid var(--border-dark); margin: 15px 0 20px 10px; padding-left: 20px; }
+  .timeline-item { position: relative; margin-bottom: 18px; }
+  .timeline-item::before { content: ""; position: absolute; left: -26px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid #fff; }
+  .timeline-title { font-size: 14px; font-weight: 700; color: var(--secondary); }
+  .timeline-desc { font-size: 13px; color: var(--text-muted); }
+  .footer { text-align: center; padding: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); background: #fbf9f6; }
+  .note { font-size: 12.5px; color: var(--text-muted); border-left: 3px solid var(--border-dark); padding-left: 10px; margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="badge">Business Requirements Document — v2.0</div>
+    <h1>TÀI LIỆU PHÂN TÍCH NGHIỆP VỤ<br>Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ</h1>
+    <div class="en-title">Business Analysis Document — Clan Genealogy Management System &amp; Family Portal</div>
+    <p>Phiên bản chuẩn hóa — tích hợp đặc trưng dòng họ Việt Nam &amp; kiến trúc công nghệ tinh gọn<br>
+    <span class="en-inline" style="color:#fcece8">Standardized edition — Vietnamese clan characteristics &amp; streamlined technical architecture</span></p>
+  </div>
+
+  <div class="meta-bar">
+    <div><strong>Phiên bản / Version:</strong> 2.0</div>
+    <div><strong>Trạng thái / Status:</strong> Bản chuẩn hóa (Baseline)</div>
+    <div><strong>Vai trò / Author role:</strong> Senior BA / Solution Architect</div>
+    <div><strong>Kế hoạch đích / Target:</strong> 2026</div>
+    <div><strong>CSDL cây / Tree store:</strong> PostgreSQL + Apache AGE</div>
+    <div><strong>Ngôn ngữ / Language:</strong> Song ngữ VI–EN</div>
+  </div>
+
+  <div class="toc">
+    <a href="#s1">1. Mục tiêu &amp; Tầm nhìn / Objectives &amp; Vision</a>
+    <a href="#s2">2. Phạm vi dự án / Project Scope</a>
+    <a href="#s3">3. Bên liên quan &amp; Vai trò / Stakeholders &amp; Roles</a>
+    <a href="#s4">4. Thuật ngữ nghiệp vụ / Domain Glossary</a>
+    <a href="#s5">5. Yêu cầu chức năng / Functional Requirements</a>
+    <a href="#s6">6. Câu chuyện người dùng / User Stories</a>
+    <a href="#s7">7. Yêu cầu phi chức năng / Non-Functional Reqs</a>
+    <a href="#s8">8. Mô hình dữ liệu / Data Model</a>
+    <a href="#s9">9. Kiến trúc giải pháp / Solution Architecture</a>
+    <a href="#s10">10. Tuân thủ pháp lý / Legal &amp; Compliance</a>
+    <a href="#s11">11. Lộ trình &amp; MVP / Roadmap &amp; MVP</a>
+    <a href="#s12">12. Giả định, Rủi ro, Câu hỏi mở / Assumptions, Risks, Open Items</a>
+  </div>
+
+  <div class="content">
+
+    <!-- 1 -->
+    <h2 id="s1">1. Mục Tiêu &amp; Tầm Nhìn <span class="en">Objectives &amp; Vision</span></h2>
+    <div class="lead">
+      <p style="margin-bottom:8px"><strong>Tầm nhìn:</strong> Số hóa toàn diện phả hệ dòng họ, kết nối các thế hệ con cháu trong và ngoài nước, gìn giữ bản sắc cội nguồn và văn hóa tâm linh; chuyên nghiệp hóa vận hành và gắn kết cộng đồng dòng tộc.</p>
+      <p style="margin-bottom:0" class="en-inline"><strong>Vision:</strong> Fully digitize the clan lineage, connect generations at home and abroad, preserve heritage and spiritual culture, and professionalize clan operations and community engagement.</p>
+    </div>
+    <table>
+      <thead><tr><th style="width:22%">Mục tiêu / Objective</th><th>Chỉ số thành công / Success measure</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Quy mô dữ liệu</strong><br><span class="en-inline">Data scale</span></td><td>Quản trị cây phả đồ 10–30+ thế hệ, hàng vạn nhân khẩu, truy vấn quan hệ &lt; 500ms. <span class="en-inline">Manage 10–30+ generations, tens of thousands of members, relationship queries under 500ms.</span></td></tr>
+        <tr><td><strong>Tự động hóa</strong><br><span class="en-inline">Automation</span></td><td>Nhắc giỗ chạp theo Âm lịch đa kênh (Zalo/ZNS, SMS, Web Push) đúng đối tượng, đúng thời điểm. <span class="en-inline">Multi-channel lunar-date reminders to the right members at the right time.</span></td></tr>
+        <tr><td><strong>Toàn vẹn &amp; kế thừa</strong><br><span class="en-inline">Integrity</span></td><td>Xóa mềm, lịch sử phiên bản đầy đủ, phân quyền theo chi/ngành, tuân thủ Nghị định 13/2023. <span class="en-inline">Soft delete, full audit trail, branch-scoped RBAC, PDPD-compliant.</span></td></tr>
+        <tr><td><strong>Kết nối kiều bào</strong><br><span class="en-inline">Diaspora reach</span></td><td>Giao diện song ngữ, hỗ trợ tên không dấu, truy cập di động (PWA). <span class="en-inline">Bilingual UI, unaccented names, mobile (PWA) access.</span></td></tr>
+      </tbody>
+    </table>
+
+    <!-- 2 -->
+    <h2 id="s2">2. Phạm Vi Dự Án <span class="en">Project Scope</span></h2>
+    <h3>Trong phạm vi <span class="en">— In scope</span></h3>
+    <ul>
+      <li>Quản lý cây phả hệ, danh xưng &amp; quan hệ họ hàng (Kinship Engine). <span class="en-inline">Genealogy tree, kinship titles &amp; relationships.</span></li>
+      <li>Hồ sơ nhân khẩu đa lớp (tên húy/tự/hiệu, sinh–tử âm/dương, quê quán, mộ phần). <span class="en-inline">Rich member profiles incl. burial info.</span></li>
+      <li>Lịch Âm–Dương, nhắc giỗ/lễ tự động đa kênh. <span class="en-inline">Lunar calendar &amp; automated multi-channel reminders.</span></li>
+      <li>Truyền thông dòng họ, bảng vàng vinh danh, thư viện di sản. <span class="en-inline">Clan news, hall of fame, heritage library.</span></li>
+      <li>Quản lý từ đường &amp; mộ phần; quỹ họ &amp; sổ công đức. <span class="en-inline">Ancestral hall &amp; graves; clan fund &amp; donations.</span></li>
+      <li>Phân quyền đa cấp theo chi/ngành (RBAC); báo cáo dân số học. <span class="en-inline">Branch-scoped RBAC; demographic reports.</span></li>
+      <li>Import/Export chuẩn <strong>GEDCOM</strong>; số hóa gia phả giấy. <span class="en-inline">GEDCOM import/export; paper digitization.</span></li>
+    </ul>
+    <h3>Ngoài phạm vi (giai đoạn sau) <span class="en">— Out of scope (future phases)</span></h3>
+    <ul>
+      <li><strong>Lớp AI/LLM</strong> (tra cứu danh xưng bằng ngôn ngữ tự nhiên, OCR Hán-Nôm, tự sinh văn khấn/sớ) — đưa vào <em>Phase sau</em>, thiết kế mở để tích hợp. <span class="en-inline">AI/LLM layer deferred to a later phase; architecture kept extensible.</span></li>
+      <li>Ứng dụng di động native (React Native); trước mắt dùng PWA. <span class="en-inline">Native mobile app deferred; PWA first.</span></li>
+      <li>Thương mại điện tử vật phẩm thờ cúng. <span class="en-inline">E-commerce for ritual goods.</span></li>
+    </ul>
+
+    <!-- 3 -->
+    <h2 id="s3">3. Bên Liên Quan &amp; Vai Trò <span class="en">Stakeholders &amp; Roles (RBAC)</span></h2>
+    <p class="note">Lưu ý: tách bạch <strong>chức danh dòng tộc</strong> (Tộc trưởng, Trưởng chi — theo huyết thống/đích tôn) với <strong>vai trò kỹ thuật</strong> (Quản trị hệ thống). Một người có thể giữ cả hai. <span class="en-inline">Clan titles are separated from technical roles; one person may hold both.</span></p>
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th style="width:20%">Vai trò / Role</th><th style="width:14%">Phạm vi / Scope</th><th>Quyền hạn / Permissions</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Quản trị hệ thống</strong><br><span class="en-inline">System Admin</span></td><td>Toàn hệ thống<br><span class="en-inline">Global</span></td><td>Cấu hình, phân quyền, sao lưu, kiểm toán — vai trò kỹ thuật. <span class="en-inline">Config, RBAC, backup, audit.</span></td></tr>
+          <tr><td><strong>Hội đồng Tộc biểu / Tộc trưởng</strong><br><span class="en-inline">Clan Council / Head</span></td><td>Toàn dòng họ<br><span class="en-inline">Whole clan</span></td><td>Phê duyệt cây chung, tài chính dòng họ, vinh danh, quyết định phả hệ. <span class="en-inline">Approve master tree, finances, honors.</span></td></tr>
+          <tr><td><strong>Trưởng Chi / Trưởng Ngành</strong><br><span class="en-inline">Branch Head</span></td><td><strong>Chi/ngành được giao</strong><br><span class="en-inline">Assigned branch only</span></td><td>Quản lý &amp; duyệt cập nhật nhân khẩu <em>trong nhánh</em>; không sửa nhánh khác. <span class="en-inline">Manage/approve within own branch only.</span></td></tr>
+          <tr><td><strong>Thành viên</strong><br><span class="en-inline">Member</span></td><td>Theo phân quyền<br><span class="en-inline">Scoped</span></td><td>Xem theo giới hạn, gửi yêu cầu đính chính, cập nhật hồ sơ bản thân. <span class="en-inline">Scoped view, submit corrections, edit own profile.</span></td></tr>
+          <tr><td><strong>Khách</strong><br><span class="en-inline">Guest</span></td><td>Công khai<br><span class="en-inline">Public</span></td><td>Xem thông tin công khai (chủ yếu người đã khuất), tin tức. <span class="en-inline">Public info (mostly deceased), news.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4 -->
+    <h2 id="s4">4. Thuật Ngữ Nghiệp Vụ <span class="en">Domain Glossary</span></h2>
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th style="width:22%">Thuật ngữ / Term</th><th>Giải nghĩa / Definition</th></tr></thead>
+        <tbody>
+          <tr><td>Chi / Ngành / Cành / Nhánh</td><td>Các cấp phân nhánh trong dòng họ. <span class="en-inline">Hierarchical branches of the lineage.</span></td></tr>
+          <tr><td>Danh xưng</td><td>Cách xưng hô theo vai vế (bác họ, chú/thúc bá, cô ruột…). <span class="en-inline">Vietnamese kinship title/form of address.</span></td></tr>
+          <tr><td>Tên húy / tự / hiệu / thụy</td><td>Các loại tên: tên thật (kiêng gọi) / tên chữ / biệt hiệu / tên đặt sau khi mất. <span class="en-inline">Taboo name / courtesy / style / posthumous name.</span></td></tr>
+          <tr><td>Kỵ húy</td><td>Kiêng đặt tên trùng tên tổ tiên. <span class="en-inline">Naming taboo against ancestors' names.</span></td></tr>
+          <tr><td>Đích tôn / Thừa tự / Kế tự</td><td>Cháu đích tôn nối dõi / người thừa kế hương hỏa / lập người kế tự khi tuyệt tự. <span class="en-inline">Eldest heir / heir of worship / adopted heir.</span></td></tr>
+          <tr><td>Tuyệt tự</td><td>Không có người nối dõi. <span class="en-inline">Lineage without a male heir / discontinued line.</span></td></tr>
+          <tr><td>Dâu / Rể</td><td>Quan hệ hôn nhân (không huyết thống). <span class="en-inline">In-law by marriage.</span></td></tr>
+          <tr><td>Giỗ / Chạp mả / Tiểu tường / Đại tường</td><td>Ngày cúng người mất / tảo mộ cuối năm / giỗ đầu / giỗ hết. <span class="en-inline">Death anniversary / grave-tending / 1st &amp; 2nd year memorials.</span></td></tr>
+          <tr><td>Từ đường</td><td>Nhà thờ họ. <span class="en-inline">Ancestral worship hall.</span></td></tr>
+          <tr><td>LCA</td><td>Tổ tiên chung gần nhất giữa 2 người. <span class="en-inline">Lowest Common Ancestor.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5 -->
+    <h2 id="s5">5. Yêu Cầu Chức Năng <span class="en">Functional Requirements</span></h2>
+    <p class="note">Ưu tiên theo MoSCoW: <span class="tag tag-must">MUST</span> bắt buộc · <span class="tag tag-should">SHOULD</span> nên có · <span class="tag tag-could">COULD</span> tùy chọn. Mã yêu cầu <code>FR-x</code>.</p>
+
+    <div class="card">
+      <div class="card-title">Module 1 — Phả đồ &amp; Kinship Engine <span class="en">Genealogy Tree &amp; Kinship Engine</span></div>
+      <div class="table-responsive"><table>
+        <thead><tr><th style="width:10%">Mã</th><th style="width:10%">Ưu tiên</th><th>Yêu cầu / Requirement</th></tr></thead>
+        <tbody>
+          <tr><td class="id">FR-1.1</td><td><span class="tag tag-must">MUST</span></td><td>Quản lý cây gia phả phân cấp chi/ngành/cành/nhánh; phân biệt con ruột, con nuôi, dâu, rể. <span class="en-inline">Hierarchical tree; distinguish biological/adopted children and in-laws.</span></td></tr>
+          <tr><td class="id">FR-1.2</td><td><span class="tag tag-must">MUST</span></td><td>Xử lý quan hệ phức tạp: đa thê/đa phu, tái hôn, con riêng, tuyệt tự, kế tự, đích tôn/thừa tự. <span class="en-inline">Handle polygamy, remarriage, step-children, heirship.</span></td></tr>
+          <tr><td class="id">FR-1.3</td><td><span class="tag tag-must">MUST</span></td><td>Tìm LCA giữa 2 thành viên bất kỳ và tự động suy luận <strong>danh xưng</strong> chuẩn văn hóa Việt. <span class="en-inline">Compute LCA and infer correct Vietnamese kinship title.</span></td></tr>
+          <tr><td class="id">FR-1.3a</td><td><span class="tag tag-must">MUST</span></td><td><strong>Bộ quy tắc danh xưng cấu hình được (Rule Engine)</strong> theo từng dòng họ &amp; vùng miền (Bắc/Trung/Nam): quy tắc lưu dạng dữ liệu (không hard-code), Hội đồng Tộc biểu chỉnh linh động, có bộ mặc định &amp; kế thừa/ghi đè theo chi. <span class="en-inline">Data-driven, per-clan/per-region configurable kinship-title rule engine, editable by the clan council with defaults &amp; branch-level overrides.</span></td></tr>
+          <tr><td class="id">FR-1.4</td><td><span class="tag tag-must">MUST</span></td><td>Chế độ hiển thị: cây phân cấp, cây tỏa tròn (radial), ma trận thế hệ; zoom/kéo-thả/thu gọn nhánh, lazy-load cho cây hàng nghìn node. <span class="en-inline">Hierarchical/radial/matrix views with lazy loading.</span></td></tr>
+          <tr><td class="id">FR-1.5</td><td><span class="tag tag-must">MUST</span></td><td><strong>Xóa mềm bắt buộc</strong> — không xóa cứng node, không làm gãy liên kết cây; ghi lịch sử phiên bản (audit versioning). <span class="en-inline">Soft delete only; full version history.</span></td></tr>
+          <tr><td class="id">FR-1.6</td><td><span class="tag tag-should">SHOULD</span></td><td><strong>Cảnh báo kỵ húy</strong> khi thêm thành viên trùng tên húy bậc trên; hỗ trợ quy tắc chữ đệm theo đời. <span class="en-inline">Naming-taboo warning; generational middle-name rules.</span></td></tr>
+          <tr><td class="id">FR-1.7</td><td><span class="tag tag-should">SHOULD</span></td><td>Import/Export <strong>GEDCOM</strong>; nhập từ ảnh scan gia phả giấy. <span class="en-inline">GEDCOM import/export; paper scan intake.</span></td></tr>
+          <tr><td class="id">FR-1.8</td><td><span class="tag tag-must">MUST</span></td><td><strong>Ghi nhận đầy đủ con gái, cháu ngoại &amp; bên ngoại</strong> ngang bằng con trai (bình đẳng giới) — mặc định của hệ thống. <span class="en-inline">Fully record daughters, maternal-line descendants equally with sons — system default.</span></td></tr>
+          <tr><td class="id">FR-1.9</td><td><span class="tag tag-could">COULD</span></td><td>Liên kết <strong>thông gia</strong> sang gia phả họ khác. <span class="en-inline">Link to other clans via marriage.</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Module 2 — Sự kiện, Nhắc lịch Âm &amp; Truyền thông <span class="en">Events, Lunar Reminders &amp; Communications</span></div>
+      <div class="table-responsive"><table>
+        <thead><tr><th style="width:10%">Mã</th><th style="width:10%">Ưu tiên</th><th>Yêu cầu / Requirement</th></tr></thead>
+        <tbody>
+          <tr><td class="id">FR-2.1</td><td><span class="tag tag-must">MUST</span></td><td>Quy đổi Âm–Dương chính xác (thuật toán Hồ Ngọc Đức, GMT+7, tháng nhuận, tiết khí). <span class="en-inline">Accurate lunar–solar conversion incl. leap months &amp; solar terms.</span></td></tr>
+          <tr><td class="id">FR-2.2</td><td><span class="tag tag-must">MUST</span></td><td>Nhắc tự động trước 7/3/1 ngày, gửi đúng thành viên cùng chi/nhánh qua Zalo OA/ZNS, SMS, Web Push. <span class="en-inline">Auto reminders 7/3/1 days ahead to correct branch members, multi-channel.</span></td></tr>
+          <tr><td class="id">FR-2.3</td><td><span class="tag tag-should">SHOULD</span></td><td><strong>Phân loại lễ:</strong> giỗ tổ/họ/chi, giỗ thường, tiểu tường, đại tường, chạp mả, mừng thọ. <span class="en-inline">Classify event types.</span></td></tr>
+          <tr><td class="id">FR-2.4</td><td><span class="tag tag-should">SHOULD</span></td><td>Bản tin dòng họ &amp; <strong>Bảng vàng vinh danh</strong> (khoa bảng, đóng góp, khuyến học). <span class="en-inline">Newsletter &amp; hall of fame.</span></td></tr>
+          <tr><td class="id">FR-2.5</td><td><span class="tag tag-must">MUST</span></td><td>Cơ chế gửi bất đồng bộ có <strong>retry + dead-letter queue</strong>; không chặn luồng web. <span class="en-inline">Async send with retry + DLQ; non-blocking.</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Module 3 — Di sản, Từ đường, Mộ phần &amp; Tiện ích Tâm linh <span class="en">Heritage, Hall, Graves &amp; Spiritual Utilities</span></div>
+      <div class="table-responsive"><table>
+        <thead><tr><th style="width:10%">Mã</th><th style="width:10%">Ưu tiên</th><th>Yêu cầu / Requirement</th></tr></thead>
+        <tbody>
+          <tr><td class="id">FR-3.1</td><td><span class="tag tag-should">SHOULD</span></td><td>Thư viện di sản: số hóa văn bia, hương ước, gia huấn, câu đối, di chúc (ảnh + văn bản). <span class="en-inline">Heritage library (steles, codes, couplets).</span></td></tr>
+          <tr><td class="id">FR-3.2</td><td><span class="tag tag-should">SHOULD</span></td><td><strong>Quản lý mộ phần:</strong> vị trí GPS, sơ đồ khu mộ, ảnh mộ chí, tình trạng cải táng, lịch tảo mộ. <span class="en-inline">Grave management with GPS &amp; maps.</span></td></tr>
+          <tr><td class="id">FR-3.3</td><td><span class="tag tag-should">SHOULD</span></td><td><strong>Từ đường:</strong> hồ sơ di tích, hoành phi câu đối, sơ đồ bài vị, lịch tế lễ. <span class="en-inline">Ancestral hall records &amp; ritual calendar.</span></td></tr>
+          <tr><td class="id">FR-3.4</td><td><span class="tag tag-could">COULD</span></td><td>Kho template văn khấn &amp; tự điền thông tin gia chủ; tra sao hạn, Tam Tai, Kim Lâu, Hoang Ốc. <span class="en-inline">Ritual-text templates; horoscope lookups.</span> <em>(Nâng cao bằng AI ở phase sau / AI-enhanced later.)</em></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Module 4 — Phân quyền, Quỹ họ &amp; Báo cáo <span class="en">RBAC, Clan Fund &amp; Reporting</span></div>
+      <div class="table-responsive"><table>
+        <thead><tr><th style="width:10%">Mã</th><th style="width:10%">Ưu tiên</th><th>Yêu cầu / Requirement</th></tr></thead>
+        <tbody>
+          <tr><td class="id">FR-4.1</td><td><span class="tag tag-must">MUST</span></td><td>RBAC đa cấp <strong>theo chi/ngành</strong> (branch-scoped); luồng duyệt cập nhật &amp; yêu cầu đính chính. <span class="en-inline">Branch-scoped multi-level RBAC with approval workflow.</span></td></tr>
+          <tr><td class="id">FR-4.2</td><td><span class="tag tag-should">SHOULD</span></td><td><strong>Quỹ họ &amp; sổ vàng công đức:</strong> thu–chi minh bạch, biên nhận, báo cáo tài chính công khai. <span class="en-inline">Transparent clan fund &amp; donation ledger.</span></td></tr>
+          <tr><td class="id">FR-4.3</td><td><span class="tag tag-should">SHOULD</span></td><td>Báo cáo dân số học: cơ cấu tuổi, giới tính, bản đồ phân bố địa lý (kể cả kiều bào). <span class="en-inline">Demographic &amp; geographic reports.</span></td></tr>
+          <tr><td class="id">FR-4.4</td><td><span class="tag tag-should">SHOULD</span></td><td>Tìm kiếm nhân khẩu tiếng Việt có dấu/không dấu, theo tên, đời, quê quán. <span class="en-inline">Vietnamese accent-insensitive member search.</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- 6 -->
+    <h2 id="s6">6. Câu Chuyện Người Dùng (tiêu biểu) <span class="en">Representative User Stories</span></h2>
+    <ul>
+      <li><strong>US-1:</strong> Là <em>thành viên</em>, tôi muốn hỏi "tôi gọi ông A là gì?" để hệ thống chạy LCA và trả về danh xưng đúng. <span class="en-inline">As a member, I want the system to tell me the correct way to address relative A.</span></li>
+      <li><strong>US-2:</strong> Là <em>Trưởng chi</em>, tôi muốn duyệt yêu cầu đính chính trong nhánh của mình, nhưng không thấy quyền sửa nhánh khác. <span class="en-inline">As a branch head, I approve corrections only within my branch.</span></li>
+      <li><strong>US-3:</strong> Là <em>con cháu xa quê</em>, tôi muốn nhận nhắc giỗ cụ tổ trước 3 ngày qua Zalo kèm bản đồ mộ phần. <span class="en-inline">As a diaspora descendant, I get a Zalo reminder with a grave map.</span></li>
+      <li><strong>US-4:</strong> Là <em>người nhập liệu</em>, tôi muốn được cảnh báo khi đặt tên con trùng tên húy tổ tiên (kỵ húy). <span class="en-inline">As a data-entry user, I'm warned about naming taboos.</span></li>
+      <li><strong>US-5:</strong> Là <em>Hội đồng Tộc biểu</em>, tôi muốn xem báo cáo thu–chi quỹ họ minh bạch theo kỳ. <span class="en-inline">As the clan council, I review transparent fund reports.</span></li>
+    </ul>
+
+    <!-- 7 -->
+    <h2 id="s7">7. Yêu Cầu Phi Chức Năng <span class="en">Non-Functional Requirements</span></h2>
+    <div class="table-responsive"><table>
+      <thead><tr><th style="width:10%">Mã</th><th style="width:20%">Nhóm / Category</th><th>Yêu cầu / Requirement</th></tr></thead>
+      <tbody>
+        <tr><td class="id">NFR-1</td><td>Hiệu năng / Performance</td><td>Truy vấn quan hệ/LCA &lt; 500ms; render cây ≤ 2s cho nhánh hiển thị; chịu tải hàng vạn node. <span class="en-inline">Relationship query &lt;500ms; scalable to tens of thousands.</span></td></tr>
+        <tr><td class="id">NFR-2</td><td>Bảo mật / Security</td><td>Spring Security + JWT/OAuth2; mã hóa dữ liệu nhạy cảm; phân quyền theo chi/ngành; chống OWASP Top 10. <span class="en-inline">JWT/OAuth2, encryption, OWASP hardening.</span></td></tr>
+        <tr><td class="id">NFR-3</td><td>Quyền riêng tư / Privacy</td><td>Tuân thủ Nghị định 13/2023; ẩn mặc định dữ liệu người còn sống. <span class="en-inline">PDPD-compliant; living persons' data hidden by default.</span></td></tr>
+        <tr><td class="id">NFR-4</td><td>Toàn vẹn / Integrity</td><td>Giao dịch ACID; audit trail đầy đủ; xóa mềm; sao lưu định kỳ &amp; phục hồi. <span class="en-inline">ACID, audit, soft delete, backups.</span></td></tr>
+        <tr><td class="id">NFR-5</td><td>Khả dụng / Availability</td><td>Uptime ≥ 99.5%; chịu tải cao điểm mùa giỗ chạp qua hàng đợi bất đồng bộ. <span class="en-inline">≥99.5% uptime; peak-season resilience via queue.</span></td></tr>
+        <tr><td class="id">NFR-6</td><td>Đa nền tảng / UX</td><td>Responsive + PWA; song ngữ VI–EN; hỗ trợ dấu tiếng Việt; giao diện màu ấm truyền thống. <span class="en-inline">Responsive PWA, bilingual, traditional warm theme.</span></td></tr>
+        <tr><td class="id">NFR-7</td><td>Quan sát / Observability</td><td>Logging tập trung, metrics, tracing (OpenTelemetry + Prometheus + Grafana). <span class="en-inline">Centralized logging, metrics, tracing.</span></td></tr>
+        <tr><td class="id">NFR-8</td><td>Khả bảo trì / Maintainability</td><td>Modular monolith theo DDD; kiểm thử tự động; CI/CD. <span class="en-inline">DDD modular monolith; automated tests; CI/CD.</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <!-- 8 -->
+    <h2 id="s8">8. Mô Hình Dữ Liệu (Khái niệm) <span class="en">Conceptual Data Model</span></h2>
+    <p>Thực thể lõi &amp; quan hệ chính. Cây phả hệ lưu bằng <strong>graph trên PostgreSQL (Apache AGE)</strong>; dữ liệu giao dịch/nội dung lưu bảng quan hệ + JSONB cho thuộc tính mở rộng.</p>
+    <div class="table-responsive"><table>
+      <thead><tr><th style="width:22%">Thực thể / Entity</th><th>Thuộc tính chính / Key attributes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Person (Nhân khẩu)</strong></td><td>Tên húy/tự/hiệu/thụy, giới tính, ngày sinh–mất (âm &amp; dương), quê quán, đời thứ, cờ sống/mất, cờ xóa-mềm, thuộc tính mở rộng (JSONB). <span class="en-inline">Multi-name, dual dates, generation, soft-delete flag, JSONB.</span></td></tr>
+        <tr><td><strong>Relationship (Quan hệ)</strong></td><td>Loại (cha-con ruột/nuôi, vợ-chồng, đích tôn/thừa tự/kế tự), person nguồn/đích, thứ tự vợ/chồng. <span class="en-inline">Typed edges incl. heirship &amp; multiple spouses.</span></td></tr>
+        <tr><td><strong>Branch (Chi/Ngành)</strong></td><td>Phân cấp cây nhánh; gắn với Trưởng chi (RBAC scope). <span class="en-inline">Branch hierarchy driving RBAC scope.</span></td></tr>
+        <tr><td><strong>Event (Sự kiện/Giỗ)</strong></td><td>Loại lễ, ngày âm gốc, person liên quan, chi/nhánh nhận nhắc. <span class="en-inline">Event type, lunar date, target branch.</span></td></tr>
+        <tr><td><strong>Grave / Hall (Mộ / Từ đường)</strong></td><td>GPS, ảnh, sơ đồ, tình trạng, liên kết Person/Branch. <span class="en-inline">Location, media, links.</span></td></tr>
+        <tr><td><strong>Fund &amp; Donation (Quỹ &amp; Công đức)</strong></td><td>Khoản thu–chi, người đóng góp, biên nhận, kỳ báo cáo. <span class="en-inline">Ledger entries &amp; receipts.</span></td></tr>
+        <tr><td><strong>User &amp; Role</strong></td><td>Tài khoản, vai trò, phạm vi chi/ngành, liên kết Person. <span class="en-inline">Account, role, branch scope.</span></td></tr>
+        <tr><td><strong>AuditLog / MediaAsset</strong></td><td>Nhật ký thay đổi (ai/khi nào/đổi gì); tài sản media trên Object Storage. <span class="en-inline">Change log; media in object storage.</span></td></tr>
+      </tbody>
+    </table></div>
+
+    <!-- 9 -->
+    <h2 id="s9">9. Kiến Trúc Giải Pháp <span class="en">Solution Architecture</span></h2>
+    <p>Modular monolith theo DDD, <strong>đơn CSDL PostgreSQL</strong> (kèm Apache AGE cho graph, ltree/FTS), giảm chi phí vận hành so với thêm graph DB riêng — phù hợp quy mô hàng vạn node.</p>
+    <div class="arch-diagram">
+[ CLIENT ]   React/Next.js (PWA)  +  React Flow / D3.js       ← song ngữ, mobile-first
+                     │  GraphQL (truy vấn cây lồng sâu)
+                     ▼
+[ BACKEND ]  Java 21 + Spring Boot 3.x  (Modular Monolith / DDD)
+                     │  Spring Security (JWT/OAuth2, branch-scoped RBAC)
+   ┌─────────────────┼──────────────┬───────────────┬──────────────────┐
+   ▼                 ▼              ▼               ▼                  ▼
+[ POSTGRESQL ]   [ RABBITMQ ]   [ REDIS ]   [ OBJECT STORAGE ]   [ OBSERVABILITY ]
+ • Apache AGE     + DLQ/Retry    cache cây    MinIO (self-host)    OpenTelemetry
+   (graph + LCA)  Zalo/SMS/Push  + session    (ảnh, văn bia,       + Prometheus
+ • JSONB, ltree   Spring Sched.               mộ, scan gia phả)     + Grafana
+ • FTS(unaccent)
+                     │
+        [ AUTH ]  Keycloak / Social login (Google, Zalo)
+        [ AI LAYER — PHASE SAU ]  tra cứu danh xưng NLP · OCR Hán-Nôm · sinh văn khấn
+    </div>
+    <div class="table-responsive"><table>
+      <thead><tr><th style="width:26%">Thành phần / Component</th><th>Lý do chọn / Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>PostgreSQL + <strong>Apache AGE</strong></td><td>Một CSDL duy nhất cho cả graph (Cypher/LCA) lẫn dữ liệu quan hệ — giảm hệ phải vận hành, license mở, đủ nhanh ở quy mô vạn node. <span class="en-inline">Single DB for graph + relational; lower ops cost.</span></td></tr>
+        <tr><td>Spring Boot 3.x / Java 21</td><td>Nền tảng vững, bảo mật tốt, virtual threads tối ưu gửi thông báo hàng loạt. <span class="en-inline">Robust, secure, virtual threads.</span></td></tr>
+        <tr><td>RabbitMQ + Scheduler</td><td>Gửi thông báo bất đồng bộ có retry/DLQ, không mất tin mùa cao điểm. <span class="en-inline">Reliable async notifications.</span></td></tr>
+        <tr><td>Redis</td><td>Cache cây phả đồ &amp; session. <span class="en-inline">Tree cache &amp; sessions.</span></td></tr>
+        <tr><td>Object Storage — <strong>MinIO (self-host)</strong></td><td>Lưu ảnh/di sản/scan tách khỏi DB; tự vận hành, tương thích S3, chủ động dữ liệu &amp; chi phí. <span class="en-inline">Self-hosted, S3-compatible; data sovereignty &amp; cost control.</span></td></tr>
+        <tr><td>React + React Flow/D3</td><td>Canvas cây lớn tương tác, lazy render. <span class="en-inline">Interactive large-tree canvas.</span></td></tr>
+        <tr><td>Thuật toán Hồ Ngọc Đức</td><td>Chuẩn de-facto lịch âm VN; đóng gói service có test. <span class="en-inline">De-facto VN lunar algorithm.</span></td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Ghi chú kiến trúc: giữ <strong>ranh giới module (bounded context)</strong> rõ để có thể tách microservice về sau nếu quy mô tăng đột biến. Neo4j là phương án dự phòng nếu sau này cần thuật toán graph nâng cao (GDS). <span class="en-inline">Boundaries kept clean for future extraction; Neo4j remains a fallback for advanced graph needs.</span></p>
+
+    <!-- 10 -->
+    <h2 id="s10">10. Tuân Thủ Pháp Lý &amp; Quyền Riêng Tư <span class="en">Legal &amp; Compliance</span></h2>
+    <ul>
+      <li><strong>Nghị định 13/2023/NĐ-CP (PDPD):</strong> thu thập dữ liệu cá nhân người còn sống phải có <em>sự đồng ý</em>; cung cấp quyền xem/sửa/rút. <span class="en-inline">Consent &amp; data-subject rights for living persons.</span></li>
+      <li><strong>Ẩn danh hóa thay vì xóa cứng:</strong> khi có yêu cầu xóa hợp pháp, ẩn danh dữ liệu cá nhân nhưng giữ node phả hệ để không gãy cây. <span class="en-inline">Anonymize (not hard-delete) to satisfy erasure while preserving the tree.</span></li>
+      <li><strong>Kiểm toán truy cập</strong> dữ liệu nhạy cảm &amp; tài chính quỹ họ. <span class="en-inline">Access audit for sensitive &amp; financial data.</span></li>
+    </ul>
+
+    <h3>Mô hình phân tầng hiển thị dữ liệu (đã chốt) <span class="en">Data Visibility Tiers (approved)</span></h3>
+    <p>Nguyên tắc lõi: <strong>người đã khuất công khai theo mục đích gia phả; người còn sống ẩn mặc định</strong>, mở dần theo phân quyền &amp; sự đồng ý. <span class="en-inline">Deceased public; living hidden by default, revealed by scope &amp; consent.</span></p>
+    <div class="table-responsive"><table>
+      <thead><tr><th style="width:24%">Đối tượng &amp; tầng / Subject &amp; tier</th><th style="width:32%">Trường dữ liệu / Fields</th><th>Ai được xem (mặc định) / Default audience</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Người đã khuất</strong><br><span class="en-inline">Deceased</span></td><td>Tên, ngày sinh–mất, tiểu sử, vai vế, mộ phần, vinh danh. <span class="en-inline">Name, dates, bio, grave, honors.</span></td><td><strong>Công khai</strong> — kể cả Khách. <span class="en-inline">Public, incl. guests.</span></td></tr>
+        <tr><td><strong>Người sống — Tầng 1</strong><br><span class="en-inline">Living — Tier 1</span></td><td>Tên, đời/vai vế, quan hệ cha–con–vợ–chồng. <span class="en-inline">Name, generation, core relations.</span></td><td>Thành viên đã đăng nhập (theo phân quyền). <strong>Khách KHÔNG thấy người còn sống.</strong> <span class="en-inline">Logged-in members only; guests see no living person.</span></td></tr>
+        <tr><td><strong>Người sống — Tầng 2</strong><br><span class="en-inline">Living — Tier 2</span></td><td>Năm sinh, nghề nghiệp, nơi ở (cấp tỉnh). <span class="en-inline">Birth year, occupation, province.</span></td><td>Thành viên cùng chi/ngành hoặc theo phân quyền. <span class="en-inline">Same-branch members or scoped.</span></td></tr>
+        <tr><td><strong>Người sống — Tầng 3 (nhạy cảm)</strong><br><span class="en-inline">Living — Tier 3 (sensitive)</span></td><td>SĐT, email, địa chỉ chi tiết, ngày sinh đầy đủ, ảnh cá nhân. <span class="en-inline">Phone, email, full address/DOB, photos.</span></td><td>Chỉ <strong>bản thân + Admin + người được chủ thể opt-in</strong>; Trưởng chi xem để liên hệ nếu được đồng ý. <span class="en-inline">Self + Admin + opt-in only.</span></td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li><strong>Chủ thể tự kiểm soát:</strong> mỗi thành viên tự chỉnh mức chia sẻ hồ sơ của mình. <span class="en-inline">Each member controls their own sharing level.</span></li>
+      <li><strong>Trẻ vị thành niên:</strong> ẩn tối đa mặc định, do phụ huynh/người giám hộ quản lý. <span class="en-inline">Minors hidden by default, managed by guardian.</span></li>
+    </ul>
+
+    <!-- 11 -->
+    <h2 id="s11">11. Lộ Trình &amp; MVP <span class="en">Roadmap &amp; MVP</span></h2>
+    <div class="timeline">
+      <div class="timeline-item"><div class="timeline-title">Giai đoạn 1 — Core &amp; Phả đồ + <span class="tag tag-p1">MVP</span> <span class="en-inline">(Core &amp; Tree)</span></div>
+        <div class="timeline-desc">Schema PostgreSQL + AGE, thuật toán LCA &amp; danh xưng, hồ sơ nhân khẩu đa lớp (ghi đầy đủ con gái), UI cây tương tác, nhắc giỗ <strong>qua Zalo (kênh MVP)</strong>. <strong>Kết thúc bằng MVP dùng thật.</strong> <span class="en-inline">Zalo-only reminders for MVP; ends with a usable MVP.</span></div></div>
+      <div class="timeline-item"><div class="timeline-title">Giai đoạn 2 — RBAC &amp; Tự động hóa <span class="en-inline">(RBAC &amp; Automation)</span></div>
+        <div class="timeline-desc">RBAC theo chi/ngành, luồng duyệt đính chính, mở rộng đa kênh (<strong>SMS &amp; Web Push</strong>) qua RabbitMQ, kỵ húy, GEDCOM. <span class="en-inline">Branch RBAC, add SMS &amp; Web Push, GEDCOM.</span></div></div>
+      <div class="timeline-item"><div class="timeline-title">Giai đoạn 3 — Di sản, Mộ phần &amp; Quỹ họ <span class="en-inline">(Heritage, Graves &amp; Fund)</span></div>
+        <div class="timeline-desc">Thư viện di sản, từ đường, mộ phần (GPS), quỹ họ &amp; sổ công đức, bản tin, bảng vàng, tra sao hạn/văn khấn. <span class="en-inline">Heritage, graves, fund, news, utilities.</span></div></div>
+      <div class="timeline-item"><div class="timeline-title">Giai đoạn 4 — Kiểm thử, Tối ưu &amp; Bàn giao <span class="en-inline">(Hardening &amp; Handover)</span></div>
+        <div class="timeline-desc">Load test cây lớn, quan sát hệ thống, tinh chỉnh bảo mật/PDPD, đào tạo &amp; bàn giao. <span class="en-inline">Load testing, observability, security, training.</span></div></div>
+      <div class="timeline-item"><div class="timeline-title">Phase sau — Lớp AI/LLM <span class="en-inline">(Future — AI Layer)</span></div>
+        <div class="timeline-desc">Tra cứu danh xưng bằng ngôn ngữ tự nhiên, OCR Hán-Nôm, tự sinh văn khấn/sớ, phát hiện trùng lặp khi nhập liệu. <span class="en-inline">NLP kinship lookup, Han-Nom OCR, ritual-text generation.</span></div></div>
+    </div>
+
+    <!-- 12 -->
+    <h2 id="s12">12. Giả Định, Rủi Ro &amp; Câu Hỏi Mở <span class="en">Assumptions, Risks &amp; Open Items</span></h2>
+    <h3>Giả định <span class="en">Assumptions</span></h3>
+    <ul>
+      <li>Quy mô ~ hàng vạn nhân khẩu (không phải hàng chục triệu) — Postgres+AGE là đủ. <span class="en-inline">Tens of thousands scale.</span></li>
+      <li>Zalo OA/ZNS &amp; cổng SMS có sẵn hợp đồng &amp; hạn mức gửi. <span class="en-inline">Zalo/SMS gateways available.</span></li>
+    </ul>
+    <h3>Rủi ro <span class="en">Risks</span></h3>
+    <ul>
+      <li>Quy tắc danh xưng vùng miền khác nhau → cần bộ luật cấu hình được &amp; hội đồng dòng họ nghiệm thu. <span class="en-inline">Regional kinship-title variations need configurable rules.</span></li>
+      <li>Chất lượng dữ liệu gia phả giấy/Hán-Nôm không đồng đều. <span class="en-inline">Uneven quality of legacy records.</span></li>
+      <li>Lộ trình ~8 tháng tham vọng → MVP sớm để giảm rủi ro. <span class="en-inline">Ambitious timeline mitigated by early MVP.</span></li>
+    </ul>
+    <h3>Quyết định đã chốt <span class="en">Resolved decisions</span></h3>
+    <div class="table-responsive"><table>
+      <thead><tr><th style="width:34%">Vấn đề / Item</th><th>Quyết định / Decision</th></tr></thead>
+      <tbody>
+        <tr><td>Ghi nhận con gái / bên ngoại <span class="en-inline">Maternal line</span></td><td><strong>Ghi nhận đầy đủ con gái, cháu ngoại</strong> ngang bằng con trai (mặc định). <span class="en-inline">Full &amp; equal recording of daughters (default).</span></td></tr>
+        <tr><td>Hiển thị dữ liệu người còn sống <span class="en-inline">Living data visibility</span></td><td><strong>Mô hình phân tầng 3 mức</strong> (xem mục 10): người đã khuất công khai; người sống ẩn mặc định, mở theo phân quyền &amp; opt-in. <span class="en-inline">3-tier model in §10.</span></td></tr>
+        <tr><td>Kênh thông báo MVP <span class="en-inline">MVP channel</span></td><td><strong>Zalo trước</strong> (MVP); SMS &amp; Web Push ở Giai đoạn 2. <span class="en-inline">Zalo first; SMS/Push in Phase 2.</span></td></tr>
+        <tr><td>Lưu trữ media <span class="en-inline">Media storage</span></td><td><strong>MinIO tự vận hành (self-host)</strong>, tương thích S3. <span class="en-inline">Self-hosted MinIO.</span></td></tr>
+        <tr><td>Quy tắc danh xưng <span class="en-inline">Kinship-title rules</span></td><td><strong>Rule engine cấu hình được</strong> theo từng dòng họ &amp; vùng miền, chỉnh linh động bởi Hội đồng Tộc biểu (xem FR-1.3a). <span class="en-inline">Configurable per-clan/per-region rule engine, dynamically editable (see FR-1.3a).</span></td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Không còn câu hỏi mở tồn đọng — tài liệu sẵn sàng nghiệm thu &amp; chuyển sang thiết kế kỹ thuật. <span class="en-inline">No remaining open questions — ready for sign-off and technical design.</span></p>
+
+  </div>
+
+  <div class="footer">
+    Tài liệu Phân tích Nghiệp vụ (BA) v2.0 — Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ &copy; 2026.<br>
+    <span class="en-inline">Business Analysis Document v2.0 — Clan Genealogy Management System &amp; Family Portal.</span>
+  </div>
+</div>
+</body>
+</html>

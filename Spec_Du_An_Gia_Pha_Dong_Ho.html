@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đặc Tả Yêu Cầu & Kiến Trúc Giải Pháp - Hệ Thống Gia Phả Dòng Họ</title>
+<style>
+  :root {
+    --primary: #8c2d19;
+    --primary-dark: #661e0f;
+    --primary-light: #fbeee9;
+    --secondary: #2c3e50;
+    --text-main: #2b2825;
+    --text-muted: #5e564d;
+    --bg-page: #f8f6f2;
+    --bg-card: #ffffff;
+    --border: #e6dfd5;
+    --border-dark: #cdbeaa;
+    --accent: #d97706;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    line-height: 1.6;
+    padding: 30px 15px;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #ffffff;
+    padding: 35px 35px 30px 35px;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .header p {
+    font-size: 14px;
+    opacity: 0.9;
+    color: #fcece8;
+  }
+
+  .meta-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    background: #f1ebd8;
+    padding: 12px 35px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .meta-bar strong {
+    color: var(--text-main);
+  }
+
+  .content {
+    padding: 35px;
+  }
+
+  h2 {
+    font-size: 17px;
+    color: var(--primary);
+    border-left: 4px solid var(--primary);
+    padding-left: 10px;
+    margin: 30px 0 15px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  h2:first-of-type {
+    margin-top: 0;
+  }
+
+  h3 {
+    font-size: 15px;
+    color: var(--secondary);
+    margin: 18px 0 8px 0;
+  }
+
+  p {
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+
+  ul, ol {
+    margin: 0 0 16px 22px;
+    font-size: 14px;
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  .card {
+    background: #faf8f5;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    margin: 20px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    text-align: left;
+  }
+
+  th, td {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  th {
+    background: var(--secondary);
+    color: #ffffff;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  tr:nth-child(even) td {
+    background-color: #faf7f0;
+  }
+
+  .tech-badge {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #1e293b;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .arch-diagram {
+    background: #1e2430;
+    color: #e2e8f0;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    padding: 20px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 15px 0 25px 0;
+    border-left: 4px solid var(--accent);
+  }
+
+  .timeline {
+    position: relative;
+    border-left: 2px solid var(--border-dark);
+    margin: 15px 0 20px 10px;
+    padding-left: 20px;
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -26px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 2px solid #ffffff;
+  }
+
+  .timeline-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--secondary);
+    margin-bottom: 4px;
+  }
+
+  .timeline-desc {
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+
+  .footer {
+    text-align: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    background: #fbf9f6;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="badge">Business Requirements &amp; Architecture Document</div>
+    <h1>HỆ THỐNG QUẢN LÝ GIA PHẢ &amp; CỔNG THÔNG TIN DÒNG HỌ</h1>
+    <p>Đặc tả Yêu cầu Nghiệp vụ (BA) &amp; Đề xuất Thiết kế Giải pháp Công nghệ (Solution Architecture)</p>
+  </div>
+
+  <div class="meta-bar">
+    <div><strong>Vai trò:</strong> Senior BA / Solution Architect</div>
+    <div><strong>Trạng thái:</strong> Bản hoàn chỉnh</div>
+    <div><strong>Kế hoạch đích:</strong> Q3 - Q4 / 2026</div>
+  </div>
+
+  <div class="content">
+
+    <h2>1. Tổng Quan Bài Toán &amp; Mục Tiêu Dự Án</h2>
+    <div class="card">
+      <div class="card-title">Tầm nhìn &amp; Sứ mệnh</div>
+      <p>Số hóa toàn diện dữ liệu phả hệ của dòng họ, kết nối các thế hệ kiều bào và con cháu muôn nơi; gìn giữ bản sắc cội nguồn, văn hóa tâm linh và chuyên nghiệp hóa công tác vận hành, gắn kết cộng đồng dòng tộc.</p>
+      <ul>
+        <li><strong>Quy mô dữ liệu:</strong> Quản trị cây phả đồ trải dài từ 10 đến 30+ thế hệ với hàng vạn nhân khẩu.</li>
+        <li><strong>Tự động hóa vận hành:</strong> Tự động nhắc lịch hiếu hỷ, ngày giỗ chạp theo Lịch Âm đa kênh (Zalo OA / ZNS, SMS, Web Push).</li>
+        <li><strong>Tính toàn vẹn &amp; Kế thừa:</strong> Cơ chế phân quyền nhiều cấp, lưu trữ lịch sử sửa đổi (Audit Trail) và bảo mật dữ liệu nhạy cảm.</li>
+      </ul>
+    </div>
+
+    <h2>2. Phân Rã Các Module Chức Năng (Functional Breakdown)</h2>
+
+    <div class="card">
+      <div class="card-title">Module 1: Phả Đồ &amp; Thuật Toán Danh Xưng (Core Engine)</div>
+      <ul>
+        <li><strong>Quản lý Cây gia phả (Genealogy Tree):</strong>
+          <ul>
+            <li>Hỗ trợ phân cấp chi, ngành, cành, nhánh; phân biệt rõ dâu, rể, con ruột, con nuôi.</li>
+            <li>Xử lý quan hệ phức tạp: Đa thê/đa phu (nhiều vợ/chồng), tuyệt tự, kế tự.</li>
+            <li>Chế độ hiển thị: Dạng Cây phân cấp truyền thống (Hierarchical Tree), Cây tỏa tròn (Radial Tree) và Ma trận thế hệ.</li>
+          </ul>
+        </li>
+        <li><strong>Thuật toán Xác định Quan hệ &amp; Tra cứu Danh xưng (Kinship Engine):</strong>
+          <ul>
+            <li>Tìm tổ tiên chung gần nhất (LCA - Lowest Common Ancestor) giữa 2 thành viên bất kỳ.</li>
+            <li>Tự động suy luận danh xưng chuẩn mực văn hóa gia đình Việt Nam (vd: <em>Bác họ, Chú thúc bá, Cô ruột, Cháu gọi bằng Cụ họ...</em>).</li>
+          </ul>
+        </li>
+        <li><strong>Cơ chế Toàn vẹn Dữ liệu:</strong> Bắt buộc áp dụng <code>Soft Delete</code> (xóa mềm), không làm gãy node liên kết cây; ghi nhận lịch sử phiên bản (Audit Versioning).</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Module 2: Truyền Thông, Sự Kiện &amp; Nhắc Lịch Giỗ Chạp</div>
+      <ul>
+        <li><strong>Lịch Âm - Dương &amp; Nhắc việc tự động:</strong>
+          <ul>
+            <li>Quy đổi chính xác ngày mất (Âm lịch) sang Dương lịch theo từng năm (tính cả tháng nhuận).</li>
+            <li>Tự động tạo tác vụ gửi thông báo trước 7 ngày, 3 ngày, 1 ngày tới đúng thành viên cùng nhánh/chi qua Zalo OA, SMS.</li>
+          </ul>
+        </li>
+        <li><strong>Bản tin Dòng họ &amp; Bảng vàng Vinh danh (Hall of Fame):</strong>
+          <ul>
+            <li>Đăng tải tin tức hoạt động họ tộc, lễ hội, khuyến học đầu xuân.</li>
+            <li>Vinh danh cá nhân đỗ đạt, thành tựu khoa bảng, công tác xã hội hoặc đóng góp công đức nổi bật.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Module 3: Thư Viện Di Sản &amp; Tiện Ích Văn Hóa Tâm Linh</div>
+      <ul>
+        <li><strong>Thư viện Di sản &amp; Lịch sử:</strong> Số hóa văn bia, hương ước, gia huấn ca, câu đối, di chúc bằng tài liệu ảnh và văn bản số.</li>
+        <li><strong>Tiện ích Văn khấn &amp; Viết sớ tự động:</strong>
+          <ul>
+            <li>Kho template văn khấn chuẩn các dịp (Tết Nguyên Đán, Giỗ tổ, Thanh minh, Rằm tháng Bảy, Động thổ...).</li>
+            <li>Tự động điền thông tin gia chủ, trạch xứ, phương danh người mất vào khung phôi sớ.</li>
+          </ul>
+        </li>
+        <li><strong>Tra cứu Sao hạn &amp; Hạn niên:</strong> Tra cứu sao chiếu mệnh (La Hầu, Kế Đô, Thái Bạch...) và hạn Tam Tai, Kim Lâu, Hoang Ốc theo tuổi âm.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Module 4: Danh Bạ, Phân Quyền Bảo Mật (RBAC) &amp; Báo Cáo</div>
+      <ul>
+        <li><strong>Phân quyền nhiều cấp (Multi-level RBAC):</strong>
+          <ul>
+            <li><em>Hội đồng Tộc biểu / Admin:</em> Quản trị toàn hệ thống, phê duyệt cây chung và tài chính dòng họ.</li>
+            <li><em>Trưởng Chi / Trưởng Ngành:</em> Quản lý nhân khẩu và duyệt cập nhật trong phạm vi nhánh được giao.</li>
+            <li><em>Thành viên / Khách:</em> Xem thông tin theo giới hạn phân quyền, gửi yêu cầu đính chính dữ liệu.</li>
+          </ul>
+        </li>
+        <li><strong>Báo cáo &amp; Dân số học:</strong> Báo cáo cơ cấu độ tuổi, tỷ lệ giới tính, bản đồ phân bổ địa lý thành viên kiều bào.</li>
+      </ul>
+    </div>
+
+    <h2>3. Đánh Giá &amp; Đề Xuất Kiến Trúc Công Nghệ</h2>
+
+    <div class="arch-diagram">
+[ FRONTEND ]         ReactJS (Next.js / Vite) + D3.js / React Flow
+                           │ (REST APIs / GraphQL)
+                           ▼
+[ BACKEND ]          Java Spring Boot 3.x (Modular Monolith / DDD)
+                           │
+       ┌───────────────────┼───────────────────┬──────────────────┐
+       ▼                   ▼                   ▼                  ▼
+[ GRAPH DATABASE ]   [ RELATIONAL DB ]   [ ASYNC MESSAGE ]  [ CACHE & SEARCH ]
+Neo4j                PostgreSQL          RabbitMQ           Redis
+(Cây phả hệ & LCA)   (User, Tin tức,     (Queue gửi Zalo,   (Cache cây phả đồ,
+                     Lịch sử, Audit)     SMS, Schedulers)   Session login)
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Thành phần</th>
+            <th style="width: 22%;">Công nghệ đề xuất</th>
+            <th>Phân tích &amp; Lý do lựa chọn</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Phả đồ &amp; Tra cứu Danh xưng</strong></td>
+            <td><span class="tech-badge">Neo4j</span><br><small>Graph Database</small></td>
+            <td>
+              • <strong>Tối ưu vượt trội:</strong> Phả hệ bản chất là một đồ thị có hướng (Directed Graph). Truy vấn quan hệ gia đình nhiều bậc (N đời) bằng Cypher query chỉ mất vài mili-giây.<br>
+              • Giải quyết triệt để vấn đề nghẽn cổ chai của SQL (loại bỏ hoàn toàn các câu lệnh Recursive CTE nhiều tầng dễ gây timeout).<br>
+              • Hỗ trợ thuật toán tìm Lowest Common Ancestor (LCA) trực tiếp để suy luận danh xưng tức thì.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Nghiệp vụ cốt lõi &amp; Giao dịch</strong></td>
+            <td><span class="tech-badge">PostgreSQL</span><br><small>Relational DB</small></td>
+            <td>
+              • Quản lý tài khoản, bài viết, văn khấn, dữ liệu công đức và nhật ký audit trail.<br>
+              • Đảm bảo tính toàn vẹn chuẩn ACID, hỗ trợ trường JSONB linh hoạt cho các thuộc tính mở rộng của nhân khẩu.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Backend Framework</strong></td>
+            <td><span class="tech-badge">Java Spring Boot 3.x</span></td>
+            <td>
+              • Nền tảng vững chắc cho hệ thống lớn, khả năng bảo mật cao (Spring Security + JWT/OAuth2).<br>
+              • Tương thích hoàn hảo với Spring Data Neo4j và Spring Data JPA.<br>
+              • Dễ dàng module hóa theo kiến trúc Domain-Driven Design (DDD).
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Giao diện Phả đồ &amp; Web App</strong></td>
+            <td><span class="tech-badge">ReactJS</span> + <span class="tech-badge">D3.js / React Flow</span></td>
+            <td>
+              • <strong>D3.js / React Flow:</strong> Vẽ cây Canvas/SVG hiệu năng cao, hỗ trợ zoom, kéo thả, thu gọn/mở rộng từng nhánh linh hoạt khi cây có hàng ngàn node.<br>
+              • UI TailwindCSS / Ant Design trang nhã, màu sắc ấm cúng mang nét văn hóa truyền thống.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Hàng đợi &amp; Tác vụ nền</strong></td>
+            <td><span class="tech-badge">RabbitMQ</span> + <span class="tech-badge">Spring Scheduler</span></td>
+            <td>
+              • Xử lý hàng nghìn thông báo Zalo ZNS / SMS tự động vào mùa giỗ chạp mà không làm chậm hệ thống web chính.<br>
+              • Cơ chế Retry &amp; Dead-letter Queue đảm bảo tin nhắn không bị thất lạc khi cổng SMS/Zalo gặp sự cố.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Tính Âm lịch &amp; Phong thủy</strong></td>
+            <td><span class="tech-badge">Thuật toán Hồ Ngọc Đức</span></td>
+            <td>
+              • Tính toán lịch âm chính xác theo múi giờ GMT+7, xử lý hoàn chỉnh các năm nhuận và tiết khí phục vụ ngày giỗ và tra cứu sao hạn.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>4. Lộ Trình Triển Khai (Project Roadmap)</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-title">Giai đoạn 1: Xây dựng Core &amp; Phả đồ (Tháng 1 - 2)</div>
+        <div class="timeline-desc">Thiết kế Schema Neo4j + PostgreSQL, thuật toán tính LCA &amp; danh xưng, xây dựng UI cây phả hệ tương tác cơ bản.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">Giai đoạn 2: Quản trị, Phân quyền &amp; Tự động hóa (Tháng 3 - 4)</div>
+        <div class="timeline-desc">Xây dựng hệ thống RBAC, phân quyền Trưởng chi, tích hợp RabbitMQ và Zalo OA gửi thông báo ngày giỗ theo âm lịch.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">Giai đoạn 3: Cổng truyền thông &amp; Tiện ích văn hóa (Tháng 5 - 6)</div>
+        <div class="timeline-desc">Hoàn thiện Bản tin, Bảng vàng vinh danh, Tiện ích tra cứu sao hạn và sớ/văn khấn tự động.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">Giai đoạn 4: Kiểm thử, Tối ưu &amp; Bàn giao (Tháng 7 - 8/2026)</div>
+        <div class="timeline-desc">Load test dữ liệu cây phả đồ lớn, bàn giao và chuẩn bị truyền thông vào Tháng 10/2026.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ &copy; 2026 — Tài liệu phân tích nghiệp vụ &amp; giải pháp kỹ thuật.
+  </div>
+</div>
+
+</body>
+</html>

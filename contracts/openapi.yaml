@@ -1,0 +1,3600 @@
+# =============================================================================
+# Hệ Thống Quản Lý Gia Phả & Cổng Thông Tin Dòng Họ — REST API Contract
+# Clan Genealogy Management System — REST API Contract
+#
+# NGUỒN CHÂN LÝ CHUNG cho Backend và Frontend (contract-first, Sprint 1).
+# SHARED SOURCE OF TRUTH for both Backend and Frontend.
+# Xem contracts/README.md trước khi sửa file này.
+#
+# Nguồn tham chiếu / Sources: TDD v1.0 §5 (từ điển dữ liệu), §9 (thiết kế API),
+# §10 (bảo mật) · BA v2.0 §10 (phân tầng hiển thị) · plan-giai-doan-1 §5.
+# Thứ tự ưu tiên khi mâu thuẫn: TDD → BA → plan.
+# =============================================================================
+openapi: 3.1.0
+
+info:
+  title: Gia Phả Dòng Họ API
+  version: 1.0.0-sprint1
+  summary: REST API cho hệ thống gia phả dòng họ (Giai đoạn 1 / Phase 1 MVP).
+  description: |-
+    ## Tiếng Việt
+
+    API REST của hệ thống quản lý gia phả. Truy vấn cây **lồng sâu** dùng GraphQL
+    (`POST /api/v1/graphql`, schema tại `contracts/schema.graphqls`); mọi thứ còn lại dùng REST.
+
+    Quy ước chung:
+
+    * **Versioning theo URL**: mọi đường dẫn nằm dưới `/api/v1`.
+    * **Lỗi theo RFC 7807** Problem Details, `Content-Type: application/problem+json`.
+      Trường mở rộng `code` là mã máy đọc được — FE phân nhánh theo `code`, **không** theo `detail`.
+    * **Phân trang thống nhất** cho mọi endpoint trả danh sách: query `page` (0-based) + `size`,
+      phản hồi bọc trong `{ items: [...], page: { ... } }`.
+    * **Định danh**: UUID v4/v7 dạng chuỗi.
+    * **Thời điểm**: ISO-8601 có offset (`2026-03-14T08:00:00+07:00`). Múi giờ nghiệp vụ là **GMT+7**.
+    * **Ngày song lịch**: mọi mốc sinh/mất đều có cả dương lịch (`solar`) và âm lịch (`lunar`).
+      `death.lunar` là **nguồn chân lý** để tính ngày giỗ.
+    * **Ngôn ngữ**: gửi `Accept-Language: vi` hoặc `en`; mặc định `vi`.
+      Danh xưng (`title`) luôn trả bằng tiếng Việt vì đó là dữ liệu nghiệp vụ, không phải chuỗi i18n.
+
+    ### Phân tầng riêng tư — đọc kỹ trước khi code FE (Nghị định 13/2023, BA v2 §10)
+
+    Cùng một `PersonDto` nhưng **tập trường trả về khác nhau** theo vai người gọi, `isAlive`
+    và `privacyLevel` của chính người đó:
+
+    | Đối tượng | Trường | Ai thấy |
+    |---|---|---|
+    | Người đã khuất | tên, ngày sinh–mất, tiểu sử, vai vế, mộ phần, vinh danh | công khai, kể cả Khách |
+    | Người sống — Tầng 1 | tên, đời/vai vế, quan hệ cha–con–vợ–chồng | **thành viên đã đăng nhập**; Khách KHÔNG thấy |
+    | Người sống — Tầng 2 | năm sinh, nghề nghiệp, nơi ở cấp tỉnh | thành viên cùng chi/ngành hoặc được cấp quyền |
+    | Người sống — Tầng 3 | SĐT, email, địa chỉ đầy đủ, ngày sinh đầy đủ, ảnh | bản thân + Admin + người được opt-in |
+
+    **Quy tắc kỹ thuật bắt buộc — cả BE và FE phải theo:**
+
+    1. Trường bị ẩn được **loại bỏ khỏi JSON** (absent), **không** trả `null`, **không** trả chuỗi rỗng
+       hay `"***"`. Ẩn vì thiếu quyền và ẩn vì không có dữ liệu là **không phân biệt được** — đó là chủ ý.
+    2. FE **không được** render ô trống/placeholder kiểu "dữ liệu bị ẩn" cho trường vắng mặt.
+    3. Khách (không có token) hỏi một **người còn sống** sẽ nhận **`404 Not Found`**, không phải `403`.
+       Trả 403 là tự tố cáo người đó tồn tại.
+    4. Vì lý do (3), người còn sống **không xuất hiện** trong `/tree`, `/persons/search`, `/events`
+       khi người gọi là Khách — kể cả dưới dạng node ẩn danh.
+    5. Trẻ vị thành niên bị ẩn tối đa theo mặc định.
+    6. Xóa dữ liệu cá nhân hợp pháp = **ẩn danh hóa** (xóa Tầng 3), **giữ node phả hệ**.
+       Không bao giờ xóa cứng một nhân khẩu.
+
+    ## English
+
+    REST API for the clan genealogy platform. Deep nested tree queries use GraphQL; everything
+    else is REST. Errors are RFC 7807. Living-person fields are filtered by privacy tier —
+    hidden fields are **omitted**, never nulled; guests receive no living person at all and get
+    `404` rather than `403` so that existence is not disclosed.
+  contact:
+    name: Nhóm phát triển Gia Phả Dòng Họ
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local dev (docker-compose)
+  - url: https://staging.giapha.example.vn/api/v1
+    description: Staging
+  - url: https://giapha.example.vn/api/v1
+    description: Production
+
+tags:
+  - name: persons
+    description: Nhân khẩu — thêm, sửa, xóa mềm, tìm kiếm. / Person records.
+  - name: tree
+    description: Phả đồ — projection cây, lazy theo độ sâu. / Tree projection.
+  - name: kinship
+    description: Danh xưng & bộ quy tắc danh xưng. / Kinship titles & rule engine.
+  - name: events
+    description: Giỗ, chạp mả, lễ dòng họ. / Ancestral events.
+  - name: notifications
+    description: Trung tâm thông báo in-app. / In-app notification centre.
+  - name: push
+    description: Web Push (VAPID). / Web Push subscriptions.
+  - name: admin-reminders
+    description: |-
+      Vận hành đường ống nhắc giỗ (chạy tay job sinh/đẩy lịch nhắc). **Chỉ System Admin.**
+      / Reminder pipeline operations, system admin only.
+  - name: graphql
+    description: Điểm vào GraphQL cho cây lồng sâu. / GraphQL entry point.
+
+security:
+  - bearerAuth: []
+  - {}
+
+paths:
+  # ---------------------------------------------------------------------------
+  # NHÂN KHẨU / PERSONS
+  # ---------------------------------------------------------------------------
+  /persons:
+    post:
+      tags: [persons]
+      operationId: createPerson
+      summary: Thêm nhân khẩu / Add a person
+      description: |-
+        Thêm một nhân khẩu vào gia phả và (tùy chọn) nối ngay vào cây qua `initialRelationships`.
+
+        **Quyền**: `BRANCH_HEAD` trong phạm vi chi/ngành được giao · `COUNCIL` · `ADMIN`.
+        `MEMBER` gửi request này sẽ nhận `202 Accepted` kèm một `ChangeRequest` chờ Trưởng chi duyệt
+        (luồng duyệt thuộc **Giai đoạn 2** — ở Giai đoạn 1 `MEMBER` nhận `403`).
+
+        **Kỵ húy (FR-1.6)** — luồng hai bước, FE phải hiện thực đúng:
+
+        1. Gửi lần đầu **không** kèm `confirmTabooOverride`.
+        2. Nếu tên `HUY` (tên húy) trùng tên húy của một bậc trên trong dòng họ, API trả
+           **`409 Conflict`** với `code = KY_HUY_CONFLICT` và danh sách `conflicts[]` (nêu rõ cụ nào,
+           đời thứ mấy, trùng tên húy nào). **Không bản ghi nào được tạo.**
+        3. FE hiện hộp thoại xác nhận, liệt kê `conflicts[]`.
+        4. Nếu người dùng vẫn muốn ghi, gửi lại **y hệt payload cũ** cộng `confirmTabooOverride: true`.
+           Lần này API trả `201`, và việc ghi đè được lưu vào `audit_log`.
+
+        Cảnh báo kỵ húy là **cảnh báo, không phải cấm** — dòng họ có quyền quyết định.
+
+        Thao tác được ghi `audit_log` (actor, thời điểm, before = null, after = person).
+        Cạnh AGE và dòng `relationship` được ghi trong **cùng một transaction**.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePersonRequest'
+      responses:
+        '201':
+          description: Đã tạo nhân khẩu. / Person created.
+          headers:
+            Location:
+              description: URI của nhân khẩu vừa tạo. / URI of the created person.
+              schema:
+                type: string
+                format: uri-reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+        '202':
+          description: |-
+            **Giai đoạn 2.** Người gọi là `MEMBER`: hệ thống đã tạo một `ChangeRequest` trạng thái
+            `PENDING` chờ Trưởng chi duyệt; chưa có nhân khẩu nào được tạo.
+            Ở Giai đoạn 1 nhánh này chưa bật — `MEMBER` nhận `403`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequestAccepted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: |-
+            Xung đột. Phân nhánh theo `code`:
+            * `KY_HUY_CONFLICT` — trùng tên húy bậc trên; gửi lại kèm `confirmTabooOverride: true`.
+            * `DUPLICATE_PERSON_SUSPECTED` — nghi trùng nhân khẩu đã có (cùng tên + năm sinh + chi);
+              gửi lại kèm `confirmDuplicateOverride: true`.
+            * `RELATIONSHIP_CYCLE` — quan hệ cha–con tạo chu trình trong đồ thị.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConflictProblem'
+              examples:
+                kyHuy:
+                  summary: Trùng tên húy bậc trên / Taboo-name collision
+                  value:
+                    type: https://giapha.example.vn/problems/ky-huy-conflict
+                    title: Trùng tên húy bậc trên
+                    status: 409
+                    detail: Tên húy "Văn Đức" trùng với cụ tổ đời thứ 3. Xác nhận để vẫn ghi.
+                    instance: /api/v1/persons
+                    code: KY_HUY_CONFLICT
+                    traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+                    overridable: true
+                    overrideField: confirmTabooOverride
+                    conflicts:
+                      - ancestorPersonId: 6f1b1d6e-2f8a-4d1c-9a91-9f2c1f0b7a01
+                        ancestorDisplayName: Nguyễn Văn Đức
+                        ancestorGeneration: 3
+                        tabooName: Văn Đức
+                        matchedNameType: HUY
+                        matchKind: EXACT
+                        relationHint: Cụ tổ đời thứ 3 của chi Nhất
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /persons/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PersonId'
+      - $ref: '#/components/parameters/AcceptLanguage'
+    get:
+      tags: [persons]
+      operationId: getPerson
+      summary: Xem hồ sơ nhân khẩu / Get a person
+      description: |-
+        Trả hồ sơ đã **lọc theo phân tầng riêng tư** (xem `info.description`).
+
+        * Người đã khuất: công khai, kể cả Khách.
+        * Người còn sống + người gọi là Khách (không token): **`404`**, không phải `403`.
+        * Người còn sống + thành viên đã đăng nhập: tối thiểu Tầng 1; Tầng 2/3 mở thêm theo
+          phạm vi chi/ngành, vai trò, và `privacyLevel` do chính chủ thể chọn.
+        * Nhân khẩu đã xóa mềm: chỉ `ADMIN`/`COUNCIL` thấy; vai khác nhận `404`.
+
+        `meta.visibleTier` cho FE biết **mình** đang ở tầng nào để bật/tắt affordance,
+        chứ không tiết lộ trường nào đang bị giấu.
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              description: Dùng cho `If-Match` khi PATCH (optimistic locking).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags: [persons]
+      operationId: updatePerson
+      summary: Sửa hồ sơ nhân khẩu / Update a person
+      description: |-
+        Cập nhật một phần hồ sơ.
+
+        **Ngữ nghĩa cập nhật — chốt rõ để BE/FE không lệch:**
+
+        * Trường **vắng mặt** trong body ⇒ **giữ nguyên**.
+        * Trường có giá trị ⇒ **ghi đè**.
+        * Muốn **xóa trắng** một trường ⇒ liệt kê tên trường trong mảng `clearFields`.
+          (Cố ý không dùng `null` để xóa: `null` và "không gửi" quá dễ lẫn nhau qua các lớp JSON client.)
+        * `names` nếu gửi là **thay thế toàn bộ** danh sách tên, không phải cộng thêm.
+
+        **Đồng thời (optimistic locking)**: gửi `If-Match` với `ETag` lấy từ `GET`.
+        Bản ghi đã bị người khác sửa ⇒ `409` `OPTIMISTIC_LOCK_CONFLICT`; FE nạp lại rồi thử lại.
+
+        **Quyền**: `ADMIN` · `COUNCIL` · `BRANCH_HEAD` trong phạm vi chi được giao ·
+        `MEMBER` chỉ sửa hồ sơ **của chính mình** (gồm `privacyLevel` của mình).
+        Sửa quan hệ phả hệ **không** đi qua endpoint này.
+
+        Ghi `audit_log` đầy đủ before/after; giá trị Tầng 3 **không** được ghi vào log.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonRequest'
+      responses:
+        '200':
+          description: Đã cập nhật. / Updated.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: |-
+            * `OPTIMISTIC_LOCK_CONFLICT` — bản ghi đã đổi kể từ `ETag` gửi lên.
+            * `KY_HUY_CONFLICT` — tên húy mới trùng bậc trên; ghi đè bằng `confirmTabooOverride: true`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConflictProblem'
+        '412':
+          description: Thiếu hoặc sai `If-Match`. / Precondition failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [persons]
+      operationId: softDeletePerson
+      summary: Xóa mềm nhân khẩu / Soft-delete a person
+      description: |-
+        **Xóa mềm — bắt buộc (FR-1.5).** Đặt `is_deleted = true`.
+        Node trong đồ thị AGE và các cạnh quan hệ **được giữ nguyên** để cây không gãy.
+        Không có API xóa cứng, và sẽ không bao giờ có.
+
+        Sau khi xóa mềm, nhân khẩu biến mất khỏi `/tree`, `/persons/search`, `/events`
+        với mọi vai trừ `ADMIN`/`COUNCIL`.
+
+        Khôi phục thực hiện qua `PATCH` với `isDeleted: false` (chỉ `ADMIN`/`COUNCIL`).
+
+        Xóa dữ liệu cá nhân theo yêu cầu hợp pháp **không dùng endpoint này** — nghiệp vụ đó là
+        *ẩn danh hóa* (xóa Tầng 3, giữ vai vế phả hệ); endpoint riêng cho việc đó **chưa chốt**
+        (xem README, mục "Việc còn treo").
+
+        **Quyền**: `ADMIN` · `COUNCIL` · `BRANCH_HEAD` trong phạm vi chi được giao.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reason
+          in: query
+          required: false
+          description: Lý do xóa, lưu vào `audit_log`. / Reason recorded in the audit log.
+          schema:
+            type: string
+            maxLength: 500
+      responses:
+        '204':
+          description: Đã xóa mềm. / Soft-deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`PERSON_ALREADY_DELETED` — đã ở trạng thái xóa mềm.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /persons/search:
+    get:
+      tags: [persons]
+      operationId: searchPersons
+      summary: Tìm kiếm nhân khẩu (không dấu) / Accent-insensitive person search
+      description: |-
+        Tìm theo tên, có dấu hoặc **không dấu** (FR-4.4) — `"nguyen van duc"` khớp `"Nguyễn Văn Đức"`.
+        Backend dùng Postgres FTS + `unaccent` + `pg_trgm`; tìm trên **mọi lớp tên**
+        (húy / tự / hiệu / thụy / thường gọi / pháp danh), không chỉ tên chính.
+
+        Kết quả đã lọc theo phân tầng riêng tư: **Khách chỉ nhận người đã khuất**.
+        Người còn sống bị lọc **trước khi** đếm, nên `page.totalElements` cũng không rò rỉ số lượng.
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: q
+          in: query
+          required: true
+          description: Chuỗi tìm kiếm, có dấu hoặc không dấu. / Query string, accented or not.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+          example: nguyen van duc
+        - name: generation
+          in: query
+          description: Lọc theo đời thứ (Thủy tổ = 1). / Filter by generation.
+          schema:
+            type: integer
+            minimum: 1
+        - name: branchId
+          in: query
+          description: Lọc trong một chi/ngành và toàn bộ nhánh con của nó. / Filter by branch subtree.
+          schema:
+            type: string
+            format: uuid
+        - name: nativePlace
+          in: query
+          description: Lọc theo nguyên quán. / Filter by native place.
+          schema:
+            type: string
+        - name: isAlive
+          in: query
+          description: Lọc theo tình trạng sống/mất. Khách gửi `true` luôn nhận danh sách rỗng.
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: sort
+          in: query
+          description: |-
+            `field,asc|desc`. Cho phép `relevance`, `generation`, `birthYear`, `name`.
+          schema:
+            type: string
+            default: relevance,desc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonSummaryPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # PHẢ ĐỒ / TREE
+  # ---------------------------------------------------------------------------
+  /tree:
+    get:
+      tags: [tree]
+      operationId: getTreeProjection
+      summary: Lấy nhánh cây theo độ sâu (lazy) / Get a tree projection
+      description: |-
+        Trả **projection phẳng** của một nhánh cây: `nodes[]` + `edges[]`, dạng React Flow nạp
+        thẳng được, không phải cây lồng nhau. Cây lồng sâu do client tự chọn hình dạng thì dùng
+        GraphQL (`contracts/schema.graphqls`).
+
+        **Lazy loading**: gọi lần đầu với `depth` nhỏ (mặc định 3). Node nào còn con chưa nạp sẽ có
+        `hasMoreDescendants: true` và `descendantCount` — FE hiện nút "mở rộng" rồi gọi lại
+        `/tree?rootId={nodeId}&depth=…` cho riêng node đó và ghép vào đồ thị đang có.
+
+        **Chặn trên**: `depth` tối đa 10; ngoài ra server còn cắt theo `maxNodes`
+        (mặc định 500, tối đa 2000). Khi bị cắt, `meta.truncated = true` và
+        `meta.truncatedNodeIds[]` liệt kê các node bị cắt nhánh — FE **phải** xử lý,
+        đừng giả định đã nhận đủ cây.
+
+        **Cache**: phản hồi được cache ở Redis và có `ETag`. Gửi `If-None-Match` để nhận `304`.
+        Cache tự invalidate khi có mutation trong nhánh.
+
+        **Phân tầng**: người còn sống bị loại **hoàn toàn** khỏi projection khi người gọi là Khách —
+        node lẫn cạnh đều không xuất hiện. Vì vậy cây mà Khách thấy có thể **đứt đoạn**;
+        FE phải render được cây có lỗ, không được coi cạnh thiếu là lỗi dữ liệu.
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: rootId
+          in: query
+          required: true
+          description: Nhân khẩu gốc của nhánh cần lấy. / Root person of the requested subtree.
+          schema:
+            type: string
+            format: uuid
+        - name: depth
+          in: query
+          description: Số đời lấy thêm tính từ gốc. / Number of generations beyond the root.
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10
+            default: 3
+        - name: direction
+          in: query
+          description: |-
+            * `DESCENDANTS` — con cháu (mặc định).
+            * `ANCESTORS` — tổ tiên.
+            * `BOTH` — cả hai chiều, mỗi chiều `depth` đời.
+          schema:
+            $ref: '#/components/schemas/TreeDirection'
+        - name: includeSpouses
+          in: query
+          description: Có kèm vợ/chồng (và cạnh `SPOUSE`) của mỗi node hay không. / Include spouses.
+          schema:
+            type: boolean
+            default: true
+        - name: includeDeleted
+          in: query
+          description: |-
+            Kèm nhân khẩu đã xóa mềm. Chỉ `ADMIN`/`COUNCIL`; vai khác gửi `true` sẽ nhận `403`.
+          schema:
+            type: boolean
+            default: false
+        - name: maxNodes
+          in: query
+          description: Trần số node trả về trước khi cắt nhánh. / Hard cap before truncation.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 2000
+            default: 500
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+              example: private, max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeProjection'
+        '304':
+          description: Không đổi kể từ `If-None-Match`. / Not modified.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # DANH XƯNG / KINSHIP
+  # ---------------------------------------------------------------------------
+  /kinship:
+    get:
+      tags: [kinship]
+      operationId: resolveKinship
+      summary: Tra cứu danh xưng giữa hai người / Resolve the kinship title between two persons
+      description: |-
+        Trả **danh xưng** mà người `from` gọi người `to`, kèm **đường quan hệ** đi qua tổ chung gần nhất
+        (LCA — Lowest Common Ancestor) để người dùng tự kiểm chứng.
+
+        Luồng (TDD §8.2): LCA bằng Cypher trên AGE → tính `RelationFacts`
+        (`genDelta`, `side` nội/ngoại, `gender`, `isElder`) → hợp nhất bộ quy tắc
+        `DEFAULT → REGION → CLAN → BRANCH` → khớp luật → cache Redis theo khóa `from:to`.
+
+        **Danh xưng đến từ dữ liệu `kinship_rule_set`, không hard-code** (FR-1.3a).
+        Kết quả vì thế phụ thuộc bộ luật đang hiệu lực; `ruleSetId`/`ruleId` trong phản hồi cho biết
+        luật nào đã khớp, dùng để truy vết khi dòng họ khiếu nại danh xưng sai.
+
+        **Không tìm được vẫn trả `200`**, phân biệt bằng `status`:
+
+        * `RESOLVED` — có `title`.
+        * `NO_COMMON_ANCESTOR` — hai người không cùng huyết thống trong dữ liệu hiện có
+          (có thể vẫn nối nhau qua hôn nhân — xem `path`).
+        * `NO_MATCHING_RULE` — tìm được LCA nhưng bộ luật chưa có luật phủ trường hợp này;
+          `title` vắng mặt, `facts` vẫn trả để Hội đồng bổ sung luật.
+        * `SELF` — `from` trùng `to`.
+
+        FE **không** được coi `title` vắng mặt là lỗi hệ thống; hiện thông điệp theo `status`.
+
+        Người còn sống bị ẩn theo phân tầng vẫn có thể nằm trên đường quan hệ; khi đó phần tử tương ứng
+        trong `path` chỉ có `personId` và `displayName` bị thay bằng nhãn chung (`"—"`).
+        Khách gọi endpoint này với bất kỳ người còn sống nào sẽ nhận `404`.
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: from
+          in: query
+          required: true
+          description: Người **xưng hô** (chủ ngữ) — "A gọi B là gì?". / The addressing person.
+          schema:
+            type: string
+            format: uuid
+        - name: to
+          in: query
+          required: true
+          description: Người **được gọi** (tân ngữ). / The addressed person.
+          schema:
+            type: string
+            format: uuid
+        - name: includePath
+          in: query
+          description: Có trả `path` (đường quan hệ qua LCA) hay không. / Include the relation path.
+          schema:
+            type: boolean
+            default: true
+        - name: ruleSetId
+          in: query
+          description: |-
+            Ép dùng một bộ luật cụ thể thay vì bộ luật hiệu lực của chi người `from`.
+            Dùng cho màn hình thử nghiệm luật của Hội đồng Tộc biểu. Chỉ `COUNCIL`/`ADMIN`.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KinshipResult'
+              examples:
+                bacHo:
+                  summary: Danh xưng bên nội, vai trên
+                  value:
+                    status: RESOLVED
+                    fromPersonId: 11111111-1111-4111-8111-111111111111
+                    toPersonId: 22222222-2222-4222-8222-222222222222
+                    title: Bác họ
+                    reciprocalTitle: Cháu
+                    facts:
+                      genDelta: 1
+                      side: PATERNAL
+                      targetGender: MALE
+                      isElder: true
+                      throughMarriage: false
+                    lca:
+                      personId: 33333333-3333-4333-8333-333333333333
+                      displayName: Nguyễn Văn Đức
+                      generation: 3
+                      distanceFrom: 3
+                      distanceTo: 2
+                    ruleSetId: 44444444-4444-4444-8444-444444444444
+                    ruleSetScope: BRANCH
+                    ruleId: 55555555-5555-4555-8555-555555555555
+                    ruleSetChain: [DEFAULT, REGION, BRANCH]
+                    cached: false
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /kinship-rules:
+    get:
+      tags: [kinship]
+      operationId: getKinshipRules
+      summary: Đọc bộ quy tắc danh xưng / Read kinship rule sets
+      description: |-
+        Đọc các bộ quy tắc danh xưng (`kinship_rule_set` + `kinship_rule`).
+
+        Hai chế độ:
+
+        * `effective = false` (mặc định) — trả **từng bộ luật thô** đúng như đã lưu, kèm `parentRuleSetId`.
+          Dùng cho màn hình quản trị khi Hội đồng sửa đúng một cấp.
+        * `effective = true` — trả **một bộ luật đã hợp nhất** theo thứ tự
+          `DEFAULT → REGION → CLAN → BRANCH`, mỗi luật kèm `inheritedFromScope` và `overridden`
+          để giao diện tô màu luật nào bị chi ghi đè. Bắt buộc kèm `branchId`.
+
+        Bộ `DEFAULT` của hệ thống là **miền Bắc** (quyết định đã chốt, plan §1).
+        `REGION` cho Trung và Nam để trống ở Giai đoạn 1.
+
+        **Quyền đọc**: mọi thành viên đã đăng nhập (`MEMBER`+). Khách nhận `401`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: scope
+          in: query
+          description: Lọc theo cấp áp dụng. / Filter by scope level.
+          schema:
+            $ref: '#/components/schemas/RuleScope'
+        - name: region
+          in: query
+          description: Lọc bộ luật cấp vùng. / Filter region-scoped sets.
+          schema:
+            $ref: '#/components/schemas/Region'
+        - name: branchId
+          in: query
+          description: Chi/ngành cần tra. Bắt buộc khi `effective=true`. / Branch, required if effective.
+          schema:
+            type: string
+            format: uuid
+        - name: effective
+          in: query
+          description: Trả bộ luật đã hợp nhất thay vì các bộ luật thô. / Return the merged set.
+          schema:
+            type: boolean
+            default: false
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: |-
+            Trả `KinshipRuleSetPage` khi `effective=false`, hoặc `EffectiveKinshipRuleSet`
+            khi `effective=true`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/KinshipRuleSetPage'
+                  - $ref: '#/components/schemas/EffectiveKinshipRuleSet'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [kinship]
+      operationId: replaceKinshipRuleSet
+      summary: Ghi đè một bộ quy tắc danh xưng / Replace a kinship rule set
+      description: |-
+        **Chỉ Hội đồng Tộc biểu (`COUNCIL`) và `ADMIN`.** `BRANCH_HEAD`, `MEMBER`, Khách → `403`.
+        Danh xưng sai là lỗi mất mặt với dòng họ, nên quyền sửa để hẹp là có chủ ý.
+
+        Ngữ nghĩa **replace toàn bộ một bộ luật**, không phải patch từng luật: mảng `rules` gửi lên
+        thay thế trọn vẹn danh sách luật hiện có của bộ đó. Muốn xóa một luật thì gửi danh sách
+        thiếu luật đó. Điều này giữ cho việc "bộ luật đang hiệu lực là gì" luôn xác định được.
+
+        * Tạo mới bộ luật: bỏ trống `ruleSetId`, khai báo `scope` (+ `region`/`clanId`/`branchId` tương ứng).
+        * Sửa bộ luật có sẵn: gửi `ruleSetId` và `expectedVersion` lấy từ `GET`
+          (sai phiên bản ⇒ `409 OPTIMISTIC_LOCK_CONFLICT`).
+        * **Không được sửa bộ `DEFAULT` của hệ thống** ⇒ `403 SYSTEM_RULE_SET_IMMUTABLE`.
+          Muốn khác đi thì tạo bộ ghi đè ở cấp `CLAN`/`BRANCH`.
+
+        Mọi thay đổi được ghi `audit_log` (before/after toàn bộ bộ luật) và **xóa cache danh xưng**
+        ở Redis cho các chi bị ảnh hưởng.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KinshipRuleSetUpdateRequest'
+      responses:
+        '200':
+          description: Đã ghi đè bộ luật. / Rule set replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KinshipRuleSetDto'
+        '201':
+          description: Đã tạo bộ luật mới. / New rule set created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KinshipRuleSetDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: |-
+            * `OPTIMISTIC_LOCK_CONFLICT` — `expectedVersion` không khớp.
+            * `RULE_SET_CYCLE` — `parentRuleSetId` tạo vòng kế thừa.
+            * `DUPLICATE_RULE` — hai luật trùng khóa `(genDelta, side, gender, isElder)` cùng `priority`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ConflictProblem'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # SỰ KIỆN / EVENTS
+  # ---------------------------------------------------------------------------
+  /events:
+    get:
+      tags: [events]
+      operationId: listEvents
+      summary: Danh sách giỗ, chạp, lễ dòng họ / List ancestral events
+      description: |-
+        Liệt kê sự kiện dòng họ: giỗ tổ, giỗ họ, giỗ chi, giỗ thường, tiểu tường, đại tường,
+        chạp mả, mừng thọ (FR-2.3).
+
+        **Ngày âm là gốc.** `lunarDate` là dữ liệu được lưu; `nextOccurrenceSolar` là ngày **dương**
+        của lần giỗ sắp tới, do backend quy đổi bằng thuật toán Hồ Ngọc Đức ở GMT+7 (có xử lý
+        tháng nhuận). FE **không được** tự quy đổi âm–dương ở client — lệch tháng nhuận là bug
+        âm thầm nhất của hệ thống này.
+
+        Lọc theo khoảng ngày dùng `from`/`to` trên **ngày dương của lần xảy ra sắp tới**,
+        vì đó là thứ người dùng nhìn trên lịch.
+
+        Sự kiện gắn với người còn sống (ví dụ mừng thọ) tuân thủ phân tầng: Khách không thấy.
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: from
+          in: query
+          description: Ngày dương bắt đầu khoảng lọc (bao gồm). / Solar range start, inclusive.
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Ngày dương kết thúc khoảng lọc (bao gồm). / Solar range end, inclusive.
+          schema:
+            type: string
+            format: date
+        - name: upcomingDays
+          in: query
+          description: |-
+            Đường tắt thay cho `from`/`to`: lấy sự kiện trong N ngày tới kể từ hôm nay (GMT+7).
+            Nếu gửi cùng `from`/`to` thì `from`/`to` thắng.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 400
+        - name: eventType
+          in: query
+          description: Lọc theo loại lễ (có thể lặp lại). / Filter by event type, repeatable.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/EventType'
+          style: form
+          explode: true
+        - name: branchId
+          in: query
+          description: |-
+            Lọc theo chi/ngành nhận nhắc, bao gồm cả nhánh con (`ltree`).
+            Sự kiện cấp dòng họ (`isClanLevel = true`) luôn xuất hiện với mọi `branchId`.
+          schema:
+            type: string
+            format: uuid
+        - name: personId
+          in: query
+          description: Lọc sự kiện của một nhân khẩu. / Filter by the subject person.
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: sort
+          in: query
+          description: '`field,asc|desc`. Cho phép `nextOccurrenceSolar`, `eventType`. Mặc định `nextOccurrenceSolar,asc`.'
+          schema:
+            type: string
+            default: nextOccurrenceSolar,asc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /events/{id}:
+    get:
+      tags: [events]
+      operationId: getEvent
+      summary: Chi tiết một sự kiện / Event detail
+      description: |-
+        Chi tiết một giỗ/lễ. Đây là **điểm đến của `deepLink`** trong thông báo nhắc giỗ
+        (`/events/{id}`) — không có endpoint này thì bấm vào thông báo là rơi vào trang trắng.
+
+        `nextOccurrenceSolar` là ngày **dương** của lần xảy ra sắp tới, do backend quy đổi
+        (Hồ Ngọc Đức, GMT+7). Nếu sự kiện không còn lần nào ở phía trước (sự kiện một lần đã diễn
+        ra) thì `nextOccurrenceSolar`, `nextOccurrenceLunarYear` và `daysUntil` đều là `null` —
+        backend **không** trả một ngày trong quá khứ rồi gọi nó là "sắp tới".
+
+        Sự kiện đã xóa mềm, và sự kiện gắn với người **còn sống** khi người gọi là Khách,
+        đều trả `404` — không phải `403`, vì `403` đã xác nhận rằng id đó tồn tại.
+
+        > **Giai đoạn 1:** chuỗi bảo mật bắt buộc đăng nhập cho mọi `/api/v1/**` ngoài
+        > `/api/v1/public/**`, nên khách vãng lai nhận `401` trước khi luật phân tầng kịp chạy.
+        > Luật "Khách không thấy người còn sống" vẫn được cài đặt ở tầng ứng dụng và sẽ có hiệu lực
+        > ngay khi cổng thông tin công khai mở endpoint này.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          description: Id sự kiện. / Event id.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # THÔNG BÁO / NOTIFICATIONS
+  # ---------------------------------------------------------------------------
+  /notifications:
+    get:
+      tags: [notifications]
+      operationId: listNotifications
+      summary: Hộp thư thông báo in-app / In-app notification inbox
+      description: |-
+        Hộp thư in-app của **chính người đang đăng nhập** (suy từ JWT — không có tham số `userId`,
+        và cũng sẽ không có: hộp thư người khác không phải thứ để lộ qua tham số).
+
+        In-app là **nguồn chân lý** của kênh thông báo MVP: người dùng từ chối quyền Web Push
+        vẫn nhận đủ thông báo ở đây. Web Push chỉ là lớp đẩy thêm ra ngoài.
+
+        `unreadCount` nằm ở **cấp phản hồi**, không phải trong `page`, và luôn là **tổng số chưa đọc
+        của toàn hộp thư**, không phụ thuộc bộ lọc hay trang hiện tại — FE dùng nó cho badge chuông.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: status
+          in: query
+          description: |-
+            * `ALL` — tất cả (mặc định).
+            * `UNREAD` — chỉ chưa đọc.
+            * `READ` — chỉ đã đọc.
+          schema:
+            type: string
+            enum: [ALL, UNREAD, READ]
+            default: ALL
+        - name: category
+          in: query
+          description: Lọc theo loại thông báo. / Filter by category.
+          schema:
+            $ref: '#/components/schemas/NotificationCategory'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: sort
+          in: query
+          description: '`field,asc|desc`. Cho phép `createdAt`. Mặc định `createdAt,desc`.'
+          schema:
+            type: string
+            default: createdAt,desc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/{id}/read:
+    post:
+      tags: [notifications]
+      operationId: markNotificationRead
+      summary: Đánh dấu đã đọc / Mark a notification as read
+      description: |-
+        Đánh dấu một thông báo trong hộp thư của **chính mình** là đã đọc.
+
+        **Idempotent**: gọi lại trên thông báo đã đọc vẫn trả `200` với `readAt` **giữ nguyên lần đầu**,
+        không cập nhật lại. FE cứ gọi thoải mái, không cần kiểm tra trạng thái trước.
+
+        Trả kèm `unreadCount` mới để FE cập nhật badge ngay, khỏi phải gọi lại `/notifications`.
+
+        Thông báo của người khác ⇒ `404` (không phải `403`, để không lộ id có tồn tại).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id thông báo trong hộp thư. / Notification id.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationReadResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /notifications/read-all:
+    post:
+      tags: [notifications]
+      operationId: markAllNotificationsRead
+      summary: Đánh dấu đã đọc tất cả / Mark the whole inbox as read
+      description: |-
+        Đánh dấu **toàn bộ** hộp thư của **chính người đang đăng nhập** là đã đọc — nút "Đọc hết"
+        của trung tâm thông báo.
+
+        **Idempotent**: gọi lại khi hộp thư đã sạch trả `200` với `markedCount = 0`, không phải lỗi.
+
+        Cố ý **không có** tham số phạm vi (danh mục, khoảng thời gian): một nút "đọc hết" chỉ xử lý
+        một phần là nút mà không ai đoán được nó vừa làm gì.
+
+        Đường dẫn là `/read-all` chứ không phải `/{id}/read` với một id đặc biệt như `all` —
+        một id ma trong đường dẫn tài nguyên sớm muộn cũng va vào một UUID thật.
+
+        `unreadCount` trả kèm để FE cập nhật badge chuông ngay, khỏi phải gọi lại `/notifications`.
+        Nó được **đọc lại từ cơ sở dữ liệu** chứ không suy ra bằng 0: một thông báo mới có thể vừa
+        rơi vào hộp thư giữa hai câu lệnh.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationReadAllResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # WEB PUSH (VAPID)
+  # ---------------------------------------------------------------------------
+  /push/public-key:
+    get:
+      tags: [push]
+      operationId: getVapidPublicKey
+      summary: Khóa công khai VAPID / VAPID public key
+      description: |-
+        Trả **khóa công khai VAPID** dạng base64url không padding, để service worker truyền vào
+        `PushManager.subscribe({ applicationServerKey })`.
+
+        Không có endpoint này thì FE buộc phải nhúng cứng khóa vào build — đổi khóa là phải build lại,
+        và môi trường dev/staging/prod dùng khóa khác nhau sẽ lệch. **Khóa bí mật VAPID không bao giờ
+        rời server** và không xuất hiện ở bất kỳ phản hồi nào.
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VapidPublicKey'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /push/subscriptions:
+    post:
+      tags: [push]
+      operationId: registerPushSubscription
+      summary: Đăng ký thiết bị nhận Web Push / Register a Web Push subscription
+      description: |-
+        Đăng ký một `PushSubscription` chuẩn **VAPID / Web Push (RFC 8291)** cho người đang đăng nhập.
+        Body chính là kết quả `PushSubscription.toJSON()` của trình duyệt, cộng vài trường phụ trợ.
+
+        **Idempotent theo `endpoint`**: gửi lại cùng `endpoint` sẽ **cập nhật** bản ghi cũ và trả `200`
+        (không phải `201`, không tạo bản trùng). Mỗi người có thể có nhiều thiết bị.
+
+        **Ghi chú nền tảng (FE phải xử lý, đừng để im lặng thất bại):**
+
+        * iOS chỉ cho Web Push khi PWA **đã được cài vào màn hình chính** (iOS 16.4+). App cần
+          hướng dẫn "Thêm vào màn hình chính", nếu không phần lớn người dùng iPhone sẽ không bao giờ nhận push.
+        * Xin quyền **đúng lúc** (sau khi người dùng xem một hồ sơ hoặc một ngày giỗ), không phải ngay khi vào trang.
+        * Người từ chối quyền vẫn nhận đủ thông báo in-app — push không phải điều kiện tiên quyết.
+
+        Khi push gateway trả `404`/`410` (subscription bị thu hồi hoặc hết hạn), backend **tự xóa**
+        bản ghi và không retry. FE có thể thấy một subscription biến mất mà không do mình gọi `DELETE`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscriptionCreateRequest'
+      responses:
+        '201':
+          description: Đã đăng ký thiết bị mới. / New subscription registered.
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscriptionDto'
+        '200':
+          description: Đã cập nhật đăng ký sẵn có cùng `endpoint`. / Existing subscription updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscriptionDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /push/subscriptions/{id}:
+    delete:
+      tags: [push]
+      operationId: deletePushSubscription
+      summary: Hủy đăng ký Web Push / Remove a Web Push subscription
+      description: |-
+        Xóa một đăng ký push của **chính mình** (người dùng tắt công tắc trong phần cài đặt,
+        hoặc gọi `pushSubscription.unsubscribe()`).
+
+        Đây là **xóa cứng** — quy tắc "chỉ xóa mềm" áp cho nhân khẩu trong gia phả, không áp cho
+        dữ liệu kỹ thuật của thiết bị.
+
+        Đăng ký không tồn tại hoặc thuộc người khác ⇒ `404`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id bản ghi đăng ký (không phải `endpoint`). / Subscription record id.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Đã hủy đăng ký. / Subscription removed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # VẬN HÀNH NHẮC GIỖ / REMINDER PIPELINE OPERATIONS (System Admin)
+  # ---------------------------------------------------------------------------
+  /admin/reminders/generate:
+    post:
+      tags: [admin-reminders]
+      operationId: generateReminders
+      summary: Sinh lịch nhắc giỗ ngay / Generate reminder jobs now
+      description: |-
+        Chạy ngay job sinh `reminder_job` thay vì chờ scheduler 01:30 (GMT+7).
+
+        **Vì sao có endpoint này.** Trên môi trường demo/staging vốn được dựng lên rồi tắt trong
+        ngày, bảng `reminder_job` luôn rỗng và cả đường ống nhắc giỗ không trình diễn được
+        đầu-cuối. Bấm nút vẫn tốt hơn sửa cron thành mỗi phút rồi quên trả lại.
+
+        **Idempotent.** Gọi lại với cùng `referenceDate` trả `200` và `createdJobs = 0`; chống
+        trùng do chỉ mục duy nhất `ux_reminder_job_occurrence (event_id, occurrence_year,
+        offset_days)` bảo đảm — không phải do một phép kiểm tra ở tầng ứng dụng. `scannedEvents`
+        vẫn giữ nguyên, nhờ đó phân biệt được "job đã có sẵn từ lượt trước" với "không có sự kiện
+        nào để quét".
+
+        **`referenceDate` đổi luôn cả mốc "bây giờ"** thành 00:00 của chính ngày đó. Nếu giữ thời
+        điểm thật thì mọi mốc nhắc nằm trước hiện tại sẽ bị loại, và tham số coi như vô dụng đúng ở
+        trường hợp cần nó nhất: dựng lại cả ba mốc **7 / 3 / 1** để xem chúng chạy thật.
+
+        **Hệ quả phải biết trước:** `referenceDate` trong quá khứ sinh ra job có `fire_at` đã qua,
+        và lượt đẩy kế tiếp (5 phút một lần, hoặc `POST /admin/reminders/dispatch`) sẽ **gửi thật**
+        tới người trong họ. Đó là lý do endpoint này chỉ dành cho System Admin.
+
+        Chỉ vai **System Admin** (`ADMIN`) — vai kỹ thuật toàn hệ thống, không phải chức danh dòng
+        tộc. Cố ý không mở cho Hội đồng Tộc biểu: hội đồng là thẩm quyền *nội dung* của dòng họ,
+        đây là bề mặt *vận hành*. Cũng không có phạm vi chi/ngành: job quét toàn bộ dòng họ nên
+        không có `ltree` nào để giới hạn nó.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: referenceDate
+          in: query
+          description: |-
+            Ngày được coi là "hôm nay" (GMT+7). Mặc định là hôm nay.
+            Chỉ chấp nhận lệch tối đa **366 ngày** về mỗi phía: gõ nhầm năm mà không có chốt này
+            thì job sẽ quét toàn bộ sự kiện của dòng họ để sinh lịch nhắc cho một mốc chẳng ai dùng.
+          schema:
+            type: string
+            format: date
+          example: '2026-09-05'
+      responses:
+        '200':
+          description: Đã chạy xong (kể cả khi không tạo job nào mới).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderGenerationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: |-
+            Đã có một lượt sinh khác đang chạy trên instance này
+            (`code` = `events.reminder-generation-in-progress`). Không phải lỗi dữ liệu — đợi lượt
+            trước xong rồi bấm lại. Chốt này chỉ để một lần bấm sốt ruột không nhân đôi tải quét
+            toàn bảng; việc ghi vốn đã idempotent.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/reminders/dispatch:
+    post:
+      tags: [admin-reminders]
+      operationId: dispatchDueReminders
+      summary: Đẩy lịch nhắc đã tới giờ lên hàng đợi / Dispatch due reminders now
+      description: |-
+        Đẩy ngay các `reminder_job` đã tới giờ lên RabbitMQ, thay vì chờ lượt quét 5 phút.
+
+        **Luồng HTTP không chờ gửi.** Ở đây chỉ ghi tin vào broker rồi trả về; việc gọi gateway
+        (in-app, Web Push) diễn ra ở consumer. Gateway chết cũng không giữ lại request nào. Vì vậy
+        `dispatchedJobs` là **số job đã đẩy đi**, không phải số người đã nhận được.
+
+        Job có ngày giỗ **đã qua** không được gửi mà chuyển `CANCELLED` — nhắc một cái giỗ đã cúng
+        xong là vô nghĩa và gây hoang mang. Job có sự kiện đã xóa mềm cũng vậy.
+
+        Chỉ vai **System Admin** (`ADMIN`).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderDispatchResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # GRAPHQL
+  # ---------------------------------------------------------------------------
+  /graphql:
+    post:
+      tags: [graphql]
+      operationId: graphql
+      summary: Điểm vào GraphQL cho cây lồng sâu / GraphQL entry point
+      description: |-
+        Điểm vào duy nhất cho GraphQL. **Schema nằm ở `contracts/schema.graphqls`** — file này chỉ
+        mô tả lớp vận chuyển HTTP.
+
+        Dùng GraphQL khi client cần **tự chọn hình dạng và độ sâu** của cây lồng nhau (`F2` canvas
+        phả đồ, hồ sơ kèm quan hệ). Dùng REST cho phần còn lại.
+
+        * Chỉ hỗ trợ **query**, không có mutation — mọi thao tác ghi đi qua REST.
+        * Server áp trần độ sâu và độ phức tạp truy vấn; vượt trần trả lỗi GraphQL với
+          `extensions.code = QUERY_TOO_COMPLEX`.
+        * Lỗi GraphQL trả `200` với mảng `errors`, mỗi lỗi có `extensions.code` **cùng tập mã**
+          với `Problem.code` của REST — FE dùng chung một bộ xử lý lỗi.
+        * Phân tầng riêng tư áp **y hệt REST**: trường bị ẩn trả `null` ở GraphQL
+          (GraphQL không có khái niệm "trường vắng mặt"), và người còn sống không xuất hiện với Khách.
+          Đây là **khác biệt duy nhất** giữa hai giao thức — FE phải nhớ.
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphQLRequest'
+      responses:
+        '200':
+          description: |-
+            Phản hồi GraphQL. Có thể chứa đồng thời `data` và `errors` (partial result).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# =============================================================================
+# COMPONENTS
+# =============================================================================
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |-
+        JWT do **Keycloak** (OAuth2/OIDC) cấp, gồm cả social login Google/Zalo.
+        Backend map `keycloak_sub → app_user → person`.
+
+        Vai trò (`realm_access.roles`): `ADMIN` (kỹ thuật, toàn hệ thống) ·
+        `COUNCIL` (Hội đồng Tộc biểu / Tộc trưởng, toàn dòng họ) ·
+        `BRANCH_HEAD` (Trưởng Chi/Ngành — **chỉ trong chi được giao**) ·
+        `MEMBER` · không token = Khách (`GUEST`).
+
+        **Kiểm quyền hai chiều**: vai trò **và** phạm vi chi/ngành theo `ltree` của đối tượng.
+        Có vai `BRANCH_HEAD` không đồng nghĩa được sửa mọi người trong họ.
+
+        Chức danh dòng tộc (Tộc trưởng, Trưởng chi — theo huyết thống/đích tôn) là dữ liệu nghiệp vụ,
+        **tách khỏi** vai kỹ thuật trong token; một người có thể giữ cả hai.
+
+  parameters:
+    PersonId:
+      name: id
+      in: path
+      required: true
+      description: Định danh nhân khẩu (UUID). / Person id.
+      schema:
+        type: string
+        format: uuid
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: |-
+        Ngôn ngữ cho nhãn và thông điệp lỗi — `vi` (mặc định) hoặc `en`.
+        Danh xưng (`title`) **luôn** tiếng Việt: đó là dữ liệu nghiệp vụ, không phải chuỗi i18n.
+      schema:
+        type: string
+        enum: [vi, en]
+        default: vi
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: '`ETag` lấy từ `GET` — optimistic locking. / ETag from a prior GET.'
+      schema:
+        type: string
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: '`ETag` đã có ở client; trùng thì nhận `304`. / Conditional GET.'
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |-
+        Khóa chống trùng do client sinh (UUID). Gửi lại cùng khóa trong 24h sẽ trả **đúng phản hồi cũ**
+        thay vì tạo bản ghi thứ hai. Nên dùng cho form thêm nhân khẩu trên mạng di động chập chờn.
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Số trang, **bắt đầu từ 0**. / Zero-based page index.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Số phần tử mỗi trang. / Page size.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    BadRequest:
+      description: Tham số hoặc body không hợp lệ. / Malformed request.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblem'
+    Unauthorized:
+      description: Thiếu hoặc sai token. / Missing or invalid token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: |-
+        Đã xác thực nhưng không đủ quyền — sai vai trò **hoặc** đối tượng nằm ngoài phạm vi
+        chi/ngành được giao (`BRANCH_SCOPE_VIOLATION`).
+
+        Lưu ý: với **người còn sống bị ẩn theo phân tầng**, API trả `404` chứ không `403`,
+        để không xác nhận rằng người đó tồn tại.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: |-
+        Không tồn tại, **hoặc** người gọi không được phép biết là nó tồn tại
+        (người còn sống với Khách, nhân khẩu đã xóa mềm với người không phải quản trị,
+        thông báo của người khác). Hai trường hợp cố ý không phân biệt được.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnprocessableEntity:
+      description: Body đúng cú pháp nhưng vi phạm ràng buộc nghiệp vụ. / Business rule violation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblem'
+    TooManyRequests:
+      description: Vượt hạn mức gọi. / Rate limit exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Số giây nên chờ trước khi thử lại. / Seconds to wait.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    InternalServerError:
+      description: |-
+        Lỗi hệ thống. `detail` **không bao giờ** chứa stack trace hay giá trị dữ liệu;
+        dùng `traceId` để tra log (Loki/OTel).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+
+    # -------------------------------------------------------------------------
+    # LỖI / ERRORS — RFC 7807 Problem Details
+    # -------------------------------------------------------------------------
+    Problem:
+      type: object
+      title: Problem (RFC 7807)
+      description: |-
+        Định dạng lỗi dùng chung cho **toàn bộ** API, theo RFC 7807 Problem Details,
+        trả với `Content-Type: application/problem+json`.
+
+        FE phân nhánh xử lý theo `code` (mã máy đọc, ổn định), **không** theo `title`/`detail`
+        (là văn bản cho người, đổi theo `Accept-Language`).
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI định danh loại lỗi. / URI identifying the problem type.
+          default: about:blank
+        title:
+          type: string
+          description: Tiêu đề ngắn cho người đọc. / Short human-readable summary.
+        status:
+          type: integer
+          description: Mã HTTP, lặp lại để tiện log. / HTTP status code.
+        detail:
+          type: string
+          description: |-
+            Diễn giải cho người dùng cuối. **Không bao giờ** chứa dữ liệu nhạy cảm (SĐT, email,
+            địa chỉ), stack trace, hay câu SQL/Cypher.
+        instance:
+          type: string
+          format: uri-reference
+          description: Đường dẫn đã gọi. / The request path.
+        code:
+          $ref: '#/components/schemas/ProblemCode'
+        traceId:
+          type: string
+          description: |-
+            Trace id (W3C traceparent) để đối chiếu log OTel/Loki. FE nên hiện cho người dùng khi
+            báo lỗi hệ thống. / Trace id for log correlation.
+        timestamp:
+          type: string
+          format: date-time
+          description: Thời điểm phát sinh lỗi (GMT+7). / When the error occurred.
+      examples:
+        - type: https://giapha.example.vn/problems/branch-scope-violation
+          title: Ngoài phạm vi chi/ngành được giao
+          status: 403
+          detail: Bạn chỉ được sửa nhân khẩu thuộc chi Nhất.
+          instance: /api/v1/persons/6f1b1d6e-2f8a-4d1c-9a91-9f2c1f0b7a01
+          code: BRANCH_SCOPE_VIOLATION
+          traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+
+    ProblemCode:
+      type: string
+      description: |-
+        Mã lỗi máy đọc. **Danh sách đóng** — thêm mã mới là thay đổi contract, phải báo cả BE và FE.
+        GraphQL dùng **cùng tập mã này** trong `errors[].extensions.code`.
+      enum:
+        - VALIDATION_FAILED
+        - UNAUTHENTICATED
+        - FORBIDDEN
+        - BRANCH_SCOPE_VIOLATION
+        - NOT_FOUND
+        - KY_HUY_CONFLICT
+        - DUPLICATE_PERSON_SUSPECTED
+        - RELATIONSHIP_CYCLE
+        - INVALID_RELATIONSHIP
+        - PERSON_ALREADY_DELETED
+        - CHANGE_REQUEST_CLOSED
+        - SELF_REVIEW_FORBIDDEN
+        - ACCOUNT_NOT_PROVISIONED
+        - ACCOUNT_NOT_ACTIVE
+        - INVALID_ROLE_ASSIGNMENT
+        - ACCOUNT_NOT_LINKED
+        - REMINDER_GENERATION_IN_PROGRESS
+        - WEBPUSH_NOT_CONFIGURED
+        - OPTIMISTIC_LOCK_CONFLICT
+        - PRECONDITION_REQUIRED
+        - SYSTEM_RULE_SET_IMMUTABLE
+        - RULE_SET_CYCLE
+        - DUPLICATE_RULE
+        - LUNAR_CONVERSION_FAILED
+        - DEPTH_LIMIT_EXCEEDED
+        - QUERY_TOO_COMPLEX
+        - RATE_LIMITED
+        - INTERNAL_ERROR
+      x-code-notes:
+        VALIDATION_FAILED: Sai kiểu, thiếu trường bắt buộc, vi phạm ràng buộc — xem `errors[]`.
+        BRANCH_SCOPE_VIOLATION: Đủ vai trò nhưng đối tượng ngoài `ltree` scope được giao.
+        KY_HUY_CONFLICT: Trùng tên húy bậc trên — ghi đè được bằng `confirmTabooOverride`.
+        RELATIONSHIP_CYCLE: Quan hệ cha–con sẽ tạo chu trình (A là tổ tiên của chính A).
+        INVALID_RELATIONSHIP: Ví dụ `spouseOrder` cho cạnh không phải `SPOUSE`, hoặc tự kết hôn với chính mình.
+        ACCOUNT_NOT_LINKED: Tài khoản đã đăng nhập nhưng chưa ghép với nhân khẩu nào trong gia phả.
+        REMINDER_GENERATION_IN_PROGRESS: Một lượt sinh lịch nhắc giỗ đang chạy — thử lại sau.
+        WEBPUSH_NOT_CONFIGURED: Máy chủ thiếu khoá VAPID nên Web Push tắt; giao diện nên ẩn công tắc.
+        CHANGE_REQUEST_CLOSED: Yêu cầu đính chính đã duyệt/từ chối/huỷ — không thao tác thêm được.
+        SELF_REVIEW_FORBIDDEN: Người gửi không được tự duyệt yêu cầu đính chính của chính mình.
+        ACCOUNT_NOT_PROVISIONED: Đăng nhập Keycloak hợp lệ nhưng chưa có `app_user` tương ứng.
+        ACCOUNT_NOT_ACTIVE: Tài khoản tồn tại nhưng đang bị khoá hoặc chờ duyệt.
+        INVALID_ROLE_ASSIGNMENT: Ví dụ gán Trưởng Chi mà không kèm chi, hoặc tự nâng vai của mình.
+        DEPTH_LIMIT_EXCEEDED: '`depth` vượt trần cho phép.'
+        LUNAR_CONVERSION_FAILED: Ngày âm không tồn tại trong năm quy đổi (thường do tháng nhuận).
+
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          description: |-
+            Problem kèm chi tiết lỗi từng trường, cho FE tô đỏ đúng ô nhập.
+          properties:
+            errors:
+              type: array
+              description: Danh sách lỗi theo trường. / Per-field violations.
+              items:
+                type: object
+                required: [field, message]
+                properties:
+                  field:
+                    type: string
+                    description: |-
+                      Đường dẫn trường theo JSON Pointer rút gọn, ví dụ `names[0].fullName`.
+                  message:
+                    type: string
+                    description: Mô tả lỗi cho người dùng. / Human-readable message.
+                  rejectedValue:
+                    description: |-
+                      Giá trị bị từ chối. **Bỏ trống với dữ liệu Tầng 3** (SĐT, email, địa chỉ) —
+                      không dội giá trị nhạy cảm trở lại và cũng không ghi vào log.
+
+    ConflictProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          description: |-
+            Problem cho nhóm `409`, có thêm thông tin để FE dựng hộp thoại xác nhận ghi đè.
+          properties:
+            overridable:
+              type: boolean
+              description: |-
+                `true` ⇒ client được phép gửi lại kèm cờ xác nhận ở `overrideField` để vẫn ghi.
+                `false` ⇒ xung đột cứng (ví dụ `OPTIMISTIC_LOCK_CONFLICT`), phải nạp lại dữ liệu.
+            overrideField:
+              type: string
+              description: |-
+                Tên trường cờ xác nhận cần gửi lại, ví dụ `confirmTabooOverride`.
+              examples: [confirmTabooOverride, confirmDuplicateOverride]
+            conflicts:
+              type: array
+              description: |-
+                Chi tiết các va chạm. Với `KY_HUY_CONFLICT`, mỗi phần tử là một bậc trên
+                có tên húy trùng — FE liệt kê đủ trong hộp thoại để dòng họ quyết định có ý thức.
+              items:
+                $ref: '#/components/schemas/TabooConflict'
+
+    TabooConflict:
+      type: object
+      title: Va chạm kỵ húy / Taboo-name collision
+      description: |-
+        Một bậc trên có **tên húy** trùng với tên đang định đặt (FR-1.6).
+        Kỵ húy là tục kiêng gọi tên thật của người trên; trùng tên húy bậc trên bị xem là thất kính.
+      required: [ancestorPersonId, tabooName, matchedNameType, matchKind]
+      properties:
+        ancestorPersonId:
+          type: string
+          format: uuid
+          description: Nhân khẩu bậc trên bị trùng. / The ancestor whose taboo name collides.
+        ancestorDisplayName:
+          type: string
+          description: Tên hiển thị của bậc trên. / Ancestor display name.
+        ancestorGeneration:
+          type: [integer, 'null']
+          description: Đời thứ của bậc trên (Thủy tổ = 1). / Ancestor generation.
+        tabooName:
+          type: string
+          description: Tên húy bị trùng. / The colliding taboo name.
+        matchedNameType:
+          $ref: '#/components/schemas/NameType'
+        matchKind:
+          type: string
+          description: |-
+            * `EXACT` — trùng toàn bộ tên húy.
+            * `GIVEN_NAME` — trùng phần tên chính (bỏ họ và chữ đệm).
+            * `UNACCENTED` — chỉ trùng khi bỏ dấu (`Đức` vs `Duc`) — cảnh báo yếu hơn.
+          enum: [EXACT, GIVEN_NAME, UNACCENTED]
+        relationHint:
+          type: string
+          description: |-
+            Gợi ý quan hệ cho dễ hiểu, ví dụ "Cụ tổ đời thứ 3 của chi Nhất".
+            Chỉ để hiển thị, đừng phân tích chuỗi này. / Display-only hint.
+
+    # -------------------------------------------------------------------------
+    # PHÂN TRANG / PAGINATION
+    # -------------------------------------------------------------------------
+    PageMeta:
+      type: object
+      title: Thông tin phân trang / Page metadata
+      description: |-
+        Khối phân trang **dùng chung cho mọi endpoint trả danh sách**. Kiểu offset (`page`/`size`),
+        không phải cursor — đủ cho quy mô hàng vạn nhân khẩu và cho phép nhảy trang trong UI quản trị.
+      required: [page, size, totalElements, totalPages, hasNext]
+      properties:
+        page:
+          type: integer
+          description: Trang hiện tại, **bắt đầu từ 0**. / Zero-based page index.
+        size:
+          type: integer
+          description: Số phần tử mỗi trang. / Page size.
+        totalElements:
+          type: integer
+          format: int64
+          description: |-
+            Tổng số phần tử **sau khi đã lọc theo phân tầng riêng tư**. Con số này cố ý không phản ánh
+            dữ liệu người gọi không được thấy. / Total after privacy filtering.
+        totalPages:
+          type: integer
+          description: Tổng số trang. / Total page count.
+        hasNext:
+          type: boolean
+          description: Còn trang sau hay không — FE dùng cho infinite scroll. / Whether more pages exist.
+        sort:
+          type: [string, 'null']
+          description: Tiêu chí sắp xếp đang áp dụng. / Applied sort.
+
+    # -------------------------------------------------------------------------
+    # ENUM DÙNG CHUNG / SHARED ENUMS
+    # -------------------------------------------------------------------------
+    Gender:
+      type: string
+      description: Giới tính. / Gender.
+      enum: [MALE, FEMALE, UNKNOWN]
+
+    NameType:
+      type: string
+      description: |-
+        Lớp tên của người Việt truyền thống — một nhân khẩu có **nhiều tên**, không chỉ một.
+
+        * `HUY` — **tên húy**: tên thật, kiêng gọi khi người đó là bậc trên (căn cứ cảnh báo kỵ húy).
+        * `TU` — **tên tự**: tên chữ, đặt khi trưởng thành.
+        * `HIEU` — **tên hiệu**: bút hiệu, biệt hiệu tự đặt.
+        * `THUY` — **tên thụy**: tên đặt **sau khi mất**, dùng trong tế lễ và văn khấn.
+        * `THUONG_GOI` — tên thường gọi hằng ngày, thường trùng tên khai sinh hiện đại.
+        * `PHAP_DANH` — pháp danh (người quy y Phật giáo).
+      enum: [HUY, TU, HIEU, THUY, THUONG_GOI, PHAP_DANH]
+
+    PrivacyLevel:
+      type: string
+      description: |-
+        Mức chia sẻ **do chính chủ thể chọn**, ghi đè mặc định theo hướng **mở thêm**, không bao giờ
+        theo hướng đóng bớt quyền của `ADMIN`.
+
+        * `DEFAULT` — theo phân tầng chuẩn ở BA v2 §10.
+        * `BRANCH_OPT_IN` — cho thành viên **cùng chi/ngành** xem thêm Tầng 3 (để tiện liên hệ).
+        * `CLAN_OPT_IN` — cho **mọi thành viên đã đăng nhập** xem thêm Tầng 3.
+        * `RESTRICTED` — siết chặt hơn mặc định: chỉ Tầng 1 kể cả với thành viên cùng chi.
+          Mặc định của **trẻ vị thành niên**.
+      enum: [DEFAULT, BRANCH_OPT_IN, CLAN_OPT_IN, RESTRICTED]
+
+    VisibleTier:
+      type: string
+      description: |-
+        Tầng dữ liệu mà **người gọi hiện tại** nhận được cho hồ sơ này.
+        Cho FE biết mình đang ở đâu để bật/tắt affordance — **không** tiết lộ trường nào bị giấu.
+
+        * `PUBLIC` — người đã khuất, công khai.
+        * `T1` / `T2` / `T3` — theo BA v2 §10.
+      enum: [PUBLIC, T1, T2, T3]
+
+    Role:
+      type: string
+      description: |-
+        Vai kỹ thuật trong hệ thống, lấy từ JWT. **Tách khỏi** chức danh dòng tộc
+        (Tộc trưởng, Trưởng chi theo huyết thống/đích tôn) — một người có thể giữ cả hai.
+      enum: [ADMIN, COUNCIL, BRANCH_HEAD, MEMBER, GUEST]
+
+    Region:
+      type: string
+      description: |-
+        Vùng miền, quyết định bộ quy tắc danh xưng ở cấp `REGION`.
+        Giai đoạn 1 chỉ có bộ **miền Bắc**; `TRUNG` và `NAM` để trống, bổ sung ở GĐ2–3.
+      enum: [BAC, TRUNG, NAM]
+
+    RelType:
+      type: string
+      description: |-
+        Loại cạnh quan hệ. Nguồn chân lý là cạnh trong đồ thị AGE; bảng `relationship` là bản chiếu,
+        **ghi trong cùng một transaction**.
+
+        Hướng cạnh là `from → to`:
+
+        * `PARENT_BIO` — cha/mẹ **ruột** → con. `from` là cha/mẹ, `to` là con.
+        * `PARENT_ADOPT` — cha/mẹ **nuôi** → con nuôi. Cùng hướng như trên.
+        * `SPOUSE` — vợ/chồng. Cạnh **vô hướng về ngữ nghĩa** nhưng lưu một chiều;
+          `spouseOrder` ghi thứ tự vợ/chồng cho trường hợp **đa thê/đa phu**
+          (1 = vợ cả/chồng cả). `validFrom`/`validTo` mô tả **tái hôn, ly hôn, goá**.
+        * `HEIR` — quan hệ **thừa kế hương hỏa**: `from` là người để lại, `to` là người nối dõi.
+          Xem `heirKind` để biết là **đích tôn**, **thừa tự** hay **kế tự**.
+
+        **Dâu / rể không phải một loại cạnh** — chúng được **suy ra** từ `SPOUSE` cộng huyết thống
+        (vợ của con trai = con dâu). Đừng tạo cạnh riêng cho dâu/rể; rule engine danh xưng
+        đã xử lý qua `side = IN_LAW`.
+      enum: [PARENT_BIO, PARENT_ADOPT, SPOUSE, HEIR]
+
+    HeirKind:
+      type: string
+      description: |-
+        Phân loại quan hệ thừa kế hương hỏa, chỉ có nghĩa với `relType = HEIR`.
+
+        * `DICH_TON` — **đích tôn**: cháu đích tôn, con trai trưởng của con trai trưởng,
+          người chịu trách nhiệm thờ tự chính.
+        * `THUA_TU` — **thừa tự**: người được chỉ định tiếp nối việc thờ cúng.
+        * `KE_TU` — **kế tự**: lập người nối dõi khi một chi **tuyệt tự** (không có người nối).
+      enum: [DICH_TON, THUA_TU, KE_TU]
+
+    RelationSide:
+      type: string
+      description: |-
+        Bên quan hệ, đầu vào của rule engine danh xưng.
+
+        * `PATERNAL` — bên **nội** (đường cha).
+        * `MATERNAL` — bên **ngoại** (đường mẹ). Ghi nhận đầy đủ, ngang bằng bên nội (FR-1.8).
+        * `BLOOD` — huyết thống trực hệ, chưa/không cần phân nội–ngoại.
+        * `IN_LAW` — quan hệ qua hôn nhân (dâu, rể, thông gia).
+      enum: [PATERNAL, MATERNAL, BLOOD, IN_LAW]
+
+    TreeDirection:
+      type: string
+      description: Chiều duyệt cây. / Traversal direction.
+      enum: [DESCENDANTS, ANCESTORS, BOTH]
+      default: DESCENDANTS
+
+    RuleScope:
+      type: string
+      description: |-
+        Cấp áp dụng của bộ quy tắc danh xưng. Hợp nhất theo thứ tự
+        `DEFAULT → REGION → CLAN → BRANCH`, cấp sau **ghi đè** cấp trước khi trùng khóa luật.
+      enum: [DEFAULT, REGION, CLAN, BRANCH]
+
+    EventType:
+      type: string
+      description: |-
+        Phân loại lễ (FR-2.3).
+
+        * `GIO_TO` — giỗ Thủy tổ.
+        * `GIO_HO` — giỗ cấp dòng họ.
+        * `GIO_CHI` — giỗ cấp chi/ngành.
+        * `GIO_THUONG` — giỗ thường của một cá nhân.
+        * `TIEU_TUONG` — giỗ đầu (tròn 1 năm).
+        * `DAI_TUONG` — giỗ hết (tròn 2 năm).
+        * `CHAP_MA` — chạp mả, tảo mộ cuối năm.
+        * `MUNG_THO` — mừng thọ (người **còn sống** — chịu phân tầng riêng tư).
+        * `KHAC` — loại khác.
+      enum: [GIO_TO, GIO_HO, GIO_CHI, GIO_THUONG, TIEU_TUONG, DAI_TUONG, CHAP_MA, MUNG_THO, KHAC]
+
+    NotificationCategory:
+      type: string
+      description: |-
+        * `GIO_REMINDER` — nhắc giỗ (mốc 7/3/1 ngày).
+        * `EVENT` — thông báo sự kiện dòng họ khác.
+        * `CHANGE_REQUEST` — yêu cầu đính chính (Giai đoạn 2).
+        * `SYSTEM` — thông báo hệ thống.
+      enum: [GIO_REMINDER, EVENT, CHANGE_REQUEST, SYSTEM]
+
+    # -------------------------------------------------------------------------
+    # VALUE OBJECT: NGÀY SONG LỊCH / DUAL CALENDAR DATES
+    # -------------------------------------------------------------------------
+    LunarDate:
+      type: object
+      title: Ngày âm lịch / Lunar date
+      description: |-
+        Ngày âm lịch Việt Nam, quy đổi theo thuật toán **Hồ Ngọc Đức** ở múi giờ **GMT+7**.
+
+        Lưu ý múi giờ: lịch âm Việt Nam (GMT+7) **có năm lệch** lịch âm Trung Quốc (GMT+8).
+        Mọi quy đổi phải do backend thực hiện — FE không tự tính.
+      required: [year, month, day]
+      properties:
+        year:
+          type: integer
+          description: Năm âm lịch. / Lunar year.
+          examples: [1957]
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: Tháng âm lịch 1–12. / Lunar month.
+        day:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Ngày âm lịch 1–30 (tháng âm không có ngày 31). / Lunar day.
+        leap:
+          type: boolean
+          default: false
+          description: |-
+            `true` nếu là **tháng nhuận**. Bỏ qua cờ này là nguồn bug số một của hệ thống:
+            giỗ sẽ lệch nguyên một tháng mà không có lỗi nào được ném ra.
+        canChi:
+          type: [string, 'null']
+          description: |-
+            Can chi của **năm** (chỉ đọc, backend sinh), ví dụ `Đinh Dậu`. / Sexagenary year name.
+        yearLabel:
+          type: [string, 'null']
+          description: Nhãn hiển thị đầy đủ, ví dụ `Mùng 3 tháng 8 nhuận, năm Đinh Dậu`. / Display label.
+
+    DateDual:
+      type: object
+      title: Ngày song lịch / Dual-calendar date
+      description: |-
+        Một mốc thời gian ghi **cả hai lịch**. Backend tự điền phần còn thiếu khi ghi
+        (gửi `solar` thì `lunar` được tính ra và ngược lại).
+
+        Với ngày **mất**, `lunar` là **nguồn chân lý** để tính ngày giỗ hằng năm — dòng họ giỗ theo
+        ngày âm, không theo ngày dương.
+
+        Dữ liệu gia phả cổ thường **chỉ có ngày âm**, đôi khi chỉ có năm. Cả hai nhánh đều nullable,
+        và `precision` cho biết mức chính xác thật sự.
+      properties:
+        solar:
+          type: [string, 'null']
+          format: date
+          description: Ngày dương lịch `YYYY-MM-DD`. / Gregorian date.
+        lunar:
+          oneOf:
+            - $ref: '#/components/schemas/LunarDate'
+            - type: 'null'
+          description: Ngày âm lịch. / Lunar date.
+        precision:
+          type: string
+          description: |-
+            Mức chính xác của dữ liệu gốc: `DAY` đủ ngày · `MONTH` chỉ biết tháng ·
+            `YEAR` chỉ biết năm · `UNKNOWN` không rõ. FE hiển thị theo mức này,
+            đừng bịa ngày `01` rồi trình bày như thể đã biết chắc.
+          enum: [DAY, MONTH, YEAR, UNKNOWN]
+          default: DAY
+
+    # -------------------------------------------------------------------------
+    # TÊN ĐA LỚP / MULTI-LAYER NAMES
+    # -------------------------------------------------------------------------
+    PersonName:
+      type: object
+      title: Một lớp tên / One name layer
+      description: |-
+        Một trong nhiều tên của một nhân khẩu (bảng `person_name`, quan hệ 1–N).
+      required: [nameType, fullName, isPrimary]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id bản ghi tên (chỉ đọc). / Name record id, read-only.
+        nameType:
+          $ref: '#/components/schemas/NameType'
+        fullName:
+          type: string
+          maxLength: 200
+          description: Tên Quốc ngữ, có dấu. / Vietnamese name in Latin script.
+          examples: [Nguyễn Văn Đức]
+        nameHanNom:
+          type: [string, 'null']
+          maxLength: 200
+          description: |-
+            Tên chữ **Hán–Nôm** nếu có (từ gia phả giấy, bia đá, hoành phi).
+            Đây là chuỗi Unicode CJK, không phải phiên âm. / Optional Han-Nom form.
+          examples: [阮文德]
+        nameUnaccented:
+          type: [string, 'null']
+          description: |-
+            Dạng **không dấu**, do backend sinh (generated column), phục vụ tìm kiếm.
+            **Chỉ đọc** — client gửi lên sẽ bị bỏ qua. / Server-generated, read-only.
+          examples: [nguyen van duc]
+        isPrimary:
+          type: boolean
+          description: |-
+            Tên hiển thị mặc định. Mỗi nhân khẩu có **đúng một** tên `isPrimary = true`.
+            / Exactly one primary name per person.
+        note:
+          type: [string, 'null']
+          maxLength: 500
+          description: Ghi chú xuất xứ tên (ví dụ "chép theo bia mộ"). / Provenance note.
+
+    PersonNameInput:
+      type: object
+      description: Dữ liệu tạo/sửa một lớp tên. / Input form of a name layer.
+      required: [nameType, fullName]
+      properties:
+        nameType:
+          $ref: '#/components/schemas/NameType'
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        nameHanNom:
+          type: [string, 'null']
+          maxLength: 200
+        isPrimary:
+          type: boolean
+          default: false
+          description: |-
+            Nếu cả danh sách không có tên nào đặt `true`, backend chọn tên đầu tiên làm tên chính.
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    # -------------------------------------------------------------------------
+    # CHI / NGÀNH — BRANCH
+    # -------------------------------------------------------------------------
+    BranchRef:
+      type: object
+      title: Tham chiếu chi/ngành / Branch reference
+      description: |-
+        Dạng rút gọn của **chi / ngành / cành / nhánh** — bốn cấp phân nhánh trong gia phả Việt.
+        Không dịch sang "branch/sub-branch" trong dữ liệu vì thứ bậc bốn cấp không có tương đương tiếng Anh.
+      required: [id, name, path]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Tên hiển thị, **có dấu**. / Display name, accented.
+          examples: [Chi Nhất — Ngành Trưởng]
+        path:
+          type: string
+          description: |-
+            Đường dẫn `ltree`, dùng cho phạm vi RBAC và truy vấn nhánh con.
+            **Nhãn `ltree` không nhận dấu tiếng Việt** nên path sinh từ slug không dấu;
+            tên hiển thị có dấu nằm ở `name`. / ltree path built from an unaccented slug.
+          pattern: '^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)*$'
+          examples: [root.chi_nhat.nganh_truong]
+        region:
+          oneOf:
+            - $ref: '#/components/schemas/Region'
+            - type: 'null'
+          description: Vùng miền của chi, chọn bộ quy tắc danh xưng cấp `REGION`.
+
+    # -------------------------------------------------------------------------
+    # NHÂN KHẨU / PERSON
+    # -------------------------------------------------------------------------
+    PersonDto:
+      type: object
+      title: Hồ sơ nhân khẩu / Person
+      description: |-
+        Hồ sơ một nhân khẩu, **đã lọc theo phân tầng riêng tư**.
+
+        ### Đọc kỹ: cùng một schema, khác tập trường
+
+        Mọi trường ngoài `id`, `isAlive`, `names`, `meta` đều **có thể vắng mặt**. Vắng mặt có
+        **hai nguyên nhân không phân biệt được** (cố ý):
+
+        1. Dữ liệu không tồn tại (gia phả cổ thiếu thông tin).
+        2. Người gọi không đủ quyền xem trường đó.
+
+        Vì vậy FE **không được** render placeholder kiểu "dữ liệu bị ẩn" cho trường vắng mặt —
+        làm thế là tự tay tiết lộ điều mà việc lọc đang cố giấu.
+
+        Trường bị ẩn được **loại khỏi JSON**, không trả `null`, không trả chuỗi rỗng, không trả `"***"`.
+        (Ở GraphQL thì trả `null`, vì GraphQL không có khái niệm trường vắng mặt.)
+
+        ### Tầng nào chứa gì (BA v2 §10)
+
+        | Tầng | Trường trong DTO |
+        |---|---|
+        | Công khai (người đã khuất) | tất cả các trường phả hệ dưới đây |
+        | T1 | `id` `names` `generation` `gender` `isAlive` `primaryBranch` `meta` |
+        | T2 | thêm `birth` **chỉ phần năm**, `occupation`, `currentPlaceProvince`, `nativePlace` |
+        | T3 | thêm `contact`, `birth` đầy đủ, `currentPlaceFull`, `avatarUrl`, `attributes`, `biography` |
+      required: [id, isAlive, names, meta]
+      properties:
+        id:
+          type: string
+          format: uuid
+        names:
+          type: array
+          description: |-
+            Các lớp tên. Với người còn sống ở Tầng 1, danh sách có thể **chỉ gồm tên chính** —
+            tên húy/tự/hiệu là dữ liệu nhạy cảm về lễ nghi, chỉ mở cho vai có quyền.
+          items:
+            $ref: '#/components/schemas/PersonName'
+        displayName:
+          type: string
+          description: |-
+            Tên hiển thị đã chọn sẵn (tên có `isPrimary = true`), để FE khỏi phải tự dò.
+            / Convenience field, the primary name.
+        gender:
+          $ref: '#/components/schemas/Gender'
+        generation:
+          type: [integer, 'null']
+          description: |-
+            Đời thứ, tính từ **Thủy tổ = 1**. `null` khi nhân khẩu chưa được nối vào cây.
+            Backend suy ra từ quan hệ cha–con; client **không** gửi lên.
+        isAlive:
+          type: boolean
+          description: |-
+            Còn sống hay đã khuất. Quyết định toàn bộ tầng hiển thị.
+            Người đã khuất là dữ liệu công khai theo mục đích gia phả.
+        isDeleted:
+          type: boolean
+          description: |-
+            Đã **xóa mềm**. Chỉ xuất hiện với `ADMIN`/`COUNCIL`; vai khác không thấy cả bản ghi.
+            Node vẫn nằm trong đồ thị để cây không gãy.
+        birth:
+          oneOf:
+            - $ref: '#/components/schemas/DateDual'
+            - type: 'null'
+          description: |-
+            Ngày sinh song lịch. **Người còn sống**: Tầng 2 chỉ nhận phần **năm**
+            (`precision = YEAR`); ngày đầy đủ là Tầng 3.
+        death:
+          oneOf:
+            - $ref: '#/components/schemas/DateDual'
+            - type: 'null'
+          description: |-
+            Ngày mất song lịch. `death.lunar` là **nguồn chân lý để tính giỗ**.
+            Luôn vắng mặt khi `isAlive = true`.
+        nativePlace:
+          type: [string, 'null']
+          description: |-
+            **Nguyên quán** — quê gốc của dòng họ, khác nơi ở hiện tại.
+            Là dữ liệu phả hệ nên công khai với người đã khuất. / Ancestral home.
+        currentPlaceProvince:
+          type: [string, 'null']
+          description: |-
+            Nơi ở hiện tại **cấp tỉnh/thành** — Tầng 2. Cố ý tách khỏi địa chỉ đầy đủ
+            để mở được mức "đang sống ở đâu" mà không lộ địa chỉ nhà.
+        currentPlaceFull:
+          type: [string, 'null']
+          description: Địa chỉ trú quán **đầy đủ** — Tầng 3. / Full address, Tier 3.
+        occupation:
+          type: [string, 'null']
+          description: Nghề nghiệp — Tầng 2. / Occupation, Tier 2.
+        biography:
+          type: [string, 'null']
+          description: Tiểu sử. Công khai với người đã khuất; với người còn sống là Tầng 3.
+        avatarUrl:
+          type: [string, 'null']
+          format: uri
+          description: |-
+            URL ảnh chân dung, trỏ tới **MinIO qua presigned URL có hạn dùng** — không phải blob.
+            Ảnh của người còn sống là **Tầng 3**. / Presigned MinIO URL.
+        primaryBranch:
+          oneOf:
+            - $ref: '#/components/schemas/BranchRef'
+            - type: 'null'
+          description: Chi/ngành chính, dùng cho phạm vi RBAC. / Primary branch, drives RBAC scope.
+        contact:
+          oneOf:
+            - $ref: '#/components/schemas/ContactInfo'
+            - type: 'null'
+          description: |-
+            **Toàn bộ khối này là Tầng 3.** Vắng mặt hoàn toàn (không phải object rỗng)
+            khi người gọi không đủ quyền.
+        attributes:
+          type: [object, 'null']
+          additionalProperties: true
+          description: |-
+            Thuộc tính mở rộng dạng JSONB (học vị, chức tước, khoa bảng, quân hàm…).
+            Khóa do dòng họ tự đặt, contract không ràng buộc.
+            Với người còn sống, khối này là Tầng 3 vì nội dung không kiểm soát trước được.
+        privacyLevel:
+          oneOf:
+            - $ref: '#/components/schemas/PrivacyLevel'
+            - type: 'null'
+          description: |-
+            Mức chia sẻ do chủ thể chọn. Chỉ **chính chủ** và `ADMIN` nhìn thấy trường này —
+            biết người khác đang siết quyền riêng tư cũng là một dạng rò rỉ.
+        createdAt:
+          type: [string, 'null']
+          format: date-time
+        updatedAt:
+          type: [string, 'null']
+          format: date-time
+        version:
+          type: [integer, 'null']
+          format: int64
+          description: |-
+            Phiên bản cho optimistic locking; cũng là giá trị dùng sinh `ETag`.
+            / Optimistic-lock version, mirrored in the ETag.
+        relationships:
+          type: array
+          description: |-
+            Quan hệ lõi cha–con–vợ–chồng của nhân khẩu này (thuộc **Tầng 1**, nên thành viên đã
+            đăng nhập luôn thấy). Chỉ chứa cạnh mà **đầu kia cũng được phép hiển thị** với người gọi —
+            quan hệ tới một người còn sống bị ẩn sẽ **không xuất hiện**, đúng như ở `/tree`.
+
+            Đây là quan hệ trực tiếp một bậc, **không** phải cả cây; muốn nhiều bậc thì gọi `/tree`
+            hoặc GraphQL.
+          items:
+            $ref: '#/components/schemas/RelationshipDto'
+        meta:
+          $ref: '#/components/schemas/PersonAccessMeta'
+
+    ContactInfo:
+      type: object
+      title: Liên hệ — Tầng 3 / Contact — Tier 3
+      description: |-
+        **Dữ liệu nhạy cảm theo Nghị định 13/2023.** Chỉ mở cho: **chính chủ**, `ADMIN`,
+        và người được chủ thể **opt-in** (`privacyLevel = BRANCH_OPT_IN` / `CLAN_OPT_IN`).
+        Trưởng chi được xem để liên hệ **chỉ khi** có opt-in.
+
+        Không bao giờ ghi các giá trị này vào `audit_log`, log ứng dụng, hay `rejectedValue` của lỗi.
+      properties:
+        phone:
+          type: [string, 'null']
+          description: Số điện thoại. / Phone number.
+        email:
+          type: [string, 'null']
+          format: email
+        zaloId:
+          type: [string, 'null']
+          description: Zalo id, dùng cho kênh nhắc giỗ ở Giai đoạn 2. / Zalo id, Phase 2 channel.
+
+    PersonAccessMeta:
+      type: object
+      title: Ngữ cảnh truy cập / Access context
+      description: |-
+        Cho FE biết **người gọi hiện tại** được làm gì với hồ sơ này, để render đúng affordance
+        thay vì gọi thử rồi ăn `403`. Đây là thông tin về **quyền của người gọi**,
+        không phải về dữ liệu bị giấu.
+      required: [visibleTier, canEdit, canDelete]
+      properties:
+        visibleTier:
+          $ref: '#/components/schemas/VisibleTier'
+        canEdit:
+          type: boolean
+          description: Người gọi được `PATCH` hồ sơ này. / Caller may PATCH.
+        canDelete:
+          type: boolean
+          description: Người gọi được xóa mềm hồ sơ này. / Caller may soft-delete.
+        canRequestCorrection:
+          type: boolean
+          default: false
+          description: |-
+            Người gọi được gửi yêu cầu đính chính (Giai đoạn 2). Giai đoạn 1 luôn `false`.
+        isSelf:
+          type: boolean
+          default: false
+          description: Hồ sơ này chính là người đang đăng nhập. / This is the caller's own profile.
+        callerRole:
+          $ref: '#/components/schemas/Role'
+
+    PersonSummaryDto:
+      type: object
+      title: Nhân khẩu rút gọn / Person summary
+      description: |-
+        Dạng gọn cho danh sách, kết quả tìm kiếm và node trên phả đồ.
+        Chỉ chứa dữ liệu **Tầng 1 trở xuống** — an toàn để hiển thị hàng loạt.
+      required: [id, displayName, isAlive]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          description: Tên chính có dấu. / Primary name.
+        nameHanNom:
+          type: [string, 'null']
+        gender:
+          $ref: '#/components/schemas/Gender'
+        generation:
+          type: [integer, 'null']
+        isAlive:
+          type: boolean
+        birthYear:
+          type: [integer, 'null']
+          description: |-
+            Chỉ **năm** sinh — Tầng 2 với người còn sống, công khai với người đã khuất.
+        deathYear:
+          type: [integer, 'null']
+        primaryBranch:
+          oneOf:
+            - $ref: '#/components/schemas/BranchRef'
+            - type: 'null'
+        nativePlace:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+          format: uri
+          description: Ảnh đại diện; với người còn sống là Tầng 3 nên thường vắng mặt.
+        matchedNameType:
+          oneOf:
+            - $ref: '#/components/schemas/NameType'
+            - type: 'null'
+          description: |-
+            Chỉ có trong kết quả `/persons/search`: lớp tên nào đã khớp truy vấn.
+            Cho phép FE hiện "khớp ở tên tự" thay vì để người dùng bối rối vì tên hiện ra khác tên đã gõ.
+
+    PersonSummaryPage:
+      type: object
+      description: Trang kết quả nhân khẩu. / A page of person summaries.
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonSummaryDto'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    # -------------------------------------------------------------------------
+    # QUAN HỆ / RELATIONSHIPS
+    # -------------------------------------------------------------------------
+    RelationshipDto:
+      type: object
+      title: Quan hệ / Relationship
+      description: |-
+        Một cạnh quan hệ. Hướng luôn là `fromPersonId → toPersonId`; ý nghĩa của hướng
+        phụ thuộc `relType` (xem mô tả `RelType`).
+      required: [id, fromPersonId, toPersonId, relType]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fromPersonId:
+          type: string
+          format: uuid
+        toPersonId:
+          type: string
+          format: uuid
+        relType:
+          $ref: '#/components/schemas/RelType'
+        heirKind:
+          oneOf:
+            - $ref: '#/components/schemas/HeirKind'
+            - type: 'null'
+          description: Chỉ có nghĩa khi `relType = HEIR`. / Only meaningful for HEIR.
+        spouseOrder:
+          type: [integer, 'null']
+          minimum: 1
+          description: |-
+            Thứ tự vợ/chồng cho **đa thê/đa phu** — `1` là vợ cả/chồng cả.
+            Chỉ có nghĩa khi `relType = SPOUSE`.
+        validFrom:
+          type: [string, 'null']
+          format: date
+          description: |-
+            Hiệu lực từ (ngày cưới). Với `SPOUSE`, cùng `validTo` mô tả **tái hôn, ly hôn, goá**;
+            một người có thể có nhiều cạnh `SPOUSE` với khoảng hiệu lực không giao nhau.
+        validTo:
+          type: [string, 'null']
+          format: date
+          description: |-
+            Hiệu lực đến (ly hôn hoặc một bên mất). `null` = còn hiệu lực.
+        note:
+          type: [string, 'null']
+          maxLength: 500
+          description: |-
+            Ghi chú, ví dụ "con riêng của vợ", "nhận nuôi năm 1975", "lập kế tự do chi trên tuyệt tự".
+
+    RelationshipLinkInput:
+      type: object
+      title: Nối quan hệ khi tạo nhân khẩu / Relationship link on create
+      description: |-
+        Nối nhân khẩu **đang được tạo** vào cây. Vì id của người mới chưa tồn tại lúc gửi request,
+        cạnh được mô tả bằng "người kia là ai" (`otherPersonId`) và "người kia đứng ở đầu nào của cạnh"
+        (`otherPersonRole`).
+
+        Ví dụ thường gặp:
+
+        * Thêm **con** của ông X: `{ relType: PARENT_BIO, otherPersonId: X, otherPersonRole: SOURCE }`
+          (X là cha ⇒ X ở đầu `from`).
+        * Thêm **cha** của anh Y: `{ relType: PARENT_BIO, otherPersonId: Y, otherPersonRole: TARGET }`
+          (người mới là cha ⇒ người mới ở đầu `from`, Y ở đầu `to`).
+        * Thêm **vợ thứ hai** của ông Z:
+          `{ relType: SPOUSE, otherPersonId: Z, otherPersonRole: SOURCE, spouseOrder: 2 }`.
+        * Thêm **con nuôi**: dùng `PARENT_ADOPT`. Con nuôi và con ruột là **hai loại cạnh khác nhau**,
+          không phải một cờ trên cùng cạnh, vì suy luận danh xưng đối xử khác nhau.
+
+        Backend ghi cạnh AGE và dòng `relationship` trong **cùng một transaction**;
+        rollback thì cả hai cùng biến mất.
+      required: [relType, otherPersonId, otherPersonRole]
+      properties:
+        relType:
+          $ref: '#/components/schemas/RelType'
+        otherPersonId:
+          type: string
+          format: uuid
+          description: Nhân khẩu đã tồn tại ở đầu kia của cạnh. / The existing person on the other end.
+        otherPersonRole:
+          type: string
+          description: |-
+            Người kia đứng ở đầu nào của cạnh `from → to`:
+            `SOURCE` = người kia là `from`; `TARGET` = người kia là `to` (người mới là `from`).
+          enum: [SOURCE, TARGET]
+        heirKind:
+          oneOf:
+            - $ref: '#/components/schemas/HeirKind'
+            - type: 'null'
+        spouseOrder:
+          type: [integer, 'null']
+          minimum: 1
+        validFrom:
+          type: [string, 'null']
+          format: date
+        validTo:
+          type: [string, 'null']
+          format: date
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    # -------------------------------------------------------------------------
+    # REQUEST BODY: TẠO / SỬA NHÂN KHẨU
+    # -------------------------------------------------------------------------
+    CreatePersonRequest:
+      type: object
+      title: Thêm nhân khẩu / Create person
+      description: |-
+        Dữ liệu thêm một nhân khẩu. `generation` **không** nhận từ client — backend suy ra từ
+        quan hệ cha–con để không bao giờ lệch với đồ thị.
+      required: [names, gender, isAlive]
+      properties:
+        names:
+          type: array
+          minItems: 1
+          description: |-
+            Ít nhất một lớp tên. Nếu có tên `HUY`, backend kiểm tra **kỵ húy** trước khi ghi.
+          items:
+            $ref: '#/components/schemas/PersonNameInput'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        isAlive:
+          type: boolean
+          description: |-
+            `false` thì nên có `death`. Con gái và bên ngoại được ghi nhận **đầy đủ, ngang bằng**
+            con trai — đây là mặc định hệ thống (FR-1.8), không phải tùy chọn.
+        birth:
+          oneOf:
+            - $ref: '#/components/schemas/DateDual'
+            - type: 'null'
+          description: |-
+            Gửi `solar` hoặc `lunar` hoặc cả hai — backend tự điền phần còn thiếu.
+            Gửi cả hai mà **mâu thuẫn** ⇒ `422 VALIDATION_FAILED`, không tự ý chọn bên nào.
+        death:
+          oneOf:
+            - $ref: '#/components/schemas/DateDual'
+            - type: 'null'
+          description: |-
+            Bắt buộc phải có phần `lunar` (hoặc `solar` để backend quy đổi ra `lunar`) nếu muốn
+            hệ thống sinh nhắc **giỗ** — `death.lunar` là gốc tính giỗ.
+        nativePlace:
+          type: [string, 'null']
+        currentPlaceProvince:
+          type: [string, 'null']
+        currentPlaceFull:
+          type: [string, 'null']
+        occupation:
+          type: [string, 'null']
+        biography:
+          type: [string, 'null']
+        primaryBranchId:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            Chi/ngành chính. Bỏ trống thì backend kế thừa chi của cha/mẹ trong `initialRelationships`.
+            Người tạo phải có quyền trong chi này (`BRANCH_SCOPE_VIOLATION` nếu không).
+        contact:
+          oneOf:
+            - $ref: '#/components/schemas/ContactInfo'
+            - type: 'null'
+          description: Dữ liệu Tầng 3 — chỉ gửi khi thật sự cần và có sự đồng ý của chủ thể.
+        attributes:
+          type: [object, 'null']
+          additionalProperties: true
+        privacyLevel:
+          oneOf:
+            - $ref: '#/components/schemas/PrivacyLevel'
+            - type: 'null'
+          description: Bỏ trống ⇒ `DEFAULT`; trẻ vị thành niên ⇒ backend ép `RESTRICTED`.
+        initialRelationships:
+          type: array
+          description: |-
+            Nối ngay vào cây trong **cùng transaction** với việc tạo nhân khẩu.
+            Để trống thì nhân khẩu tồn tại nhưng **chưa nằm trong cây** (`generation = null`)
+            và sẽ không xuất hiện trên phả đồ cho tới khi được nối.
+          items:
+            $ref: '#/components/schemas/RelationshipLinkInput'
+        confirmTabooOverride:
+          type: boolean
+          default: false
+          description: |-
+            **Cờ xác nhận kỵ húy.** Gửi `true` để chấp nhận ghi đè cảnh báo trùng tên húy bậc trên
+            đã nhận ở lần gọi trước (`409 KY_HUY_CONFLICT`).
+
+            FE **không được** mặc định `true` để "cho tiện" — mất cảnh báo là mất luôn giá trị của FR-1.6.
+            Việc ghi đè được lưu vào `audit_log` kèm danh sách va chạm.
+        confirmDuplicateOverride:
+          type: boolean
+          default: false
+          description: |-
+            Cờ xác nhận cho `409 DUPLICATE_PERSON_SUSPECTED` — người dùng khẳng định đây là người khác,
+            không phải bản trùng.
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+          description: Ghi chú nguồn dữ liệu (ví dụ "chép từ gia phả giấy 1998, trang 12").
+
+    UpdatePersonRequest:
+      type: object
+      title: Sửa nhân khẩu / Update person
+      description: |-
+        Cập nhật một phần. **Trường vắng mặt = giữ nguyên**; muốn xóa trắng thì dùng `clearFields`.
+        Không dùng `null` để xóa (xem mô tả của `PATCH /persons/{id}`).
+      properties:
+        names:
+          type: array
+          description: |-
+            Nếu gửi, **thay thế toàn bộ** danh sách tên. Muốn thêm một tên thì gửi lại cả danh sách cũ
+            cộng tên mới. Thêm/sửa tên `HUY` sẽ kích hoạt kiểm tra kỵ húy.
+          items:
+            $ref: '#/components/schemas/PersonNameInput'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        isAlive:
+          type: boolean
+          description: |-
+            Chuyển `true → false` là **báo mất**: nên gửi kèm `death`. Backend sẽ sinh sự kiện giỗ
+            từ `death.lunar` và ẩn các trường Tầng 2/3 khỏi luồng lọc người sống.
+
+            **Suy diễn (quyết định của Hội đồng).** Gửi `death` mà KHÔNG gửi `isAlive` trên một
+            người đang sống thì backend tự đặt `isAlive = false` và lưu ngày mất — không từ chối,
+            không im lặng vứt đi. `audit_log.note` được đánh dấu là suy diễn để về sau còn phân biệt
+            với trường hợp người nhập liệu tuyên bố tường minh.
+
+            **Mâu thuẫn tường minh bị từ chối.** Gửi `isAlive: true` KÈM `death` có giá trị thì trả
+            `422 VALIDATION_FAILED` — client đang nói hai điều trái ngược, khác hẳn với việc quên
+            gửi `isAlive`.
+
+            **Đính chính "thật ra còn sống":** gửi `isAlive: true` và đưa `death` vào `clearFields`.
+
+            > ⚠️ Báo mất không chỉ đổi một cờ. Theo BA v2 §10, hồ sơ chuyển từ "ẩn mặc định" sang
+            > **công khai với cả Khách chưa đăng nhập**, đồng thời sinh lịch nhắc giỗ. Giao diện
+            > phải xác nhận với người dùng trước khi gửi.
+        isDeleted:
+          type: boolean
+          description: |-
+            Chỉ `ADMIN`/`COUNCIL`. Dùng để **khôi phục** bản ghi đã xóa mềm (`false`).
+            Đặt `true` qua đây tương đương `DELETE`.
+        birth:
+          $ref: '#/components/schemas/DateDual'
+        death:
+          allOf:
+            - $ref: '#/components/schemas/DateDual'
+          description: |-
+            `death.lunar` là **nguồn sự thật** cho ngày giỗ.
+
+            Đưa `death` vào `clearFields` trên một người đã mất chỉ **gỡ ngày giỗ**, KHÔNG đặt lại
+            `isAlive = true` — ràng buộc `ck_person_alive_vs_death` chỉ cấm chiều ngược lại (người
+            còn sống mà có ngày mất). Gia phả cổ thường ghi nhận một cụ đã mất mà không rõ ngày.
+        nativePlace:
+          type: string
+        currentPlaceProvince:
+          type: string
+        currentPlaceFull:
+          type: string
+        occupation:
+          type: string
+        biography:
+          type: string
+        primaryBranchId:
+          type: string
+          format: uuid
+          description: |-
+            Chuyển chi/ngành. Người gọi phải có quyền ở **cả chi cũ và chi mới**.
+        contact:
+          $ref: '#/components/schemas/ContactInfo'
+        attributes:
+          type: object
+          additionalProperties: true
+          description: Nếu gửi, **thay thế toàn bộ** object `attributes`.
+        privacyLevel:
+          $ref: '#/components/schemas/PrivacyLevel'
+        clearFields:
+          type: array
+          description: |-
+            Danh sách tên trường cần **xóa trắng** (đặt về `null`), ví dụ
+            `["occupation", "contact.phone"]`. Trường vừa nằm trong `clearFields` vừa có giá trị
+            trong body ⇒ `422`.
+          items:
+            type: string
+        confirmTabooOverride:
+          type: boolean
+          default: false
+        note:
+          type: string
+          maxLength: 1000
+          description: Lý do sửa, ghi vào `audit_log`. / Reason, recorded in the audit log.
+
+    ChangeRequestAccepted:
+      type: object
+      title: Đã tạo yêu cầu đính chính (GĐ2) / Change request created (Phase 2)
+      description: |-
+        Phản hồi `202` khi người gọi chưa đủ quyền ghi trực tiếp: thay đổi được xếp hàng chờ
+        Trưởng chi duyệt. **Chưa bật ở Giai đoạn 1.**
+      required: [changeRequestId, status]
+      properties:
+        changeRequestId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING]
+        targetPersonId:
+          type: [string, 'null']
+          format: uuid
+          description: Nhân khẩu bị ảnh hưởng; `null` khi là yêu cầu **thêm mới**.
+        submittedAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+          description: Thông điệp hiển thị cho người gửi. / Message to show the requester.
+
+    # -------------------------------------------------------------------------
+    # PHẢ ĐỒ / TREE PROJECTION
+    # -------------------------------------------------------------------------
+    TreeProjection:
+      type: object
+      title: Projection cây / Tree projection
+      description: |-
+        Đồ thị **phẳng** (`nodes` + `edges`), không lồng nhau — nạp thẳng vào React Flow.
+        Cần cây lồng theo hình dạng tự chọn thì dùng GraphQL.
+
+        FE gọi nhiều lần cho nhiều nhánh rồi **ghép** vào cùng một đồ thị; `nodes` và `edges`
+        có thể trùng lặp giữa các lần gọi nên phải khử trùng theo `id`.
+      required: [rootId, nodes, edges, meta]
+      properties:
+        rootId:
+          type: string
+          format: uuid
+          description: Nhân khẩu gốc của lần gọi này. / Root of this projection.
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+        edges:
+          type: array
+          description: |-
+            Chỉ chứa cạnh mà **cả hai đầu** đều nằm trong `nodes`. Cạnh có một đầu bị lọc
+            vì phân tầng riêng tư sẽ **không xuất hiện** — cây có thể đứt đoạn một cách hợp lệ.
+          items:
+            $ref: '#/components/schemas/TreeEdge'
+        meta:
+          $ref: '#/components/schemas/TreeMeta'
+
+    TreeNode:
+      type: object
+      title: Node trên phả đồ / Tree node
+      description: |-
+        Node hiển thị. Chỉ chứa dữ liệu Tầng 1 để render hàng nghìn node mà không kéo theo
+        dữ liệu nhạy cảm; bấm vào node thì FE gọi `GET /persons/{id}` để lấy hồ sơ đầy đủ.
+      required: [id, person, depth, hasMoreDescendants]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Trùng `person.id`; tách ra cho khớp mô hình node/edge của React Flow.
+        person:
+          $ref: '#/components/schemas/PersonSummaryDto'
+        depth:
+          type: integer
+          description: |-
+            Khoảng cách đời tính từ `rootId`: `0` là gốc, số dương là đời dưới,
+            **số âm là đời trên** (khi `direction = ANCESTORS` hoặc `BOTH`).
+        parentIds:
+          type: array
+          description: Cha/mẹ (ruột hoặc nuôi) có mặt trong projection này. / Parents present here.
+          items:
+            type: string
+            format: uuid
+        spouseIds:
+          type: array
+          description: Vợ/chồng có mặt trong projection này. / Spouses present here.
+          items:
+            type: string
+            format: uuid
+        childCount:
+          type: [integer, 'null']
+          description: |-
+            **Tổng** số con trong CSDL (đã lọc riêng tư), kể cả phần chưa nạp — để FE hiện
+            "còn 12 người con" trên nút mở rộng. / Total children, including not-yet-loaded ones.
+        hasMoreDescendants:
+          type: boolean
+          description: |-
+            `true` ⇒ node còn con cháu **chưa nạp** vì chạm `depth` hoặc `maxNodes`.
+            FE hiện nút mở rộng và gọi lại `/tree?rootId={id}`.
+        badges:
+          type: array
+          description: |-
+            Nhãn nghiệp vụ để canvas vẽ badge, tính sẵn ở backend để FE không phải suy luận
+            từ quan hệ:
+
+            * `DICH_TON` — cháu đích tôn.
+            * `THUA_TU` / `KE_TU` — người thừa tự / kế tự.
+            * `CON_NUOI` — con nuôi (`PARENT_ADOPT`).
+            * `DAU` / `RE` — con dâu / con rể (suy từ `SPOUSE` + huyết thống).
+            * `TUYET_TU` — chi tuyệt tự (không có người nối dõi).
+            * `TRUONG_CHI` — đang giữ chức Trưởng chi.
+            * `DECEASED` — đã khuất (canvas phân biệt thị giác với người còn sống).
+          items:
+            type: string
+            enum: [DICH_TON, THUA_TU, KE_TU, CON_NUOI, DAU, RE, TUYET_TU, TRUONG_CHI, DECEASED]
+
+    TreeEdge:
+      type: object
+      title: Cạnh trên phả đồ / Tree edge
+      required: [id, source, target, relType]
+      properties:
+        id:
+          type: string
+          description: Id cạnh, ổn định giữa các lần gọi. / Stable edge id.
+        source:
+          type: string
+          format: uuid
+          description: Đầu `from` của cạnh. / Edge source.
+        target:
+          type: string
+          format: uuid
+          description: Đầu `to` của cạnh. / Edge target.
+        relType:
+          $ref: '#/components/schemas/RelType'
+        heirKind:
+          oneOf:
+            - $ref: '#/components/schemas/HeirKind'
+            - type: 'null'
+        spouseOrder:
+          type: [integer, 'null']
+          description: Thứ tự vợ/chồng — canvas dùng để xếp thứ tự vợ cả/vợ thứ.
+        validTo:
+          type: [string, 'null']
+          format: date
+          description: |-
+            Có giá trị ⇒ quan hệ **đã kết thúc** (ly hôn hoặc một bên mất);
+            canvas nên vẽ nét đứt thay vì nét liền.
+
+    TreeMeta:
+      type: object
+      title: Siêu dữ liệu projection / Projection metadata
+      required: [depth, direction, nodeCount, truncated]
+      properties:
+        depth:
+          type: integer
+          description: Độ sâu đã áp dụng (có thể nhỏ hơn yêu cầu nếu chạm trần).
+        direction:
+          $ref: '#/components/schemas/TreeDirection'
+        nodeCount:
+          type: integer
+        edgeCount:
+          type: integer
+        truncated:
+          type: boolean
+          description: |-
+            `true` ⇒ projection **đã bị cắt** vì chạm `maxNodes`. FE phải xử lý, đừng coi là
+            đã nhận đủ cây. / The projection was truncated.
+        truncatedNodeIds:
+          type: array
+          description: Các node bị cắt nhánh — chính là nơi cần nút mở rộng. / Where truncation happened.
+          items:
+            type: string
+            format: uuid
+        generatedAt:
+          type: string
+          format: date-time
+        fromCache:
+          type: boolean
+          description: Phản hồi lấy từ cache Redis hay dựng mới. / Served from cache or freshly built.
+
+    # -------------------------------------------------------------------------
+    # DANH XƯNG / KINSHIP
+    # -------------------------------------------------------------------------
+    KinshipResult:
+      type: object
+      title: Kết quả tra danh xưng / Kinship resolution result
+      description: |-
+        Danh xưng mà `from` gọi `to`, kèm bằng chứng để người dùng tự kiểm chứng.
+        **Danh xưng luôn là tiếng Việt** và đến từ dữ liệu `kinship_rule`, không hard-code.
+      required: [status, fromPersonId, toPersonId]
+      properties:
+        status:
+          type: string
+          description: |-
+            * `RESOLVED` — có `title`.
+            * `NO_COMMON_ANCESTOR` — không tìm được tổ chung trong dữ liệu hiện có.
+            * `NO_MATCHING_RULE` — có LCA nhưng bộ luật chưa phủ; `facts` vẫn trả để Hội đồng bổ sung luật.
+            * `SELF` — `from` trùng `to`.
+          enum: [RESOLVED, NO_COMMON_ANCESTOR, NO_MATCHING_RULE, SELF]
+        fromPersonId:
+          type: string
+          format: uuid
+        toPersonId:
+          type: string
+          format: uuid
+        title:
+          type: [string, 'null']
+          description: |-
+            **Danh xưng** — cách `from` gọi `to`, ví dụ `Bác họ`, `Cô ruột`, `Chú`, `Cháu`.
+            Vắng mặt khi `status` khác `RESOLVED`.
+          examples: [Bác họ]
+        reciprocalTitle:
+          type: [string, 'null']
+          description: |-
+            Danh xưng ngược lại — cách `to` gọi `from`. Tiện cho UI hiện cả hai chiều
+            ("A gọi B là Bác họ, B gọi A là Cháu").
+        titleEn:
+          type: [string, 'null']
+          description: |-
+            Diễn giải tiếng Anh gần đúng (`paternal uncle, elder`) cho giao diện EN.
+            **Chỉ tham khảo** — hệ danh xưng Việt không ánh xạ 1–1 sang tiếng Anh.
+        facts:
+          oneOf:
+            - $ref: '#/components/schemas/RelationFacts'
+            - type: 'null'
+        lca:
+          oneOf:
+            - $ref: '#/components/schemas/LcaInfo'
+            - type: 'null'
+        path:
+          type: array
+          description: |-
+            Đường quan hệ từ `from` lên LCA rồi xuống `to`. FE vẽ để người dùng tự kiểm chứng —
+            đây là thứ tạo niềm tin cho tính năng, đừng ẩn đi.
+          items:
+            $ref: '#/components/schemas/KinshipPathStep'
+        ruleSetId:
+          type: [string, 'null']
+          format: uuid
+          description: Bộ luật đã dùng. / The rule set used.
+        ruleSetScope:
+          oneOf:
+            - $ref: '#/components/schemas/RuleScope'
+            - type: 'null'
+          description: Cấp của luật đã khớp — cho biết chi này có ghi đè hay đang dùng mặc định.
+        ruleId:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            Luật cụ thể đã khớp. Dùng để truy vết khi dòng họ báo danh xưng sai —
+            biết ngay phải sửa luật nào.
+        ruleSetChain:
+          type: array
+          description: Chuỗi kế thừa đã hợp nhất, theo thứ tự áp dụng. / Merge chain applied.
+          items:
+            $ref: '#/components/schemas/RuleScope'
+        cached:
+          type: boolean
+          description: Kết quả lấy từ cache Redis. / Served from cache.
+
+    RelationFacts:
+      type: object
+      title: Dữ kiện quan hệ / Relation facts
+      description: |-
+        Đầu vào chuẩn hóa của rule engine, tính từ kết quả LCA. Trả về cho client để màn hình quản trị
+        của Hội đồng biết **luật cần viết cho tổ hợp nào**.
+      required: [genDelta, side]
+      properties:
+        genDelta:
+          type: integer
+          description: |-
+            `distFrom - distTo`, với `dist*` là số đời từ mỗi người đi lên tới LCA:
+            **dương** = `to` ở đời TRÊN (bố, bác, ông…), `0` = cùng đời,
+            **âm** = `to` ở đời DƯỚI (con, cháu, chắt…).
+
+            Quy ước dấu này do `V3__kinship_rules.sql` định nghĩa và 111 luật trong
+            `R__seed_kinship_rules_default.sql` đã seed theo đúng nó (`CHA` = `1`,
+            `CON_TRAI` = `-1`). Trường này và `KinshipRule.genDelta` luôn hiển thị
+            cạnh nhau trên màn hình sửa luật của Hội đồng, nên hai chỗ **bắt buộc**
+            cùng dấu.
+          examples: [1]
+        side:
+          $ref: '#/components/schemas/RelationSide'
+        targetGender:
+          $ref: '#/components/schemas/Gender'
+        isElder:
+          type: [boolean, 'null']
+          description: |-
+            Vai trên/dưới **trong cùng một đời** — phân biệt `bác` (anh của cha) với `chú` (em của cha).
+            `null` khi không xác định được thứ tự sinh trong dữ liệu.
+        throughMarriage:
+          type: boolean
+          default: false
+          description: |-
+            Quan hệ đi qua hôn nhân (dâu/rể/thông gia) chứ không thuần huyết thống.
+        throughAdoption:
+          type: boolean
+          default: false
+          description: Đường quan hệ có ít nhất một cạnh `PARENT_ADOPT` (con nuôi).
+        collateralDegree:
+          type: [integer, 'null']
+          description: |-
+            Bậc bàng hệ `collateral_degree = min(dist_a, dist_b)` — suy thẳng từ kết quả LCA.
+            `0` = trực hệ (một người là tổ tiên của người kia) · `1` = ruột · `2` = họ
+            (con chú con bác) · `>=3` = họ xa. Đây là chiều phân biệt `bác ruột` với `bác họ`.
+            Khớp cột `kinship_rule.collateral_degree` trong migration V3.
+
+    LcaInfo:
+      type: object
+      title: Tổ chung gần nhất / Lowest common ancestor
+      description: |-
+        Kết quả truy vấn LCA bằng Cypher trên AGE (TDD §6).
+      required: [personId, distanceFrom, distanceTo]
+      properties:
+        personId:
+          type: string
+          format: uuid
+        displayName:
+          type: [string, 'null']
+          description: |-
+            Tên tổ chung. Bị thay bằng nhãn chung khi người đó còn sống và bị ẩn theo phân tầng.
+        generation:
+          type: [integer, 'null']
+        distanceFrom:
+          type: integer
+          description: Số bậc từ `from` lên tới LCA. / Generations from `from` up to the LCA.
+        distanceTo:
+          type: integer
+          description: Số bậc từ `to` lên tới LCA. / Generations from `to` up to the LCA.
+
+    KinshipPathStep:
+      type: object
+      title: Một chặng trên đường quan hệ / One step of the relation path
+      required: [personId, direction]
+      properties:
+        personId:
+          type: string
+          format: uuid
+        displayName:
+          type: [string, 'null']
+          description: |-
+            Tên hiển thị; với người còn sống bị ẩn theo phân tầng, backend trả nhãn chung
+            (ví dụ `"—"`) thay vì tên thật, **không** bỏ chặng đó khỏi đường đi
+            (bỏ chặng sẽ làm sai độ dài đường quan hệ).
+        generation:
+          type: [integer, 'null']
+        direction:
+          type: string
+          description: |-
+            Chiều đi của chặng: `UP` lên đời trên · `DOWN` xuống đời dưới ·
+            `ACROSS` sang ngang qua hôn nhân (vợ/chồng) · `SELF` điểm xuất phát.
+          enum: [SELF, UP, DOWN, ACROSS]
+        viaRelType:
+          oneOf:
+            - $ref: '#/components/schemas/RelType'
+            - type: 'null'
+          description: Loại cạnh đã đi qua để tới chặng này. / The edge type traversed.
+
+    KinshipRuleDto:
+      type: object
+      title: Một luật danh xưng / One kinship rule
+      description: |-
+        Một dòng trong bảng `kinship_rule`. **Khóa khớp** là bộ
+        `(genDelta, collateralDegree, side, gender, isElder)` cộng nhóm `link*` khi
+        `side = IN_LAW` và nhóm `directLink*` khi khớp thẳng theo cạnh; nhiều luật cùng
+        khớp thì `priority` nhỏ hơn thắng.
+
+        `collateralDegree` là chiều **bắt buộc**: thiếu nó thì không phân biệt được
+        `bác ruột` với `bác họ`, cũng như `anh ruột` với `anh họ`.
+
+        ⚠️ `PUT /kinship-rules` có ngữ nghĩa **replace trọn vẹn**, không phải patch —
+        danh sách gửi lên thay thế toàn bộ luật của bộ đó. Trường nào không gửi sẽ bị
+        **xoá**, nên client phải gửi lại đủ mọi trường dưới đây, kể cả những trường nó
+        không hiển thị.
+      required: [relationCode, title]
+      properties:
+        id:
+          type: string
+          format: uuid
+        relationCode:
+          type: string
+          maxLength: 48
+          description: |-
+            Mã quan hệ ổn định (`kinship_rule.relation_code`, `NOT NULL`) — ví dụ
+            `BAC_RUOT_NOI`, `CHU_RUOT`, `THIM`, `CHAU_HO`. Đây là **khoá ghi đè** giữa các
+            cấp `DEFAULT → REGION → CLAN → BRANCH`: luật của bộ con thay thế luật cùng mã
+            của bộ cha. Trong một bộ luật mỗi mã chỉ xuất hiện một lần (unique index
+            `ux_kinship_rule_code`).
+          examples: [BAC_HO_NOI]
+        genDelta:
+          type: integer
+          description: |-
+            Chênh lệch đời cần khớp, cùng quy ước dấu với `RelationFacts.genDelta`:
+            **dương** = người được gọi ở đời trên. `null` = không xét chiều này.
+            / Generation delta; positive means the addressee is an older generation.
+        side:
+          $ref: '#/components/schemas/RelationSide'
+        gender:
+          oneOf:
+            - $ref: '#/components/schemas/Gender'
+            - type: 'null'
+          description: Giới tính **người được gọi**. `null` = luật áp cho mọi giới.
+        isElder:
+          type: [boolean, 'null']
+          description: |-
+            Vai trên/dưới trong cùng đời. `null` = luật không phân biệt
+            (dùng cho vùng miền không tách `bác`/`chú`).
+        collateralDegree:
+          type: [integer, 'null']
+          description: |-
+            Áp cho một bậc bàng hệ cụ thể; `null` = mọi bậc.
+            `0` = trực hệ · `1` = ruột · `2` = họ · `>=3` = họ xa.
+            Khớp cột `kinship_rule.collateral_degree` (migration V3).
+        genDeltaMin:
+          type: [integer, 'null']
+          description: |-
+            Cận dưới của `genDelta` cho luật mở (ví dụ "tổ tiên từ đời 6 trở lên").
+            Dùng thay cho `genDelta` khi luật áp cho một dải, không phải một giá trị.
+        genDeltaMax:
+          type: [integer, 'null']
+          description: Cận trên của `genDelta`.
+        collateralDegreeMin:
+          type: [integer, 'null']
+          description: Cận dưới của `collateralDegree` — dùng cho luật "họ xa" (`>= 3`).
+        collateralDegreeMax:
+          type: [integer, 'null']
+          description: Cận trên của `collateralDegree`.
+        linkSide:
+          oneOf:
+            - $ref: '#/components/schemas/RelationSide'
+            - type: 'null'
+          description: |-
+            **Chỉ có nghĩa khi `side = IN_LAW`.** Bên nội/ngoại của *người nối* — người vừa
+            là ruột thịt của `from`, vừa là vợ/chồng của `to`. Ràng buộc
+            `ck_kinship_rule_in_law_shape` bắt buộc trường này `null` với mọi `side` khác.
+        linkGender:
+          oneOf:
+            - $ref: '#/components/schemas/Gender'
+            - type: 'null'
+          description: |-
+            **Chỉ có nghĩa khi `side = IN_LAW`.** Giới tính của *người nối*. Ví dụ `thím`
+            = vợ của em trai bố → `linkGender: MALE`, `gender: FEMALE`.
+        inLawDirection:
+          type: [string, 'null']
+          enum: [ALTER_IS_SPOUSE, EGO_IS_SPOUSE, null]
+          description: |-
+            **Chỉ có nghĩa khi `side = IN_LAW`.** Chiều của quan hệ hôn nhân:
+            `ALTER_IS_SPOUSE` — `to` là dâu/rể của họ nhà `from` (thím, mợ, chị dâu, con dâu,
+            con rể) · `EGO_IS_SPOUSE` — `from` là dâu/rể, `to` là ruột thịt bên vợ/chồng
+            (bố chồng, mẹ vợ).
+        directLink:
+          type: [string, 'null']
+          enum: [SPOUSE, PARENT_BIO, PARENT_ADOPT, HEIR, null]
+          description: |-
+            Khớp thẳng theo **cạnh** thay vì theo LCA — dùng cho quan hệ mà LCA vô nghĩa
+            hoặc cần ưu tiên tuyệt đối (vợ/chồng, bố mẹ nuôi/con nuôi, đích tôn/thừa tự).
+            Luật có `directLink` được xét trước (đặt `priority` nhỏ).
+        directLinkSubtype:
+          type: [string, 'null']
+          enum: [DICH_TON, THUA_TU, KE_TU, BIO, ADOPT, null]
+          description: |-
+            Phân loại cạnh. `HEIR` → `DICH_TON`/`THUA_TU`/`KE_TU` ·
+            `PARENT_BIO`/`PARENT_ADOPT` → `BIO`/`ADOPT`. Tổ hợp khác bị
+            `ck_kinship_rule_direct_subtype` từ chối.
+        directLinkReversed:
+          type: boolean
+          default: false
+          description: |-
+            `true` = cạnh đi từ `to` sang `from`. Ví dụ luật "con nuôi": cạnh `PARENT_ADOPT`
+            xuất phát từ `to` (bố mẹ nuôi) trỏ về `from`.
+        throughMarriage:
+          type: [boolean, 'null']
+          description: Áp riêng cho quan hệ qua hôn nhân (dâu/rể). `null` = không phân biệt.
+        title:
+          type: string
+          description: |-
+            **Danh xưng kết quả** — chuỗi tiếng Việt hiển thị cho người dùng, ví dụ `Bác họ`.
+          examples: [Bác họ]
+        titleShort:
+          type: [string, 'null']
+          maxLength: 32
+          description: |-
+            Dạng rút gọn để vẽ trên node của phả đồ, nơi không đủ chỗ cho danh xưng đầy đủ.
+            Khớp cột `kinship_rule.title_short`.
+        reciprocalTitle:
+          type: [string, 'null']
+          description: |-
+            Danh xưng chiều ngược lại, ví dụ `Cháu`. / Reciprocal title.
+
+            **Lưu ý ánh xạ:** khi ghi xuống, trường này vào cột `kinship_rule.ego_self_term`
+            — "`from` tự xưng là gì khi nói với `to`" (gọi `bác` thì xưng `cháu`). Đây là dữ
+            liệu của chính luật này. Còn `KinshipResult.reciprocalTitle` trong phản hồi tra
+            cứu là thứ khác: nó do rule engine tính bằng cách đảo vai rồi khớp lại, và chỉ
+            lùi về `egoSelfTerm` khi không luật nào khớp chiều ngược.
+        priority:
+          type: integer
+          default: 100
+          description: |-
+            Số **nhỏ hơn thắng** khi nhiều luật cùng khớp. / Lower wins.
+            Quy ước: luật khớp chính xác `10–40` · luật khái quát `50–90` · luật vét `900+`.
+        active:
+          type: boolean
+          default: true
+          description: |-
+            Tắt một luật mà không xoá nó (`kinship_rule.is_active`). Luật tắt bị bỏ qua khi
+            hợp nhất, nhưng vẫn giữ chỗ để bộ con không vô tình "mở lại" luật của bộ cha.
+        note:
+          type: [string, 'null']
+          maxLength: 500
+          description: Ghi chú của Hội đồng về xuất xứ luật. / Council note.
+
+    KinshipRuleSetDto:
+      type: object
+      title: Bộ quy tắc danh xưng / Kinship rule set
+      required: [id, scope, rules, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scope:
+          $ref: '#/components/schemas/RuleScope'
+        name:
+          type: [string, 'null']
+          description: Tên gọi bộ luật, ví dụ `Mặc định miền Bắc`. / Display name.
+        region:
+          oneOf:
+            - $ref: '#/components/schemas/Region'
+            - type: 'null'
+          description: Chỉ có nghĩa khi `scope = REGION`.
+        clanId:
+          type: [string, 'null']
+          format: uuid
+          description: Chỉ có nghĩa khi `scope = CLAN`.
+        branchId:
+          type: [string, 'null']
+          format: uuid
+          description: Chỉ có nghĩa khi `scope = BRANCH`.
+        parentRuleSetId:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            Bộ luật cha để kế thừa. Bỏ trống thì backend tự nối theo chuỗi chuẩn
+            `DEFAULT → REGION → CLAN → BRANCH`.
+        isSystemDefault:
+          type: boolean
+          default: false
+          description: |-
+            Bộ `DEFAULT` do hệ thống seed (**miền Bắc**). **Không sửa được** —
+            `PUT` vào đây trả `403 SYSTEM_RULE_SET_IMMUTABLE`; muốn khác thì tạo bộ ghi đè cấp dưới.
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/KinshipRuleDto'
+        version:
+          type: integer
+          format: int64
+          description: Phiên bản cho optimistic locking, gửi lại ở `expectedVersion`.
+        updatedAt:
+          type: [string, 'null']
+          format: date-time
+        updatedBy:
+          type: [string, 'null']
+          description: Người sửa gần nhất (hiển thị tên, không phải id định danh cá nhân).
+
+    KinshipRuleSetPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/KinshipRuleSetDto'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    EffectiveKinshipRuleSet:
+      type: object
+      title: Bộ luật hiệu lực đã hợp nhất / Merged effective rule set
+      description: |-
+        Kết quả hợp nhất `DEFAULT → REGION → CLAN → BRANCH` cho một chi cụ thể — chính là bộ luật
+        mà `/kinship` thực sự dùng. Mỗi luật kèm nguồn gốc để UI tô màu luật nào bị ghi đè.
+      required: [branchId, chain, rules]
+      properties:
+        branchId:
+          type: string
+          format: uuid
+        chain:
+          type: array
+          description: Các bộ luật đã hợp nhất, theo thứ tự áp dụng. / Merge chain, in order.
+          items:
+            type: object
+            required: [ruleSetId, scope]
+            properties:
+              ruleSetId:
+                type: string
+                format: uuid
+              scope:
+                $ref: '#/components/schemas/RuleScope'
+              name:
+                type: [string, 'null']
+        rules:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/KinshipRuleDto'
+              - type: object
+                properties:
+                  inheritedFromScope:
+                    $ref: '#/components/schemas/RuleScope'
+                  inheritedFromRuleSetId:
+                    type: string
+                    format: uuid
+                  overridden:
+                    type: boolean
+                    description: |-
+                      `true` ⇒ luật này đã bị một cấp thấp hơn ghi đè và **không** còn hiệu lực;
+                      trả về chỉ để UI hiển thị lịch sử ghi đè.
+
+    KinshipRuleSetUpdateRequest:
+      type: object
+      title: Ghi đè bộ quy tắc / Replace rule set
+      description: |-
+        Thay thế **toàn bộ** danh sách luật của một bộ. Chỉ `COUNCIL`/`ADMIN`.
+      required: [scope, rules]
+      properties:
+        ruleSetId:
+          type: [string, 'null']
+          format: uuid
+          description: Bỏ trống ⇒ tạo bộ mới (`201`). Có giá trị ⇒ ghi đè bộ đó (`200`).
+        scope:
+          $ref: '#/components/schemas/RuleScope'
+        name:
+          type: [string, 'null']
+        region:
+          oneOf:
+            - $ref: '#/components/schemas/Region'
+            - type: 'null'
+          description: Bắt buộc khi `scope = REGION`.
+        clanId:
+          type: [string, 'null']
+          format: uuid
+          description: Bắt buộc khi `scope = CLAN`.
+        branchId:
+          type: [string, 'null']
+          format: uuid
+          description: Bắt buộc khi `scope = BRANCH`.
+        parentRuleSetId:
+          type: [string, 'null']
+          format: uuid
+        rules:
+          type: array
+          description: |-
+            **Thay thế trọn vẹn** danh sách luật hiện có. Gửi mảng rỗng = xóa hết luật của bộ này
+            (bộ vẫn tồn tại và kế thừa nguyên vẹn từ cha).
+          items:
+            $ref: '#/components/schemas/KinshipRuleDto'
+        expectedVersion:
+          type: [integer, 'null']
+          format: int64
+          description: |-
+            Phiên bản đọc được từ `GET`. Bắt buộc khi sửa bộ có sẵn; sai ⇒ `409 OPTIMISTIC_LOCK_CONFLICT`.
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+          description: Lý do thay đổi, ghi vào `audit_log`. / Reason, recorded in the audit log.
+
+    # -------------------------------------------------------------------------
+    # SỰ KIỆN / EVENTS
+    # -------------------------------------------------------------------------
+    EventDto:
+      type: object
+      title: Sự kiện dòng họ / Clan event
+      description: |-
+        Một sự kiện giỗ/lễ. Ngày **âm** là dữ liệu gốc; ngày dương là kết quả quy đổi của backend.
+      required: [id, eventType, lunarDate, isClanLevel]
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        title:
+          type: [string, 'null']
+          description: |-
+            Tên hiển thị, ví dụ `Giỗ cụ Nguyễn Văn Đức`. Backend sinh sẵn theo `Accept-Language`
+            để FE khỏi ghép chuỗi (ghép ở client sẽ sai với người bị ẩn theo phân tầng).
+        person:
+          oneOf:
+            - $ref: '#/components/schemas/PersonSummaryDto'
+            - type: 'null'
+          description: |-
+            Nhân khẩu chủ thể (người được giỗ, hoặc người mừng thọ).
+            `null` với sự kiện cấp dòng họ không gắn cá nhân.
+        lunarDate:
+          $ref: '#/components/schemas/LunarDate'
+        nextOccurrenceSolar:
+          type: [string, 'null']
+          format: date
+          description: |-
+            Ngày **dương** của lần xảy ra sắp tới, backend quy đổi (Hồ Ngọc Đức, GMT+7, có xử lý
+            tháng nhuận). FE **không tự quy đổi** — sai tháng nhuận là lệch giỗ nguyên một tháng
+            mà không có lỗi nào được ném ra.
+        nextOccurrenceLunarYear:
+          type: [integer, 'null']
+          description: Năm âm lịch tương ứng của lần xảy ra sắp tới. / Lunar year of next occurrence.
+        daysUntil:
+          type: [integer, 'null']
+          description: Số ngày còn lại tính từ hôm nay (GMT+7). Âm = đã qua trong khoảng lọc.
+        targetBranch:
+          oneOf:
+            - $ref: '#/components/schemas/BranchRef'
+            - type: 'null'
+          description: |-
+            Chi/ngành được nhắc. Người nhận nhắc là thành viên thuộc chi này **và các nhánh con**.
+        isClanLevel:
+          type: boolean
+          description: |-
+            `true` ⇒ sự kiện cấp **toàn dòng họ** (giỗ Tổ, chạp mả chung): mọi thành viên đều nhận nhắc,
+            bỏ qua `targetBranch`.
+        reminderOffsets:
+          type: array
+          description: |-
+            Các mốc nhắc trước, tính bằng ngày. Mặc định `[7, 3, 1]` theo FR-2.2.
+          items:
+            type: integer
+          examples:
+            - [7, 3, 1]
+        graveId:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            Mộ phần liên quan (Giai đoạn 3) — dùng cho nhắc chạp mả kèm bản đồ.
+        note:
+          type: [string, 'null']
+
+    EventPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDto'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    # -------------------------------------------------------------------------
+    # THÔNG BÁO / NOTIFICATIONS
+    # -------------------------------------------------------------------------
+    NotificationDto:
+      type: object
+      title: Thông báo in-app / In-app notification
+      description: |-
+        Một dòng trong hộp thư in-app (`notification_inbox`). In-app là **nguồn chân lý** của
+        thông báo; Web Push chỉ là bản đẩy thêm và có thể không tới nơi.
+      required: [id, category, title, createdAt, isRead]
+      properties:
+        id:
+          type: string
+          format: uuid
+        category:
+          $ref: '#/components/schemas/NotificationCategory'
+        title:
+          type: string
+          description: Tiêu đề, ví dụ `Còn 3 ngày tới giỗ cụ Nguyễn Văn Đức`.
+        body:
+          type: [string, 'null']
+          description: |-
+            Nội dung. **Không bao giờ** chứa dữ liệu Tầng 3 (SĐT, email, địa chỉ) — thông báo
+            có thể hiện trên màn hình khoá của thiết bị.
+        eventId:
+          type: [string, 'null']
+          format: uuid
+          description: Sự kiện liên quan, để FE điều hướng. / Related event, for deep-linking.
+        personId:
+          type: [string, 'null']
+          format: uuid
+          description: Nhân khẩu liên quan. / Related person.
+        deepLink:
+          type: [string, 'null']
+          description: |-
+            Đường dẫn tương đối trong ứng dụng để mở khi bấm, ví dụ `/events/{id}`.
+            Dùng chung cho cả in-app và Web Push. / Relative in-app link.
+        createdAt:
+          type: string
+          format: date-time
+        isRead:
+          type: boolean
+        readAt:
+          type: [string, 'null']
+          format: date-time
+        reminderOffsetDays:
+          type: [integer, 'null']
+          description: Mốc nhắc đã sinh ra thông báo này (7 / 3 / 1). / Which reminder offset fired.
+
+    NotificationPage:
+      type: object
+      description: |-
+        Trang thông báo, kèm `unreadCount` cho badge chuông.
+      required: [items, page, unreadCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationDto'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+        unreadCount:
+          type: integer
+          description: |-
+            **Tổng số chưa đọc của toàn hộp thư**, không phụ thuộc bộ lọc hay trang hiện tại.
+            / Total unread across the whole inbox, filter-independent.
+
+    NotificationReadResult:
+      type: object
+      required: [id, isRead, unreadCount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        isRead:
+          type: boolean
+        readAt:
+          type: string
+          format: date-time
+          description: |-
+            Thời điểm đọc **lần đầu**. Gọi lại không cập nhật giá trị này (idempotent).
+        unreadCount:
+          type: integer
+          description: Số chưa đọc còn lại, để FE cập nhật badge ngay. / Remaining unread count.
+
+    NotificationReadAllResult:
+      type: object
+      description: |-
+        Kết quả "đánh dấu đã đọc tất cả". `markedCount = 0` là kết quả hợp lệ (hộp thư đã sạch),
+        không phải lỗi.
+      required: [markedCount, unreadCount]
+      properties:
+        markedCount:
+          type: integer
+          description: Số tin thực sự chuyển sang đã đọc ở lượt gọi này. / Rows actually flipped.
+        unreadCount:
+          type: integer
+          description: |-
+            Số chưa đọc còn lại của **toàn** hộp thư, đọc lại từ cơ sở dữ liệu chứ không suy ra
+            bằng 0 — một tin mới có thể vừa rơi vào giữa hai câu lệnh.
+
+    # -------------------------------------------------------------------------
+    # VẬN HÀNH NHẮC GIỖ / REMINDER PIPELINE OPS
+    # -------------------------------------------------------------------------
+    ReminderGenerationResult:
+      type: object
+      description: |-
+        Kết quả một lượt chạy tay job sinh lịch nhắc giỗ.
+
+        Đọc cặp `scannedEvents` / `createdJobs` cùng nhau: `createdJobs = 0` mà
+        `scannedEvents > 0` nghĩa là **lịch nhắc đã có sẵn từ lượt trước** (chống trùng đang chạy
+        đúng), còn `scannedEvents = 0` nghĩa là không có sự kiện lặp lại nào để quét.
+      required: [referenceDate, scannedEvents, createdJobs]
+      properties:
+        referenceDate:
+          type: string
+          format: date
+          description: Ngày được coi là "hôm nay" của lượt chạy (GMT+7). / Reference "today".
+        lunarYears:
+          type: array
+          description: |-
+            Các năm **âm lịch** đã quy đổi. Luôn gồm năm âm hiện tại và năm kế tiếp: giỗ tháng Chạp
+            rơi vào tháng 1–2 **dương lịch của năm sau**, chỉ sinh cho năm âm hiện tại thì nó chỉ có
+            lịch nhắc sau khi đã qua.
+          items:
+            type: integer
+          examples: [[2026, 2027]]
+        solarYears:
+          type: array
+          description: Các năm **dương lịch** đã quy đổi (cho sự kiện theo dương lịch).
+          items:
+            type: integer
+          examples: [[2026, 2027]]
+        scannedEvents:
+          type: integer
+          description: Số sự kiện lặp lại, chưa xóa mềm, đã quét. / Recurring events scanned.
+        createdJobs:
+          type: integer
+          description: |-
+            Số `reminder_job` **thực sự ghi mới**. Job đã tồn tại không được tính — đó là điều làm
+            cho endpoint này idempotent.
+        startedAt:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+          format: int64
+          description: Thời gian chạy, mili giây. / Wall-clock duration.
+
+    ReminderDispatchResult:
+      type: object
+      description: |-
+        Kết quả một lượt đẩy lịch nhắc đã tới giờ lên RabbitMQ.
+      required: [dispatchedJobs, dispatchedAt]
+      properties:
+        dispatchedJobs:
+          type: integer
+          description: |-
+            Số `reminder_job` đã đẩy lên hàng đợi. **Không phải** số người đã nhận được: việc gửi
+            thật diễn ra bất đồng bộ ở consumer, và luồng HTTP không bao giờ chờ nó.
+            Job quá hạn hoặc thuộc sự kiện đã xóa mềm bị chuyển `CANCELLED` và không tính vào đây.
+        dispatchedAt:
+          type: string
+          format: date-time
+
+    # -------------------------------------------------------------------------
+    # WEB PUSH
+    # -------------------------------------------------------------------------
+    VapidPublicKey:
+      type: object
+      required: [publicKey]
+      properties:
+        publicKey:
+          type: string
+          description: |-
+            Khóa công khai VAPID, **base64url không padding**, truyền thẳng vào
+            `applicationServerKey` của `PushManager.subscribe`.
+          examples: [BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U]
+
+    PushSubscriptionCreateRequest:
+      type: object
+      title: Đăng ký Web Push / Web Push subscription
+      description: |-
+        Chính là `PushSubscription.toJSON()` của trình duyệt (chuẩn Web Push / RFC 8291),
+        cộng vài trường phụ trợ để quản trị thiết bị.
+      required: [endpoint, keys]
+      properties:
+        endpoint:
+          type: string
+          format: uri
+          description: |-
+            Endpoint do push service của trình duyệt cấp. **Đây là khóa định danh duy nhất**
+            của một đăng ký — gửi lại cùng `endpoint` là cập nhật, không tạo bản mới.
+        keys:
+          type: object
+          required: [p256dh, auth]
+          description: Khóa mã hóa payload (RFC 8291). / Payload encryption keys.
+          properties:
+            p256dh:
+              type: string
+              description: Khóa công khai ECDH của client, base64url. / Client ECDH public key.
+            auth:
+              type: string
+              description: Bí mật xác thực, base64url. / Auth secret.
+        expirationTime:
+          type: [integer, 'null']
+          format: int64
+          description: |-
+            Thời điểm hết hạn do trình duyệt cấp (epoch milliseconds), thường `null`.
+        userAgent:
+          type: [string, 'null']
+          description: |-
+            User-Agent để người dùng nhận ra thiết bị trong màn hình cài đặt
+            ("iPhone của Bố"). Không dùng cho mục đích khác.
+        locale:
+          type: [string, 'null']
+          description: Ngôn ngữ mong muốn của thông báo đẩy tới thiết bị này (`vi`/`en`).
+          examples: [vi]
+
+    PushSubscriptionDto:
+      type: object
+      required: [id, endpoint, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Id bản ghi — dùng cho `DELETE /push/subscriptions/{id}`.
+        endpoint:
+          type: string
+          format: uri
+          description: |-
+            Endpoint đã đăng ký. **Không trả về `keys`** — khóa mã hóa chỉ nằm ở server,
+            trả ra là rò rỉ vô ích.
+        userAgent:
+          type: [string, 'null']
+        locale:
+          type: [string, 'null']
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Lần cuối gửi push thành công qua đăng ký này. / Last successful push.
+        isCurrentDevice:
+          type: boolean
+          default: false
+          description: |-
+            Đăng ký này khớp `endpoint` mà client vừa gửi lên — giúp màn hình cài đặt đánh dấu
+            "thiết bị này". / Marks the caller's own device.
+
+    # -------------------------------------------------------------------------
+    # GRAPHQL TRANSPORT
+    # -------------------------------------------------------------------------
+    GraphQLRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          description: Văn bản truy vấn GraphQL. / The GraphQL query document.
+        operationName:
+          type: [string, 'null']
+        variables:
+          type: [object, 'null']
+          additionalProperties: true
+
+    GraphQLResponse:
+      type: object
+      description: |-
+        Phản hồi GraphQL chuẩn. Có thể vừa có `data` vừa có `errors` (kết quả một phần) —
+        FE phải kiểm tra `errors` kể cả khi `data` khác `null`.
+      properties:
+        data:
+          type: [object, 'null']
+          additionalProperties: true
+        errors:
+          type: array
+          items:
+            type: object
+            required: [message]
+            properties:
+              message:
+                type: string
+              path:
+                type: array
+                items: {}
+              locations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    line:
+                      type: integer
+                    column:
+                      type: integer
+              extensions:
+                type: object
+                description: |-
+                  `code` dùng **cùng tập mã** với `Problem.code` của REST, kèm `status` và `traceId`.
+                properties:
+                  code:
+                    $ref: '#/components/schemas/ProblemCode'
+                  status:
+                    type: integer
+                  traceId:
+                    type: string

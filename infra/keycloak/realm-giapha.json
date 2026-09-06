@@ -1,0 +1,211 @@
+{
+  "realm": "giapha",
+  "displayName": "Gia Pha Dong Ho",
+  "displayNameHtml": "<b>Gia Ph&#7843; D&#242;ng H&#7885;</b>",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "failureFactor": 10,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "vi",
+    "en"
+  ],
+  "defaultLocale": "vi",
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "System Admin - quan tri ky thuat toan he thong (khac voi chuc danh Toc truong theo dong toc)"
+      },
+      {
+        "name": "COUNCIL",
+        "description": "Hoi dong Toc bieu / Toc truong - pham vi toan dong ho"
+      },
+      {
+        "name": "BRANCH_HEAD",
+        "description": "Truong Chi/Nganh - chi duyet trong chi duoc giao, kiem tra theo ltree branch path"
+      },
+      {
+        "name": "MEMBER",
+        "description": "Thanh vien - doc theo pham vi, sua ho so ban than, gui yeu cau dinh chinh"
+      },
+      {
+        "name": "GUEST",
+        "description": "Khach - chi thay nguoi da khuat (Nghi dinh 13/2023)"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "giapha-backend",
+      "name": "Gia Pha Backend (resource server)",
+      "description": "Spring Boot resource server. Chi xac thuc bearer token, khong chay browser flow.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dev-only-backend-secret-change-me",
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": true,
+      "redirectUris": [],
+      "webOrigins": [],
+      "attributes": {
+        "access.token.lifespan": "900"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "basic",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access"
+      ]
+    },
+    {
+      "clientId": "giapha-frontend",
+      "name": "Gia Pha Frontend (Next.js PWA)",
+      "description": "Public client, Authorization Code + PKCE S256.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "fullScopeAllowed": true,
+      "rootUrl": "http://localhost:3000",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "basic",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access"
+      ],
+      "protocolMappers": [
+        {
+          "name": "giapha-backend-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "giapha-backend",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin.giapha",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Quan tri",
+      "lastName": "He thong",
+      "email": "admin@giapha.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "giapha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-giapha",
+        "ADMIN",
+        "COUNCIL"
+      ],
+      "id": "a0000000-0000-4000-8000-000000000001"
+    },
+    {
+      "username": "truongchi",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Truong Chi",
+      "lastName": "Chi Nhat",
+      "email": "truongchi@giapha.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "giapha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-giapha",
+        "BRANCH_HEAD",
+        "MEMBER"
+      ],
+      "id": "a0000000-0000-4000-8000-000000000002"
+    },
+    {
+      "username": "thanhvien",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Thanh vien",
+      "lastName": "Dong ho",
+      "email": "thanhvien@giapha.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "giapha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-giapha",
+        "MEMBER"
+      ],
+      "id": "a0000000-0000-4000-8000-000000000003"
+    }
+  ],
+  "identityProviders": [],
+  "requiredActions": []
+}

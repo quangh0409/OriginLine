@@ -1,0 +1,200 @@
+# =====================================================================================
+# Cau hinh mac dinh - He Thong Quan Ly Gia Pha & Cong Thong Tin Dong Ho
+# Gia tri nhay cam deu doc tu bien moi truong; gia tri mac dinh o day la cua moi truong
+# phat trien cuc bo, khop voi infra/docker-compose.yml.
+# =====================================================================================
+spring:
+  application:
+    name: giapha-backend
+  profiles:
+    default: dev
+
+  # ---------------------------------------------------------------------------------
+  # PostgreSQL 16 + Apache AGE - kho du lieu DUY NHAT (quan he + do thi trong cung mot DB)
+  # ---------------------------------------------------------------------------------
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/giapha}
+    username: ${DB_USERNAME:giapha}
+    password: ${DB_PASSWORD:giapha}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: giapha-hikari
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: 2
+      connection-timeout: 30000
+      # =============================================================================
+      # BAY SO 1 - APACHE AGE PHAI DUOC NAP LAI TREN TUNG CONNECTION
+      #
+      # `CREATE EXTENSION age` (Flyway V1) chi dang ky extension o cap database. Nhung
+      # thu vien dong cua AGE phai duoc LOAD vao *tung phien lam viec*, va cac ham/kieu
+      # cua no (cypher(), agtype, ...) nam trong schema `ag_catalog` - schema nay khong
+      # co trong search_path mac dinh.
+      #
+      # Khong co dong duoi day thi moi truy van Cypher se fail rai rac va rat kho chan
+      # doan: connection nao vua duoc tao moi thi loi ("function cypher(...) does not
+      # exist"), connection dang nam trong pool va da tung chay thi van chay dung.
+      # Trieu chung "luc duoc luc khong" nay dot rat nhieu thoi gian neu khong biet truoc.
+      #
+      # Hikari chay chuoi SQL nay ngay sau khi mo moi connection vat ly - ke ca connection
+      # ma Flyway dung. Luu y: LOAD 'age' doi hoi image Postgres CO san thu vien AGE
+      # (vd. apache/age:PG16_latest). Chay tren image postgres:16 thuan thi TOAN BO pool
+      # se hong ngay tu connection dau tien.
+      # =============================================================================
+      connection-init-sql: 'LOAD ''age''; SET search_path = ag_catalog, "$user", public;'
+
+  jpa:
+    hibernate:
+      # Schema do Flyway quan ly. Khong bao gio de Hibernate tu sua schema:
+      # bang `person` co cot generated (name_unaccented), ltree va graph di kem.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        # =====================================================================
+        # BAY SO 2 - AGE VA HIBERNATE TRANH NHAU "SCHEMA MAC DINH"
+        #
+        # connection-init-sql o tren buoc phai dat ag_catalog DAU search_path de
+        # Cypher chay duoc. Nhung Hibernate lai suy ra schema mac dinh tu chinh
+        # phan tu dau tien do, nen khi ddl-auto=validate no di tim
+        # `ag_catalog.branch` va chet ngay luc khoi dong:
+        #
+        #     SchemaManagementException: Schema-validation: missing table [branch]
+        #
+        # Bang van nam dung cho o `public` (Flyway tao dung); chi rieng phep
+        # validate nhin nham cho. Ghim thang default_schema thay vi doi thu tu
+        # search_path - doi thu tu la dung vao thu ma tang graph phu thuoc.
+        # =====================================================================
+        default_schema: public
+        jdbc:
+          time_zone: UTC
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        format_sql: false
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    # Migration thuoc so huu cua workstream W1 - khong sua tu W0.
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:giapha}
+    password: ${RABBITMQ_PASSWORD:giapha}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 10
+        # default-requeue-rejected: false la BAT BUOC. De true thi tin nhan loi quay
+        # vong vo tan giua queue va consumer, khong bao gio toi duoc notify.dlq.
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 2s
+          multiplier: 2
+          max-attempts: 5
+          max-interval: 30s
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # BAY SO 2 - khoi dong khong duoc phu thuoc vao Keycloak dang song.
+          # Neu chi khai bao issuer-uri, Spring Boot goi endpoint discovery NGAY luc tao
+          # bean -> Keycloak chua san sang la backend chet ngay khi khoi dong (va
+          # /actuator/health khong bao gio xanh). Khai bao them jwk-set-uri thi decoder
+          # duoc tao lazy, con issuer-uri van duoc dung de kiem tra claim `iss`.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/giapha}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/giapha/protocol/openid-connect/certs}
+
+  graphql:
+    # GraphQL chi phuc vu truy van cay long sau (client tu chon do sau) - phan con lai la REST.
+    path: /api/v1/graphql
+    schema:
+      locations: classpath:graphql/**/
+    graphiql:
+      enabled: false
+
+  mvc:
+    problemdetails:
+      # Bat de ca ngoai le san co cua Spring MVC cung tra ve RFC 7807.
+      enabled: true
+    throw-exception-if-no-handler-found: true
+
+  web:
+    resources:
+      add-mappings: false
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  error:
+    whitelabel:
+      enabled: false
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: giapha-backend
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# =====================================================================================
+# Cau hinh rieng cua ung dung
+# =====================================================================================
+giapha:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  security:
+    client-id: ${KEYCLOAK_CLIENT_ID:giapha-backend}
+  openapi:
+    server-url: ${OPENAPI_SERVER_URL:http://localhost:8080}
+  graph:
+    # Ten do thi AGE - dung trong moi cau Cypher: SELECT * FROM cypher('giapha_graph', $$ ... $$)
+    name: giapha_graph
+  locale:
+    default: vi
+    supported: vi,en
+
+logging:
+  level:
+    root: INFO
+    vn.giapha: INFO

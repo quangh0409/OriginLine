@@ -1,0 +1,193 @@
+# ---------------------------------------------------------------------------
+# Gia Phả Dòng Họ — môi trường phát triển (Sprint 1 / W0)
+# Nguồn: TDD §12 mục 1, plan Giai đoạn 1 §3 W0.
+#
+# Chạy:   cd infra && cp .env.example .env && docker compose up -d
+# Dừng:   docker compose down            (giữ dữ liệu)
+#         docker compose down -v         (xoá sạch volume — dựng lại từ số 0)
+#
+# Backend Spring Boot và frontend Next.js chạy TRÊN MÁY HOST (không nằm trong
+# compose ở Giai đoạn 1) — xem README.md ở thư mục gốc.
+# ---------------------------------------------------------------------------
+name: giapha
+
+services:
+
+  # -------------------------------------------------------------------------
+  # PostgreSQL 16 + Apache AGE — DATASTORE DUY NHẤT (BA v2 §9, §12)
+  # Cây phả đồ là graph `giapha_graph` truy vấn bằng Cypher ngay trong Postgres.
+  # Không có Neo4j. Không duyệt cây bằng recursive CTE.
+  #
+  # LƯU Ý: KHÔNG ghi đè `command:` cho service này. CMD mặc định của image là
+  #   postgres -c shared_preload_libraries=age
+  # Ghi đè mà quên shared_preload_libraries thì mọi truy vấn Cypher sẽ lỗi.
+  # -------------------------------------------------------------------------
+  postgres:
+    image: apache/age:release_PG16_1.6.0
+    container_name: giapha-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-giapha}
+      POSTGRES_USER: ${POSTGRES_USER:-giapha}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-giapha}
+      # C.UTF-8 để so sánh chuỗi tiếng Việt ổn định giữa các máy dev.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+      PGTZ: ${TZ:-Asia/Ho_Chi_Minh}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Mount TỪNG FILE, không mount cả thư mục ./init lên
+      # /docker-entrypoint-initdb.d — mount cả thư mục sẽ che mất script
+      # 00-create-extension-age.sql có sẵn trong image.
+      - ./init/01-giapha-extensions.sql:/docker-entrypoint-initdb.d/01-giapha-extensions.sql:ro
+      # Script tiện ích chạy tay: docker exec ... psql -f /scripts/<file>.sql
+      - ./scripts:/scripts:ro
+    healthcheck:
+      # Dùng -h 127.0.0.1: server tạm trong lúc initdb chỉ nghe unix socket,
+      # nên kiểm qua TCP để không báo "healthy" sớm khi DB chưa mở cổng thật.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER:-giapha} -d ${POSTGRES_DB:-giapha}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks: [giapha-net]
+
+  # -------------------------------------------------------------------------
+  # Redis — cache projection cây phả đồ + session. KHÔNG phải search engine
+  # (tìm kiếm là Postgres FTS + unaccent).
+  # -------------------------------------------------------------------------
+  redis:
+    image: redis:7.4-alpine
+    container_name: giapha-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks: [giapha-net]
+
+  # -------------------------------------------------------------------------
+  # RabbitMQ (bản management) — hàng đợi nhắc giỗ (FR-2.5: retry + DLQ).
+  # Topology (exchange notify -> notify.inapp / notify.webpush, DLX notify.dlx
+  # -> notify.dlq) do backend W5 khai báo bằng Spring AMQP, KHÔNG khai ở đây.
+  # -------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    container_name: giapha-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-giapha}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-giapha}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"      # AMQP
+      - "${RABBITMQ_UI_PORT:-15672}:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks: [giapha-net]
+
+  # -------------------------------------------------------------------------
+  # MinIO — object storage S3-compatible: chân dung, thác bản văn bia, ảnh mộ,
+  # gia phả giấy scan. TUYỆT ĐỐI không lưu blob media trong Postgres.
+  # -------------------------------------------------------------------------
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: giapha-minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-giapha}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-giapha123}
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:${MINIO_CONSOLE_PORT:-9001}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"          # S3 API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"  # Console
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [giapha-net]
+
+  # -------------------------------------------------------------------------
+  # Tạo sẵn bucket. Chạy một lần rồi thoát (restart: "no").
+  # Mọi bucket đều PRIVATE: ảnh người còn sống là dữ liệu Tầng 3 theo
+  # Nghị định 13/2023. Backend phát presigned URL, không mở anonymous read.
+  # -------------------------------------------------------------------------
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    container_name: giapha-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_started
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-giapha}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-giapha123}
+      MINIO_BUCKETS: ${MINIO_BUCKETS:-giapha-portraits giapha-stele giapha-graves giapha-documents}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        echo "[minio-init] Cho MinIO san sang..."
+        until mc alias set giapha "http://minio:9000" "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+          sleep 2
+        done
+        for b in $$MINIO_BUCKETS; do
+          mc mb --ignore-existing "giapha/$$b"
+          mc anonymous set none "giapha/$$b" >/dev/null
+          echo "[minio-init] bucket san sang: $$b (private)"
+        done
+        echo "[minio-init] Hoan tat."
+    networks: [giapha-net]
+
+  # -------------------------------------------------------------------------
+  # Keycloak — OAuth2/OIDC. Cổng 8081 (8080 dành cho backend Spring Boot).
+  # Container nghe thẳng 8081 để issuer trong JWT khớp http://localhost:8081.
+  # Dev mode: H2 nhúng, KHÔNG gắn volume → realm import lại mỗi lần `up`.
+  # -------------------------------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7
+    container_name: giapha-keycloak
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm", "--http-port=8081"]
+    environment:
+      # Keycloak >= 26.0 dùng KC_BOOTSTRAP_ADMIN_* (KEYCLOAK_ADMIN đã deprecated)
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    ports:
+      - "${KEYCLOAK_PORT:-8081}:8081"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    networks: [giapha-net]
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  minio-data:
+
+networks:
+  giapha-net:
+    driver: bridge

@@ -1,0 +1,65 @@
+# can-chi.csv - Can Chi cua NAM AM LICH, 1990-2040.
+#
+# NGUON: dong tieu de bang [HKO] "Gregorian-Lunar Calendar Conversion Table of <year>
+# (<Can-Chi phien am Pinyin> - year of the <con giap>)". Doi chieu Pinyin sang Han-Viet.
+# Vi du 2024 = "Jia-chen" = Giap Thin; 2026 = "Bing-wu" = Binh Ngo.
+#
+# Moi dong duoc kiem hai duong doc lap: (1) phien am Pinyin cua Can va Chi, (2) ten con giap
+# tieng Anh HKO ghi. Cong thuc doi chieu (Ho Ngoc Duc, amlich.js): can = (nam + 6) % 10,
+# chi = (nam + 8) % 12.
+#
+# LUU Y VAN HOA: chi Mao o Viet Nam la con MEO, o Trung Quoc la con Tho (HKO ghi "Rabbit").
+# Cot zodiac_en giu nguyen cach goi cua HKO - khong phai cach goi Viet Nam.
+# Can Chi cua NAM khong phu thuoc mui gio nen lich VN va TQ luon trung nhau o cot nay.
+lunar_year,can,chi,can_chi,pinyin,zodiac_en,source,verified
+1990,Canh,Ngọ,Canh Ngọ,Geng-wu,Horse,HKO,yes
+1991,Tân,Mùi,Tân Mùi,Xin-wei,Goat,HKO,yes
+1992,Nhâm,Thân,Nhâm Thân,Ren-shen,Monkey,HKO,yes
+1993,Quý,Dậu,Quý Dậu,Gui-you,Rooster,HKO,yes
+1994,Giáp,Tuất,Giáp Tuất,Jia-xu,Dog,HKO,yes
+1995,Ất,Hợi,Ất Hợi,Yi-hai,Pig,HKO,yes
+1996,Bính,Tý,Bính Tý,Bing-zi,Mouse,HKO,yes
+1997,Đinh,Sửu,Đinh Sửu,Ding-chou,Ox,HKO,yes
+1998,Mậu,Dần,Mậu Dần,Wu-yin,Tiger,HKO,yes
+1999,Kỷ,Mão,Kỷ Mão,Ji-mao,Rabbit,HKO,yes
+2000,Canh,Thìn,Canh Thìn,Geng-chen,Dragon,HKO,yes
+2001,Tân,Tỵ,Tân Tỵ,Xin-si,Snake,HKO,yes
+2002,Nhâm,Ngọ,Nhâm Ngọ,Ren-wu,Horse,HKO,yes
+2003,Quý,Mùi,Quý Mùi,Gui-wei,Goat,HKO,yes
+2004,Giáp,Thân,Giáp Thân,Jia-shen,Monkey,HKO,yes
+2005,Ất,Dậu,Ất Dậu,Yi-you,Rooster,HKO,yes
+2006,Bính,Tuất,Bính Tuất,Bing-xu,Dog,HKO,yes
+2007,Đinh,Hợi,Đinh Hợi,Ding-hai,Pig,HKO,yes
+2008,Mậu,Tý,Mậu Tý,Wu-zi,Mouse,HKO,yes
+2009,Kỷ,Sửu,Kỷ Sửu,Ji-chou,Ox,HKO,yes
+2010,Canh,Dần,Canh Dần,Geng-yin,Tiger,HKO,yes
+2011,Tân,Mão,Tân Mão,Xin-mao,Rabbit,HKO,yes
+2012,Nhâm,Thìn,Nhâm Thìn,Ren-chen,Dragon,HKO,yes
+2013,Quý,Tỵ,Quý Tỵ,Gui-si,Snake,HKO,yes
+2014,Giáp,Ngọ,Giáp Ngọ,Jia-wu,Horse,HKO,yes
+2015,Ất,Mùi,Ất Mùi,Yi-wei,Goat,HKO,yes
+2016,Bính,Thân,Bính Thân,Bing-shen,Monkey,HKO,yes
+2017,Đinh,Dậu,Đinh Dậu,Ding-you,Rooster,HKO,yes
+2018,Mậu,Tuất,Mậu Tuất,Wu-xu,Dog,HKO,yes
+2019,Kỷ,Hợi,Kỷ Hợi,Ji-hai,Pig,HKO,yes
+2020,Canh,Tý,Canh Tý,Geng-zi,Mouse,HKO,yes
+2021,Tân,Sửu,Tân Sửu,Xin-chou,Ox,HKO,yes
+2022,Nhâm,Dần,Nhâm Dần,Ren-yin,Tiger,HKO,yes
+2023,Quý,Mão,Quý Mão,Gui-mao,Rabbit,HKO,yes
+2024,Giáp,Thìn,Giáp Thìn,Jia-chen,Dragon,HKO,yes
+2025,Ất,Tỵ,Ất Tỵ,Yi-si,Snake,HKO,yes
+2026,Bính,Ngọ,Bính Ngọ,Bing-wu,Horse,HKO,yes
+2027,Đinh,Mùi,Đinh Mùi,Ding-wei,Goat,HKO,yes
+2028,Mậu,Thân,Mậu Thân,Wu-shen,Monkey,HKO,yes
+2029,Kỷ,Dậu,Kỷ Dậu,Ji-you,Rooster,HKO,yes
+2030,Canh,Tuất,Canh Tuất,Geng-xu,Dog,HKO,yes
+2031,Tân,Hợi,Tân Hợi,Xin-hai,Pig,HKO,yes
+2032,Nhâm,Tý,Nhâm Tý,Ren-zi,Mouse,HKO,yes
+2033,Quý,Sửu,Quý Sửu,Gui-chou,Ox,HKO,yes
+2034,Giáp,Dần,Giáp Dần,Jia-yin,Tiger,HKO,yes
+2035,Ất,Mão,Ất Mão,Yi-mao,Rabbit,HKO,yes
+2036,Bính,Thìn,Bính Thìn,Bing-chen,Dragon,HKO,yes
+2037,Đinh,Tỵ,Đinh Tỵ,Ding-si,Snake,HKO,yes
+2038,Mậu,Ngọ,Mậu Ngọ,Wu-wu,Horse,HKO,yes
+2039,Kỷ,Mùi,Kỷ Mùi,Ji-wei,Goat,HKO,yes
+2040,Canh,Thân,Canh Thân,Geng-shen,Monkey,HKO,yes

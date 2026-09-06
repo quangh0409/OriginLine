@@ -1,0 +1,69 @@
+# tet.csv - Ngay duong lich cua mung 1 Tet (am lich 1/1), lich Viet Nam GMT+7, 1990-2040.
+# NGUON DU LIEU / DATA PROVENANCE
+#  [HND-TABLE] Bang tra am lich Viet Nam cua Ho Ngoc Duc (amlich.js v0.5, bang TK19/TK20/TK21/TK22,
+#              phu 1800-2199). Ban sao lay tai https://raw.githubusercontent.com/nukeviet/NukeViet-2.0/master/js/amlich.js
+#              Ho Ngoc Duc ghi ro bang nay do chuong trinh Java chinh xac hon cua ong tinh san.
+#  [HND-ALGO]  Thuat toan thien van cua Ho Ngoc Duc (calrules), doi chieu voi ban port Python
+#              https://raw.githubusercontent.com/vanng822/camlich/master/cal/amlich.py (c) 2006 Ho Ngoc Duc.
+#  [HKO]       Hong Kong Observatory - Gregorian-Lunar Calendar Conversion Table (lich Trung Quoc, UTC+8):
+#              https://www.hko.gov.hk/en/gts/time/calendar/text/files/T<YYYY>e.txt
+#  [HND-HIST]  Ho Ngoc Duc, "Am lich Viet Nam qua cac thoi ky lich su" (histcal) - lich su mui gio.
+#
+# Cot verified: yes = doi chieu duoc voi it nhat 2 nguon doc lap; derived = suy ra tu nguon co
+#               kem lap luan ghi o cot note; no = CHUA XAC MINH DUOC, khong duoc dung de assert.
+#
+# Moi dong da duoc kiem chung 3 lop: [HND-TABLE] == [HND-ALGO tz=+7], va == [HKO] o 49/51 nam.
+# Hai nam 2007 va 2030 lech lich Trung Quoc dung 1 ngay (xem divergence.csv) - do la lech that,
+# khong phai sai so: [HKO] xac nhan Tet Trung Quoc roi vao ngay hom sau.
+lunar_year,tet_solar_date,chinese_new_year,same_as_china,source,verified
+1990,1990-01-27,1990-01-27,yes,HND-TABLE+HND-ALGO+HKO,yes
+1991,1991-02-15,1991-02-15,yes,HND-TABLE+HND-ALGO+HKO,yes
+1992,1992-02-04,1992-02-04,yes,HND-TABLE+HND-ALGO+HKO,yes
+1993,1993-01-23,1993-01-23,yes,HND-TABLE+HND-ALGO+HKO,yes
+1994,1994-02-10,1994-02-10,yes,HND-TABLE+HND-ALGO+HKO,yes
+1995,1995-01-31,1995-01-31,yes,HND-TABLE+HND-ALGO+HKO,yes
+1996,1996-02-19,1996-02-19,yes,HND-TABLE+HND-ALGO+HKO,yes
+1997,1997-02-07,1997-02-07,yes,HND-TABLE+HND-ALGO+HKO,yes
+1998,1998-01-28,1998-01-28,yes,HND-TABLE+HND-ALGO+HKO,yes
+1999,1999-02-16,1999-02-16,yes,HND-TABLE+HND-ALGO+HKO,yes
+2000,2000-02-05,2000-02-05,yes,HND-TABLE+HND-ALGO+HKO,yes
+2001,2001-01-24,2001-01-24,yes,HND-TABLE+HND-ALGO+HKO,yes
+2002,2002-02-12,2002-02-12,yes,HND-TABLE+HND-ALGO+HKO,yes
+2003,2003-02-01,2003-02-01,yes,HND-TABLE+HND-ALGO+HKO,yes
+2004,2004-01-22,2004-01-22,yes,HND-TABLE+HND-ALGO+HKO,yes
+2005,2005-02-09,2005-02-09,yes,HND-TABLE+HND-ALGO+HKO,yes
+2006,2006-01-29,2006-01-29,yes,HND-TABLE+HND-ALGO+HKO,yes
+2007,2007-02-17,2007-02-18,no,HND-TABLE+HND-ALGO+HKO,yes
+2008,2008-02-07,2008-02-07,yes,HND-TABLE+HND-ALGO+HKO,yes
+2009,2009-01-26,2009-01-26,yes,HND-TABLE+HND-ALGO+HKO,yes
+2010,2010-02-14,2010-02-14,yes,HND-TABLE+HND-ALGO+HKO,yes
+2011,2011-02-03,2011-02-03,yes,HND-TABLE+HND-ALGO+HKO,yes
+2012,2012-01-23,2012-01-23,yes,HND-TABLE+HND-ALGO+HKO,yes
+2013,2013-02-10,2013-02-10,yes,HND-TABLE+HND-ALGO+HKO,yes
+2014,2014-01-31,2014-01-31,yes,HND-TABLE+HND-ALGO+HKO,yes
+2015,2015-02-19,2015-02-19,yes,HND-TABLE+HND-ALGO+HKO,yes
+2016,2016-02-08,2016-02-08,yes,HND-TABLE+HND-ALGO+HKO,yes
+2017,2017-01-28,2017-01-28,yes,HND-TABLE+HND-ALGO+HKO,yes
+2018,2018-02-16,2018-02-16,yes,HND-TABLE+HND-ALGO+HKO,yes
+2019,2019-02-05,2019-02-05,yes,HND-TABLE+HND-ALGO+HKO,yes
+2020,2020-01-25,2020-01-25,yes,HND-TABLE+HND-ALGO+HKO,yes
+2021,2021-02-12,2021-02-12,yes,HND-TABLE+HND-ALGO+HKO,yes
+2022,2022-02-01,2022-02-01,yes,HND-TABLE+HND-ALGO+HKO,yes
+2023,2023-01-22,2023-01-22,yes,HND-TABLE+HND-ALGO+HKO,yes
+2024,2024-02-10,2024-02-10,yes,HND-TABLE+HND-ALGO+HKO,yes
+2025,2025-01-29,2025-01-29,yes,HND-TABLE+HND-ALGO+HKO,yes
+2026,2026-02-17,2026-02-17,yes,HND-TABLE+HND-ALGO+HKO,yes
+2027,2027-02-06,2027-02-06,yes,HND-TABLE+HND-ALGO+HKO,yes
+2028,2028-01-26,2028-01-26,yes,HND-TABLE+HND-ALGO+HKO,yes
+2029,2029-02-13,2029-02-13,yes,HND-TABLE+HND-ALGO+HKO,yes
+2030,2030-02-02,2030-02-03,no,HND-TABLE+HND-ALGO+HKO,yes
+2031,2031-01-23,2031-01-23,yes,HND-TABLE+HND-ALGO+HKO,yes
+2032,2032-02-11,2032-02-11,yes,HND-TABLE+HND-ALGO+HKO,yes
+2033,2033-01-31,2033-01-31,yes,HND-TABLE+HND-ALGO+HKO,yes
+2034,2034-02-19,2034-02-19,yes,HND-TABLE+HND-ALGO+HKO,yes
+2035,2035-02-08,2035-02-08,yes,HND-TABLE+HND-ALGO+HKO,yes
+2036,2036-01-28,2036-01-28,yes,HND-TABLE+HND-ALGO+HKO,yes
+2037,2037-02-15,2037-02-15,yes,HND-TABLE+HND-ALGO+HKO,yes
+2038,2038-02-04,2038-02-04,yes,HND-TABLE+HND-ALGO+HKO,yes
+2039,2039-01-24,2039-01-24,yes,HND-TABLE+HND-ALGO+HKO,yes
+2040,2040-02-12,2040-02-12,yes,HND-TABLE+HND-ALGO+HKO,yes
