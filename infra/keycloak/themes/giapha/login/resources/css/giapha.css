@@ -1,0 +1,953 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   GIAO DIỆN ĐĂNG NHẬP CỦA DÒNG HỌ — theme Keycloak `giapha`
+
+   Bản dựng của `design/06-dang-nhap/index.html` §4.1 (phương án A: một cột, có
+   bảng tên), §7 (trạng thái lỗi), §8 (lối vào chế độ khách), §9 (ngân sách chiều
+   cao trên điện thoại), §10 (song ngữ).
+
+   ───────────────────────────────────────────────────────────────────────────
+   BA LUẬT KHÔNG ĐƯỢC PHÁ (định hướng 00 §2.2, §2.3)
+     · thân bài ≥ 16px — KHÔNG có ngoại lệ "chỗ này chật quá"
+     · vùng chạm ≥ 44×44px — đo HỘP BAO, không đo chữ
+     · mọi điều khiển có nhãn CHỮ; biểu tượng không bao giờ đứng một mình
+   Dải tuổi người dùng là 16 đến hơn 70, và 00 §2.1 CẤM công tắc "chế độ dễ nhìn
+   cho người lớn tuổi". Nên mặc định ở đây đã phải tử tế với cụ 70 tuổi.
+
+   ───────────────────────────────────────────────────────────────────────────
+   MÀU: KHAI Ở :root TRƯỚC, LUÔN LUÔN (00 §3)
+
+   "Màu chỉ tồn tại trong khối tối là lỗi kinh điển gây trang không đọc được."
+   Khối `@media (prefers-color-scheme: dark)` bên dưới CHỈ ghi đè kênh RGB, không
+   khai thêm tên màu mới nào. Ai thêm một `--color-*` mới thì phải thêm ở :root.
+
+   Giá trị chép từ `frontend/src/styles/tokens.ts` — nguồn màu thật của sản phẩm.
+   Theme Keycloak không với tới tokens.ts được (đó chính là cái giá của "đường 3"
+   ở §3 bản thiết kế), nên đây là bản chép tay và nó SẼ trôi nếu không ai canh.
+   Phép kiểm chặn trôi lệch: `infra/keycloak/kiem-mau-theme.mjs`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Kênh màu, chế độ sáng. Trùng khối :root của frontend/src/app/globals.css ── */
+  --rgb-primary: 140 45 25;           /* #8c2d19 đỏ trầm */
+  --rgb-primary-dark: 102 30 15;      /* #661e0f */
+  --rgb-primary-light: 251 238 233;   /* #fbeee9 */
+  --rgb-bg-page: 248 246 242;         /* #f8f6f2 nền kem */
+  --rgb-bg-card: 255 255 255;         /* #ffffff */
+  --rgb-bg-deceased: 242 237 226;     /* #f2ede2 giấy cũ */
+  --rgb-accent: 217 119 6;            /* #d97706 hổ phách — MẢNG TÔ / NÉT DÀY */
+  --rgb-accent-text: 156 90 6;        /* #9c5a06 hổ phách trầm — CHỮ */
+  --rgb-text-main: 43 40 37;          /* #2b2825 */
+  --rgb-text-muted: 94 86 77;         /* #5e564d */
+  --rgb-border: 230 223 213;          /* #e6dfd5 viền thẻ */
+  --rgb-border-dark: 205 190 170;     /* #cdbeaa */
+  --rgb-border-input: 138 122 102;    /* #8a7a66 viền ô nhập, 4,15:1 */
+  --rgb-success-text: 17 101 51;      /* #116533 */
+  --rgb-danger: 185 28 28;            /* #b91c1c */
+  --rgb-danger-bg: 251 234 233;       /* #fbeae9 */
+  --rgb-warning-bg: 253 246 231;      /* #fdf6e7 */
+  --rgb-focus-ring: 43 40 37;         /* #2b2825 lõi vòng tiêu điểm */
+  --rgb-focus-halo: 255 255 255;      /* #ffffff quầng vòng tiêu điểm */
+
+  /* Chữ trên nút tô nền đỏ trầm. Ở chế độ tối nút sáng lên nên chữ phải tối đi —
+     giữ trắng ở đó thì #ffffff trên #e08a72 chỉ được 2,4:1, tức nút chính là chỗ
+     KHÓ ĐỌC NHẤT màn hình. Vì vậy đây là một biến, không phải một hằng số. */
+  --rgb-on-primary: 255 255 255;
+
+  /* ── Tên màu. Suy ra từ kênh, KHÔNG lặp lại trong khối tối ── */
+  --color-primary: rgb(var(--rgb-primary));
+  --color-primary-dark: rgb(var(--rgb-primary-dark));
+  --color-primary-light: rgb(var(--rgb-primary-light));
+  --color-bg-page: rgb(var(--rgb-bg-page));
+  --color-bg-card: rgb(var(--rgb-bg-card));
+  --color-bg-deceased: rgb(var(--rgb-bg-deceased));
+  --color-accent: rgb(var(--rgb-accent));
+  --color-accent-text: rgb(var(--rgb-accent-text));
+  --color-text-main: rgb(var(--rgb-text-main));
+  --color-text-muted: rgb(var(--rgb-text-muted));
+  --color-border: rgb(var(--rgb-border));
+  --color-border-dark: rgb(var(--rgb-border-dark));
+  --color-border-input: rgb(var(--rgb-border-input));
+  --color-success-text: rgb(var(--rgb-success-text));
+  --color-danger: rgb(var(--rgb-danger));
+  --color-danger-bg: rgb(var(--rgb-danger-bg));
+  --color-warning-bg: rgb(var(--rgb-warning-bg));
+  --color-focus-ring: rgb(var(--rgb-focus-ring));
+  --color-focus-halo: rgb(var(--rgb-focus-halo));
+  --color-on-primary: rgb(var(--rgb-on-primary));
+
+  /* ── Kích thước. Số lấy từ khung dây §4.1 và §9 của tài liệu 06 ── */
+  --gp-cao-o: 52px;      /* ô nhập và nút chính — khung dây vẽ 52 */
+  --gp-cham: 44px;       /* SÀN vùng chạm, WCAG 2.2 */
+  --gp-ban-kinh: 4px;
+  --gp-the-rong: 440px;  /* bề rộng thẻ trên máy tính, §4.1 vẽ 440 */
+
+  color-scheme: light;
+}
+
+/* ── Chế độ tối. CHỈ ghi đè kênh RGB. ───────────────────────────────────────
+   Trang Keycloak KHÔNG có công tắc sáng/tối — nó không đọc được lựa chọn người
+   dùng đã lưu trong ứng dụng Next.js (khác nguồn gốc, khác phiên). Nên ở đây chỉ
+   còn một tín hiệu duy nhất: lựa chọn của hệ điều hành. Đó là trạng thái "theo
+   hệ thống" mà 00 §3 đặt làm mặc định, nên đúng tinh thần; nhưng người đã ép
+   "Sáng" trong ứng dụng mà hệ điều hành đang tối thì vẫn thấy trang này tối.
+   Ghi ra đây vì nó là một chỗ lệch có thật giữa hai nửa sản phẩm. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rgb-primary: 224 138 114;       /* #e08a72 */
+    --rgb-primary-dark: 240 166 143;  /* #f0a68f — SÁNG hơn: trên nền tối "đậm nét lên" là sáng lên */
+    --rgb-primary-light: 51 33 28;    /* #33211c */
+    --rgb-bg-page: 26 22 20;          /* #1a1614 */
+    --rgb-bg-card: 36 31 28;          /* #241f1c */
+    --rgb-bg-deceased: 43 37 33;      /* #2b2521 */
+    --rgb-accent: 233 168 63;         /* #e9a83f */
+    --rgb-accent-text: 233 168 63;    /* hổ phách hết trượt ở nền tối */
+    --rgb-text-main: 239 232 223;     /* #efe8df */
+    --rgb-text-muted: 169 156 142;    /* #a99c8e */
+    --rgb-border: 59 49 43;           /* #3b312b */
+    --rgb-border-dark: 86 72 63;      /* #56483f */
+    --rgb-border-input: 139 119 103;  /* #8b7767 */
+    --rgb-success-text: 116 198 143;  /* #74c68f */
+    --rgb-danger: 236 138 128;        /* #ec8a80 */
+    --rgb-danger-bg: 51 32 30;        /* #33201e */
+    --rgb-warning-bg: 46 38 23;       /* #2e2617 */
+    --rgb-focus-ring: 239 232 223;    /* đảo hai lớp: lõi sáng, quầng tối */
+    --rgb-focus-halo: 26 22 20;
+    --rgb-on-primary: 26 22 20;       /* #1a1614 trên #e08a72 → 7,4:1 */
+
+    color-scheme: dark;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NỀN TẢNG
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Nền đặt trên <html> chứ không chỉ <body>: vùng kéo quá đà trên iOS lấy màu
+     từ <html>. Thiếu dòng này thì ở chế độ tối kéo quá đáy sẽ loé một vệt trắng. */
+  background-color: var(--color-bg-page);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  /* KHÔNG tự phóng chữ theo chiều ngang trên iOS khi xoay máy. */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg-page);
+  color: var(--color-text-main);
+  font-family: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* SÀN 16px. Không đặt ở đây thì thân bài chạy theo mặc định của trình duyệt —
+     đúng số, nhưng chỉ là trùng hợp, và mất ngay khi ai đó đặt font-size lên
+     một thẻ tổ tiên. */
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Tên người, tên chi là DỮ LIỆU: không viết hoa toàn bộ, không cắt bằng "…".
+   (00 §3, thẻ "Chữ".) Không có quy tắc text-transform nào trong tệp này. */
+
+/* ── Liên kết bỏ qua. Điểm dừng Tab ĐẦU TIÊN — danh mục kiểm §11 #4 ───────── */
+.gp-bo-qua {
+  position: absolute;
+  left: 8px;
+  top: -200px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--gp-cham);
+  padding: 0 16px;
+  background: var(--color-bg-card);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--gp-ban-kinh);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.gp-bo-qua:focus {
+  top: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VÒNG TIÊU ĐIỂM BÀN PHÍM — MỘT MẪU DUY NHẤT
+
+   Vòng ĐƠN SẮC không thể đạt 3:1 với mọi nền cùng lúc: nền ở đây trải từ trắng
+   tới đỏ trầm. Lời giải là hai lớp trái sắc, luôn có một lớp gánh được:
+     quầng (box-shadow, ôm sát)  #ffffff → 8,38:1 quanh nút đỏ trầm
+     lõi   (outline, vòng ngoài) #2b2825 → 13,58:1 trên nền kem
+   Chép nguyên logic từ frontend/src/app/globals.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px var(--color-focus-halo);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THANH ĐẦU TRANG — tên dòng họ + công tắc ngôn ngữ
+   Tài liệu 06 §10: công tắc ngôn ngữ phải có mặt ở BƯỚC 1, viết CHỮ chứ không
+   vẽ cờ (cờ là quốc gia, không phải ngôn ngữ), và đặt ở thanh đầu trang chứ
+   không nhét vào chân thẻ.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-thanh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 56px;
+  padding: 6px 16px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.gp-thanh-ten {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.gp-ngonngu {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Dấu chấm giữa hai ngôn ngữ là TRANG TRÍ, không phải điều khiển — nhưng nó là
+   một ký tự NHÌN THẤY ĐƯỢC, nên vẫn phải đọc được. Đo lần đầu ở
+   `--color-border-dark`: 1,82:1 trên nền thẻ, tức một vết mờ. Dùng màu chữ phụ
+   (7,4:1) thay vì màu viền. */
+.gp-ngonngu-ngan {
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.gp-ngonngu-nut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44×44 kể cả khi nhãn chỉ có hai chữ. Đo hộp bao, không đo chữ. */
+  min-height: var(--gp-cham);
+  min-width: var(--gp-cham);
+  padding: 0 12px;
+  border-radius: var(--gp-ban-kinh);
+  font-size: 16px;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gp-ngonngu-nut:hover {
+  background: var(--color-primary-light);
+}
+
+/* Ngôn ngữ ĐANG dùng: không phải một liên kết bấm được nữa, nên bỏ gạch chân và
+   đổi sang chữ đậm — khác biệt không chỉ nằm ở màu (WCAG 1.4.1). */
+.gp-ngonngu-nut--dang {
+  font-weight: 600;
+  color: var(--color-text-main);
+  text-decoration: none;
+  cursor: default;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THÂN TRANG
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-than {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: var(--gp-the-rong);
+  margin: 0 auto;
+  /* Đệm 16 trên điện thoại. §9: thẻ ĐỤNG mép trái/phải ở khung 390 là cố ý —
+     mỗi 8px bề ngang là một ký tự nữa của nhãn ô nhập không phải xuống dòng. */
+  padding: 16px 16px 32px;
+}
+
+.gp-the {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-dark);
+  border-radius: 6px;
+  padding: 20px 16px;
+}
+
+/* ── Bảng tên: BA DÒNG CHỮ, KHÔNG ẢNH (06 §2.2) ──────────────────────────────
+   Một tấm biển tên, không phải một trang bìa. Thêm logo tròn / câu đối / ảnh từ
+   đường vào đây là đẩy nút "Đăng nhập" xuống dưới bàn phím ảo — §9 chứng minh
+   bằng con số, không bằng ý kiến. */
+.gp-bien {
+  margin: 0 0 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.gp-bien-ten {
+  margin: 0;
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+  /* Bậc D2 của tài liệu 02: 26/32, serif 700. Trên khung hẹp lùi về 24 để tên
+     dài như "Phả họ Nguyễn — Đại Lan" không vỡ thành ba dòng. */
+  font-size: 24px;
+  line-height: 1.24;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.gp-bien-phu {
+  margin: 8px 0 0;
+  /* Bậc T2 — SÀN. Không hạ xuống 14px "cho gọn". */
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* ── Tiêu đề màn (Quên mật khẩu, Đặt mật khẩu mới, …) ── */
+.gp-tieu-de {
+  margin: 0 0 12px;
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.gp-dan {
+  margin: 0 0 16px;
+  /* Bậc T1 — nội dung chính. */
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--color-text-main);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HỘP THÔNG BÁO / LỖI
+
+   06 §7.2 luật 4: KHÔNG dùng màu đỏ lỗi cho luật chạy đúng. Chờ duyệt và chế độ
+   khách không phải sự cố — chúng dùng nền giấy hoặc hổ phách. Đỏ chỉ dành cho
+   ca người dùng phải làm lại một việc.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-bao {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: var(--gp-ban-kinh);
+  border: 1.5px solid var(--color-border-dark);
+  background: var(--color-bg-deceased);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.gp-bao-dau {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.gp-bao p:last-child {
+  margin-bottom: 0;
+}
+
+.gp-bao--loi {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.gp-bao--loi .gp-bao-dau {
+  color: var(--color-danger);
+}
+
+.gp-bao--nhac {
+  border-color: var(--color-accent);
+  background: var(--color-warning-bg);
+}
+
+.gp-bao--nhac .gp-bao-dau {
+  color: var(--color-accent-text);
+}
+
+.gp-bao--xong {
+  border-color: var(--color-success-text);
+  background: var(--color-bg-card);
+}
+
+.gp-bao--xong .gp-bao-dau {
+  color: var(--color-success-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BIỂU MẪU
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-nhom {
+  margin-bottom: 16px;
+}
+
+/* ── NGÂN SÁCH CHIỀU CAO KHI BÀN PHÍM ẢO MỞ ─────────────────────────────────
+   06 §9 đặt một ràng buộc đo được: ĐÁY NÚT "ĐĂNG NHẬP" PHẢI CÁCH ĐÁY Ô MẬT
+   KHẨU KHÔNG QUÁ 120px. Quá ngưỡng ấy thì trên điện thoại, sau khi trình duyệt
+   cuộn ô mật khẩu vào tầm nhìn, nút chính rơi xuống dưới mép bàn phím — và
+   người dùng gõ xong mật khẩu rồi không thấy nút đâu. Đó là một lỗi IM LẶNG.
+
+   Phép cộng của bố cục này, đo trên khung 400 (xem chú thích từng khối):
+     8  lề dưới của nhóm ô mật khẩu   (.gp-nhom--cuoi)
+     44 hàng "Ghi nhớ đăng nhập"      (.gp-chon)
+     8  lề dưới của hàng ấy
+     52 nút chính
+     ───
+     112px  → còn dư 8px
+
+   Nếu bật lại "Quên mật khẩu?" (realm `resetPasswordAllowed`), liên kết ấy chèn
+   vào GIỮA và cộng thêm 44 + 8 = 52 → 156px, VƯỢT TRẦN. Ghi ra đây vì lúc bật
+   SMTP sẽ không ai nhớ: khi ấy phải gộp "Quên mật khẩu?" và "Ghi nhớ đăng nhập"
+   vào cùng MỘT hàng, hoặc bỏ hàng ghi nhớ. Con số 156 là ĐO THẬT, không ước
+   lượng: đã bật `resetPasswordAllowed` lên rồi đo lại trên khung 400.
+   ───────────────────────────────────────────────────────────────────────────── */
+.gp-nhom--cuoi {
+  margin-bottom: 8px;
+}
+
+.gp-nhan {
+  display: block;
+  margin-bottom: 6px;
+  /* Bậc T2đ: 16/24 weight 500. KHÔNG viết "Tên đăng nhập" — đó là tiếng của
+     phần mềm (00 §2.5) và nó hỏi người dùng một câu họ không có dữ kiện để trả
+     lời. Nhãn thật nằm ở messages/, không ở đây. */
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-main);
+}
+
+.gp-o {
+  display: block;
+  width: 100%;
+  height: var(--gp-cao-o);
+  padding: 0 14px;
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  border: 1.5px solid var(--color-border-input);
+  border-radius: var(--gp-ban-kinh);
+  font-family: inherit;
+  /* 17px chứ không 16: dưới 16px Safari trên iOS tự phóng to cả trang khi ô nhận
+     tiêu điểm, và người dùng không hiểu vì sao trang vừa nhảy. 17 cho thêm biên. */
+  font-size: 17px;
+}
+
+.gp-o--khoa {
+  /* Ô chỉ để ĐỌC, không gõ được. Nền giấy cũ + viền nhạt để nó khác hẳn ô gõ
+     được — người dùng không phải thử gõ vào rồi mới biết. Vẫn giữ 17px và
+     tương phản chữ đầy đủ: "không sửa được" không có nghĩa là "khó đọc". */
+  background: var(--color-bg-deceased);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-main);
+}
+
+.gp-o::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.gp-o[aria-invalid="true"] {
+  border-color: var(--color-danger);
+  border-width: 2px;
+}
+
+/* Câu trợ giúp dưới ô. Đây là câu DUY NHẤT trên màn hình nói với người không có
+   email rằng họ không bị bỏ ra ngoài (06 §2.1) — nên nó ở 16px, không phải chữ
+   chú thích. */
+.gp-goi-y {
+  margin: 8px 0 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+/* ── Ô mật khẩu + nút "Hiện" ────────────────────────────────────────────────
+   Nút 68×44 CÓ CHỮ, đổi thành "Ẩn" khi đang hiện (06 §9.1). Con mắt gạch chéo
+   là một câu đố (00 §2.3), và người gõ một ngón cần nhìn thấy mình gõ gì. */
+.gp-o-boc {
+  position: relative;
+}
+
+.gp-o-boc .gp-o {
+  /* Chừa chỗ cho nút: 68 + 4 lề mỗi bên. */
+  padding-right: 84px;
+}
+
+.gp-hien {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: var(--gp-cham);
+  padding: 0;
+  background: var(--color-bg-deceased);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--gp-ban-kinh);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.gp-hien:hover {
+  background: var(--color-border);
+}
+
+/* ── Ghi nhớ đăng nhập ── */
+/* Vùng chạm thật của ô đánh dấu là CẢ HÀNG <label> cao 44, không phải cái ô
+   vuông 24×24 bên trong nó: bấm vào nhãn cũng bật/tắt. Một bộ kiểm tự động đo
+   riêng thẻ <input> sẽ báo 24×24 — đó là số đúng của một thứ không phải vùng
+   chạm. */
+.gp-chon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--gp-cham);
+  margin-bottom: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.gp-chon input {
+  /* Ô đánh dấu mặc định ~13px — quá nhỏ để chạm. Vùng chạm thật là cả dòng
+     <label> cao 44, nhưng bản thân ô cũng phải nhìn thấy được. */
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--color-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NÚT
+
+   Nút chính và nút phụ CÙNG chiều cao 52 và cùng cỡ chữ (06 §4.1 chú thích ③):
+   "Xem phần công khai" là một lựa chọn thật, không phải một liên kết nhỏ nép ở
+   góc. Khác biệt duy nhất là tô nền hay không.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-nut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--gp-cao-o);
+  padding: 8px 16px;
+  border-radius: var(--gp-ban-kinh);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+}
+
+.gp-nut--chinh {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
+}
+
+.gp-nut--chinh:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.gp-nut--phu {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.gp-nut--phu:hover {
+  background: var(--color-primary-light);
+}
+
+/* Nút trung tính — "Quay lại đăng nhập", "Không phải tôi". */
+.gp-nut--nhat {
+  background: transparent;
+  color: var(--color-text-main);
+  border-color: var(--color-border-dark);
+}
+
+.gp-nut--nhat:hover {
+  background: var(--color-bg-deceased);
+}
+
+.gp-nut + .gp-nut {
+  margin-top: 12px;
+}
+
+/* ── Liên kết cỡ chạm (Quên mật khẩu?, Tôi có mã mời) ────────────────────────
+   §9: "Quên mật khẩu?" nằm GIỮA ô mật khẩu và nút, không nằm dưới nút — để đáy
+   nút chính vẫn cách đáy ô mật khẩu ≤ 120px khi bàn phím ảo mở. */
+.gp-lien-ket {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--gp-cham);
+  padding: 0 8px;
+  margin-left: -8px;
+  border-radius: var(--gp-ban-kinh);
+  font-size: 16px;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gp-lien-ket:hover {
+  background: var(--color-primary-light);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VẠCH "HOẶC" VÀ CHỖ CẮM ZALO
+
+   06 §4.5 luật 1: CHỪA THỨ TỰ, KHÔNG CHỪA KHOẢNG TRỐNG. Thẻ cao theo nội dung
+   của nó. Khi có Zalo OA, nút Zalo chèn vào đúng khe `.gp-mang-xa-hoi` — giữa
+   vạch "hoặc" và nút "Xem phần công khai" — và thẻ tự cao thêm. Hôm nay
+   `identityProviders` rỗng nên khối ấy không in ra một điểm ảnh nào, và màn hình
+   vẫn cân.
+
+   Luật 2: KHÔNG vẽ nút xám "sắp có". Không có lớp `.gp-nut--vo-hieu` trong tệp
+   này, và đó là cố ý.
+   Luật 3: Zalo KHÔNG BAO GIỜ là nút đầu tiên — nó nằm dưới nút "Đăng nhập" của
+   chính dòng họ. Vị trí ấy do login.ftl quyết định, không do CSS.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-vach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.gp-vach::before,
+.gp-vach::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-dark);
+}
+
+.gp-mang-xa-hoi {
+  margin-bottom: 12px;
+}
+
+.gp-mang-xa-hoi ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gp-mang-xa-hoi li + li {
+  margin-top: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KHỐI "KHÁCH XEM ĐƯỢC GÌ" (06 §8)
+
+   Đặt DƯỚI thẻ đăng nhập, tức SAU nút "Xem phần công khai" trên điện thoại —
+   thông tin vẫn có, không tranh chỗ với việc chính.
+
+   Cột phải viết "phải là người trong họ mới xem được", KHÔNG viết "có N người
+   đang sống bị ẩn": con số ấy tự nó là một rò rỉ (02 §4.1).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-khach {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--color-bg-deceased);
+  border: 1px solid var(--color-border-dark);
+  border-radius: 6px;
+}
+
+.gp-khach-dau {
+  margin: 0 0 12px;
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.gp-khach-cot + .gp-khach-cot {
+  margin-top: 16px;
+}
+
+.gp-khach-nhan {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.gp-khach-nhan--duoc {
+  color: var(--color-success-text);
+}
+
+.gp-khach-nhan--khong {
+  color: var(--color-primary);
+}
+
+.gp-khach ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.gp-khach li {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.gp-khach-luat {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-dark);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KHỐI "GỌI NGƯỜI THẬT" (06 §2.3 điểm 3)
+
+   Mọi ngõ cụt phải in tên và số máy của MỘT CON NGƯỜI, không phải một hộp thư
+   hỗ trợ. "Liên hệ quản trị viên" là ngõ cụt; "gọi bác Bốn, 09xx xxx xxx" thì
+   không.
+
+   NHƯNG: 00 §5 cấm bịa số. Nếu `giaphaHelpName`/`giaphaHelpPhone` chưa được
+   điền trong theme.properties thì khối này in một câu chung chung và KHÔNG in
+   số máy nào — thà chung chung còn hơn sai số.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-goi {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-dark);
+  border-radius: 6px;
+}
+
+.gp-goi-dau {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.gp-goi p {
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.gp-goi-ten {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.gp-goi-so {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--gp-cham);
+  padding: 0 8px;
+  margin-left: -8px;
+  border-radius: var(--gp-ban-kinh);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  /* Số điện thoại KHÔNG được xuống dòng giữa chừng — một số gãy đôi là một số
+     người ta gọi sai. */
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHÂN TRANG
+   ═══════════════════════════════════════════════════════════════════════════ */
+.gp-chan {
+  flex: none;
+  max-width: var(--gp-the-rong);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KHUNG RỘNG
+
+   Từ 480px trở lên mới nới đệm và nâng bảng tên lên bậc D2 đầy đủ (26px). Dưới
+   ngưỡng ấy giữ nguyên bản điện thoại — đó là bản CHÍNH, không phải bản rút gọn.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 480px) {
+  .gp-than {
+    padding: 24px 16px 40px;
+  }
+
+  .gp-the {
+    padding: 24px;
+  }
+
+  .gp-bien-ten {
+    font-size: 26px;
+    line-height: 1.23; /* 26/32 — bậc D2 */
+  }
+
+  .gp-thanh {
+    padding: 6px 24px;
+  }
+}
+
+/* Hai cột cho khối "khách xem được gì" — chỉ khi đủ rộng thật. Hai cột chen vào
+   một khung 390 sẽ ra hai cột mỗi cột bốn chữ. */
+@media (min-width: 720px) {
+  .gp-than {
+    max-width: 760px;
+  }
+
+  .gp-the {
+    max-width: var(--gp-the-rong);
+    margin: 0 auto;
+  }
+
+  .gp-khach-cot-boc {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .gp-khach-cot + .gp-khach-cot {
+    margin-top: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LƯỚI AN TOÀN CHO CÁC TRANG CHƯA DỰNG LẠI
+
+   `theme.properties` khai `parent=base`, và mọi trang của `base` đều gọi cùng
+   macro `registrationLayout` — tức là trang nào ta CHƯA dựng lại (login-otp,
+   logout-confirm, select-authenticator, terms, …) vẫn nhận được khuôn ngoài của
+   ta: thanh đầu trang, bảng tên, khối "gọi ai", chân trang. Đã kiểm thật bằng
+   `logout-confirm.ftl`: nó hiện ra có giao diện dù ta không đụng vào nó.
+
+   Nhưng RUỘT của chúng là thẻ trần — `<input class="">`, `<input type="submit">`
+   không lớp nào — nên chúng rơi về kích thước mặc định của trình duyệt: chữ
+   ~13px và nút cao ~21px. Đó là vi phạm sàn 16px / 44×44 của 00 §2.2, trên
+   những trang mà không ai nhìn tới.
+
+   Khối dưới đây là lưới an toàn: mọi điều khiển NẰM TRONG THẺ mà không mang lớp
+   `gp-*` đều bị kéo lên sàn. Nó KHÔNG thay việc dựng lại trang cho tử tế — bố
+   cục vẫn xấu — nhưng nó bảo đảm không có trang nào tụt xuống dưới sàn.
+
+   `:not([class*="gp-"])` để các thành phần ta đã dựng không bị ghi đè hai lần.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Khối này CỐ Ý loại trừ `submit`/`button`: nếu để chúng lọt vào đây thì khối
+   nút bên dưới thua về độ ưu tiên (bốn `:not()` cộng lại nặng hơn), và nút rơi
+   về 44 thay vì 52. Đã đo thật trên trang `logout-confirm`. */
+.gp-the input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([class*="gp-"]),
+.gp-the select:not([class*="gp-"]),
+.gp-the textarea:not([class*="gp-"]) {
+  min-height: var(--gp-cham);
+  font-family: inherit;
+  font-size: 17px;
+  color: var(--color-text-main);
+}
+
+.gp-the input[type="submit"]:not([class*="gp-"]),
+.gp-the input[type="button"]:not([class*="gp-"]),
+.gp-the button:not([class*="gp-"]) {
+  min-height: var(--gp-cao-o);
+  padding: 8px 20px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--gp-ban-kinh);
+  /* `font-family`/`font-size` KHÔNG kế thừa vào <button>/<input> — trình duyệt
+     đặt riêng (~13,3px, bộ chữ hệ thống). Thiếu hai dòng này thì nút cao đúng
+     52 nhưng chữ trong nó vẫn 13px, tức vẫn dưới sàn. Đã đo thật. */
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gp-the input[type="text"]:not([class*="gp-"]),
+.gp-the input[type="password"]:not([class*="gp-"]),
+.gp-the input[type="email"]:not([class*="gp-"]),
+.gp-the input[type="tel"]:not([class*="gp-"]),
+.gp-the input[type="number"]:not([class*="gp-"]),
+.gp-the select:not([class*="gp-"]) {
+  width: 100%;
+  padding: 0 14px;
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border-input);
+  border-radius: var(--gp-ban-kinh);
+}
+
+.gp-the label:not([class*="gp-"]) {
+  display: inline-block;
+  min-height: var(--gp-cham);
+  font-size: 16px;
+  line-height: var(--gp-cham);
+}
+
+.gp-the a:not([class*="gp-"]) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--gp-cham);
+  font-size: 16px;
+  color: var(--color-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GIẢM CHUYỂN ĐỘNG — danh mục kiểm §11 #12
+
+   Màn đăng nhập là chỗ hay bị thêm hiệu ứng RUNG khi sai mật khẩu nhất. Tệp này
+   không có @keyframes nào, và khối dưới đây là hàng rào để nó không lẻn vào sau.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TƯƠNG PHẢN CAO — người dùng Windows bật "Chế độ tương phản"
+
+   `forced-colors` thay toàn bộ bảng màu bằng bảng của hệ điều hành. Viền vẽ bằng
+   `background` sẽ biến mất; nút tô nền mất luôn hình dạng. Khai lại bằng từ khoá
+   hệ thống để nút vẫn còn viền.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (forced-colors: active) {
+  .gp-nut,
+  .gp-o,
+  .gp-hien {
+    border: 2px solid ButtonBorder;
+  }
+
+  .gp-vach::before,
+  .gp-vach::after {
+    background: CanvasText;
+  }
+}

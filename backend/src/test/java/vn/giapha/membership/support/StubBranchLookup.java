@@ -19,6 +19,7 @@ public final class StubBranchLookup implements BranchLookupPort {
     private final Map<UUID, BranchPath> branchPaths = new LinkedHashMap<>();
     private final Map<UUID, UUID> personBranches = new LinkedHashMap<>();
     private final Map<UUID, Boolean> deleted = new LinkedHashMap<>();
+    private final Map<UUID, Long> personVersions = new LinkedHashMap<>();
 
     /** Khai báo một chi/ngành với đường dẫn {@code ltree} của nó. */
     public UUID branch(UUID branchId, String ltreePath) {
@@ -27,10 +28,21 @@ public final class StubBranchLookup implements BranchLookupPort {
         return branchId;
     }
 
-    /** Gắn một nhân khẩu vào chi chính của người ấy. */
+    /** Gắn một nhân khẩu vào chi chính của người ấy. Phiên bản khởi điểm là 0. */
     public UUID person(UUID personId, UUID branchId) {
         personBranches.put(personId, branchId);
+        personVersions.put(personId, 0L);
         return personId;
+    }
+
+    /**
+     * Đặt {@code person.version} — mô phỏng "có người khác vừa sửa hồ sơ này".
+     *
+     * <p>Đây là điều kiện của ca ghi đè mù: đề nghị đóng dấu phiên bản {@code n} lúc gửi, hồ sơ
+     * nhích lên {@code n+1} trong lúc chờ, và lúc duyệt phải bị chặn chứ không âm thầm đè.</p>
+     */
+    public void personVersion(UUID personId, long version) {
+        personVersions.put(personId, version);
     }
 
     /** Xoá mềm một chi — path không còn phân giải được. */
@@ -57,6 +69,11 @@ public final class StubBranchLookup implements BranchLookupPort {
             return Optional.empty();
         }
         return Optional.ofNullable(personBranches.get(personId));
+    }
+
+    @Override
+    public Optional<Long> versionOfPerson(UUID personId) {
+        return personId == null ? Optional.empty() : Optional.ofNullable(personVersions.get(personId));
     }
 
     @Override

@@ -74,13 +74,32 @@ public class AppUserProvisioningService {
             return Optional.empty();
         }
         CurrentUser user = caller.get();
-        Optional<AppUser> existing = appUsers.byKeycloakSub(user.keycloakSub());
+        return Optional.of(ensureFor(user.keycloakSub(), user.email(), user.username()));
+    }
+
+    /**
+     * Tài khoản ứng với một {@code keycloak_sub} <b>bất kỳ</b>, tạo mới nếu chưa có.
+     *
+     * <h2>Vì sao lối này tồn tại bên cạnh {@link #ensureCurrentUser()}</h2>
+     * Luồng mời lập tài khoản Keycloak cho người <i>chưa đăng nhập bao giờ</i>. Lúc ấy không có
+     * {@code SecurityContext} nào để đọc, nhưng {@code sub} thì đã có — nó vừa được Keycloak trả về
+     * ở header {@code Location}. Không có phương thức này thì {@code InvitationLinker} buộc phải
+     * chép lại toàn bộ luật tự khởi tạo (kể cả cách xử lý đua tranh), và hai bản chép sẽ lệch nhau.
+     *
+     * <p><b>Đây KHÔNG phải một phép kiểm quyền.</b> Nó chỉ dựng dòng {@code app_user} ở trạng thái
+     * {@link AppUserStatus#PENDING} — chưa gắn nhân khẩu nên chưa thấy được gì ngoài dữ liệu công
+     * khai. Việc quyết định tài khoản này được ghép vào ai là của nơi gọi, và nơi gọi phải có bằng
+     * chứng riêng (một mã mời còn hiệu lực, hoặc quyền toàn dòng họ).</p>
+     */
+    @Transactional
+    public AppUser ensureFor(String keycloakSub, String email, String displayName) {
+        Optional<AppUser> existing = appUsers.byKeycloakSub(keycloakSub);
         if (existing.isPresent()) {
             AppUser account = existing.get();
-            account.refreshProfile(user.email(), user.username(), Instant.now());
-            return Optional.of(appUsers.save(account));
+            account.refreshProfile(email, displayName, Instant.now());
+            return appUsers.save(account);
         }
-        return Optional.of(create(user));
+        return create(keycloakSub, email, displayName);
     }
 
     /** Trạng thái tài khoản hiện tại; ném 403 nếu chưa khởi tạo được. */
@@ -99,6 +118,17 @@ public class AppUserProvisioningService {
      * <p>Đây là thao tác nhạy cảm nhất của context: ghép sai là trao cho một người quyền xem Tầng 3
      * của người khác dưới danh nghĩa "hồ sơ của mình". Vì vậy nó không bao giờ được suy ra tự động
      * từ trùng tên hay trùng ngày sinh.</p>
+     *
+     * <h2>Vì sao đường này VẪN đòi quyền toàn dòng họ, trong khi luồng mời thì không</h2>
+     * {@code InvitationService.issue} cho Trưởng chi phát lời mời trong phạm vi chi mình. Hai chỗ
+     * <b>cố ý</b> khác nhau vì mức rủi ro khác nhau: ghép thẳng ở đây là thao tác <b>một phía</b> —
+     * không ai hỏi người bị ghép, không ai xác nhận. Ghép qua lời mời thì người ở đầu kia phải bấm
+     * "Đúng là tôi", và có một nút "Không phải tôi" để nói ngược lại. Trưởng chi được nới quyền ở
+     * lối có con người xác nhận, không phải ở lối im lặng.
+     *
+     * <p>Trước khi nới {@code requireClanWide} ở đây thành {@code requireWriteAccess}: hãy hỏi vì
+     * sao Trưởng chi cần ghép mà không mời. Nếu câu trả lời là "người ấy không dùng được điện
+     * thoại" thì vấn đề nằm ở kênh chuyển mã, không ở phép kiểm quyền.</p>
      */
     @Transactional
     public AppUser linkToPerson(UUID appUserId, UUID personId) {
@@ -145,21 +175,20 @@ public class AppUserProvisioningService {
         return saved;
     }
 
-    private AppUser create(CurrentUser user) {
-        AppUser fresh = AppUser.register(UUID.randomUUID(), user.keycloakSub(),
-                user.email(), user.username());
-        fresh.refreshProfile(user.email(), user.username(), Instant.now());
+    private AppUser create(String keycloakSub, String email, String displayName) {
+        AppUser fresh = AppUser.register(UUID.randomUUID(), keycloakSub, email, displayName);
+        fresh.refreshProfile(email, displayName, Instant.now());
         try {
             AppUser saved = appUsers.save(fresh);
             audit.record(ENTITY, saved.id().toString(), AuditAction.CREATE,
                     null, snapshot(saved), List.of("keycloakSub", "status"),
                     "Tu khoi tao o lan dang nhap dau tien");
-            log.info("Khoi tao app_user {} cho keycloak_sub {}", saved.id(), user.keycloakSub());
+            log.info("Khoi tao app_user {} cho keycloak_sub {}", saved.id(), keycloakSub);
             return saved;
         } catch (DataIntegrityViolationException ex) {
             // Hai request song song cung tao mot tai khoan: doc lai ban ma luong kia vua ghi.
-            log.debug("Dua tranh khi khoi tao app_user cho sub {}, doc lai", user.keycloakSub());
-            return appUsers.byKeycloakSub(user.keycloakSub()).orElseThrow(() -> ex);
+            log.debug("Dua tranh khi khoi tao app_user cho sub {}, doc lai", keycloakSub);
+            return appUsers.byKeycloakSub(keycloakSub).orElseThrow(() -> ex);
         }
     }
 

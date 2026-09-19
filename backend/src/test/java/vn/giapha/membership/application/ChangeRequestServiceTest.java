@@ -17,6 +17,7 @@ import vn.giapha.membership.domain.AppUser;
 import vn.giapha.membership.domain.ChangeRequestStatus;
 import vn.giapha.membership.domain.ChangeRequestType;
 import vn.giapha.membership.domain.event.ChangeRequestApprovedEvent;
+import vn.giapha.membership.domain.event.CorrectionPayload;
 import vn.giapha.membership.domain.event.ChangeRequestRejectedEvent;
 import vn.giapha.membership.support.ClanFixture;
 import vn.giapha.membership.support.TestSecurity;
@@ -51,11 +52,29 @@ class ChangeRequestServiceTest {
         return user;
     }
 
+    /**
+     * Payload đính chính <b>ngày giỗ</b> — ca dùng thật nhiều nhất của cả luồng.
+     *
+     * <p>Đúng hợp đồng {@link CorrectionPayload}: khoá là tên trường của {@code UpdatePersonRequest}
+     * ({@code death}), giá trị là một {@code DateDual} đầy đủ. Cờ tháng nhuận phải có mặt — bỏ qua
+     * nó thì giỗ lệch nguyên một tháng mà không lỗi nào được ném ra.</p>
+     */
+    private static Map<String, Object> deNghiNgayGio(int nam, int thang, int ngay) {
+        return Map.of("death", Map.of(
+                "lunar", Map.of("year", nam, "month", thang, "day", ngay, "leap", false),
+                "precision", "DAY"));
+    }
+
+    /** Payload hợp lệ tối giản, cho các ca chỉ quan tâm tới phân quyền chứ không tới nội dung. */
+    private static Map<String, Object> deNghiNguyenQuan() {
+        return Map.of("nativePlace", "Bac Ninh");
+    }
+
     private ChangeRequestView guiYeuCauSuaNguoiChiGiap(String sub) {
         thanhVienChiGiap(sub);
         nguoiChiGiap = clan.personIn(clan.chiGiapId);
         return service.submit(new SubmitChangeRequestCommand(ChangeRequestType.UPDATE_PERSON,
-                nguoiChiGiap, null, Map.of("deathLunar", "15/07"), "Ngày giỗ ghi sai"));
+                nguoiChiGiap, null, deNghiNgayGio(1975, 7, 15), "Ngày giỗ ghi sai"));
     }
 
     @Nested
@@ -73,7 +92,7 @@ class ChangeRequestServiceTest {
 
             ChangeRequestView view = service.submit(new SubmitChangeRequestCommand(
                     ChangeRequestType.UPDATE_PERSON, nguoiChiGiap, null,
-                    Map.of("deathLunar", "15/07"), "Ngày giỗ cụ ghi sai một tháng"));
+                    deNghiNgayGio(1975, 7, 15), "Ngày giỗ cụ ghi sai một tháng"));
 
             assertThat(view.status()).isEqualTo("PENDING");
             assertThat(view.targetBranchId()).isEqualTo(clan.chiGiapId);
@@ -109,14 +128,14 @@ class ChangeRequestServiceTest {
             thanhVienChiGiap("sub-nguoi-gui");
             nguoiChiGiap = clan.personIn(clan.chiGiapId);
             Map<String, Object> xoaTruong = new java.util.LinkedHashMap<>();
-            xoaTruong.put("deathSolar", null);
+            xoaTruong.put("death", null);
 
             ChangeRequestView yeuCau = service.submit(new SubmitChangeRequestCommand(
                     ChangeRequestType.UPDATE_PERSON, nguoiChiGiap, null, xoaTruong,
                     "Ghi nhầm ngày mất của cụ, xin bỏ"));
 
-            assertThat(yeuCau.payload()).containsEntry("deathSolar", null);
-            assertThat(yeuCau.payloadFields()).containsExactly("deathSolar");
+            assertThat(yeuCau.payload()).containsEntry("death", null);
+            assertThat(yeuCau.payloadFields()).containsExactly("death");
 
             AppUser truongChi = clan.account("sub-truong-chi-giap", clan.chiGiapId);
             clan.branchHeadOf(truongChi, clan.chiGiapId);
@@ -126,7 +145,7 @@ class ChangeRequestServiceTest {
                     .status()).isEqualTo("APPROVED");
             ChangeRequestApprovedEvent event =
                     (ChangeRequestApprovedEvent) clan.publishedEvents.get(0);
-            assertThat(event.payload()).containsEntry("deathSolar", null);
+            assertThat(event.payload()).containsEntry("death", null);
         }
 
         @Test
@@ -188,7 +207,8 @@ class ChangeRequestServiceTest {
             thanhVienChiGiap("sub-nguoi-gui");
             UUID nguoiNganhTruong = clan.personIn(clan.nganhTruongId);
             ChangeRequestView yeuCau = service.submit(new SubmitChangeRequestCommand(
-                    ChangeRequestType.UPDATE_PERSON, nguoiNganhTruong, null, Map.of(), "sửa"));
+                    ChangeRequestType.UPDATE_PERSON, nguoiNganhTruong, null, deNghiNguyenQuan(),
+                    "sửa"));
 
             AppUser truongChiGiap = clan.account("sub-truong-chi-giap", clan.chiGiapId);
             clan.branchHeadOf(truongChiGiap, clan.chiGiapId);
@@ -247,7 +267,11 @@ class ChangeRequestServiceTest {
             TestSecurity.loginAs("sub-nguoi-gui", "MEMBER");
             UUID nguoiKhongChi = clan.personWithoutBranch();
             ChangeRequestView yeuCau = service.submit(new SubmitChangeRequestCommand(
-                    ChangeRequestType.UPDATE_PERSON, nguoiKhongChi, null, Map.of(), "sửa"));
+                    ChangeRequestType.UPDATE_PERSON, nguoiKhongChi, null,
+                    // Nhan khau chua duoc gan chi nen backend khong doc noi person.version;
+                    // nguoi gui phai tu kem moc phien ban lay tu ETag.
+                    Map.of("nativePlace", "Bac Ninh", CorrectionPayload.BASE_VERSION_KEY, 0),
+                    "sửa"));
             assertThat(yeuCau.targetBranchId()).isNull();
 
             AppUser truongChiGiap = clan.account("sub-truong-chi-giap", clan.chiGiapId);
@@ -339,7 +363,7 @@ class ChangeRequestServiceTest {
             TestSecurity.loginAs("sub-truong-chi-giap", "BRANCH_HEAD");
             UUID nguoi = clan.personIn(clan.chiGiapId);
             ChangeRequestView yeuCau = service.submit(new SubmitChangeRequestCommand(
-                    ChangeRequestType.UPDATE_PERSON, nguoi, null, Map.of(), "sửa"));
+                    ChangeRequestType.UPDATE_PERSON, nguoi, null, deNghiNguyenQuan(), "sửa"));
 
             assertThatThrownBy(() -> service.review(
                     new ReviewChangeRequestCommand(yeuCau.id(), true, "tự duyệt")))
@@ -449,7 +473,7 @@ class ChangeRequestServiceTest {
             List<ChangeRequestView> cuaToi = service.mine(0, 20);
 
             assertThat(cuaToi).hasSize(1);
-            assertThat(cuaToi.get(0).payload()).containsKey("deathLunar");
+            assertThat(cuaToi.get(0).payload()).containsKey("death");
         }
     }
 
@@ -461,13 +485,13 @@ class ChangeRequestServiceTest {
         @DisplayName("Người gửi và người có quyền duyệt thấy payload")
         void nguoiDuocPhepThayPayload() {
             ChangeRequestView yeuCau = guiYeuCauSuaNguoiChiGiap("sub-nguoi-gui");
-            assertThat(service.byId(yeuCau.id()).payload()).containsKey("deathLunar");
+            assertThat(service.byId(yeuCau.id()).payload()).containsKey("death");
 
             AppUser truongChi = clan.account("sub-truong-chi-giap", clan.chiGiapId);
             clan.branchHeadOf(truongChi, clan.chiGiapId);
             TestSecurity.loginAs("sub-truong-chi-giap", "BRANCH_HEAD");
 
-            assertThat(service.byId(yeuCau.id()).payload()).containsKey("deathLunar");
+            assertThat(service.byId(yeuCau.id()).payload()).containsKey("death");
         }
 
         @Test
@@ -482,7 +506,7 @@ class ChangeRequestServiceTest {
             ChangeRequestView thay = service.byId(yeuCau.id());
 
             assertThat(thay.payload()).isEmpty();
-            assertThat(thay.payloadFields()).containsExactly("deathLunar");
+            assertThat(thay.payloadFields()).containsExactly("death");
         }
 
         @Test

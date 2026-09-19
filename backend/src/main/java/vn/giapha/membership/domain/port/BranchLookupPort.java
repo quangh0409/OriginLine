@@ -40,4 +40,18 @@ public interface BranchLookupPort {
 
     /** Chi tồn tại và chưa bị xoá mềm. */
     boolean branchExists(UUID branchId);
+
+    /**
+     * {@code person.version} hiện tại — mốc khoá lạc quan mà một đề nghị đính chính dựa trên.
+     *
+     * <p><b>Vì sao membership cần biết con số này.</b> Một đề nghị nằm chờ Trưởng chi cả tuần rồi
+     * mới được áp dụng. Không có mốc phiên bản đóng dấu <i>lúc gửi</i> thì lệnh ghi lúc duyệt là
+     * một cú <b>ghi đè mù</b> lên mọi thay đổi đã xảy ra trong lúc chờ. Xem
+     * {@code CorrectionPayload#BASE_VERSION_KEY}.</p>
+     *
+     * <p>Rỗng khi nhân khẩu không tồn tại. Người gửi vẫn có lối đi: tự gửi kèm
+     * {@code _baseVersion} lấy từ {@code ETag} của lần {@code GET} hồ sơ gần nhất — và đó mới là
+     * giá trị <i>đúng nhất</i>, vì nó là phiên bản họ thật sự nhìn thấy.</p>
+     */
+    Optional<Long> versionOfPerson(UUID personId);
 }

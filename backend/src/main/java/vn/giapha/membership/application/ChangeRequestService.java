@@ -2,6 +2,7 @@ package vn.giapha.membership.application;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import vn.giapha.membership.domain.ChangeRequestStatus;
 import vn.giapha.membership.domain.MemberScope;
 import vn.giapha.membership.domain.event.ChangeRequestApprovedEvent;
 import vn.giapha.membership.domain.event.ChangeRequestRejectedEvent;
+import vn.giapha.membership.domain.event.CorrectionPayload;
 import vn.giapha.membership.domain.port.BranchLookupPort;
 import vn.giapha.membership.domain.port.ChangeRequestRepository;
 import vn.giapha.shared.exception.DomainException;
@@ -78,8 +80,13 @@ public class ChangeRequestService {
      * này.
      *
      * <p>Cố ý như vậy: một người con gái đã lấy chồng xa vẫn phải báo được rằng ngày mất của cụ
-     * ghi sai, dù chi của cụ không phải chi cô ấy đang sinh hoạt. Cửa kiểm là ở bước duyệt, và ở
-     * đó nó chặt.</p>
+     * ghi sai, dù chi của cụ không phải chi cô ấy đang sinh hoạt. Cửa kiểm <i>phạm vi</i> là ở bước
+     * duyệt, và ở đó nó chặt.</p>
+     *
+     * <p><b>Cửa kiểm nội dung thì ngược lại — nó ở ngay đây.</b> Payload phải khớp hợp đồng đóng
+     * {@link CorrectionPayload}. Để đến lúc duyệt mới phát hiện sai khoá nghĩa là người gửi biết
+     * mình gõ nhầm sau <i>một tuần</i>, khi đã quên mình gõ gì; còn Trưởng chi thì nhận một đề nghị
+     * không dùng được và không có cách nào sửa hộ.</p>
      */
     @Transactional
     public ChangeRequestView submit(SubmitChangeRequestCommand command) {
@@ -91,8 +98,10 @@ public class ChangeRequestService {
             targetBranchId = resolveBranchIdOfPerson(command.personId());
         }
 
+        Map<String, Object> payload = validatedPayload(command);
+
         ChangeRequest request = ChangeRequest.submit(UUID.randomUUID(), command.type(),
-                command.personId(), targetBranchId, command.payload(), command.reason(),
+                command.personId(), targetBranchId, payload, command.reason(),
                 caller.appUserId());
         ChangeRequest saved = requests.save(request);
 
@@ -104,7 +113,25 @@ public class ChangeRequestService {
         return ChangeRequestView.from(saved);
     }
 
-    /** Duyệt hoặc từ chối. Kiểm quyền hai chiều nằm trọn trong {@link #requireReviewer}. */
+    /**
+     * Duyệt hoặc từ chối. Kiểm quyền hai chiều nằm trọn trong {@link #requireReviewer}.
+     *
+     * <h2>Duyệt và áp dụng nằm trong CÙNG một transaction</h2>
+     * {@link ChangeRequestApprovedEvent} được phát bằng {@code publishEvent} thường, nên bên nhận
+     * ({@code genealogy.application.ChangeRequestApplier}) chạy <b>đồng bộ, trong ngăn xếp lời gọi
+     * này</b>, tức là trong chính transaction đang mở. Áp dụng hỏng — lệch phiên bản, nhân khẩu đã
+     * bị xoá mềm, trùng kỵ húy — thì ngoại lệ lan ngược lên đây và cả trạng thái {@code APPROVED}
+     * lẫn dòng audit {@code APPROVE} cùng bị rollback. Yêu cầu ở lại {@code PENDING}.
+     *
+     * <p><b>Cái giá:</b> Trưởng chi nhận lỗi thay vì màn hình "đã duyệt", và phải xử lý xung đột.
+     * Đổi lại, hệ thống không bao giờ rơi vào trạng thái mà bộ này sinh ra để chấm dứt: yêu cầu ghi
+     * {@code APPROVED} mà gia phả không hề đổi. Giữa "người duyệt phải bấm lại" và "cuốn gia phả
+     * nói dối", chọn cái thứ nhất.</p>
+     *
+     * <p>Thông báo cho người gửi thì <b>không</b> được nằm trong transaction này — bên
+     * {@code notification} phải nghe bằng {@code @TransactionalEventListener(AFTER_COMMIT)}, nếu
+     * không một cú gửi Zalo hỏng sẽ kéo đổ cả việc duyệt.</p>
+     */
     @Transactional
     public ChangeRequestView review(ReviewChangeRequestCommand command) {
         MemberScope caller = scopes.currentMemberScope();
@@ -272,6 +299,51 @@ public class ChangeRequestService {
             return branches.branchOfPerson(request.personId()).orElse(null);
         }
         return null;
+    }
+
+    /**
+     * Kiểm hợp đồng payload rồi <b>đóng dấu mốc phiên bản</b>.
+     *
+     * <p>Hai bước, theo đúng thứ tự:</p>
+     * <ol>
+     *   <li>{@link CorrectionPayload#violations} soi khoá và kiểu giá trị. Ở bước này
+     *       {@code _baseVersion} chưa bắt buộc — client cũ chưa gửi nó, và backend còn kịp tự đóng
+     *       dấu.</li>
+     *   <li>Thiếu {@code _baseVersion} thì đọc {@code person.version} <b>ngay lúc này</b> và ghi
+     *       vào payload. Mốc chụp lúc gửi vẫn chặn được ghi đè mù: mọi thay đổi xảy ra trong lúc
+     *       chờ duyệt đều làm {@code version} nhích lên và đề nghị sẽ bị từ chối áp dụng.</li>
+     * </ol>
+     *
+     * <p>Giá trị do client gửi <b>luôn thắng</b> giá trị backend tự đọc: nó là phiên bản người dùng
+     * thật sự nhìn thấy trên màn hình, còn con số backend đọc chỉ là xấp xỉ.</p>
+     *
+     * <p>Không đọc được {@code person.version} (nhân khẩu không tồn tại) mà client cũng không gửi
+     * thì <b>từ chối</b>. Bỏ trống mốc phiên bản là mở lại đúng lỗ hổng ghi đè mù.</p>
+     */
+    private Map<String, Object> validatedPayload(SubmitChangeRequestCommand command) {
+        String type = command.type().name();
+        Map<String, Object> payload = command.payload();
+
+        List<String> problems = CorrectionPayload.violations(type, payload, false);
+        if (!problems.isEmpty()) {
+            throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
+                    "Noi dung de nghi dinh chinh khong hop le: " + String.join("; ", problems));
+        }
+        if (!CorrectionPayload.isApplicable(type)
+                || CorrectionPayload.baseVersion(payload) != null) {
+            return payload;
+        }
+
+        Long current = branches.versionOfPerson(command.personId()).orElse(null);
+        if (current == null) {
+            throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
+                    "Khong doc duoc phien ban hien tai cua nhan khau " + command.personId()
+                            + "; hay gui kem " + CorrectionPayload.BASE_VERSION_KEY
+                            + " lay tu ETag cua lan GET ho so gan nhat");
+        }
+        log.debug("Dong dau {}={} cho de nghi tren nhan khau {}",
+                CorrectionPayload.BASE_VERSION_KEY, current, command.personId());
+        return CorrectionPayload.withBaseVersion(payload, current);
     }
 
     /**

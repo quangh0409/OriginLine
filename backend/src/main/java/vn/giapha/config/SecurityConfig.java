@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
+import vn.giapha.shared.api.SecurityProblemSupport;
 
 /**
  * Backend là <b>resource server</b> thuần: chỉ xác thực JWT do Keycloak (realm {@code giapha}) cấp,
@@ -36,6 +37,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
  * dữ liệu nhân khẩu nào, và frontend cùng bộ kiểm thử hợp đồng đang dựa vào. Nếu về sau muốn đóng
  * trên môi trường thật thì đóng bằng cấu hình {@code springdoc.api-docs.enabled}, đừng đóng bằng
  * một luật ở đây rồi quên mất trên môi trường dev.</p>
+ *
+ * <h2>401/403 của chuỗi lọc cũng phải là RFC 7807</h2>
+ * {@code exceptionHandling} cắm {@link SecurityProblemSupport} vào cả hai điểm thoát. Không có nó,
+ * {@code ExceptionTranslationFilter} tự trả lời ngay trong chuỗi lọc và {@code DispatcherServlet} không
+ * bao giờ được gọi, nên {@code GlobalExceptionHandler} — dù có sẵn nhánh
+ * {@code AuthenticationException} — không có cơ hội chạy.
  *
  * <p><b>Bẫy khởi động:</b> nếu chỉ khai báo {@code issuer-uri}, Spring Boot sẽ gọi endpoint
  * discovery của Keycloak <i>ngay lúc tạo bean</i> — Keycloak chưa chạy là backend chết ngay khi
@@ -87,9 +94,16 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http,
-            @Qualifier("corsConfigurationSource") CorsConfigurationSource corsSource)
+            @Qualifier("corsConfigurationSource") CorsConfigurationSource corsSource,
+            SecurityProblemSupport problems)
             throws Exception {
         http
+                // 401/403 phát sinh TRONG chuỗi lọc không đi qua @RestControllerAdvice — xem
+                // SecurityProblemSupport. Thiếu hai dòng này thì thân phản hồi rỗng và client
+                // rẽ nhánh theo `code` đọc ra "UNKNOWN".
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(problems)
+                        .accessDeniedHandler(problems))
                 // API stateless dùng Bearer token -> CSRF token không có tác dụng bảo vệ gì thêm.
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsSource))
@@ -104,12 +118,43 @@ public class SecurityConfig {
                         // Cổng thông tin công khai: CHỈ dữ liệu người đã khuất mới được lộ ở đây.
                         // Bộ lọc phân tầng hiển thị vẫn phải chạy trên mọi phản hồi.
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
+                        // LUỒNG MỜI — hai đường duy nhất mở cho người CHƯA có tài khoản.
+                        // Thẩm quyền ở đây là VIỆC SỞ HỮU MÃ, không phải một vai trong token:
+                        // người bấm chính là người chưa đăng nhập được, nên đòi token là đóng
+                        // luôn cửa duy nhất đưa người thứ tư vào hệ thống.
+                        // /lookup trả về TÊN MỘT NGƯỜI CÒN SỐNG — ngoại lệ có chủ ý của BA v2 §10,
+                        // đổi lại bằng mã dùng một lần + hạn ngắn + giới hạn tần suất trong
+                        // InviteThrottle. Liệt kê tường minh từng đường, KHÔNG dùng
+                        // "/api/v1/invitations/**": mẫu bao trùm ấy sẽ mở luôn cả lệnh phát mã.
+                        //
+                        // /accept VÀ /set-password cũng nằm ở đây, và đó là điểm gỡ chỗ đứt cuối
+                        // cùng của luồng: /accept từng đòi token, nên người được mời phải ĐÃ CÓ
+                        // tài khoản mới nhận được lời mời — trong khi realm đặt
+                        // registrationAllowed: false và không ai lập được tài khoản ấy cho họ. Nay
+                        // /accept tự lập tài khoản Keycloak rồi trả về một liên kết một lần, và
+                        // /set-password là nơi liên kết ấy được tiêu. Cả hai đều KHÔNG thể đòi
+                        // token: người bấm chính là người chưa có mật khẩu để đăng nhập.
+                        //
+                        // Thẩm quyền của bốn đường này là VIỆC SỞ HỮU BÍ MẬT — mã mời (50 bit,
+                        // một lần, có hạn, có giới hạn tần suất) hoặc token của liên kết đặt mật
+                        // khẩu (ký HMAC, hạn nửa giờ, chết ngay khi mật khẩu được đặt).
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/invitations/lookup",
+                                "/api/v1/invitations/accept",
+                                "/api/v1/invitations/set-password",
+                                "/api/v1/invitations/decline").permitAll()
                         // Quản trị tài khoản & phân quyền: chặn thô ở đây, nhưng phép kiểm THẬT
                         // (vai x phạm vi ltree) nằm ở BranchScopeGuard của context membership.
                         .requestMatchers("/api/v1/branch-assignments/**").hasAnyRole(ROLE_ADMIN, ROLE_COUNCIL)
                         .requestMatchers("/api/v1/audit-logs/**").hasAnyRole(ROLE_ADMIN, ROLE_COUNCIL)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
+                        // Cắm LẠI ở đây, không thừa: BearerTokenAuthenticationFilter giữ entry
+                        // point RIÊNG cho ca "có token nhưng token hỏng/hết hạn" và không hỏi tới
+                        // exceptionHandling ở trên. Thiếu dòng này thì phiên hết hạn — ca thường
+                        // gặp nhất của một PWA để mở qua đêm — vẫn nhận thân rỗng.
+                        .authenticationEntryPoint(problems)
+                        .accessDeniedHandler(problems)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();
     }

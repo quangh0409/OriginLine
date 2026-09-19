@@ -8,7 +8,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import vn.giapha.audit.application.AuditTrailService;
 import vn.giapha.audit.support.InMemoryAuditLog;
 import vn.giapha.audit.support.SimpleObjectProvider;
+import vn.giapha.membership.application.AppUserProvisioningService;
 import vn.giapha.membership.application.BranchScopeGuard;
+import vn.giapha.membership.application.InvitationLinker;
+import vn.giapha.membership.application.InvitationService;
+import vn.giapha.membership.application.InviteThrottle;
 import vn.giapha.membership.application.MemberScopeService;
 import vn.giapha.membership.domain.AppUser;
 import vn.giapha.membership.domain.BranchAssignment;
@@ -131,5 +135,40 @@ public final class ClanFixture {
         return assignments.seed(new BranchAssignment(UUID.randomUUID(), user.id(),
                 RoleCode.BRANCH_HEAD, branchId, branches.pathOfBranch(branchId).orElseThrow(),
                 today.minusYears(3), today.minusDays(1), null, "Nhiem ky da man"));
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Luồng mời
+    // -------------------------------------------------------------------------------------
+
+    public final InMemoryInvitationRepository invitations = new InMemoryInvitationRepository(branches);
+    public final StubInviteeLookup invitees = new StubInviteeLookup(branches);
+    public final InMemoryInviteThrottlePort attempts = new InMemoryInviteThrottlePort();
+
+    /** Realm Keycloak giả — nơi tài khoản đăng nhập của người được mời được lập. */
+    public final FakeIdentityProvider identityProvider = new FakeIdentityProvider();
+
+    /**
+     * {@code InvitationService} thật, nối vào kho dữ liệu giả.
+     *
+     * <p>{@code MemberScopeService}, {@code BranchScopeGuard}, {@code AppUserProvisioningService}
+     * và {@code InviteThrottle} đều là lớp production — test vì thế bắt được lỗi ở chính luật phân
+     * quyền và luật đếm, không phải ở một bản mô phỏng luật.</p>
+     *
+     * @param maxFailures ngưỡng giới hạn tần suất; đặt thấp để ca "dò mã" chạy nhanh
+     */
+    public InvitationService invitationService(int maxFailures) {
+        AppUserProvisioningService provisioning =
+                new AppUserProvisioningService(appUsers, guard, scopes, auditTrail);
+        InvitationLinker linker =
+                new InvitationLinker(invitations, appUsers, provisioning, auditTrail);
+        InviteThrottle throttle = new InviteThrottle(attempts, maxFailures, 60L);
+        return new InvitationService(invitations, appUsers, invitees, branches, scopes, guard,
+                linker, identityProvider, throttle, auditTrail, 7);
+    }
+
+    /** Ngưỡng rộng rãi — dùng cho mọi ca không nhắm vào giới hạn tần suất. */
+    public InvitationService invitationService() {
+        return invitationService(1000);
     }
 }

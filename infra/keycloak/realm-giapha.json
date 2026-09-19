@@ -1,6 +1,6 @@
 {
   "realm": "giapha",
-  "displayName": "Gia Pha Dong Ho",
+  "displayName": "Gia Phả Dòng Họ",
   "displayNameHtml": "<b>Gia Ph&#7843; D&#242;ng H&#7885;</b>",
   "enabled": true,
   "sslRequired": "none",
@@ -10,7 +10,7 @@
   "verifyEmail": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
-  "resetPasswordAllowed": true,
+  "resetPasswordAllowed": false,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "permanentLockout": false,
@@ -22,8 +22,9 @@
     "en"
   ],
   "defaultLocale": "vi",
+  "loginTheme": "giapha",
   "accessTokenLifespan": 900,
-  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionIdleTimeout": 7200,
   "ssoSessionMaxLifespan": 36000,
   "offlineSessionIdleTimeout": 2592000,
   "roles": {
@@ -140,6 +141,30 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "giapha-provisioner",
+      "name": "Gia Pha Provisioner (tai khoan dich vu)",
+      "description": "Lap tai khoan Keycloak cho nguoi duoc moi. CHI client_credentials. Quyen toi thieu: realm-management:manage-users — KHONG phai realm-admin. Bi mat that den tu GIAPHA_KEYCLOAK_ADMIN_CLIENT_SECRET; chuoi duoi day chi la cho danh san cho may phat trien.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${env.GIAPHA_KEYCLOAK_ADMIN_CLIENT_SECRET:dev-only-provisioner-secret}",
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "frontchannelLogout": false,
+      "fullScopeAllowed": false,
+      "redirectUris": [],
+      "webOrigins": [],
+      "defaultClientScopes": [
+        "basic",
+        "roles"
+      ],
+      "optionalClientScopes": []
     }
   ],
   "users": [
@@ -204,8 +229,98 @@
         "MEMBER"
       ],
       "id": "a0000000-0000-4000-8000-000000000003"
+    },
+    {
+      "username": "hoidong",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Hoi dong",
+      "email": "hoidong@giapha.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "giapha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-giapha",
+        "COUNCIL",
+        "MEMBER"
+      ],
+      "id": "065d6eb9-91ca-4e38-a461-bca8eea20294"
+    },
+    {
+      "username": "truongchi.at",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Truong chi At",
+      "email": "truongchi.at@giapha.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "giapha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-giapha",
+        "BRANCH_HEAD",
+        "MEMBER"
+      ],
+      "id": "597ef951-28a9-4f7d-bb64-794d4ca704b2"
+    },
+    {
+      "username": "chuaduyet",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Chua duyet",
+      "email": "chuaduyet@giapha.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "giapha123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-giapha",
+        "MEMBER"
+      ],
+      "id": "1155d816-00df-4b58-9a65-12649370b5be"
+    },
+    {
+      "username": "service-account-giapha-provisioner",
+      "enabled": true,
+      "serviceAccountClientId": "giapha-provisioner",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users"
+        ]
+      }
     }
   ],
   "identityProviders": [],
-  "requiredActions": []
+  "requiredActions": [
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Dat lai mat khau",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30,
+      "config": {}
+    }
+  ],
+  "clientScopeMappings": {
+    "realm-management": [
+      {
+        "client": "giapha-provisioner",
+        "roles": [
+          "manage-users"
+        ]
+      }
+    ]
+  },
+  "passwordPolicy": "length(8) and notUsername and notEmail"
 }

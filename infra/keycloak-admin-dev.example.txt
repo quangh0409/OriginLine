@@ -1,0 +1,94 @@
+# =====================================================================================
+# MAU cau hinh TAI KHOAN DICH VU KEYCLOAK cho MAY PHAT TRIEN
+#
+# Day la TEP MAU. No KHONG chua bi mat that va khong duoc phep chua bi mat that.
+# Dong duoi cung chi la cho danh san; ban tu sinh bi mat cua rieng minh va dan vao
+# MOT BAN SAO NAM NGOAI KHO MA (vi du C:\giapha-secrets\keycloak-admin-dev.txt).
+#
+# VI SAO BI MAT THAT KHONG NAM TRONG KHO MA
+#   Bi mat nay mo quyen TAO NGUOI DUNG trong realm `giapha`. Bat cu thu gi da vao lich
+#   su Git thi con mai o do: xoa tep o commit sau KHONG xoa duoc noi dung o commit
+#   truoc, va moi ban clone deu da co. Vi vay bi mat chi vao he thong qua BIEN MOI
+#   TRUONG, do nguoi van hanh dat, mot lan cho moi moi truong.
+#   `KeycloakAdminPropertiesTest` dang canh dieu nay: no lam do bo test neu
+#   application.yml, tep mau nay, hay realm-giapha.json xuat hien mot bi mat that.
+#
+# MOI MOI TRUONG MOT BI MAT RIENG (dev / staging / production).
+#
+# =====================================================================================
+# 1) VI SAO LA MOT CLIENT RIENG, KHONG PHAI `giapha-backend`
+# =====================================================================================
+#   `giapha-backend` la AUDIENCE cua moi token nguoi dung. Gan them quyen quan tri realm
+#   vao dung client ay la gop hai muc rui ro hoan toan khac nhau vao mot bi mat. Vi vay
+#   co client thu ba: `giapha-provisioner`, chi dung cho client_credentials, khong co
+#   browser flow, khong co direct access grant.
+#
+# =====================================================================================
+# 2) QUYEN TOI THIEU — DUNG MOT VAI CLIENT
+# =====================================================================================
+#   realm-management -> manage-users
+#
+#   KHONG PHAI `realm-admin`. Vai ay gop ca manage-realm, manage-clients,
+#   manage-identity-providers va impersonation: mot bi mat ro ra se thanh quyen quan tri
+#   toan realm — doi duoc luong xac thuc, tat duoc kiem mat khau, mao danh duoc bat ky ai.
+#
+#   Cung KHONG can `view-users` rieng: trong Keycloak `canView()` da dung khi nguoi goi
+#   co quyen quan ly, nen `manage-users` tu phu ca tim kiem lan doc credential.
+#
+#   Hep hon `manage-users` thi Keycloak ban thuong khong co. Huong siet tiep theo la
+#   fine-grained admin permissions cua Keycloak — ghi ra day de lan sau khong phai tim lai.
+#
+# =====================================================================================
+# 3) TAO CLIENT TREN MOT REALM DANG CHAY
+# =====================================================================================
+#   Neu realm `giapha` da duoc nhap tu truoc thi `--import-realm` KHONG nhap lai, nen
+#   client moi trong realm-giapha.json se khong tu xuat hien. Tao bang admin CLI:
+#
+#     docker exec giapha-keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+#       --server http://localhost:8081 --realm master --user admin --password admin
+#     docker exec giapha-keycloak /opt/keycloak/bin/kcadm.sh create clients -r giapha \
+#       -s clientId=giapha-provisioner -s enabled=true -s publicClient=false \
+#       -s standardFlowEnabled=false -s directAccessGrantsEnabled=false \
+#       -s serviceAccountsEnabled=true -s fullScopeAllowed=false \
+#       -s secret='<bi mat cua ban>'
+#     docker exec giapha-keycloak /opt/keycloak/bin/kcadm.sh add-roles -r giapha \
+#       --uusername service-account-giapha-provisioner \
+#       --cclientid realm-management --rolename manage-users
+#
+#   Kiem tra vai da gan dung MOT vai:
+#     kcadm.sh get-roles -r giapha --uusername service-account-giapha-provisioner \
+#       --cclientid realm-management
+#
+# =====================================================================================
+# 4) NAP VAO TIEN TRINH BACKEND
+# =====================================================================================
+#   PowerShell (chi hieu luc trong cua so hien tai):
+#     $env:GIAPHA_KEYCLOAK_ADMIN_CLIENT_SECRET = "<dan bi mat>"
+#     cd backend; .\mvnw.cmd spring-boot:run
+#
+#   bash:
+#     export GIAPHA_KEYCLOAK_ADMIN_CLIENT_SECRET="<dan bi mat>"
+#     cd backend && ./mvnw spring-boot:run
+#
+#   Bi mat chi duoc doc MOT LAN luc khoi dong. Dat bien cho mot tien trinh dang chay
+#   khong co tac dung - phai khoi dong lai.
+#
+# =====================================================================================
+# 5) KIEM TRA
+# =====================================================================================
+#   Chua cau hinh: POST /api/v1/invitations/accept KHONG kem token tra
+#   503 IDENTITY_PROVIDER_UNAVAILABLE, va MA MOI VAN CON DUNG DUOC.
+#   Da cau hinh: cung loi goi ay tra 200 kem `setPasswordUrl`.
+#
+# =====================================================================================
+# 6) KHI DOI BI MAT
+# =====================================================================================
+#   Khoa ky cua lien ket dat mat khau duoc DAN XUAT tu chinh bi mat nay
+#   (HMAC(secret, "giapha:set-password-link:v1")). Doi bi mat lam MOI lien ket dat mat
+#   khau dang luu hanh het hieu luc ngay lap tuc. Voi han nua gio thi do la chuyen cua
+#   nua gio; nguoi bi ket chi can xin Truong chi phat lai loi moi.
+#
+# =====================================================================================
+
+GIAPHA_KEYCLOAK_ADMIN_CLIENT_ID=giapha-provisioner
+GIAPHA_KEYCLOAK_ADMIN_CLIENT_SECRET=dan-bi-mat-cua-ban-KHONG-COMMIT

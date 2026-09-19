@@ -61,6 +61,12 @@ public class BranchLookupJdbcAdapter implements BranchLookupPort {
              WHERE p.id = :personId
             """;
 
+    private static final String SQL_PERSON_VERSION = """
+            SELECT p.version
+              FROM person p
+             WHERE p.id = :personId
+            """;
+
     private final NamedParameterJdbcTemplate jdbc;
 
     public BranchLookupJdbcAdapter(NamedParameterJdbcTemplate jdbc) {
@@ -97,6 +103,21 @@ public class BranchLookupJdbcAdapter implements BranchLookupPort {
         }
         return first(jdbc.queryForList(SQL_PERSON_BRANCH_ID,
                 new MapSqlParameterSource("personId", personId), UUID.class));
+    }
+
+    /**
+     * Cố ý <b>không</b> lọc {@code is_deleted}: mốc phiên bản của một nhân khẩu đã xoá mềm vẫn là
+     * dữ liệu thật, và việc từ chối áp dụng lên bản ghi đã xoá là quyết định của
+     * {@code ChangeRequestApplier} bên {@code genealogy} — nơi biết đủ ngữ cảnh để trả đúng mã lỗi.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Long> versionOfPerson(UUID personId) {
+        if (personId == null) {
+            return Optional.empty();
+        }
+        return first(jdbc.queryForList(SQL_PERSON_VERSION,
+                new MapSqlParameterSource("personId", personId), Long.class));
     }
 
     @Override
