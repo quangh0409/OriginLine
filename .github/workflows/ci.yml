@@ -1,0 +1,267 @@
+# ---------------------------------------------------------------------------
+# CI — bốn cổng bắt buộc cho Gia Phả Dòng Họ
+#
+# Vì sao có tệp này: bản dựng production của frontend đã HỎNG nhiều đợt mà
+# không ai biết (thiếu <Suspense> quanh useSearchParams() trong một thành phần
+# nằm trên MỌI trang). 134 ca E2E đều chạy trên `next dev`, nên không lượt nào
+# chạm tới `next build`. Vì thế cổng 3 tồn tại độc lập, dù không ca kiểm nào
+# chạy trên bản dựng ấy.
+#
+# Bốn cổng, chi tiết xem README.md §7:
+#   1. Backend       — mvn test (JDK 21 + Testcontainers trên PostgreSQL+AGE thật)
+#   2. Frontend tĩnh — typecheck + lint + vitest (đối chiếu danh sách đỏ có chủ ý)
+#   3. next build    — cổng riêng, bắt buộc
+#   4. E2E           — Playwright, TÁCH TỪNG TỆP SPEC qua matrix
+# ---------------------------------------------------------------------------
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Đẩy commit mới lên cùng một nhánh thì huỷ lượt cũ — E2E chia 10 việc, để
+# chồng lượt sẽ chiếm hết runner.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # =========================================================================
+  # CỔNG 1 — Backend
+  # =========================================================================
+  backend:
+    name: "Cổng 1 · Backend — mvn test (JDK 21 + PostgreSQL/AGE thật)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # Máy dev chạy ở GMT+7 và miền nghiệp vụ (giỗ, lịch âm, tiết khí) cũng
+      # neo vào GMT+7. Runner mặc định UTC, nên ghim lại cho khớp mốc đã biết.
+      TZ: Asia/Ho_Chi_Minh
+      # Ngưỡng chống "xanh vì chẳng chạy gì". Đặt 1800 vì `mvn test` trên đúng
+      # commit HEAD hiện tại (e34f1ba) chạy 1827 ca — ngưỡng phải nằm DƯỚI mốc
+      # thật của nhánh main, nếu không CI đỏ ngay từ lượt đầu và không ai tin
+      # nó nữa. Phần việc dataimport đang mở đưa con số lên ~2185; khi nhánh đó
+      # vào main, hãy nâng ngưỡng này lên khoảng 2100.
+      BACKEND_MIN_TESTS: "1800"
+    steps:
+      - name: "Lấy mã nguồn"
+        uses: actions/checkout@v4
+
+      - name: "Cài JDK 21 (Temurin) + cache ~/.m2"
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Kéo sẵn image để lượt pull chậm không tính vào timeout khởi động
+      # container của Testcontainers. Tag phải khớp TestcontainersConfiguration
+      # và infra/docker-compose.yml — image postgres:16 thuần KHÔNG dùng được
+      # vì migration V1 có CREATE EXTENSION age.
+      - name: "Kéo sẵn image hạ tầng cho Testcontainers"
+        run: |
+          docker pull apache/age:release_PG16_1.6.0
+          docker pull rabbitmq:4.1-management-alpine
+          docker pull redis:7.4-alpine
+
+      - name: "Chạy toàn bộ test backend"
+        working-directory: backend
+        run: |
+          chmod +x ./mvnw
+          ./mvnw -B -ntp test
+
+      # Bước này mới là phần chống dối. Mọi lớp *IT đều gắn
+      # @EnabledIf(dockerAvailable); runner không thấy Docker thì JUnit bỏ qua
+      # chúng trong im lặng và `mvn test` vẫn trả về 0.
+      - name: "Kiểm chứng bộ test tích hợp thật sự đã chạy"
+        if: always()
+        run: node .github/ci/check-surefire.mjs backend/target/surefire-reports
+
+      - name: "Lưu báo cáo surefire khi cổng đỏ"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # =========================================================================
+  # CỔNG 2 — Frontend kiểm tĩnh
+  # =========================================================================
+  frontend-static:
+    name: "Cổng 2 · Frontend tĩnh — typecheck + lint + vitest"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: "Lấy mã nguồn"
+        uses: actions/checkout@v4
+
+      - name: "Chuẩn bị phụ thuộc frontend"
+        uses: ./.github/actions/frontend-deps
+
+      - name: "Kiểm kiểu — tsc --noEmit"
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: "Lint — next lint"
+        working-directory: frontend
+        run: npm run lint
+
+      # vitest trả mã thoát khác 0 vì các ca đỏ CÓ CHỦ Ý, nên phán quyết của
+      # cổng do check-vitest.mjs đưa ra, không phải mã thoát của vitest. Nếu
+      # vitest sập mà chưa kịp ghi JSON thì `test -f` bên dưới bắt được.
+      - name: "Chạy vitest (ghi báo cáo JSON)"
+        working-directory: frontend
+        run: |
+          set +e
+          npx vitest run --reporter=default --reporter=json --outputFile=../vitest-results.json
+          ma_thoat=$?
+          set -e
+          echo "vitest thoát với mã $ma_thoat"
+          test -f ../vitest-results.json
+
+      - name: "Đối chiếu với danh sách ca đỏ có chủ ý"
+        run: node .github/ci/check-vitest.mjs vitest-results.json .github/ci/vitest-expected-failures.json
+
+      - name: "Lưu báo cáo vitest khi cổng đỏ"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-results
+          path: vitest-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # =========================================================================
+  # CỔNG 3 — next build
+  # =========================================================================
+  frontend-build:
+    name: "Cổng 3 · next build (bản dựng production)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: "Lấy mã nguồn"
+        uses: actions/checkout@v4
+
+      - name: "Chuẩn bị phụ thuộc frontend"
+        uses: ./.github/actions/frontend-deps
+
+      # Không ca kiểm nào chạy trên bản dựng này, và đó là chuyện bình thường.
+      # Cổng này chỉ trả lời đúng một câu: `next build` có qua được không.
+      # Lỗi prerender kiểu thiếu <Suspense> quanh useSearchParams() chỉ lộ ra ở
+      # đây, và thông báo lỗi thường trỏ vào một trang vô can — hãy đọc tên
+      # THÀNH PHẦN trong vết lỗi, đừng đọc tên trang.
+      - name: "next build"
+        working-directory: frontend
+        run: npm run build
+
+      - name: "Lưu vết build khi cổng đỏ"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build-trace
+          path: |
+            frontend/.next/trace
+            frontend/.next/build-manifest.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # =========================================================================
+  # CỔNG 4 — E2E Playwright, tách từng tệp spec
+  # =========================================================================
+  e2e:
+    name: "Cổng 4 · E2E — ${{ matrix.spec }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      # Một spec đỏ không được che kết quả của tám spec còn lại.
+      fail-fast: false
+      matrix:
+        # Chạy cả 134 ca trong MỘT tiến trình thì `next dev` phình tới ~2,9 GB
+        # và hệ điều hành giết lượt chạy. Runner GitHub có ~7 GB nên có thể dư
+        # hơn máy dev — nhưng chia theo tệp thì vừa không phải đặt cược vào
+        # điều đó, vừa chạy song song.
+        #
+        # `e2e/real-auth/` KHÔNG có ở đây: nó cần Keycloak + backend +
+        # PostgreSQL sống và dùng playwright.real.config.ts.
+        spec:
+          - accessibility.spec.ts
+          - data-import.spec.ts
+          - directory-and-sharing.spec.ts
+          - guest-privacy.spec.ts
+          - i18n.spec.ts
+          # Bố cục: "không thẻ con nào rộng hơn thẻ cha", đo trên trình duyệt thật
+          # ở CẢ hai khung (1440px và Pixel 5) và cả hai chế độ màu.
+          - layout-containment.spec.ts
+          - mobile.spec.ts
+          - tree-canvas.spec.ts
+          - tree-legibility.spec.ts
+          - tree-performance.spec.ts
+    steps:
+      - name: "Lấy mã nguồn"
+        uses: actions/checkout@v4
+
+      - name: "Chuẩn bị phụ thuộc frontend"
+        uses: ./.github/actions/frontend-deps
+
+      - name: "Khôi phục cache trình duyệt Playwright"
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: "Cài Chromium cho Playwright"
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      # KHÔNG chạy E2E trên bản dựng production: service worker của PWA giành
+      # mất phạm vi mà MSW cần, và 92/134 ca sẽ đỏ vì không có dữ liệu. Xem
+      # `disable:` của next-pwa trong frontend/next.config.js. webServer trong
+      # playwright.config.ts đã gọi `npm run dev:mock` — đừng đổi.
+      - name: "Playwright — ${{ matrix.spec }}"
+        working-directory: frontend
+        run: npx playwright test "e2e/${{ matrix.spec }}"
+
+      - name: "Lưu báo cáo Playwright khi cổng đỏ"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ matrix.spec }}
+          path: frontend/.playwright-mcp/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # =========================================================================
+  # Tổng kết — một check duy nhất để đặt làm "required" trên nhánh main
+  # =========================================================================
+  tong-ket:
+    name: "Tổng kết — cả bốn cổng phải xanh"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [backend, frontend-static, frontend-build, e2e]
+    steps:
+      - name: "Kết luận"
+        env:
+          KQ_BACKEND: ${{ needs.backend.result }}
+          KQ_FE_TINH: ${{ needs.frontend-static.result }}
+          KQ_FE_BUILD: ${{ needs.frontend-build.result }}
+          KQ_E2E: ${{ needs.e2e.result }}
+        run: |
+          echo "Cổng 1 · Backend        : $KQ_BACKEND"
+          echo "Cổng 2 · Frontend tĩnh  : $KQ_FE_TINH"
+          echo "Cổng 3 · next build     : $KQ_FE_BUILD"
+          echo "Cổng 4 · E2E            : $KQ_E2E"
+          hong=0
+          for kq in "$KQ_BACKEND" "$KQ_FE_TINH" "$KQ_FE_BUILD" "$KQ_E2E"; do
+            if [ "$kq" != "success" ]; then hong=1; fi
+          done
+          if [ "$hong" -ne 0 ]; then
+            echo "Có cổng chưa xanh — xem chi tiết ở job tương ứng."
+            exit 1
+          fi
+          echo "Cả bốn cổng đều xanh."

@@ -1,0 +1,39 @@
+{
+  "ghiChu": [
+    "DANH SÁCH CA ĐỎ CÓ CHỦ Ý của cổng 2 (vitest).",
+    "Bốn ca dưới đây là LỜI NHẮC đang chờ Hội đồng Tộc biểu quyết, không phải nợ kỹ thuật.",
+    "Chúng cố ý còn đỏ để khi Hội đồng quyết xong thì có thứ nhắc người sửa quay lại.",
+    "CI vẫn XANH khi tập ca đỏ khớp CHÍNH XÁC danh sách này — không hơn, không kém.",
+    "Thêm một ca đỏ mới vào đây là một quyết định, không phải một thao tác dọn dẹp:",
+    "phải có người ký vào lý do, và phải có điều kiện gỡ bỏ.",
+    "Khi một mục ở đây xanh trở lại, CI sẽ ĐỎ và bắt xoá mục đó đi — đó là đúng ý đồ.",
+    "Khoá đối chiếu = tệp + tên đầy đủ (describe nối với it, đúng như vitest ghi trong JSON)."
+  ],
+  "soCaToiThieu": 1200,
+  "caDoCoChuY": [
+    {
+      "tep": "frontend/tests/unit/a11y/no-hardcoded-colors.test.ts",
+      "tenDayDu": "bảng màu · không mã màu cứng ngoài tokens.ts không tệp nguồn nào viết thẳng mã màu hex",
+      "lyDo": "Màu huy hiệu Dâu/Rể còn là mã hex cố định. Dâu/rể có được một sắc riêng ngoài bảng màu dòng họ hay không là câu hỏi về NGHĨA, không phải về CSS — đang chờ Hội đồng Tộc biểu quyết. Xem chú thích trong tests/unit/tree/badges.test.ts.",
+      "goBoKhi": "Hội đồng chốt sắc cho Dâu/Rể, BADGE_META chuyển hai màu đó sang biến CSS."
+    },
+    {
+      "tep": "frontend/tests/unit/a11y/no-hardcoded-colors.test.ts",
+      "tenDayDu": "bảng màu · mọi mã màu đang dùng đều truy ngược được về một token phân loại được vi phạm: trùng token (sửa import) hay là màu lạ (cần duyệt)",
+      "lyDo": "Cùng nguyên nhân với mục trên: hai mã hex Dâu/Rể chưa truy ngược được về token nào vì token cho chúng chưa được đặt tên.",
+      "goBoKhi": "Hội đồng chốt sắc cho Dâu/Rể, BADGE_META chuyển hai màu đó sang biến CSS."
+    },
+    {
+      "tep": "frontend/tests/unit/a11y/token-contrast.test.ts",
+      "tenDayDu": "C-2.4 · tương phản bảng màu — chế độ sáng mọi viền và thành phần giao diện đạt 3:1",
+      "lyDo": "Token `accent` (hổ phách #d97706) cho 2,95:1 trên nền trang, dưới ngưỡng 3:1 của WCAG 1.4.11. Đổi sắc hổ phách là đổi bản sắc thị giác của dòng họ nên phải do Hội đồng quyết; phần chữ đã được cứu bằng token tách riêng `accentText`.",
+      "goBoKhi": "Hội đồng chốt sắc hổ phách mới đạt 3:1, hoặc chốt bỏ hẳn cách dùng `accent` làm mảng tô."
+    },
+    {
+      "tep": "frontend/tests/unit/a11y/token-contrast.test.ts",
+      "tenDayDu": "C-2.4 · ngoại lệ cố ý — sắc giấy cũ của người đã khuất ngoại lệ không được nới ra cho bất kỳ cặp nào khác",
+      "lyDo": "Ca này canh cho ngoại lệ nền giấy cũ không bị nới rộng. Nó đang bắt đúng cặp `mảng hổ phách trên nền trang (2.95:1)` của mục trên — cùng một quyết định đang treo, không phải một lỗi thứ hai.",
+      "goBoKhi": "Cùng điều kiện với mục `accent` ở trên."
+    }
+  ]
+}
