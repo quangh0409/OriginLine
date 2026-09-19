@@ -21,7 +21,9 @@ import vn.giapha.genealogy.domain.NameType;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonFixtures;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyConsent;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.genealogy.domain.RelType;
 import vn.giapha.genealogy.domain.port.AuditPort;
 import vn.giapha.shared.exception.DomainException;
@@ -37,6 +39,14 @@ import vn.giapha.shared.vo.Gender;
  * {@code person} cùng sống hoặc cùng biến mất.
  */
 class AddPersonServiceTest {
+
+    /** Mọi nhóm trường mở cho cả họ — mức rộng nhất mà một client có thể xin. */
+    private static final PrivacyConsent CA_HO_XEM_HET = PrivacyConsent.of(java.util.Map.of(
+            PrivacyFieldGroup.OCCUPATION, ShareScope.CLAN,
+            PrivacyFieldGroup.RESIDENCE_PROVINCE, ShareScope.CLAN,
+            PrivacyFieldGroup.RESIDENCE_FULL, ShareScope.CLAN,
+            PrivacyFieldGroup.CONTACT, ShareScope.CLAN,
+            PrivacyFieldGroup.BIRTH_DETAIL_AND_PHOTO, ShareScope.CLAN));
 
     private GenealogyServiceFixture fx;
 
@@ -73,16 +83,18 @@ class AddPersonServiceTest {
     }
 
     @Test
-    @DisplayName("Lệnh tạo phát PersonAddedEvent, kèm hai sự kiện phụ sinh ra lúc dựng aggregate")
+    @DisplayName("Lệnh tạo phát PersonAddedEvent, kèm một sự kiện phụ sinh ra lúc dựng aggregate")
     void lenhTaoPhatSuKienNao() {
         fx.addPerson.add(lenh("Nguyễn Văn Cả", Gender.MALE, fx.chiGiap.id(), List.of()));
 
         assertThat(fx.suKien).extracting(vn.giapha.shared.domain.DomainEvent::eventType)
-                .as("PersonMovedBranchEvent va PersonUpdatedEvent la SAN PHAM PHU cua viec dung "
-                        + "aggregate (moveToBranch + choosePrivacyLevel) chu khong phai mot lan "
-                        + "chuyen chi hay mot lan sua ho so that. Consumer nhac gio/thong bao phai "
-                        + "idempotent va khong duoc coi chung la thao tac cua nguoi dung.")
-                .containsExactly("PersonAddedEvent", "PersonMovedBranchEvent", "PersonUpdatedEvent");
+                .as("PersonMovedBranchEvent la SAN PHAM PHU cua viec dung aggregate (moveToBranch) "
+                        + "chu khong phai mot lan chuyen chi that. Consumer nhac gio/thong bao phai "
+                        + "idempotent va khong duoc coi no la thao tac cua nguoi dung. "
+                        + "PersonUpdatedEvent KHONG con xuat hien: choosePrivacyConsent() bo qua khi "
+                        + "ban dong thuan khong doi, ma nhan khau moi von da kin hoan toan — "
+                        + "khong co thay doi nao de bao.")
+                .containsExactly("PersonAddedEvent", "PersonMovedBranchEvent");
     }
 
     @Test
@@ -216,25 +228,27 @@ class AddPersonServiceTest {
         assertThat(fx.audit.cuoiCung().note())
                 .as("ghi de canh bao ky huy phai de lai dau vet trong audit_log")
                 .contains("chép từ gia phả giấy 1998")
-                .contains("Ghi de canh bao ky huy")
-                .contains("Nguyễn Văn Tuân");
+                .contains("Ghi de canh bao ky huy");
+        assertThat(fx.audit.cuoiCung().note())
+                .as("dau vet ay mang KHOA chu khong mang ten doc tu pha — xem TabooNameChecker")
+                .doesNotContain("Nguyễn Văn Tuân");
     }
 
     @Test
-    @DisplayName("Trẻ vị thành niên bị ép RESTRICTED bất kể client gửi mức nào")
-    void treViThanhNienBiEpRestricted() {
+    @DisplayName("Trẻ vị thành niên bị ép kín hoàn toàn bất kể client gửi mức nào")
+    void treViThanhNienBiEpKinHoanToan() {
         AddPersonCommand cmd = new AddPersonCommand(
                 List.of(PersonName.of(NameType.THUONG_GOI, "Nguyễn Văn Bé", true)),
                 Gender.MALE, true, PersonFixtures.sinhNam(Year.now().getValue() - 8), null,
                 null, null, null, null, null, fx.chiGiap.id(), null, null,
-                PrivacyLevel.CLAN_OPT_IN, List.of(), false, false, null);
+                CA_HO_XEM_HET, List.of(), false, false, null);
 
         PersonView view = fx.addPerson.add(cmd);
 
         Person daLuu = fx.persons.byId(vn.giapha.shared.vo.PersonId.of(view.id())).orElseThrow();
-        assertThat(daLuu.privacyLevel())
+        assertThat(daLuu.privacyConsent().isAllPrivate())
                 .as("mot dua tre khong tu quyet duoc, va nguoi nhap lieu cung khong quyet thay duoc")
-                .isEqualTo(PrivacyLevel.RESTRICTED);
+                .isTrue();
     }
 
     @Test
@@ -244,12 +258,12 @@ class AddPersonServiceTest {
                 List.of(PersonName.of(NameType.THUONG_GOI, "Nguyễn Văn Lớn", true)),
                 Gender.MALE, true, PersonFixtures.sinhNam(1980), null,
                 null, null, null, null, null, fx.chiGiap.id(), null, null,
-                PrivacyLevel.CLAN_OPT_IN, List.of(), false, false, null);
+                CA_HO_XEM_HET, List.of(), false, false, null);
 
         PersonView view = fx.addPerson.add(cmd);
 
         Person daLuu = fx.persons.byId(vn.giapha.shared.vo.PersonId.of(view.id())).orElseThrow();
-        assertThat(daLuu.privacyLevel()).isEqualTo(PrivacyLevel.CLAN_OPT_IN);
+        assertThat(daLuu.privacyConsent()).isEqualTo(CA_HO_XEM_HET);
     }
 
     @Test

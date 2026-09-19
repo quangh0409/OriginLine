@@ -53,8 +53,14 @@ public class TabooNameChecker {
         if (!confirmed) {
             throw new TabooNameConflictException(conflicts);
         }
+        // Ghi bang KHOA, khong bang gia tri doc tu pha — cung ly do nhu DuplicatePersonChecker.
+        //
+        // `tabooName` KHONG phai o nguoi dung vua go: no la `person_name.full_name` cua ho so
+        // trong pha, nen khi khop o muc bo dau no phat ra ban CO DAU nguoi goi chua tung biet.
+        // Va phep do ky huy chon bac tren theo DOI THU, khong theo song/mat va khong theo chi,
+        // nen "bac tren" hoan toan co the la mot ong bac con song o chi khac.
         String summary = conflicts.stream()
-                .map(c -> c.tabooName() + " (" + c.ancestorPersonId() + ")")
+                .map(c -> String.valueOf(c.ancestorPersonId()))
                 .collect(Collectors.joining("; "));
         log.info("Ghi de canh bao ky huy cho {} va cham, da co xac nhan cua nguoi dung", conflicts.size());
         return "Ghi de canh bao ky huy: " + summary;

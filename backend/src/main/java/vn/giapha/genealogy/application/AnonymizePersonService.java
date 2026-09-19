@@ -91,7 +91,7 @@ public class AnonymizePersonService {
         audit.record("Person", personId.toString(), AuditPort.Action.ANONYMIZE, before,
                 person.auditSnapshot(),
                 List.of("contact", "currentPlaceFull", "currentPlaceProvince", "occupation",
-                        "biography", "avatarKey", "attributes", "birth", "names", "privacyLevel"),
+                        "biography", "avatarKey", "attributes", "birth", "names", "privacyConsent"),
                 reason);
         events.publishAndClear(daSua);
         treeCache.evictAll();

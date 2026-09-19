@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import vn.giapha.genealogy.domain.PrivacyLevel;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -21,6 +20,8 @@ import vn.giapha.shared.vo.Gender;
  *        khẩu; để trống thì nhân khẩu tồn tại nhưng chưa nằm trong cây và chưa hiện trên phả đồ
  * @param confirmTabooOverride cờ xác nhận <b>kỵ húy</b>. Giao diện không được mặc định {@code true}
  *        cho tiện: mất cảnh báo là mất luôn giá trị của FR-1.6.
+ * @param privacy bản đồng thuận riêng tư theo <b>từng nhóm trường</b>. Nhóm vắng mặt (hoặc cả
+ *        khối vắng mặt) ⇒ {@code PRIVATE}: mặc định là KÍN, hệ thống không tự mở hộ ai.
  * @param note ghi chú nguồn dữ liệu, ví dụ "chép từ gia phả giấy 1998, trang 12"
  */
 public record CreatePersonRequest(@NotEmpty @Valid List<PersonNameInput> names,
@@ -36,7 +37,7 @@ public record CreatePersonRequest(@NotEmpty @Valid List<PersonNameInput> names,
                                   UUID primaryBranchId,
                                   ContactInfoDto contact,
                                   Map<String, Object> attributes,
-                                  PrivacyLevel privacyLevel,
+                                  PrivacySettingsDto privacy,
                                   @Valid List<RelationshipLinkInput> initialRelationships,
                                   Boolean confirmTabooOverride,
                                   Boolean confirmDuplicateOverride,

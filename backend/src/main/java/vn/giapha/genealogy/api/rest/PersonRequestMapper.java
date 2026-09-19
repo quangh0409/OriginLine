@@ -1,6 +1,7 @@
 package vn.giapha.genealogy.api.rest;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +10,7 @@ import vn.giapha.genealogy.api.rest.dto.ContactInfoDto;
 import vn.giapha.genealogy.api.rest.dto.CreatePersonRequest;
 import vn.giapha.genealogy.api.rest.dto.DateDualDto;
 import vn.giapha.genealogy.api.rest.dto.PersonNameInput;
+import vn.giapha.genealogy.api.rest.dto.PrivacySettingsDto;
 import vn.giapha.genealogy.api.rest.dto.RelationshipLinkInput;
 import vn.giapha.genealogy.api.rest.dto.UpdatePersonRequest;
 import vn.giapha.genealogy.application.GenealogyProblemCodes;
@@ -20,6 +22,9 @@ import vn.giapha.genealogy.domain.DatePrecision;
 import vn.giapha.genealogy.domain.FieldChange;
 import vn.giapha.genealogy.domain.LifeDate;
 import vn.giapha.genealogy.domain.PersonName;
+import vn.giapha.genealogy.domain.PrivacyConsent;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.shared.exception.DomainException;
 import vn.giapha.shared.vo.LunarDate;
 
@@ -55,7 +60,7 @@ public final class PersonRequestMapper {
                 request.primaryBranchId(),
                 toContact(request.contact()),
                 request.attributes(),
-                request.privacyLevel(),
+                toConsent(request.privacy()),
                 toLinks(request.initialRelationships()),
                 Boolean.TRUE.equals(request.confirmTabooOverride()),
                 Boolean.TRUE.equals(request.confirmDuplicateOverride()),
@@ -90,9 +95,57 @@ public final class PersonRequestMapper {
                 contactChange(present, cleared, request.contact()),
                 PersonRequestMapper.<Map<String, Object>>change(present, cleared, "attributes",
                         request.attributes()),
-                change(present, cleared, "privacyLevel", request.privacyLevel()),
+                privacyChange(present, cleared, request.privacy()),
                 Boolean.TRUE.equals(request.confirmTabooOverride()),
                 request.note());
+    }
+
+    /**
+     * Bản đồng thuận <b>đầy đủ</b> cho {@code POST}: nhóm vắng mặt ⇒ {@code PRIVATE}.
+     *
+     * <p>Mặc định là KÍN. Không có nhánh nào ở đây suy ra một mức mở từ sự im lặng của client —
+     * thêm một nhánh như vậy là mở dữ liệu mà chủ thể chưa từng đồng ý.</p>
+     */
+    static PrivacyConsent toConsent(PrivacySettingsDto dto) {
+        return PrivacyConsent.of(toScopeMap(dto));
+    }
+
+    /**
+     * Phần thay đổi <b>từng phần</b> cho {@code PATCH}: chỉ những nhóm thực sự có mặt trong body.
+     *
+     * <p>{@code privacy} nằm trong {@code clearFields} ⇒ {@link FieldChange#clear()}, và
+     * {@code UpdatePersonService} hiểu đó là đóng cả năm nhóm về {@code PRIVATE}.</p>
+     */
+    private static FieldChange<Map<PrivacyFieldGroup, ShareScope>> privacyChange(
+            Set<String> present, Set<String> cleared, PrivacySettingsDto dto) {
+        if (cleared.contains("privacy")) {
+            return FieldChange.clear();
+        }
+        if (!present.contains("privacy") || dto == null) {
+            return FieldChange.keep();
+        }
+        return FieldChange.set(toScopeMap(dto));
+    }
+
+    /** Chỉ giữ nhóm có giá trị; {@code null} nghĩa là "không nói gì về nhóm này". */
+    private static Map<PrivacyFieldGroup, ShareScope> toScopeMap(PrivacySettingsDto dto) {
+        if (dto == null) {
+            return Map.of();
+        }
+        Map<PrivacyFieldGroup, ShareScope> map = new EnumMap<>(PrivacyFieldGroup.class);
+        putScope(map, PrivacyFieldGroup.OCCUPATION, dto.occupation());
+        putScope(map, PrivacyFieldGroup.RESIDENCE_PROVINCE, dto.residenceProvince());
+        putScope(map, PrivacyFieldGroup.RESIDENCE_FULL, dto.residenceFull());
+        putScope(map, PrivacyFieldGroup.CONTACT, dto.contact());
+        putScope(map, PrivacyFieldGroup.BIRTH_DETAIL_AND_PHOTO, dto.birthDetailAndPhoto());
+        return map;
+    }
+
+    private static void putScope(Map<PrivacyFieldGroup, ShareScope> map, PrivacyFieldGroup group,
+                                 ShareScope scope) {
+        if (scope != null) {
+            map.put(group, scope);
+        }
     }
 
     /**

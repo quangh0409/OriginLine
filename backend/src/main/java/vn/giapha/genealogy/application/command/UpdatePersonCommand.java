@@ -7,7 +7,8 @@ import vn.giapha.genealogy.domain.ContactInfo;
 import vn.giapha.genealogy.domain.FieldChange;
 import vn.giapha.genealogy.domain.LifeDate;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -25,6 +26,9 @@ import vn.giapha.shared.vo.Gender;
  *        {@code death}. Vắng mặt mà có {@code death} thì backend <b>suy ra</b> là đã mất (Phương án
  *        B của Hội đồng Tộc biểu — xem {@code LifeStatusResolver}); gửi kèm {@code alive = true}
  *        cùng một ngày mất là mâu thuẫn tường minh và bị từ chối {@code VALIDATION_FAILED}
+ * @param privacyConsent <b>hợp nhất, không thay thế</b>: map chỉ chứa những nhóm trường thực sự
+ *        có mặt trong body, các nhóm khác giữ nguyên mức hiện có. {@code FieldChange.clear()}
+ *        (tên {@code privacy} trong {@code clearFields}) đóng cả năm nhóm về {@code PRIVATE}.
  * @param deleted dùng để khôi phục bản ghi đã xoá mềm; chỉ {@code ADMIN} và {@code COUNCIL}
  */
 public record UpdatePersonCommand(UUID personId,
@@ -44,7 +48,7 @@ public record UpdatePersonCommand(UUID personId,
                                   FieldChange<UUID> primaryBranchId,
                                   FieldChange<ContactInfo> contact,
                                   FieldChange<Map<String, Object>> attributes,
-                                  FieldChange<PrivacyLevel> privacyLevel,
+                                  FieldChange<Map<PrivacyFieldGroup, ShareScope>> privacyConsent,
                                   boolean confirmTabooOverride,
                                   String note) {
 }

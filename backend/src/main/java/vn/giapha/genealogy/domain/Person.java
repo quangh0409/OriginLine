@@ -65,7 +65,20 @@ public class Person extends AggregateRoot<PersonId> {
     private final List<PersonName> names = new ArrayList<>();
     private UUID primaryBranchId;
     private LineageStatus lineageStatus;
-    private PrivacyLevel privacyLevel;
+
+    /**
+     * <b>Ý chí riêng tư của chủ thể</b> — mỗi nhóm trường một mức độc lập. Đây là thứ duy nhất
+     * {@code PrivacyTierService} hỏi tới khi lọc hồ sơ người còn sống.
+     */
+    private PrivacyConsent privacyConsent;
+
+    /**
+     * <b>DI SẢN, không quyết định gì.</b> Giá trị nguyên vẹn của cột {@code person.privacy_level}
+     * để việc ghi lại không xoá mất dấu vết dữ liệu trước {@code V8}. Đừng đọc nó để quyết định
+     * hiển thị — mọi lối như thế phải đi qua {@link #privacyConsent}.
+     */
+    @SuppressWarnings("deprecation")
+    private PrivacyLevel legacyPrivacyLevel;
     private final Map<String, Object> attributes = new LinkedHashMap<>();
 
     private boolean deleted;
@@ -98,7 +111,10 @@ public class Person extends AggregateRoot<PersonId> {
         person.gender = gender == null ? Gender.UNKNOWN : gender;
         person.alive = alive;
         person.lineageStatus = LineageStatus.NORMAL;
-        person.privacyLevel = PrivacyLevel.DEFAULT;
+        // Mac dinh la KIN: nhan khau moi bat dau voi ca nam nhom truong o muc Rieng tu. Nguoi dung
+        // chu dong mo; he thong khong tu mo ho.
+        person.privacyConsent = PrivacyConsent.allPrivate();
+        person.legacyPrivacyLevel = PrivacyLevel.DEFAULT;
         person.contact = ContactInfo.EMPTY;
         person.deleted = false;
         person.anonymized = false;
@@ -266,11 +282,25 @@ public class Person extends AggregateRoot<PersonId> {
         touch();
     }
 
-    /** Mức chia sẻ do <b>chính chủ thể</b> chọn; Admin không siết hộ, chỉ chủ thể tự siết. */
-    public void choosePrivacyLevel(PrivacyLevel level) {
-        this.privacyLevel = level == null ? PrivacyLevel.DEFAULT : level;
+    /**
+     * <b>Đặt lại bản đồng thuận riêng tư</b> — ý chí của chính chủ thể, từng nhóm trường một.
+     *
+     * <p>Admin không siết hộ và cũng không nới hộ. {@code null} được hiểu là "về mặc định", mà mặc
+     * định của mô hình này là <b>kín hoàn toàn</b> chứ không phải một mức trung dung nào đó.</p>
+     */
+    public void choosePrivacyConsent(PrivacyConsent consent) {
+        PrivacyConsent resolved = consent == null ? PrivacyConsent.allPrivate() : consent;
+        if (resolved.equals(this.privacyConsent)) {
+            return;
+        }
+        this.privacyConsent = resolved;
         touch();
-        registerEvent(new PersonUpdatedEvent(id.value(), List.of("privacyLevel")));
+        registerEvent(new PersonUpdatedEvent(id.value(), List.of("privacyConsent")));
+    }
+
+    /** Đổi mức chia sẻ của <b>một</b> nhóm trường, giữ nguyên bốn nhóm còn lại. */
+    public void choosePrivacyScope(PrivacyFieldGroup group, ShareScope scope) {
+        choosePrivacyConsent(privacyConsent().with(group, scope));
     }
 
     /**
@@ -350,7 +380,9 @@ public class Person extends AggregateRoot<PersonId> {
         this.names.removeIf(name -> !name.primary());
         this.anonymized = true;
         this.anonymizedAt = Instant.now();
-        this.privacyLevel = PrivacyLevel.RESTRICTED;
+        // Xoa du lieu ma khong dong lai muc chia se thi lan nhap lieu sau se lap tuc mo lai dung
+        // nhung truong vua duoc xoa theo yeu cau hop phap.
+        this.privacyConsent = PrivacyConsent.allPrivate();
         touch();
         registerEvent(new PersonAnonymizedEvent(id.value()));
     }
@@ -448,8 +480,19 @@ public class Person extends AggregateRoot<PersonId> {
         return lineageStatus;
     }
 
-    public PrivacyLevel privacyLevel() {
-        return privacyLevel;
+    /** Bản đồng thuận riêng tư; không bao giờ {@code null}. */
+    public PrivacyConsent privacyConsent() {
+        return privacyConsent == null ? PrivacyConsent.allPrivate() : privacyConsent;
+    }
+
+    /**
+     * Giá trị di sản của cột {@code person.privacy_level}. <b>Chỉ để adapter ghi lại nguyên vẹn.</b>
+     *
+     * @deprecated không dùng để quyết định hiển thị — xem {@link #privacyConsent()}
+     */
+    @Deprecated(since = "V8", forRemoval = true)
+    public PrivacyLevel legacyPrivacyLevel() {
+        return legacyPrivacyLevel == null ? PrivacyLevel.DEFAULT : legacyPrivacyLevel;
     }
 
     public Map<String, Object> attributes() {
@@ -501,7 +544,9 @@ public class Person extends AggregateRoot<PersonId> {
         snapshot.put("nativePlace", nativePlace);
         snapshot.put("primaryBranchId", primaryBranchId == null ? null : primaryBranchId.toString());
         snapshot.put("lineageStatus", lineageStatus == null ? null : lineageStatus.name());
-        snapshot.put("privacyLevel", privacyLevel == null ? null : privacyLevel.name());
+        // Chi ghi MUC chia se, khong ghi gia tri truong nao — nhat ky khong duoc thanh ban sao
+        // khong kiem soat cua du lieu Tang 3.
+        snapshot.put("privacyConsent", privacyConsent().toJson());
         snapshot.put("names", names.stream()
                 .map(n -> Map.<String, Object>of(
                         "type", n.type().name(),
@@ -568,7 +613,8 @@ public class Person extends AggregateRoot<PersonId> {
             this.person.gender = Gender.UNKNOWN;
             this.person.alive = true;
             this.person.lineageStatus = LineageStatus.NORMAL;
-            this.person.privacyLevel = PrivacyLevel.DEFAULT;
+            this.person.privacyConsent = PrivacyConsent.allPrivate();
+            this.person.legacyPrivacyLevel = PrivacyLevel.DEFAULT;
             this.person.contact = ContactInfo.EMPTY;
         }
 
@@ -655,8 +701,19 @@ public class Person extends AggregateRoot<PersonId> {
             return this;
         }
 
-        public Builder privacyLevel(PrivacyLevel value) {
-            person.privacyLevel = value == null ? PrivacyLevel.DEFAULT : value;
+        /**
+         * Bản đồng thuận đọc từ cột {@code privacy_consent}. {@code null} ⇒ kín hoàn toàn: một hàng
+         * chưa có dữ liệu đồng thuận không được suy diễn thành mức mở nào.
+         */
+        public Builder privacyConsent(PrivacyConsent value) {
+            person.privacyConsent = value == null ? PrivacyConsent.allPrivate() : value;
+            return this;
+        }
+
+        /** Giá trị di sản của cột {@code privacy_level}, giữ nguyên để ghi lại. */
+        @Deprecated(since = "V8", forRemoval = true)
+        public Builder legacyPrivacyLevel(PrivacyLevel value) {
+            person.legacyPrivacyLevel = value == null ? PrivacyLevel.DEFAULT : value;
             return this;
         }
 

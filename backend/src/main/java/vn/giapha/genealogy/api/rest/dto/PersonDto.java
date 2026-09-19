@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import vn.giapha.genealogy.domain.PrivacyLevel;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -27,6 +26,9 @@ import vn.giapha.shared.vo.Gender;
  * @param isDeleted chỉ xuất hiện với {@code ADMIN}/{@code COUNCIL}; vai khác không thấy cả bản ghi
  * @param avatarUrl ảnh chân dung. Giai đoạn 1 trả <b>khoá đối tượng MinIO</b>; việc ký URL có hạn
  *        dùng thuộc về adapter lưu trữ chưa có ở workstream này (xem báo cáo bàn giao).
+ * @param privacy bản đồng thuận riêng tư của chủ thể — năm nhóm trường, năm mức độc lập. Chỉ
+ *        <b>chính chủ</b> và {@code ADMIN} nhận được khối này; với vai khác nó vắng mặt hoàn
+ *        toàn, vì biết người khác đang siết quyền riêng tư cũng là một dạng rò rỉ.
  * @param version phiên bản optimistic locking, cũng là giá trị sinh {@code ETag}
  * @param relationships quan hệ trực tiếp một bậc, chỉ gồm cạnh mà đầu kia cũng hiển thị được
  */
@@ -49,7 +51,7 @@ public record PersonDto(UUID id,
                         BranchRefDto primaryBranch,
                         ContactInfoDto contact,
                         Map<String, Object> attributes,
-                        PrivacyLevel privacyLevel,
+                        PrivacySettingsDto privacy,
                         Instant createdAt,
                         Instant updatedAt,
                         Long version,

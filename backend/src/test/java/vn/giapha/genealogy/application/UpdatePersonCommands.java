@@ -8,7 +8,8 @@ import vn.giapha.genealogy.domain.ContactInfo;
 import vn.giapha.genealogy.domain.FieldChange;
 import vn.giapha.genealogy.domain.LifeDate;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -34,7 +35,8 @@ public final class UpdatePersonCommands {
     private FieldChange<UUID> primaryBranchId = FieldChange.keep();
     private FieldChange<ContactInfo> contact = FieldChange.keep();
     private FieldChange<Map<String, Object>> attributes = FieldChange.keep();
-    private FieldChange<PrivacyLevel> privacyLevel = FieldChange.keep();
+    private FieldChange<java.util.Map<PrivacyFieldGroup, ShareScope>> privacyConsent =
+            FieldChange.keep();
     private boolean confirmTabooOverride;
     private String note;
 
@@ -112,8 +114,9 @@ public final class UpdatePersonCommands {
         return this;
     }
 
-    public UpdatePersonCommands mucRiengTu(PrivacyLevel value) {
-        this.privacyLevel = FieldChange.set(value);
+    /** Đặt mức chia sẻ cho <b>một</b> nhóm trường; các nhóm khác giữ nguyên (ngữ nghĩa hợp nhất). */
+    public UpdatePersonCommands mucRiengTu(PrivacyFieldGroup group, ShareScope scope) {
+        this.privacyConsent = FieldChange.set(java.util.Map.of(group, scope));
         return this;
     }
 
@@ -130,7 +133,7 @@ public final class UpdatePersonCommands {
     public UpdatePersonCommand build() {
         return new UpdatePersonCommand(personId, expectedVersion, names, gender, alive, deleted,
                 birth, death, nativePlace, currentPlaceProvince, currentPlaceFull, occupation,
-                biography, avatarKey, primaryBranchId, contact, attributes, privacyLevel,
+                biography, avatarKey, primaryBranchId, contact, attributes, privacyConsent,
                 confirmTabooOverride, note);
     }
 }

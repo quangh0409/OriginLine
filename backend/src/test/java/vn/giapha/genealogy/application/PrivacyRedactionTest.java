@@ -18,8 +18,10 @@ import vn.giapha.genealogy.domain.NameType;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonFixtures;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyConsent;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
 import vn.giapha.genealogy.domain.ProfileEdit;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.shared.vo.BranchPath;
 import vn.giapha.shared.vo.Gender;
 import vn.giapha.shared.vo.PersonId;
@@ -95,23 +97,43 @@ class PrivacyRedactionTest {
     }
 
     @Test
-    @DisplayName("Tầng 2: thêm nghề, tỉnh, nguyên quán và CHỈ năm sinh — không phải ngày đầy đủ")
-    void tang2ChiChoNamSinh() {
-        PersonView view = privacy.toView(hoSoDayDu(true), vai(CallerRole.MEMBER, CHI_GIAP), danhBaChi);
+    @DisplayName("Mở nghề + tỉnh cho cùng chi: có nghề, tỉnh, nguyên quán và CHỈ năm sinh")
+    void moNgheVaTinhChoCungChiThiChiCoNamSinh() {
+        Person person = hoSoDayDu(true);
+        person.choosePrivacyConsent(PrivacyConsent.allPrivate()
+                .with(PrivacyFieldGroup.OCCUPATION, ShareScope.BRANCH)
+                .with(PrivacyFieldGroup.RESIDENCE_PROVINCE, ShareScope.BRANCH));
+
+        PersonView view = privacy.toView(person, vai(CallerRole.MEMBER, CHI_GIAP), danhBaChi);
 
         assertThat(view.occupation()).isEqualTo("Giáo viên");
         assertThat(view.currentPlaceProvince()).isEqualTo("Hà Nội");
-        assertThat(view.nativePlace()).isEqualTo("Bắc Ninh");
-        assertThat(view.birth()).isNotNull();
-        assertThat(view.birth().precision())
-                .as("ngay sinh day du la du lieu Tang 3")
-                .isEqualTo(DatePrecision.YEAR);
-        assertThat(view.birth().year()).hasValue(1960);
-        assertThat(view.birth().solar().getMonthValue()).isEqualTo(1);
+
+        assertThat(view.nativePlace())
+                .as("nguyen quan khong thuoc nhom nao nen KHONG mo duoc — xem "
+                        + "PersonVisibility.ungroupedFieldsVisible()")
+                .isNull();
+        assertThat(view.birth())
+                .as("nam sinh cung vay: muon cho nguoi khac thay thi bat nhom "
+                        + "BIRTH_DETAIL_AND_PHOTO, va khi do la ngay day du")
+                .isNull();
         assertThat(view.contact()).isNull();
         assertThat(view.currentPlaceFull()).isNull();
         assertThat(view.biography()).isNull();
         assertThat(view.avatarKey()).isNull();
+    }
+
+    @Test
+    @DisplayName("Bật nhóm ngày sinh & ảnh cho cùng chi thì ra NGÀY đầy đủ, không phải riêng năm")
+    void batNhomNgaySinhThiRaNgayDayDu() {
+        Person person = hoSoDayDu(true);
+        person.choosePrivacyScope(PrivacyFieldGroup.BIRTH_DETAIL_AND_PHOTO, ShareScope.BRANCH);
+
+        PersonView view = privacy.toView(person, vai(CallerRole.MEMBER, CHI_GIAP), danhBaChi);
+
+        assertThat(view.birth().precision()).isEqualTo(DatePrecision.DAY);
+        assertThat(view.birth().solar().getDayOfMonth()).isEqualTo(17);
+        assertThat(view.avatarKey()).isEqualTo("portraits/lan.jpg");
     }
 
     @Test
@@ -135,20 +157,21 @@ class PrivacyRedactionTest {
     }
 
     @Test
-    @DisplayName("Mức riêng tư chỉ hiện với chính chủ và Quản trị hệ thống")
-    void mucRiengTuChiHienVoiChinhChuVaAdmin() {
+    @DisplayName("Bảng đồng thuận chỉ hiện với chính chủ và Quản trị hệ thống")
+    void banDongThuanChiHienVoiChinhChuVaAdmin() {
         Person person = hoSoDayDu(true);
-        person.choosePrivacyLevel(PrivacyLevel.CLAN_OPT_IN);
+        person.choosePrivacyScope(PrivacyFieldGroup.OCCUPATION, ShareScope.CLAN);
         CallerContext chinhChu = new CallerContext(CallerRole.MEMBER, person.rawId(),
                 List.of(), CHI_GIAP);
 
-        assertThat(privacy.toView(person, chinhChu, danhBaChi).privacyLevel())
-                .isEqualTo(PrivacyLevel.CLAN_OPT_IN);
-        assertThat(privacy.toView(person, vai(CallerRole.ADMIN, null), danhBaChi).privacyLevel())
-                .isEqualTo(PrivacyLevel.CLAN_OPT_IN);
-        assertThat(privacy.toView(person, vai(CallerRole.COUNCIL, null), danhBaChi).privacyLevel())
+        assertThat(privacy.toView(person, chinhChu, danhBaChi).privacyConsent())
+                .isEqualTo(person.privacyConsent());
+        assertThat(privacy.toView(person, vai(CallerRole.ADMIN, null), danhBaChi).privacyConsent())
+                .isEqualTo(person.privacyConsent());
+        assertThat(privacy.toView(person, vai(CallerRole.COUNCIL, null), danhBaChi).privacyConsent())
+                .as("biet nguoi khac dang siet quyen rieng tu cung la mot dang ro ri")
                 .isNull();
-        assertThat(privacy.toView(person, vai(CallerRole.MEMBER, CHI_GIAP), danhBaChi).privacyLevel())
+        assertThat(privacy.toView(person, vai(CallerRole.MEMBER, CHI_GIAP), danhBaChi).privacyConsent())
                 .isNull();
     }
 
@@ -219,13 +242,15 @@ class PrivacyRedactionTest {
     }
 
     @Test
-    @DisplayName("Dạng gọn ở Tầng 2 có năm sinh và nguyên quán nhưng vẫn không có ảnh")
-    void dangGonTang2CoNamSinhKhongCoAnh() {
+    @DisplayName("Dạng gọn: người cùng chi vẫn không có năm sinh, nguyên quán hay ảnh")
+    void dangGonCungChiVanKhongCoNamSinh() {
         PersonSummaryView summary = privacy.toSummary(hoSoDayDu(true),
                 vai(CallerRole.MEMBER, CHI_GIAP), danhBaChi);
 
-        assertThat(summary.birthYear()).isEqualTo(1960);
-        assertThat(summary.nativePlace()).isEqualTo("Bắc Ninh");
+        assertThat(summary.birthYear())
+                .as("nam sinh nguoi con song khong hien tren node pha do voi thanh vien thuong")
+                .isNull();
+        assertThat(summary.nativePlace()).isNull();
         assertThat(summary.avatarKey()).isNull();
     }
 

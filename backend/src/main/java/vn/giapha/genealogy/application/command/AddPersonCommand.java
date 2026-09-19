@@ -6,7 +6,7 @@ import java.util.UUID;
 import vn.giapha.genealogy.domain.ContactInfo;
 import vn.giapha.genealogy.domain.LifeDate;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyConsent;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -19,6 +19,8 @@ import vn.giapha.shared.vo.Gender;
  * @param confirmTabooOverride cờ xác nhận <b>kỵ húy</b>: người dùng đã xem danh sách va chạm ở lần
  *        gọi trước và vẫn quyết định ghi. Việc ghi đè được lưu vào {@code audit_log} - đây là cảnh
  *        báo chứ không phải lệnh cấm, quyền quyết định thuộc về dòng họ.
+ * @param privacyConsent bản đồng thuận riêng tư theo từng nhóm trường. {@code null} ⇒ kín hoàn
+ *        toàn: mặc định là KÍN, không có mức trung dung nào.
  * @param note ghi chú nguồn dữ liệu, ví dụ "chép từ gia phả giấy 1998, trang 12"
  */
 public record AddPersonCommand(List<PersonName> names,
@@ -34,7 +36,7 @@ public record AddPersonCommand(List<PersonName> names,
                                UUID primaryBranchId,
                                ContactInfo contact,
                                Map<String, Object> attributes,
-                               PrivacyLevel privacyLevel,
+                               PrivacyConsent privacyConsent,
                                List<RelationshipLinkCommand> links,
                                boolean confirmTabooOverride,
                                boolean confirmDuplicateOverride,

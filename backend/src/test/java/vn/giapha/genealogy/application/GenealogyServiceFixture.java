@@ -45,7 +45,10 @@ public final class GenealogyServiceFixture {
     public final FakeCallerIdentity identity = new FakeCallerIdentity();
     public final List<DomainEvent> suKien = new ArrayList<>();
 
+    public final FakeDuplicateCandidatePort duplicatePort = new FakeDuplicateCandidatePort();
+
     public final TabooNameChecker tabooNames = new TabooNameChecker(tabooPort);
+    public final DuplicatePersonChecker duplicates = new DuplicatePersonChecker(duplicatePort);
     public final PrivacyTierService privacy = new PrivacyTierService(identity);
     public final GenealogyAccessGuard guard = new GenealogyAccessGuard();
     public final DomainEventPublisher events = new DomainEventPublisher(event -> {
@@ -57,7 +60,8 @@ public final class GenealogyServiceFixture {
     public final LinkRelationshipService links = new LinkRelationshipService(
             persons, relationships, graph, branches, audit, treeCache, privacy, guard, events);
     public final AddPersonService addPerson = new AddPersonService(
-            persons, branches, graph, audit, treeCache, tabooNames, links, privacy, guard, events);
+            persons, branches, graph, audit, treeCache, tabooNames, duplicates, links, privacy,
+            guard, events);
     public final SoftDeletePersonService softDelete = new SoftDeletePersonService(
             persons, branches, graph, audit, treeCache, privacy, guard, events);
     public final RestorePersonService restore = new RestorePersonService(

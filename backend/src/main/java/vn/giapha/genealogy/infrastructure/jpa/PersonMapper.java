@@ -16,6 +16,7 @@ import vn.giapha.genealogy.domain.LineageStatus;
 import vn.giapha.genealogy.domain.NameType;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonName;
+import vn.giapha.genealogy.domain.PrivacyConsent;
 import vn.giapha.genealogy.domain.PrivacyLevel;
 import vn.giapha.shared.vo.Gender;
 import vn.giapha.shared.vo.LunarDate;
@@ -85,7 +86,8 @@ public class PersonMapper {
                 .names(names)
                 .primaryBranchId(entity.getPrimaryBranchId())
                 .lineageStatus(LineageStatus.valueOf(entity.getLineageStatus()))
-                .privacyLevel(PrivacyLevel.fromDbValue(entity.getPrivacyLevel()))
+                .privacyConsent(PrivacyConsent.fromJson(entity.getPrivacyConsent()))
+                .legacyPrivacyLevel(PrivacyLevel.fromDbValue(entity.getPrivacyLevel()))
                 .attributes(attributes)
                 .deleted(entity.isDeleted(), toInstant(entity.getDeletedAt()))
                 .anonymized(entity.isAnonymized(), toInstant(entity.getAnonymizedAt()))
@@ -109,7 +111,10 @@ public class PersonMapper {
         entity.setCurrentPlace(person.currentPlaceFull());
         entity.setPrimaryBranchId(person.primaryBranchId());
         entity.setLineageStatus(person.lineageStatus().name());
-        entity.setPrivacyLevel(person.privacyLevel().dbValue());
+        // Ghi lai nguyen ven cot di san — khong suy dien nguoc tu privacy_consent, vi mot gia
+        // tri suy dien trong cot dung de doi chieu lich su thi con te hon la khong co gi.
+        entity.setPrivacyLevel(person.legacyPrivacyLevel().dbValue());
+        entity.setPrivacyConsent(person.privacyConsent().toJson());
         entity.setDeleted(person.isDeleted());
         entity.setDeletedAt(toOffset(person.deletedAt()));
         entity.setAnonymized(person.isAnonymized());

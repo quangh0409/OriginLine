@@ -235,7 +235,7 @@ public final class GenealogyTestDoubles {
                     .names(names)
                     .primaryBranchId(person.primaryBranchId())
                     .lineageStatus(person.lineageStatus())
-                    .privacyLevel(person.privacyLevel())
+                    .privacyConsent(person.privacyConsent())
                     .attributes(person.attributes())
                     .deleted(person.isDeleted(), person.deletedAt())
                     .anonymized(person.isAnonymized(), person.anonymizedAt())

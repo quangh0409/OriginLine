@@ -16,6 +16,16 @@ public final class ProblemTypes {
     public static final URI FORBIDDEN = URI.create(BASE + "forbidden");
     public static final URI UNAUTHORIZED = URI.create(BASE + "unauthorized");
     public static final URI CONFLICT = URI.create(BASE + "conflict");
+
+    /**
+     * Tài khoản đăng nhập được nhưng chưa sẵn sàng dùng — chưa có {@code app_user}, hoặc đã có mà
+     * chưa được ghép với một nhân khẩu trong phả.
+     *
+     * <p>Tách khỏi {@link #CONFLICT} dù cùng HTTP 409: {@code CONFLICT} đang mang nghĩa "dữ liệu
+     * vừa bị người khác sửa" (khoá lạc quan) và giao diện phản ứng bằng "tải lại trang". Ở đây
+     * tải lại trang không giúp được gì — phải có người khác ghép tài khoản.</p>
+     */
+    public static final URI ACCOUNT_NOT_PROVISIONED = URI.create(BASE + "account-not-provisioned");
     public static final URI INTERNAL = URI.create(BASE + "internal-error");
 
     private ProblemTypes() {

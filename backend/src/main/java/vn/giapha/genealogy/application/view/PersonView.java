@@ -7,7 +7,7 @@ import java.util.UUID;
 import vn.giapha.genealogy.domain.ContactInfo;
 import vn.giapha.genealogy.domain.LifeDate;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyConsent;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -48,7 +48,7 @@ public record PersonView(UUID id,
                          BranchRef primaryBranch,
                          ContactInfo contact,
                          Map<String, Object> attributes,
-                         PrivacyLevel privacyLevel,
+                         PrivacyConsent privacyConsent,
                          Instant createdAt,
                          Instant updatedAt,
                          Long version,
@@ -59,7 +59,7 @@ public record PersonView(UUID id,
     public PersonView withRelationships(List<RelationshipView> value) {
         return new PersonView(id, names, displayName, gender, generation, alive, deleted, birth, death,
                 nativePlace, currentPlaceProvince, currentPlaceFull, occupation, biography, avatarKey,
-                primaryBranch, contact, attributes, privacyLevel, createdAt, updatedAt, version,
+                primaryBranch, contact, attributes, privacyConsent, createdAt, updatedAt, version,
                 value, access);
     }
 }

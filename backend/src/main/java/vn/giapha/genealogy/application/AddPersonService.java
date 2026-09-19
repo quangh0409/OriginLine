@@ -17,7 +17,7 @@ import vn.giapha.genealogy.application.command.RelationshipLinkCommand;
 import vn.giapha.genealogy.application.view.PersonView;
 import vn.giapha.genealogy.domain.FieldChange;
 import vn.giapha.genealogy.domain.Person;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyConsent;
 import vn.giapha.genealogy.domain.ProfileEdit;
 import vn.giapha.genealogy.domain.port.AuditPort;
 import vn.giapha.genealogy.domain.port.BranchRepository;
@@ -39,6 +39,10 @@ import vn.giapha.shared.vo.PersonId;
  *   <li><b>Kiểm quyền</b> theo chi đích - vai trò cộng phạm vi {@code ltree}.</li>
  *   <li><b>Kiểm kỵ húy</b> trước mọi lệnh ghi. Có va chạm mà chưa xác nhận thì <b>không bản ghi
  *       nào được tạo</b>; client nhận danh sách va chạm rồi gọi lại kèm cờ xác nhận.</li>
+ *   <li><b>Dò trùng nhân khẩu</b>, cũng trước mọi lệnh ghi và cũng ghi đè được. Đặt sau kiểm kỵ húy
+ *       chứ không trước: kỵ húy là quy tắc lễ nghi có tính bắt buộc hơn, còn nghi trùng chỉ là phỏng
+ *       đoán của máy. Hai cảnh báo hiếm khi cùng nổ (kỵ húy chỉ soi bậc trên, còn nghi trùng gần như
+ *       luôn đòi cùng đời) nên người dùng không bị hỏi hai lần liên tiếp trong thực tế.</li>
  *   <li><b>Ghi</b>: bảng {@code person}, đỉnh trong đồ thị, rồi từng cạnh quan hệ.</li>
  *   <li><b>Nhật ký + sự kiện + dọn cache cây.</b></li>
  * </ol>
@@ -61,6 +65,7 @@ public class AddPersonService {
     private final AuditPort audit;
     private final TreeCachePort treeCache;
     private final TabooNameChecker tabooNames;
+    private final DuplicatePersonChecker duplicates;
     private final LinkRelationshipService links;
     private final PrivacyTierService privacy;
     private final GenealogyAccessGuard guard;
@@ -68,14 +73,16 @@ public class AddPersonService {
 
     public AddPersonService(PersonRepository persons, BranchRepository branches, TreeGraphPort graph,
                             AuditPort audit, TreeCachePort treeCache, TabooNameChecker tabooNames,
-                            LinkRelationshipService links, PrivacyTierService privacy,
-                            GenealogyAccessGuard guard, DomainEventPublisher events) {
+                            DuplicatePersonChecker duplicates, LinkRelationshipService links,
+                            PrivacyTierService privacy, GenealogyAccessGuard guard,
+                            DomainEventPublisher events) {
         this.persons = persons;
         this.branches = branches;
         this.graph = graph;
         this.audit = audit;
         this.treeCache = treeCache;
         this.tabooNames = tabooNames;
+        this.duplicates = duplicates;
         this.links = links;
         this.privacy = privacy;
         this.guard = guard;
@@ -95,6 +102,8 @@ public class AddPersonService {
 
         String tabooNote = tabooNames.check(cmd.names(), placement.generation(), null,
                 cmd.confirmTabooOverride());
+        String duplicateNote = duplicates.check(duplicateProbe(cmd, placement),
+                cmd.confirmDuplicateOverride());
 
         PersonId id = PersonId.newId();
         Person person = Person.create(id, cmd.gender() == null ? Gender.UNKNOWN : cmd.gender(),
@@ -108,7 +117,7 @@ public class AddPersonService {
         }
         person.placeInGeneration(placement.generation());
         person.placeInBirthOrder(placement.birthOrder());
-        person.choosePrivacyLevel(effectivePrivacyLevel(cmd));
+        person.choosePrivacyConsent(effectivePrivacyConsent(cmd));
 
         persons.save(person);
         graph.createPersonNode(id.value(), person.gender() == null ? null : person.gender().name(),
@@ -119,7 +128,7 @@ public class AddPersonService {
         }
 
         audit.record("Person", id.toString(), AuditPort.Action.CREATE, null, person.auditSnapshot(),
-                List.of(), joinNotes(cmd.note(), tabooNote));
+                List.of(), joinNotes(cmd.note(), tabooNote, duplicateNote));
         events.publishAndClear(person);
         // Cây đang cache không có người vừa thêm; xoá thô cả vùng vì xác định đúng những gốc nào
         // chứa người này lại cần chính phép duyệt mà cache sinh ra để tránh.
@@ -173,6 +182,18 @@ public class AddPersonService {
         return new Placement(generation, branchId, birthOrder);
     }
 
+    /**
+     * Hồ sơ đưa vào bộ dò trùng.
+     *
+     * <p>Đời thứ và chi lấy từ {@link Placement} — tức giá trị đã <b>suy ra từ liên kết cha/mẹ</b>,
+     * không phải giá trị client tự khai. Đây là chỗ quan trọng: khác đời thứ là phản chứng nặng
+     * nhất của bộ dò, mà đời thứ tự khai thì không đáng tin để làm phản chứng.</p>
+     */
+    private DuplicateProbe duplicateProbe(AddPersonCommand cmd, Placement placement) {
+        return DuplicateProbe.of(cmd.names(), cmd.gender(), placement.generation(),
+                placement.branchId(), cmd.birth(), cmd.death(), cmd.nativePlace());
+    }
+
     private LinkRelationshipCommand toLinkCommand(UUID newPersonId, RelationshipLinkCommand link) {
         UUID from = link.otherIsSource() ? link.otherPersonId() : newPersonId;
         UUID to = link.otherIsSource() ? newPersonId : link.otherPersonId();
@@ -194,20 +215,23 @@ public class AddPersonService {
     }
 
     /**
-     * Trẻ vị thành niên bị ép {@code RESTRICTED} bất kể client gửi gì.
+     * Trẻ vị thành niên bị ép <b>kín hoàn toàn</b> bất kể client gửi gì.
      *
      * <p>Một đứa trẻ không tự quyết định được việc công khai dữ liệu của mình, và người nhập liệu
      * cũng không quyết thay được - đây là ràng buộc của Nghị định 13/2023 chứ không phải một tuỳ
-     * chọn giao diện.</p>
+     * chọn giao diện. {@code PrivacyTierService} còn chặn thêm một lần nữa lúc đọc, vì tuổi thay
+     * đổi theo thời gian còn bản ghi đồng thuận thì không.</p>
+     *
+     * <p>Không gửi gì cũng ra <b>kín hoàn toàn</b>: mặc định là KÍN, hệ thống không tự mở hộ.</p>
      */
-    private PrivacyLevel effectivePrivacyLevel(AddPersonCommand cmd) {
+    private PrivacyConsent effectivePrivacyConsent(AddPersonCommand cmd) {
         if (cmd.alive() && cmd.birth() != null) {
             Integer year = cmd.birth().year().orElse(null);
             if (year != null && Year.now().getValue() - year < MINOR_AGE) {
-                return PrivacyLevel.RESTRICTED;
+                return PrivacyConsent.allPrivate();
             }
         }
-        return cmd.privacyLevel() == null ? PrivacyLevel.DEFAULT : cmd.privacyLevel();
+        return cmd.privacyConsent() == null ? PrivacyConsent.allPrivate() : cmd.privacyConsent();
     }
 
     private Person load(UUID id) {

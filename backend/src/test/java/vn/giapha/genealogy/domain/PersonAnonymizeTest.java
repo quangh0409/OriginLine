@@ -110,14 +110,14 @@ class PersonAnonymizeTest {
     }
 
     @Test
-    @DisplayName("Mức riêng tư bị ép về RESTRICTED để dữ liệu còn lại không mở rộng trở lại")
-    void mucRiengTuBiEpVeRestricted() {
+    @DisplayName("Bản đồng thuận bị đóng hết để dữ liệu nhập lại sau không tự mở trở lại")
+    void banDongThuanBiDongHet() {
         Person person = hoSoDayDu();
-        person.choosePrivacyLevel(PrivacyLevel.CLAN_OPT_IN);
+        person.choosePrivacyConsent(PrivacyLevel.CLAN_OPT_IN.toConsent());
 
         person.anonymize();
 
-        assertThat(person.privacyLevel()).isEqualTo(PrivacyLevel.RESTRICTED);
+        assertThat(person.privacyConsent().isAllPrivate()).isTrue();
         assertThat(person.isAnonymized()).isTrue();
         assertThat(person.anonymizedAt()).isNotNull();
     }

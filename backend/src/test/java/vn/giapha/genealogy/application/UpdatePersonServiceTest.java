@@ -14,7 +14,8 @@ import vn.giapha.genealogy.domain.NameType;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonFixtures;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.genealogy.domain.port.AuditPort;
 import vn.giapha.shared.exception.ForbiddenException;
 import vn.giapha.shared.vo.Gender;
@@ -184,8 +185,8 @@ class UpdatePersonServiceTest {
         fx.dangNhapHoiDong();
 
         assertThatThrownBy(() -> fx.updatePerson.update(UpdatePersonCommands.cho(nguoi.rawId())
-                .mucRiengTu(PrivacyLevel.CLAN_OPT_IN).build()))
-                .as("privacyLevel la y chi cua nguoi duoc ghi trong gia pha, khong phai cong cu quan tri")
+                .mucRiengTu(PrivacyFieldGroup.CONTACT, ShareScope.CLAN).build()))
+                .as("ban dong thuan la y chi cua nguoi duoc ghi trong gia pha, khong phai cong cu quan tri")
                 .isInstanceOf(ForbiddenException.class)
                 .extracting("code").isEqualTo(GenealogyProblemCodes.FORBIDDEN);
     }
@@ -197,9 +198,13 @@ class UpdatePersonServiceTest {
         fx.dangNhapThanhVien(nguoi.rawId(), GenealogyServiceFixture.P_CHI_GIAP);
 
         PersonView view = fx.updatePerson.update(UpdatePersonCommands.cho(nguoi.rawId())
-                .mucRiengTu(PrivacyLevel.RESTRICTED).build());
+                .mucRiengTu(PrivacyFieldGroup.OCCUPATION, ShareScope.CLAN).build());
 
-        assertThat(view.privacyLevel()).isEqualTo(PrivacyLevel.RESTRICTED);
+        assertThat(view.privacyConsent().scopeOf(PrivacyFieldGroup.OCCUPATION))
+                .isEqualTo(ShareScope.CLAN);
+        assertThat(view.privacyConsent().scopeOf(PrivacyFieldGroup.CONTACT))
+                .as("hop nhat chu khong thay the: nhom khong duoc nhac toi giu nguyen muc kin")
+                .isEqualTo(ShareScope.PRIVATE);
     }
 
     @Test

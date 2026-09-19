@@ -82,8 +82,25 @@ public class PersonJpaEntity {
     @Column(name = "attributes", nullable = false)
     private Map<String, Object> attributes = new LinkedHashMap<>();
 
+    /**
+     * DI SẢN (trước V8): không còn quyết định hiển thị, chỉ được ghi lại nguyên vẹn để giữ dấu vết.
+     * Nguồn chân lý là {@link #privacyConsent}.
+     */
     @Column(name = "privacy_level", nullable = false, length = 12)
     private String privacyLevel = "DEFAULT";
+
+    /**
+     * Bản đồng thuận riêng tư theo từng nhóm trường (V8).
+     *
+     * <p>Cột {@code NOT NULL}, nên map này <b>không bao giờ được là {@code null}</b>:
+     * {@code JsonbAttributeConverter} cố ý giữ {@code null → null} (bẫy đã biết với
+     * {@code birth_lunar}), và một {@code null} ở đây sẽ vỡ ở tầng driver chứ không âm thầm thành
+     * {@code '{}'}. {@code PersonMapper} luôn ghi đủ năm khoá.</p>
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Convert(converter = JsonbAttributeConverter.class)
+    @Column(name = "privacy_consent", nullable = false)
+    private Map<String, Object> privacyConsent = new LinkedHashMap<>();
 
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted;
@@ -232,6 +249,14 @@ public class PersonJpaEntity {
 
     public void setPrivacyLevel(String privacyLevel) {
         this.privacyLevel = privacyLevel;
+    }
+
+    public Map<String, Object> getPrivacyConsent() {
+        return privacyConsent;
+    }
+
+    public void setPrivacyConsent(Map<String, Object> privacyConsent) {
+        this.privacyConsent = privacyConsent == null ? new LinkedHashMap<>() : privacyConsent;
     }
 
     public boolean isDeleted() {

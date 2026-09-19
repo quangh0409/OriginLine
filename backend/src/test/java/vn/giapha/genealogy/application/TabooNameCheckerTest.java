@@ -71,8 +71,12 @@ class TabooNameCheckerTest {
         assertThat(note)
                 .as("viec ghi de phai de lai dau vet trong nhat ky")
                 .startsWith("Ghi de canh bao ky huy:")
-                .contains("Nguyễn Văn Tuân")
                 .contains(conflict.ancestorPersonId().toString());
+        assertThat(note)
+                .as("`tabooName` la `person_name.full_name` DOC TU PHA, khong phai o nguoi dung vua"
+                        + " go; va phep do chon bac tren theo DOI THU chu khong theo song/mat, nen"
+                        + " no co the la mot ong bac con song")
+                .doesNotContain("Nguyễn Văn Tuân");
     }
 
     @Test

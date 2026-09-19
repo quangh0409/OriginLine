@@ -13,7 +13,10 @@ import vn.giapha.genealogy.application.command.UpdatePersonCommand;
 import vn.giapha.genealogy.application.view.PersonView;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonName;
+import vn.giapha.genealogy.domain.PrivacyConsent;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
 import vn.giapha.genealogy.domain.ProfileEdit;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.genealogy.domain.port.AuditPort;
 import vn.giapha.genealogy.domain.port.BranchRepository;
 import vn.giapha.genealogy.domain.port.PersonRepository;
@@ -108,7 +111,7 @@ public class UpdatePersonService {
 
         changed.addAll(applyNames(cmd, person));
         changed.addAll(applyLifeStatus(lifeStatus, person));
-        changed.addAll(applyPrivacyLevel(cmd, person, caller));
+        changed.addAll(applyPrivacyConsent(cmd, person, caller));
         changed.addAll(person.applyProfileEdit(profileEdit(cmd)));
 
         if (changed.isEmpty()) {
@@ -229,24 +232,33 @@ public class UpdatePersonService {
     }
 
     /**
-     * Mức chia sẻ là quyền của <b>chính chủ thể</b>.
+     * Mức chia sẻ của <b>từng nhóm trường</b> là quyền của <b>chính chủ thể</b>.
      *
-     * <p>Quản trị viên không siết hộ và cũng không nới hộ: {@code privacyLevel} là ý chí của người
-     * được ghi trong gia phả, đúng tinh thần Nghị định 13/2023.</p>
+     * <p>Quản trị viên không siết hộ và cũng không nới hộ: bản đồng thuận là ý chí của người được
+     * ghi trong gia phả, đúng tinh thần Nghị định 13/2023.</p>
+     *
+     * <p>Ngữ nghĩa <b>hợp nhất</b>: nhóm vắng mặt trong body giữ nguyên mức hiện có, nên giao diện
+     * năm công tắc chỉ cần gửi công tắc vừa gạt. {@code clearFields: ["privacy"]} thì đóng cả năm
+     * nhóm về {@code PRIVATE} — hướng duy nhất mà một thao tác "xoá trắng" được phép đi.</p>
      */
-    private List<String> applyPrivacyLevel(UpdatePersonCommand cmd, Person person, CallerContext caller) {
-        if (!cmd.privacyLevel().present() || cmd.privacyLevel().value() == null) {
+    private List<String> applyPrivacyConsent(UpdatePersonCommand cmd, Person person,
+                                             CallerContext caller) {
+        if (!cmd.privacyConsent().present()) {
             return List.of();
         }
         if (!caller.isSelf(person.rawId()) && !caller.isAdmin()) {
             throw new ForbiddenException(GenealogyProblemCodes.FORBIDDEN,
                     "Chi chinh chu the (hoac Quan tri he thong thay mat ho) duoc doi muc rieng tu");
         }
-        if (cmd.privacyLevel().value() == person.privacyLevel()) {
+        Map<PrivacyFieldGroup, ShareScope> changes = cmd.privacyConsent().value();
+        PrivacyConsent target = changes == null
+                ? PrivacyConsent.allPrivate()
+                : person.privacyConsent().merge(changes);
+        if (target.equals(person.privacyConsent())) {
             return List.of();
         }
-        person.choosePrivacyLevel(cmd.privacyLevel().value());
-        return List.of("privacyLevel");
+        person.choosePrivacyConsent(target);
+        return List.of("privacyConsent");
     }
 
     private ProfileEdit profileEdit(UpdatePersonCommand cmd) {

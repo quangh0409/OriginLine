@@ -62,16 +62,19 @@ public class PersonController {
     private final UpdatePersonService updatePerson;
     private final SoftDeletePersonService softDeletePerson;
     private final PersonQueryService personQuery;
+    private final RelationshipSummaryLoader relationshipSummaries;
     private final ObjectMapper objectMapper;
     private final Validator validator;
 
     public PersonController(AddPersonService addPerson, UpdatePersonService updatePerson,
                             SoftDeletePersonService softDeletePerson, PersonQueryService personQuery,
+                            RelationshipSummaryLoader relationshipSummaries,
                             ObjectMapper objectMapper, Validator validator) {
         this.addPerson = addPerson;
         this.updatePerson = updatePerson;
         this.softDeletePerson = softDeletePerson;
         this.personQuery = personQuery;
+        this.relationshipSummaries = relationshipSummaries;
         this.objectMapper = objectMapper;
         this.validator = validator;
     }
@@ -89,14 +92,14 @@ public class PersonController {
         log.debug("POST /api/v1/persons -> {}", created.id());
         return ResponseEntity.created(URI.create("/api/v1/persons/" + created.id()))
                 .eTag(etagOf(created))
-                .body(GenealogyDtoMapper.toDto(created));
+                .body(toDtoWithRelationSummaries(created));
     }
 
     /** Hồ sơ đã lọc theo phân tầng riêng tư; Khách hỏi người còn sống sẽ nhận {@code 404}. */
     @GetMapping("/{id}")
     public ResponseEntity<PersonDto> get(@PathVariable UUID id) {
         PersonView view = personQuery.byId(id);
-        return ResponseEntity.ok().eTag(etagOf(view)).body(GenealogyDtoMapper.toDto(view));
+        return ResponseEntity.ok().eTag(etagOf(view)).body(toDtoWithRelationSummaries(view));
     }
 
     @PatchMapping("/{id}")
@@ -107,7 +110,7 @@ public class PersonController {
         UpdatePersonRequest request = readBody(body);
         PersonView updated = updatePerson.update(PersonRequestMapper.toCommand(id, request,
                 presentFieldsOf(body), parseIfMatch(ifMatch)));
-        return ResponseEntity.ok().eTag(etagOf(updated)).body(GenealogyDtoMapper.toDto(updated));
+        return ResponseEntity.ok().eTag(etagOf(updated)).body(toDtoWithRelationSummaries(updated));
     }
 
     /**
@@ -180,6 +183,17 @@ public class PersonController {
         } catch (NumberFormatException ex) {
             throw new PreconditionRequiredException("If-Match khong hop le: " + ifMatch);
         }
+    }
+
+    /**
+     * Hồ sơ kèm tóm tắt của đầu kia mỗi cạnh quan hệ.
+     *
+     * <p>Tóm tắt đi qua {@link RelationshipSummaryLoader}, tức qua đúng bộ lọc phân tầng riêng tư của
+     * người gọi. Đừng thay bằng một lượt đọc kho trực tiếp cho "nhanh": màn "Quan hệ" sẽ thành nơi
+     * tên người còn sống rò ra qua hồ sơ công khai của một cụ đã khuất.</p>
+     */
+    private PersonDto toDtoWithRelationSummaries(PersonView view) {
+        return GenealogyDtoMapper.toDto(view, relationshipSummaries.forSubject(view));
     }
 
     private String etagOf(PersonView view) {

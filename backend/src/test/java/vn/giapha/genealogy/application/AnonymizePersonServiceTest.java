@@ -14,7 +14,6 @@ import vn.giapha.genealogy.domain.NameType;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonFixtures;
 import vn.giapha.genealogy.domain.PersonName;
-import vn.giapha.genealogy.domain.PrivacyLevel;
 import vn.giapha.genealogy.domain.ProfileEdit;
 import vn.giapha.genealogy.domain.port.AuditPort;
 import vn.giapha.shared.exception.ForbiddenException;
@@ -82,7 +81,7 @@ class AnonymizePersonServiceTest {
         assertThat(sau.avatarKey()).isNull();
         assertThat(sau.attributes()).isEmpty();
         assertThat(sau.isAnonymized()).isTrue();
-        assertThat(sau.privacyLevel()).isEqualTo(PrivacyLevel.RESTRICTED);
+        assertThat(sau.privacyConsent().isAllPrivate()).isTrue();
 
         assertThat(sau.isDeleted()).as("an danh hoa KHONG phai xoa mem").isFalse();
         assertThat(sau.displayName()).isEqualTo("Nguyễn Thị Lan");

@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import vn.giapha.genealogy.domain.PrivacyLevel;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -25,6 +24,11 @@ import vn.giapha.shared.vo.Gender;
  *
  * <p>{@code names} nếu gửi là <b>thay thế toàn bộ</b> danh sách tên, không phải cộng thêm; muốn
  * thêm một tên thì gửi lại cả danh sách cũ cộng tên mới.</p>
+ *
+ * <p><b>{@code privacy} thì ngược lại: hợp nhất, không thay thế.</b> Nhóm trường vắng mặt trong
+ * khối {@code privacy} giữ nguyên mức hiện có — đúng ngữ nghĩa PATCH của phần còn lại. Giao diện
+ * năm công tắc chỉ cần gửi công tắc vừa gạt. Muốn đóng hết thì đưa {@code "privacy"} vào
+ * {@code clearFields}: cả năm nhóm về {@code PRIVATE}.</p>
  */
 public record UpdatePersonRequest(@Valid List<PersonNameInput> names,
                                   Gender gender,
@@ -41,7 +45,7 @@ public record UpdatePersonRequest(@Valid List<PersonNameInput> names,
                                   UUID primaryBranchId,
                                   ContactInfoDto contact,
                                   Map<String, Object> attributes,
-                                  PrivacyLevel privacyLevel,
+                                  PrivacySettingsDto privacy,
                                   List<String> clearFields,
                                   Boolean confirmTabooOverride,
                                   @Size(max = 1000) String note) {

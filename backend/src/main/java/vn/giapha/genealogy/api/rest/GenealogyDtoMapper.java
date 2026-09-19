@@ -1,6 +1,8 @@
 package vn.giapha.genealogy.api.rest;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import vn.giapha.genealogy.api.rest.dto.BranchRefDto;
 import vn.giapha.genealogy.api.rest.dto.ContactInfoDto;
 import vn.giapha.genealogy.api.rest.dto.DateDualDto;
@@ -10,6 +12,7 @@ import vn.giapha.genealogy.api.rest.dto.PersonDto;
 import vn.giapha.genealogy.api.rest.dto.PersonNameDto;
 import vn.giapha.genealogy.api.rest.dto.PersonSummaryDto;
 import vn.giapha.genealogy.api.rest.dto.RelationshipDto;
+import vn.giapha.genealogy.api.rest.dto.PrivacySettingsDto;
 import vn.giapha.genealogy.api.rest.dto.TreeProjectionDto;
 import vn.giapha.genealogy.application.view.BranchRef;
 import vn.giapha.genealogy.application.view.PageView;
@@ -19,6 +22,8 @@ import vn.giapha.genealogy.application.view.PersonView;
 import vn.giapha.genealogy.application.view.RelationshipView;
 import vn.giapha.genealogy.application.view.TreeProjectionView;
 import vn.giapha.genealogy.domain.ContactInfo;
+import vn.giapha.genealogy.domain.PrivacyConsent;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
 import vn.giapha.genealogy.domain.LifeDate;
 import vn.giapha.genealogy.domain.PersonName;
 import vn.giapha.shared.vo.Gender;
@@ -43,9 +48,24 @@ public final class GenealogyDtoMapper {
     }
 
     public static PersonDto toDto(PersonView view) {
+        return toDto(view, Map.of());
+    }
+
+    /**
+     * Như {@link #toDto(PersonView)} nhưng gắn thêm tóm tắt của <b>đầu kia</b> vào từng cạnh quan hệ.
+     *
+     * <p>{@code otherEnds} phải đã đi qua bộ lọc phân tầng riêng tư của <b>chính người gọi hiện
+     * tại</b> - xem {@code RelationshipSummaryLoader}. Đừng bao giờ dựng map này từ thực thể hay từ
+     * một bản cache dùng chung: nội dung tóm tắt phụ thuộc người gọi, và một bản của vai này rơi vào
+     * tay vai khác là rò rỉ dữ liệu không để lại dấu vết nào trong log.</p>
+     *
+     * @param otherEnds tóm tắt đã lọc, tra theo id nhân khẩu; id thiếu trong map thì cạnh chỉ mang id
+     */
+    public static PersonDto toDto(PersonView view, Map<UUID, PersonSummaryDto> otherEnds) {
         if (view == null) {
             return null;
         }
+        Map<UUID, PersonSummaryDto> others = otherEnds == null ? Map.of() : otherEnds;
         return new PersonDto(
                 view.id(),
                 view.names() == null ? null : view.names().stream()
@@ -66,12 +86,13 @@ public final class GenealogyDtoMapper {
                 toDto(view.primaryBranch()),
                 toDto(view.contact()),
                 view.attributes(),
-                view.privacyLevel(),
+                toDto(view.privacyConsent()),
                 view.createdAt(),
                 view.updatedAt(),
                 view.version(),
                 view.relationships() == null || view.relationships().isEmpty() ? null
-                        : view.relationships().stream().map(GenealogyDtoMapper::toDto).toList(),
+                        : view.relationships().stream()
+                                .map(rel -> toDto(rel, view.id(), others)).toList(),
                 toDto(view.access()));
     }
 
@@ -111,8 +132,54 @@ public final class GenealogyDtoMapper {
     }
 
     public static RelationshipDto toDto(RelationshipView view) {
+        return toDto(view, null, Map.of());
+    }
+
+    /**
+     * Cạnh quan hệ kèm tóm tắt của đầu kia xét theo {@code subjectId}.
+     *
+     * <p>{@code subjectId} là nhân khẩu <b>đang được xem</b>, không phải một trong hai đầu cạnh nói
+     * chung: cùng một cạnh cha–con hiện ra là "cha" trên hồ sơ người con và là "con" trên hồ sơ
+     * người cha, nên "đầu kia" chỉ có nghĩa khi biết đang đứng ở đâu mà nhìn.</p>
+     */
+    public static RelationshipDto toDto(RelationshipView view, UUID subjectId,
+                                        Map<UUID, PersonSummaryDto> otherEnds) {
+        if (view == null) {
+            return null;
+        }
+        PersonSummaryDto other = null;
+        if (subjectId != null && otherEnds != null && !otherEnds.isEmpty()) {
+            UUID otherId = view.fromPersonId() == null || view.toPersonId() == null ? null
+                    : subjectId.equals(view.fromPersonId()) ? view.toPersonId()
+                            : subjectId.equals(view.toPersonId()) ? view.fromPersonId() : null;
+            other = otherId == null ? null : otherEnds.get(otherId);
+        }
         return new RelationshipDto(view.id(), view.fromPersonId(), view.toPersonId(), view.relType(),
-                view.heirKind(), view.spouseOrder(), view.validFrom(), view.validTo(), view.note());
+                view.heirKind(), view.spouseOrder(), view.validFrom(), view.validTo(), view.note(),
+                other);
+    }
+
+    /**
+     * Thu một {@link PersonView} <b>đã lọc</b> về dạng tóm tắt.
+     *
+     * <p>Không lọc lại gì cả, và đó là chủ ý: mọi trường ở đây đều đã do
+     * {@code PrivacyTierService.toView} quyết định. Nhân bản luật phân tầng ở tầng api là cách chắc
+     * chắn nhất để hai bản luật lệch nhau sau vài lần sửa, và bản lệch ấy sẽ là bản rò rỉ.</p>
+     */
+    public static PersonSummaryDto toSummary(PersonView view) {
+        if (view == null) {
+            return null;
+        }
+        String hanNom = null;
+        if (view.names() != null) {
+            hanNom = view.names().stream().filter(PersonName::primary).findFirst()
+                    .map(PersonName::hanNom).orElse(null);
+        }
+        Integer birthYear = view.birth() == null ? null : view.birth().year().orElse(null);
+        Integer deathYear = view.death() == null ? null : view.death().year().orElse(null);
+        return new PersonSummaryDto(view.id(), view.displayName(), hanNom,
+                contractGender(view.gender()), view.generation(), view.alive(), birthYear, deathYear,
+                toDto(view.primaryBranch()), view.nativePlace(), view.avatarKey(), null);
     }
 
     public static PersonNameDto toDto(PersonName name) {
@@ -124,6 +191,22 @@ public final class GenealogyDtoMapper {
 
     public static BranchRefDto toDto(BranchRef ref) {
         return ref == null ? null : new BranchRefDto(ref.id(), ref.name(), ref.path(), ref.region());
+    }
+
+    /**
+     * Bản đồng thuận riêng tư ra DTO. {@code null} ở view nghĩa là người gọi không được đọc khối
+     * này (chỉ chính chủ và {@code ADMIN} được), nên nó phải <b>vắng mặt</b> khỏi JSON.
+     */
+    public static PrivacySettingsDto toDto(PrivacyConsent consent) {
+        if (consent == null) {
+            return null;
+        }
+        return new PrivacySettingsDto(
+                consent.scopeOf(PrivacyFieldGroup.OCCUPATION),
+                consent.scopeOf(PrivacyFieldGroup.RESIDENCE_PROVINCE),
+                consent.scopeOf(PrivacyFieldGroup.RESIDENCE_FULL),
+                consent.scopeOf(PrivacyFieldGroup.CONTACT),
+                consent.scopeOf(PrivacyFieldGroup.BIRTH_DETAIL_AND_PHOTO));
     }
 
     public static ContactInfoDto toDto(ContactInfo contact) {
