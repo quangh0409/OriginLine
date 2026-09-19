@@ -3,7 +3,7 @@
 import { Divider } from "antd";
 import { useTranslations } from "next-intl";
 import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import { KinshipFactsList } from "./kinship-facts-list";
 import { KinshipPathDiagram } from "./kinship-path-diagram";
 import { KinshipStatusNotice } from "./kinship-status-notice";
@@ -62,13 +62,13 @@ export function KinshipResultCard({ result, fromPerson, toPerson }: KinshipResul
       <section
         className="rounded-lg border px-4 py-5 text-center sm:px-6"
         style={{
-          background: colorTokens.primaryLight,
-          borderColor: colorTokens.borderDark,
-          borderTop: `3px solid ${colorTokens.primary}`,
+          background: colorVars.primaryLight,
+          borderColor: colorVars.borderDark,
+          borderTop: `3px solid ${colorVars.primary}`,
         }}
       >
         {isPresent(fromName) && isPresent(toName) && (
-          <p className="m-0 text-[13px] text-text-muted">
+          <p className="m-0 text-than text-text-muted">
             {t("sentence", { from: fromName, to: toName })}
           </p>
         )}
@@ -78,7 +78,7 @@ export function KinshipResultCard({ result, fromPerson, toPerson }: KinshipResul
         </p>
 
         {isPresent(result.reciprocalTitle) && (
-          <p className="m-0 mt-2 text-[15px] text-text-main">
+          <p className="m-0 mt-2 text-than text-text-main">
             {t("selfAddress")}{" "}
             <strong className="font-serif text-lg text-primary-dark">
               {result.reciprocalTitle}
@@ -87,14 +87,14 @@ export function KinshipResultCard({ result, fromPerson, toPerson }: KinshipResul
         )}
 
         {isPresent(result.titleEn) && (
-          <p className="m-0 mt-2 text-[12px] italic text-text-muted">{result.titleEn}</p>
+          <p className="m-0 mt-2 text-than italic text-text-muted">{result.titleEn}</p>
         )}
       </section>
 
       {isPresent(result.reciprocalTitle) && isPresent(fromName) && isPresent(toName) && (
         <section className="rounded-lg border border-border bg-bg-card px-4 py-3">
           <h3 className="mb-1 mt-0 font-serif text-base text-primary">{t("reverseTitle")}</h3>
-          <p className="m-0 text-[15px] text-text-main">
+          <p className="m-0 text-than text-text-main">
             {t("reverseSentence", {
               to: toName,
               from: fromName,
@@ -107,7 +107,7 @@ export function KinshipResultCard({ result, fromPerson, toPerson }: KinshipResul
       <section className="rounded-lg border border-border bg-bg-card px-4 py-3">
         <h3 className="mb-1 mt-0 font-serif text-base text-primary">{t("pathTitle")}</h3>
         {result.lca && (
-          <p className="mb-3 mt-0 text-[13px] leading-relaxed text-text-muted">
+          <p className="mb-3 mt-0 text-than leading-relaxed text-text-muted">
             {t("pathSummary", {
               lca: result.lca.displayName ?? "",
               up: result.lca.distanceFrom,

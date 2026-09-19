@@ -14,7 +14,7 @@ console.log(JSON.stringify(await page.evaluate(() => {
     scrollY: window.scrollY,
     docScrollH: document.documentElement.scrollHeight,
     header: r("header"),
-    toolbar: r(".react-flow") ? r("[data-testid='tree-loaded-count']") : null,
+    toolbar: r(".react-flow") ? r("[data-testid='tree-node-count']") : null,
     canvas: r(".react-flow"),
     nav: r("nav[aria-label]"),
     footer: r("footer"),

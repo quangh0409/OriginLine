@@ -3,20 +3,106 @@
 @tailwind utilities;
 
 @layer base {
+  /* ═══════════════════════════════════════════════════════════════════════════
+     BẢNG MÀU — KHAI Ở :root TRƯỚC, LUÔN LUÔN
+
+     Định hướng 00 §3 nói thẳng: "mọi màu phải khai ở :root trước; màu chỉ tồn
+     tại trong khối tối là lỗi kinh điển gây trang không đọc được". Ở trạng thái
+     "theo hệ thống" (mặc định, không đánh dấu gì) trình duyệt chỉ thấy khối
+     :root này — một biến bỏ quên ở đây sẽ thành `color: ` rỗng, tức chữ đen mặc
+     định trên nền có thể cũng đen.
+
+     Vì sao khai KÊNH RGB (`--rgb-x: 140 45 25`) chứ không khai hex:
+     Tailwind cần dạng kênh để hậu tố độ mờ chạy được — `bg-bg-page/95`,
+     `hover:border-primary/40`, `border-primary/50` đang có thật trong mã, và cả
+     ba sẽ im lặng mất tác dụng nếu scale màu là chuỗi `var(--color-x)` đặc.
+     Tailwind sinh `rgb(var(--rgb-x) / 0.95)`.
+
+     Vì sao vẫn có `--color-x` bên dưới: để CSS thường và `style={{}}` dùng được
+     một tên màu bình thường. Nó ĐƯỢC SUY RA từ kênh, khai đúng một lần ở :root
+     và không lặp lại trong khối tối — nhờ vậy đảo chế độ chỉ phải sửa MỘT bảng.
+     Nếu khai cả hai ở cả hai khối thì sớm muộn sẽ có người sửa một bên quên bên
+     kia, và cái sai đó không có gì bắt được.
+     ═══════════════════════════════════════════════════════════════════════════ */
   :root {
-    /* Mirrors src/styles/tokens.ts. Kept as CSS custom properties too so
-       non-Tailwind, non-AntD code (e.g. the service worker's notification
-       styling hints) can reference the same palette without a JS import. */
-    --color-primary: #8c2d19;
-    --color-primary-dark: #661e0f;
-    --color-primary-light: #fbeee9;
-    --color-bg-page: #f8f6f2;
-    --color-bg-card: #ffffff;
-    --color-accent: #d97706;
-    --color-text-main: #2b2825;
-    --color-text-muted: #5e564d;
-    --color-secondary: #2c3e50;
-    --color-border: #e6dfd5;
+    /* ── Kênh màu, chế độ sáng ── */
+    --rgb-primary: 140 45 25; /* #8c2d19 do tram */
+    --rgb-primary-dark: 102 30 15; /* #661e0f */
+    --rgb-primary-light: 251 238 233; /* #fbeee9 */
+    --rgb-bg-page: 248 246 242; /* #f8f6f2 nen kem */
+    --rgb-bg-card: 255 255 255; /* #ffffff */
+    --rgb-bg-deceased: 242 237 226; /* #f2ede2 giay cu */
+    --rgb-accent: 217 119 6; /* #d97706 ho phach — MẢNG TÔ / NÉT DÀY */
+    --rgb-accent-text: 156 90 6; /* #9c5a06 ho phach tram — CHỮ */
+    --rgb-text-main: 43 40 37; /* #2b2825 */
+    --rgb-text-muted: 94 86 77; /* #5e564d */
+    --rgb-secondary: 44 62 80; /* #2c3e50 */
+    --rgb-border: 230 223 213; /* #e6dfd5 viền thẻ */
+    --rgb-border-dark: 205 190 170; /* #cdbeaa */
+    --rgb-border-input: 138 122 102; /* #8a7a66 viền ô nhập, 4,15:1 */
+    --rgb-success: 21 128 61; /* #15803d mảng tô */
+    --rgb-success-text: 17 101 51; /* #116533 chữ */
+    --rgb-success-bg: 234 246 238; /* #eaf6ee */
+    --rgb-danger: 185 28 28; /* #b91c1c */
+    --rgb-danger-bg: 251 234 233; /* #fbeae9 */
+    --rgb-warning-bg: 253 246 231; /* #fdf6e7 */
+    --rgb-focus-ring: 43 40 37; /* #2b2825 lõi vòng tiêu điểm */
+    --rgb-focus-halo: 255 255 255; /* #ffffff quầng vòng tiêu điểm */
+
+    /* ── Tên màu dùng được trực tiếp. Suy ra từ kênh, KHÔNG lặp lại ở khối tối ── */
+    --color-primary: rgb(var(--rgb-primary));
+    --color-primary-dark: rgb(var(--rgb-primary-dark));
+    --color-primary-light: rgb(var(--rgb-primary-light));
+    --color-bg-page: rgb(var(--rgb-bg-page));
+    --color-bg-card: rgb(var(--rgb-bg-card));
+    --color-bg-deceased: rgb(var(--rgb-bg-deceased));
+    --color-accent: rgb(var(--rgb-accent));
+    --color-accent-text: rgb(var(--rgb-accent-text));
+    --color-text-main: rgb(var(--rgb-text-main));
+    --color-text-muted: rgb(var(--rgb-text-muted));
+    --color-secondary: rgb(var(--rgb-secondary));
+    --color-border: rgb(var(--rgb-border));
+    --color-border-dark: rgb(var(--rgb-border-dark));
+    --color-border-input: rgb(var(--rgb-border-input));
+    --color-success: rgb(var(--rgb-success));
+    --color-success-text: rgb(var(--rgb-success-text));
+    --color-success-bg: rgb(var(--rgb-success-bg));
+    --color-danger: rgb(var(--rgb-danger));
+    --color-danger-bg: rgb(var(--rgb-danger-bg));
+    --color-warning-bg: rgb(var(--rgb-warning-bg));
+    --color-focus-ring: rgb(var(--rgb-focus-ring));
+    --color-focus-halo: rgb(var(--rgb-focus-halo));
+
+    /* ── Nét vẽ trên phả đồ ────────────────────────────────────────────────
+       Ba biến này được `src/lib/tree/to-flow-elements.ts` tham chiếu kèm giá
+       trị dự phòng. Chừng nào chúng CHƯA được khai ở đâu thì giá trị dự phòng
+       luôn thắng — kể cả ở chế độ tối — nên đường xuống con, thanh hôn phối và
+       đường kế tự vẽ bằng màu chế độ sáng trên nền tối. Khai ở đây là thứ đóng
+       cái lỗ đó.
+
+       KHÔNG lặp lại ba dòng này trong khối `.dark` và khối `@media`: chúng trỏ
+       vào `--color-*`, mà `--color-*` được suy ra từ kênh RGB và kênh RGB mới
+       là thứ đảo theo chế độ. Phép thay thế `var()` giải ở THỜI ĐIỂM DÙNG, nên
+       một dòng ở `:root` đã tự đúng cho cả ba trạng thái — đúng nguyên tắc mà
+       khối chú thích đầu tệp đặt ra ("khai đúng một lần ở :root ... nhờ vậy đảo
+       chế độ chỉ phải sửa MỘT bảng"). Lặp lại chỉ tạo thêm một chỗ để lệch. */
+    --tree-line-descent: var(--color-text-muted);
+    /* Hổ phách TRẦM, không phải hổ phách rực: thanh hôn phối là đồ hoạ MANG
+       NGHĨA (1.4.11 ⇒ 3:1) và #d97706 chỉ đạt 2,95:1 trên nền kem. Ở chế độ tối
+       `accentText` ánh xạ thẳng về `accent` nên không mất sắc. */
+    --tree-line-marriage: var(--color-accent-text);
+    --tree-line-heir: var(--color-primary);
+
+    /* ── Thời lượng chuyển động. Bị ép về 0 khi người dùng xin giảm chuyển động ──
+       Khai ở đây để mã TS đọc được bằng getComputedStyle thay vì tự đoán. */
+    --thoi-luong-mau: 150ms; /* c1/c2 — đổi màu, hiện vòng tiêu điểm */
+    --thoi-luong-khoi: 240ms; /* c3 — hiện/ẩn khối, bung nhánh */
+    --thoi-luong-lop-phu: 300ms; /* c4 — ngăn kéo, hộp thoại */
+    --thoi-luong-canh-khung: 400ms; /* c5 — canh khung phả đồ */
+
+    /* Cho trình duyệt biết trang đang ở tông nào: thanh cuộn, ô chọn ngày, ô
+       tải tệp của HỆ ĐIỀU HÀNH tự đổi theo, không CSS nào với tới được chúng. */
+    color-scheme: light;
   }
 
   html {
@@ -26,11 +112,65 @@
        screens, which is this product's primary form factor. */
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    /* Nền cũng đặt trên <html>: vùng kéo quá đà (overscroll) trên iOS lấy màu từ
+       <html>, không phải <body>. Thiếu dòng này thì ở chế độ tối kéo xuống quá
+       đáy trang sẽ loé ra một vệt trắng. */
+    background-color: var(--color-bg-page);
   }
 
   body {
     background-color: var(--color-bg-page);
     color: var(--color-text-main);
+    /* Sàn 16px của 00 §2.2 ("không có ngoại lệ"). Không đặt ở đây thì thân bài
+       chạy theo mặc định 16px của trình duyệt — đúng số, nhưng chỉ là trùng hợp,
+       và mất ngay khi có ai đặt font-size lên một tổ tiên. */
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     SÀN CHỨA — KHÔNG THẺ CON NÀO ĐƯỢC RỘNG HƠN THẺ CHA
+
+     Lỗi nghiệm thu: "thẻ bên trong dài hơn thẻ bao ngoài, tràn ra ngoài viền",
+     trên NHIỀU màn chứ không một màn. Nhiều màn cùng một triệu chứng thì nguyên
+     nhân không nằm ở màn nào cả — nó nằm ở tầng này, nơi KHÔNG CÓ quy ước nào
+     nói rằng nội dung phải co được. Vá từng thẻ bằng một lớp CSS riêng là cách
+     bảo đảm thẻ thứ mười một quay lại.
+
+     CSS mặc định có đúng hai chỗ hở, và cả hai đều nằm ở tầng trình duyệt:
+
+     1. `overflow-wrap: normal` — một "từ" không có chỗ ngắt (UUID của
+        `app_user`, đường `ltree` của chi, tên tệp .xlsx có dấu, URL người dùng
+        dán vào lý do xin đính chính) KHÔNG được phép xuống dòng, nên nó đẩy hộp
+        chứa rộng ra bằng chính nó. Hộp chứa là thẻ ⇒ thẻ tràn khỏi viền cha.
+        Đây là nguyên nhân số một, và nó chỉ lộ ra với DỮ LIỆU THẬT: bộ giả lập
+        dùng mã ngắn "P-001", máy chủ thật trả UUID 36 ký tự.
+
+     2. `fieldset { min-inline-size: min-content }` — một dòng trong stylesheet
+        mặc định của trình duyệt mà Preflight của Tailwind KHÔNG đặt lại (nó chỉ
+        gỡ margin/padding/border). Hệ quả: `<fieldset>` là hộp DUY NHẤT trong
+        HTML không bao giờ chịu hẹp hơn nội dung của nó — đúng định nghĩa của
+        "thẻ con dài hơn thẻ cha". Biểu mẫu nhân khẩu và hộp xin đính chính đều
+        bọc khối ngày âm–dương trong `<fieldset>`.
+
+     Vì sao `break-word` chứ không `anywhere`: `anywhere` còn ăn vào phép tính
+     kích thước NỘI TẠI (min-content), nên nó sẽ cho phép mọi thứ co xuống một
+     ký tự — kể cả nhãn nút và ô nhập, ở những chỗ đang vừa vặn. `break-word`
+     chỉ ra tay đúng lúc một từ không nằm vừa dòng của chính nó, tức đúng lúc
+     lỗi xảy ra và không sớm hơn.
+
+     Chỉ dùng bộ chọn theo THẺ ở đây: Tailwind v3 loại mọi bộ chọn theo LỚP khỏi
+     `@layer base` (xem cảnh báo dài ở cuối tệp). `body` và `fieldset` là thẻ,
+     nên chúng sống sót — và `overflow-wrap` là thuộc tính KẾ THỪA nên khai một
+     lần ở `body` là phủ toàn sản phẩm, kể cả widget Ant Design dựng lúc chạy.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  body {
+    overflow-wrap: break-word;
+  }
+
+  fieldset {
+    /* Trả `<fieldset>` về hành vi của một `<div>` bình thường. */
+    min-inline-size: 0;
   }
 
   h1,
@@ -38,5 +178,303 @@
   h3,
   h4 {
     font-family: var(--font-noto-serif), Georgia, "Times New Roman", serif;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     VÒNG TIÊU ĐIỂM BÀN PHÍM — MỘT MẪU DUY NHẤT CHO CẢ SẢN PHẨM
+
+     Vòng đơn sắc KHÔNG THỂ đạt 3:1 với mọi nền cùng lúc. Hổ phách — thứ sản phẩm
+     đang dùng — được 2,95 trên nền kem, 2,73 trên giấy cũ, 2,63 quanh nút đỏ
+     trầm: trượt cả ba. Bất kỳ màu đơn nào khác cũng sẽ trượt ở đâu đó, vì nền của
+     sản phẩm trải từ trắng tới đỏ trầm.
+
+     Lời giải là hai lớp TRÁI SẮC, để luôn có một lớp gánh được:
+       quầng #ffffff ôm sát phần tử  → 8,38:1 trên nút đỏ trầm  (trên nền kem chỉ 1,08)
+       lõi   #2b2825 ở vòng ngoài    → 13,58:1 trên nền kem, 12,55 trên giấy cũ
+                                        (trên nút đỏ chỉ 1,75 — nhưng lúc đó quầng gánh)
+
+     Dùng `outline` cho lõi chứ không dùng box-shadow cho cả hai, vì outline KHÔNG
+     bị `overflow: hidden` của tổ tiên cắt mất — mà thẻ phả đồ và ngăn kéo đều có
+     overflow ẩn.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  /* KHÔNG còn loại trừ `[class*="ant-"]`.
+     Chú thích cũ ở đây nói vòng mặc định của Ant Design "đã tạm chấp nhận được".
+     Đo ra thì không: ô <Select> khi nhận tiêu điểm cho 1,00:1 — tức KHÔNG CÓ
+     dấu hiệu nào — và trong kho có 13 ô Select/DatePicker, nằm đúng ở biểu mẫu
+     sửa người và hộp thoại xin đính chính.
+
+     Nhưng phần còn lại của chú thích cũ thì đúng và vẫn phải tôn trọng: antd
+     dùng box-shadow cho nhiều việc khác, và widget hợp thành của nó đặt tiêu
+     điểm lên một ô nhập TRONG SUỐT rồi vẽ trạng thái lên phần vỏ nhìn thấy
+     được. Nên lời giải không phải xoá một chuỗi `:not(...)` là xong — nó gồm
+     ba phần, xem hai khối ngay bên dưới. */
+  a:focus-visible,
+  button:focus-visible,
+  summary:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [tabindex]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    /* `!important` — đo được, không phải phòng xa.
+       Ant Design tiêm vào <head> LÚC CHẠY một quy tắc
+       `:where(.css-…) a:focus { outline: 0 }`. `:where()` không cộng độ đặc hiệu,
+       nên bộ chọn ấy chỉ là `a:focus` = (0,1,1) — ĐÚNG BẰNG `a:focus-visible` ở
+       đây — và nó nằm sau stylesheet của Tailwind, nên nó thắng. Hậu quả đo được
+       trên trình duyệt: MỌI liên kết trong sản phẩm mất vòng tiêu điểm và chỉ còn
+       quầng trắng, tức 1,00:1.
+
+       Bản trước thắng được là nhờ đuôi `:not([class*="ant-"])` vô tình nâng độ đặc
+       hiệu lên (0,2,1) — tức vòng tiêu điểm của cả sản phẩm đang sống nhờ một tác
+       dụng phụ của một mệnh đề viết ra vì lý do khác. Bỏ mệnh đề ấy đi (đúng, vì
+       widget AntD cần vòng chứ không cần bị loại trừ) thì phải thay bằng một lời
+       khẳng định rõ ràng.
+
+       Vòng tiêu điểm là thứ KHÔNG thư viện nào được phép lặng lẽ gỡ bỏ. `!important`
+       ở đây nói đúng điều đó. */
+    outline: 2px solid var(--color-focus-ring) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 2px var(--color-focus-halo) !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     GIẢM CHUYỂN ĐỘNG
+
+     Với người rối loạn tiền đình, hoạt ảnh trượt/phóng toàn màn hình gây chóng
+     mặt và buồn nôn thật — không phải chuyện thẩm mỹ. Phả đồ, thứ phóng và trượt
+     cả một mặt phẳng lớn, thuộc đúng loại gây triệu chứng nặng nhất.
+
+     Đặt ở tầng CSS chung, không sửa từng chỗ: nó phủ luôn hoạt ảnh mặc định của
+     Ant Design ở mọi hộp thoại/ngăn kéo/tooltip, thứ không ai đi sửa tay nổi.
+
+     KHÔNG dùng cách quét sạch `transition-duration: 0.01ms !important` thường
+     thấy. Đổi màu và hiện vòng tiêu điểm KHÔNG gây triệu chứng, và bỏ chúng đi là
+     mất phản hồi thị giác — với người lão thị thì mất phản hồi còn hại hơn. Nên ở
+     đây: giữ chuyển màu, cắt chuyển động.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --thoi-luong-khoi: 0ms;
+      --thoi-luong-lop-phu: 0ms;
+      --thoi-luong-canh-khung: 0ms;
+      /* --thoi-luong-mau giữ nguyên 150ms: đổi màu không gây triệu chứng */
+    }
+
+    *,
+    *::before,
+    *::after {
+      /* Danh sách trắng: chỉ những thuộc tính KHÔNG di chuyển pixel nào mới còn
+         được chuyển tiếp. Mọi transform/translate/scale/height đều bị loại. */
+      transition-property: color, background-color, border-color, outline-color,
+        text-decoration-color, fill, stroke !important;
+      transition-duration: var(--thoi-luong-mau) !important;
+      transition-delay: 0ms !important;
+      animation-duration: 1ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HAI KHỐI DƯỚI ĐÂY NẰM NGOÀI `@layer base` — CỐ Ý, ĐỪNG ĐƯA VÀO LẠI
+
+   Tailwind v3 LOẠI BỎ mọi quy tắc có bộ chọn theo LỚP (class) khỏi `@layer base`
+   khi biên dịch. Kiểm chứng: đặt `.dark { --c: 3 }` trong `@layer base` rồi dựng
+   ra, quy tắc biến mất khỏi tệp CSS đầu ra, trong khi `:root` bên cạnh vẫn còn.
+   Không cảnh báo, không lỗi biên dịch.
+
+   Đây đúng là loại lỗi đắt nhất trong cả đợt sửa này: khai đủ, đọc mã thấy đúng,
+   test đọc tệp nguồn cũng thấy đúng — nhưng công tắc "Tối" của người dùng không
+   làm gì cả, còn chế độ "theo hệ thống" thì vẫn chạy (vì `@media` không bị loại).
+   Tức là hỏng ĐÚNG MỘT trong ba trạng thái, chỗ dễ bỏ sót nhất khi thử tay.
+
+   `tests/unit/styles/tailwind-build.test.ts` dựng thật rồi soi đầu ra để canh.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   VÒNG TIÊU ĐIỂM CHO WIDGET ANT DESIGN — CŨNG NẰM NGOÀI `@layer base`
+
+   Cùng một cái bẫy đã ghi ngay bên trên, và nó vừa cắn thêm một lần nữa: Tailwind
+   v3 loại bỏ MỌI quy tắc có bộ chọn theo LỚP khỏi `@layer base`. Ba khối dưới đây
+   nhắm vào `.ant-select-focused`, `.ant-picker-focused`, `.ant-input-affix-wrapper`
+   — toàn bộ chọn theo lớp — nên đặt chúng trong `@layer base` là viết ra một tệp
+   CSS mà chúng KHÔNG hề có mặt trong đầu ra. Kiểm chứng: dựng rồi tìm chuỗi
+   `.ant-select-focused` trong CSS đầu ra — trước khi sửa thì không có kết quả nào.
+
+   CẢNH BÁO VỀ CHÍNH CHÚ THÍCH NÀY: đừng viết một mẫu glob dạng dấu-sao-dấu-sao-gạch
+   chéo vào đây. CSS không có chú thích lồng nhau, nên hai dấu sao liền nhau rồi tới
+   gạch chéo sẽ ĐÓNG chú thích ngay giữa câu; phần chữ còn lại thành CSS rác và trình
+   duyệt nuốt luôn quy tắc đứng ngay sau đó. Đã xảy ra thật trong chính đợt sửa này:
+   khối "Phần 2" biến mất khỏi CSSOM trong khi tệp nguồn và cả tệp phục vụ đều có nó.
+
+   Không cảnh báo, không lỗi biên dịch, và đọc mã nguồn thì thấy hoàn toàn đúng.
+   `tests/unit/styles/tailwind-build.test.ts` dựng thật rồi soi đầu ra để canh.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Phần 2: TẮT vòng ở ô nhập TRONG SUỐT của widget hợp thành ───────────
+   <Select>, <Segmented>, <Checkbox>, <Radio> của Ant Design đặt tiêu điểm lên
+   một <input> `opacity: 0` rộng gần bằng không, rồi vẽ trạng thái lên phần vỏ
+   nhìn thấy được. Vẽ vòng lên chính ô ẩn ấy còn tệ hơn không vẽ: người dùng
+   không thấy gì, mà phép kiểm tiếp cận lại ĐỌC ĐƯỢC một vòng và báo xanh —
+   đúng loại xanh giả mà bộ kiểm này sinh ra để chặn. */
+.ant-select .ant-select-selection-search-input:focus-visible,
+.ant-picker input:focus-visible,
+.ant-segmented .ant-segmented-item-input:focus-visible,
+.ant-checkbox-input:focus-visible,
+.ant-radio-input:focus-visible,
+.ant-radio-button-input:focus-visible,
+.ant-input-affix-wrapper .ant-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Phần 3: vẽ vòng lên phần VỎ nhìn thấy được ──────────────────────────
+   `!important` là bắt buộc, không phải cẩu thả: Ant Design tiêm CSS-in-JS vào
+   <head> LÚC CHẠY, tức sau stylesheet của Tailwind, và bộ chọn của nó
+   (`.ant-select-outlined.ant-select-focused ... .ant-select-selector`) đặc
+   hiệu hơn. Không có `!important` thì box-shadow mặc định của antd thắng và
+   mọi thứ ở đây im lặng không có tác dụng.
+
+   Chỉ ghi đè outline + box-shadow. Viền trạng thái lỗi của antd đi bằng
+   `border-color` chứ không bằng box-shadow, nên `status="error"` vẫn còn đỏ
+   khi ô đang được tiêu điểm — biểu mẫu người là chỗ dùng nó nhiều nhất. */
+.ant-btn:focus-visible,
+.ant-input:focus-visible,
+.ant-input-affix-wrapper-focused,
+.ant-input-number-focused,
+/* HAI cách nhắm vào cùng một chỗ, và cần cả hai.
+   `.ant-select-focused` là lớp do Ant Design tự gắn — nó đúng khi ô đang mở hoặc
+   đang được tiêu điểm, nhưng nó là NỘI BỘ của thư viện: đo được trên trình duyệt,
+   có lượt Tab mà lớp ấy chưa kịp có mặt, và khi đó ô <Select> không còn dấu hiệu
+   tiêu điểm nào (vòng ở ô nhập ẩn đã bị tắt ở khối trên).
+   `:focus-within` thì là CSS thuần: nó đúng bất cứ khi nào một hậu duệ đang giữ
+   tiêu điểm, không phụ thuộc phiên bản antd. Giữ cả hai để một bản nâng cấp đổi tên
+   lớp cũng không làm vòng tiêu điểm biến mất trong im lặng. */
+.ant-select-focused .ant-select-selector,
+.ant-select:focus-within .ant-select-selector,
+.ant-picker-focused,
+.ant-picker:focus-within,
+.ant-segmented-item:has(.ant-segmented-item-input:focus-visible),
+.ant-checkbox-wrapper:has(.ant-checkbox-input:focus-visible),
+.ant-radio-wrapper:has(.ant-radio-input:focus-visible),
+.ant-radio-button-wrapper:has(.ant-radio-button-input:focus-visible),
+.ant-switch:focus-visible,
+/* Bản thân <Segmented> cũng nhận tiêu điểm, và AntD vẽ cho nó một vòng riêng bằng
+   sắc phái sinh từ primary — đo được #b38676, tức 2,6:1 trên nền trắng, dưới ngưỡng
+   3:1. Phải ghi đè cả gốc lẫn từng mục. */
+.ant-segmented:focus-visible,
+.ant-tabs-tab-btn:focus-visible,
+.ant-modal-close:focus-visible,
+.ant-drawer-close:focus-visible {
+  outline: 2px solid var(--color-focus-ring) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px var(--color-focus-halo) !important;
+}
+
+/* ── Ô nhập có tiền tố / hậu tố: cái vỏ cao 44px, ruột chỉ 26px ─────────
+   `<Input allowClear>` và `<Input prefix=…>` được Ant Design bọc trong
+   `.ant-input-affix-wrapper`. Chiều cao 44px nằm ở CÁI VỎ; thẻ `<input>` bên
+   trong chỉ cao 26px vì nó là một dòng chữ cộng padding của vỏ. Phép đo vùng
+   chạm nhìn thấy `<input>` chứ không nhìn thấy vỏ — và người dùng cũng vậy:
+   chạm vào dải 9px trên/dưới của vỏ không đặt được con trỏ vào ô.
+
+   Bỏ padding DỌC của vỏ rồi đẩy sàn xuống chính thẻ <input>: vỏ vẫn cao đúng
+   44px (nay do ruột quyết định), còn vùng chạm thật thì bằng cả ô. Padding
+   NGANG giữ nguyên — nó là khoảng thở giữa chữ và viền, không liên quan. */
+/* ── Nhãn giá trị của <Select> một-lựa-chọn không được NUỐT con trỏ ─────────
+   Ant Design đặt `.ant-select-selection-item` (chữ đang hiển thị) đè lên
+   `.ant-select-selection-search` (ô nhập thật, trong suốt). Cả hai cùng cỡ, và
+   cái nhãn nằm trên — nên `document.elementFromPoint` ở giữa ô trả về NHÃN chứ
+   không trả về phần tử đang giữ tiêu điểm. Phép kiểm C-4.4 ("phần tử được tiêu
+   điểm không bị lớp khác che") đọc ra là bị che, và nó không sai về mặt hình
+   học: có một lớp thật nằm trên.
+
+   Nhãn ấy là chữ THỤ ĐỘNG — mọi thao tác đều thuộc về `.ant-select-selector`
+   bên dưới. Trả con trỏ về cho phần tử điều khiển là đúng cả về ngữ nghĩa lẫn
+   về phép đo.
+
+   Giới hạn ở `.ant-select-single`: ở ô nhiều lựa chọn, `.ant-select-selection-item`
+   là một thẻ có nút "x" để gỡ, và nút ấy BẮT BUỘC phải nhận được con trỏ. */
+.ant-select-single .ant-select-selection-item {
+  pointer-events: none;
+}
+
+.ant-input-affix-wrapper {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+.ant-input-affix-wrapper > input.ant-input {
+  min-height: 44px !important;
+}
+
+/* ── Chế độ tối, đường 1: người dùng chọn tay (thêm class `dark` lên <html>) ── */
+.dark {
+  --rgb-primary: 224 138 114; /* #e08a72 */
+  --rgb-primary-dark: 240 166 143; /* #f0a68f — SÁNG hơn primary: trên nền tối, "đậm nét lên" nghĩa là sáng lên */
+  --rgb-primary-light: 51 33 28; /* #33211c */
+  --rgb-bg-page: 26 22 20; /* #1a1614 */
+  --rgb-bg-card: 36 31 28; /* #241f1c */
+  --rgb-bg-deceased: 43 37 33; /* #2b2521 */
+  --rgb-accent: 233 168 63; /* #e9a83f */
+  --rgb-accent-text: 233 168 63; /* hổ phách HẾT trượt ở nền tối (7,87–8,67:1) nên chữ và mảng dùng chung một màu */
+  --rgb-text-main: 239 232 223; /* #efe8df */
+  --rgb-text-muted: 169 156 142; /* #a99c8e */
+  --rgb-secondary: 139 169 196; /* #8ba9c4 */
+  --rgb-border: 59 49 43; /* #3b312b */
+  --rgb-border-dark: 86 72 63; /* #56483f */
+  --rgb-border-input: 139 119 103; /* #8b7767, 3,83:1 trên nền thẻ */
+  --rgb-success: 116 198 143; /* #74c68f */
+  --rgb-success-text: 116 198 143;
+  --rgb-success-bg: 28 46 34; /* #1c2e22 */
+  --rgb-danger: 236 138 128; /* #ec8a80 */
+  --rgb-danger-bg: 51 32 30; /* #33201e */
+  --rgb-warning-bg: 46 38 23; /* #2e2617 */
+  /* Vòng tiêu điểm ĐẢO hai lớp: lõi sáng, quầng tối. Cùng logic "luôn có một
+     lớp đạt ≥3:1 với bất kỳ nền nào", chỉ đổi chiều. */
+  --rgb-focus-ring: 239 232 223; /* #efe8df */
+  --rgb-focus-halo: 26 22 20; /* #1a1614 */
+
+  color-scheme: dark;
+}
+
+/* ── Chế độ tối, đường 2: "theo hệ thống" (mặc định, KHÔNG đánh dấu gì) ──
+   `:root:not(.light)` chứ không phải `:root`: khi người dùng đã chọn tay "Sáng"
+   thì lớp `light` có mặt và khối này phải im. Ba trạng thái mà 00 §3 chốt ánh
+   xạ đúng như sau:
+     không class → theo hệ thống   ·   .light → ép sáng   ·   .dark → ép tối
+   Chuỗi giá trị dưới đây bắt buộc phải trùng khối `.dark`; test
+   `tests/unit/styles/css-vars.test.ts` đối chiếu cả hai với tokens.ts để
+   không ai sửa lệch một bên. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --rgb-primary: 224 138 114;
+    --rgb-primary-dark: 240 166 143;
+    --rgb-primary-light: 51 33 28;
+    --rgb-bg-page: 26 22 20;
+    --rgb-bg-card: 36 31 28;
+    --rgb-bg-deceased: 43 37 33;
+    --rgb-accent: 233 168 63;
+    --rgb-accent-text: 233 168 63;
+    --rgb-text-main: 239 232 223;
+    --rgb-text-muted: 169 156 142;
+    --rgb-secondary: 139 169 196;
+    --rgb-border: 59 49 43;
+    --rgb-border-dark: 86 72 63;
+    --rgb-border-input: 139 119 103;
+    --rgb-success: 116 198 143;
+    --rgb-success-text: 116 198 143;
+    --rgb-success-bg: 28 46 34;
+    --rgb-danger: 236 138 128;
+    --rgb-danger-bg: 51 32 30;
+    --rgb-warning-bg: 46 38 23;
+    --rgb-focus-ring: 239 232 223;
+    --rgb-focus-halo: 26 22 20;
+
+    color-scheme: dark;
   }
 }

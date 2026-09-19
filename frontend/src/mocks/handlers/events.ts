@@ -1,7 +1,8 @@
 import { http, HttpResponse } from "msw";
 import { API_BASE_URL } from "@/lib/api/http";
 import { getMockEvents } from "@/mocks/events-calendar";
-import { canSeeLivingPersons, resolveMockRole } from "./role";
+import { canSeeBirthYearMock } from "@/mocks/privacy";
+import { canSeeLivingPersons, resolveMockRole, type MockRole } from "./role";
 import type { EventDto, EventPage, EventType } from "@/types/api";
 
 /** Mirrors the contract's `upcomingDays` ceiling. */
@@ -32,19 +33,52 @@ function branchPathFor(events: EventDto[], branchId: string): string | undefined
   return events.find((e) => e.targetBranch?.id === branchId)?.targetBranch?.path;
 }
 
+/**
+ * Sự kiện này có đi ra cho người gọi không.
+ *
+ * Hai tầng, và tầng thứ hai là tầng V10 mới thêm:
+ *
+ * 1. **Sự kiện gắn với người còn sống theo đúng phân tầng của người ấy.** Khách
+ *    không thấy người còn sống nào, nên cũng không thấy lễ của họ — nếu không
+ *    thì một dòng "Mừng thọ ông X" tự nó đã tiết lộ rằng ông X tồn tại và đang
+ *    còn sống.
+ * 2. **`SINH_NHAT` chặt hơn `MUNG_THO`.** Ngày diễn ra sinh nhật *chính là*
+ *    ngày sinh, mà ngày sinh nằm trong nhóm `birthDetailAndPhoto` do chủ thể tự
+ *    bật. Nên một thành viên cùng chi vẫn có thể **không** thấy sinh nhật của
+ *    người bên cạnh mình — đúng như họ không thấy năm sinh trên thẻ phả đồ.
+ *    Mừng thọ thì không chịu ràng buộc ấy: đó là việc của cả họ, và mốc
+ *    60/70/80/90 không tiết lộ ngày sinh.
+ *
+ * Cả hai tầng đều lọc **trước** khi phân trang và đếm, để `totalElements` không
+ * đếm hộ người xem số dòng đã bị giữ lại.
+ */
+function visibleToCaller(event: EventDto, role: MockRole): boolean {
+  const person = event.person;
+  if ((person?.isAlive ?? false) && !canSeeLivingPersons(role)) return false;
+
+  if (event.eventType === "SINH_NHAT") {
+    if (!person) return false;
+    return canSeeBirthYearMock(
+      {
+        id: person.id,
+        isAlive: person.isAlive,
+        birthYear: person.birthYear ?? null,
+        primaryBranch: person.primaryBranch ?? null,
+      },
+      role
+    );
+  }
+
+  return true;
+}
+
 export const eventHandlers = [
   http.get(`${API_BASE_URL}/api/v1/events`, ({ request }) => {
     const url = new URL(request.url);
     const role = resolveMockRole(request);
     const all = getMockEvents();
 
-    // Events tied to a living person (e.g. MUNG_THO) follow the same privacy
-    // tier as the person: a guest must not see that the person exists at all,
-    // so the event is dropped BEFORE paging and counting — `totalElements`
-    // must not leak how many were withheld.
-    let items = all.filter(
-      (e) => canSeeLivingPersons(role) || (e.person?.isAlive ?? false) === false
-    );
+    let items = all.filter((e) => visibleToCaller(e, role));
 
     const upcomingDaysParam = url.searchParams.get("upcomingDays");
     let from = url.searchParams.get("from") ?? undefined;

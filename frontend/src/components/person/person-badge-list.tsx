@@ -31,8 +31,9 @@ export function PersonBadgeList({ badges, size = "md" }: PersonBadgeListProps) {
         <li key={badge}>
           <Tag
             color={BADGE_META[badge].color}
+            style={{ color: BADGE_META[badge].ink }}
             bordered={false}
-            className={size === "sm" ? "!m-0 !px-1.5 !text-[10px]" : "!m-0"}
+            className={size === "sm" ? "!m-0 !px-1.5" : "!m-0"}
           >
             {locale === "vi" ? BADGE_META[badge].vi : BADGE_META[badge].en}
           </Tag>

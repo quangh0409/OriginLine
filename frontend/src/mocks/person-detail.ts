@@ -5,6 +5,7 @@ import type {
   PersonSummaryDto,
 } from "@/types/api";
 import { findPersonMock } from "./data";
+import { preProjectionMeta } from "./privacy";
 import { getMockGraph } from "./tree-graph/build-graph";
 import type { RawPerson } from "./tree-graph/generate-large-tree";
 
@@ -131,14 +132,10 @@ export function synthesizePersonDto(raw: RawPerson): PersonDto {
           zaloId: null,
         }
       : null,
-    privacyLevel: "DEFAULT",
     version: 1,
-    meta: {
-      visibleTier: raw.isAlive ? "T3" : "PUBLIC",
-      canEdit: false,
-      canDelete: false,
-      canRequestCorrection: false,
-    },
+    // Bản ghi "đầy đủ", chưa gắn với người gọi nào — ba cờ quyền chưa có câu
+    // trả lời ở đây. `projectPersonForRole` dựng lại `meta` cho từng người gọi.
+    meta: preProjectionMeta(raw.isAlive ? "T3" : "PUBLIC"),
   };
 }
 

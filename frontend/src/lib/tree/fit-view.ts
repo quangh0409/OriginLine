@@ -46,3 +46,62 @@ export const WHOLE_TREE_FIT_VIEW_OPTIONS = {
   duration: 400,
   minZoom: CANVAS_MIN_ZOOM,
 } as const;
+
+/* --------------------------------------------------------------------------
+   GIẢM CHUYỂN ĐỘNG (prefers-reduced-motion)
+
+   Hai phép canh khung trên đây chạy bằng JAVASCRIPT — React Flow tự nội suy ma trận máy quay qua
+   `duration`, không qua CSS transition. Nên bản vá `prefers-reduced-motion` ở tầng biểu định kiểu
+   KHÔNG với tới được: nó cắt được mọi chuyển tiếp CSS mà vẫn để cả mặt phẳng phả đồ trượt và phóng
+   trong 300–400ms. Với người rối loạn tiền đình thì đúng thứ đó gây chóng mặt và buồn nôn — và một
+   mặt phẳng lớn trượt-phóng là hoạt ảnh nặng nhất còn lại trong sản phẩm.
+--------------------------------------------------------------------------- */
+
+/** Đổi "400ms" / "0.4s" / "0ms" thành số mili giây; null nếu không đọc được. */
+function parseCssMilliseconds(raw: string): number | null {
+  const text = raw.trim();
+  if (text === "") return null;
+  const match = /^(-?[\d.]+)(ms|s)$/.exec(text);
+  if (!match) return null;
+  const value = Number(match[1]);
+  if (!Number.isFinite(value)) return null;
+  return match[2] === "s" ? value * 1000 : value;
+}
+
+/**
+ * Người dùng có đang xin giảm chuyển động không.
+ *
+ * Hỏi HAI nguồn, vì mỗi nguồn hỏng một kiểu:
+ *
+ * 1. `matchMedia` — nguồn gốc, đúng cả khi biểu định kiểu chưa tải xong.
+ * 2. Biến CSS `--thoi-luong-canh-khung` (globals.css) — tầng CSS đã ép nó về `0ms` trong khối
+ *    `prefers-reduced-motion`. Đọc nó nghĩa là mã TS và mã CSS không thể nói hai điều khác nhau;
+ *    nếu ai đó sau này quyết định tắt hoạt ảnh vì lý do khác (máy yếu, chế độ trình chiếu), chỉ
+ *    cần ép biến ấy về 0 là phả đồ nghe theo ngay.
+ */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return true;
+    const raw = window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue("--thoi-luong-canh-khung");
+    return parseCssMilliseconds(raw) === 0;
+  } catch {
+    // Môi trường không có matchMedia/getComputedStyle (test dựng tay, kết xuất phía máy chủ):
+    // giữ nguyên hoạt ảnh chứ không tự ý tắt.
+    return false;
+  }
+}
+
+/**
+ * Áp nguyện vọng chuyển động của người dùng lên một bộ tham số canh khung.
+ *
+ * Trả về CHÍNH đối tượng cũ khi không phải giảm chuyển động — để hai hằng số trên vẫn là hai đối
+ * tượng ổn định, không sinh tham chiếu mới mỗi lần dựng lại (chúng đi vào `useCallback`/`useEffect`).
+ */
+export function withMotionPreference<T extends { readonly duration: number }>(
+  options: T
+): T | (Omit<T, "duration"> & { duration: 0 }) {
+  return prefersReducedMotion() ? { ...options, duration: 0 as const } : options;
+}

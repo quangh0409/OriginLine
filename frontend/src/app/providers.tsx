@@ -8,7 +8,8 @@ import enUS from "antd/locale/en_US";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "@/lib/query/query-client";
 import { setApiLocale } from "@/lib/api/http";
-import { antdTheme } from "@/styles/antd-theme";
+import { antdTheme, antdThemeDark } from "@/styles/antd-theme";
+import { ThemeProvider, useChuDe } from "@/lib/theme/theme-context";
 import { MswProvider } from "@/mocks/msw-provider";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import type { AppLocale } from "@/i18n/routing";
@@ -45,15 +46,39 @@ export function Providers({
 
   return (
     <AntdRegistry>
-      <ConfigProvider theme={antdTheme} locale={locale === "vi" ? viVN : enUS}>
-        <AntdApp>
-          <QueryClientProvider client={queryClient}>
-            <MswProvider>
-              <AuthProvider>{children}</AuthProvider>
-            </MswProvider>
-          </QueryClientProvider>
-        </AntdApp>
-      </ConfigProvider>
+      <ThemeProvider>
+        <AntdTheoChuDe locale={locale}>
+          <AntdApp>
+            <QueryClientProvider client={queryClient}>
+              <MswProvider>
+                <AuthProvider>{children}</AuthProvider>
+              </MswProvider>
+            </QueryClientProvider>
+          </AntdApp>
+        </AntdTheoChuDe>
+      </ThemeProvider>
     </AntdRegistry>
+  );
+}
+
+/**
+ * Nối chủ đề vào Ant Design.
+ *
+ * <p>Tailwind đổi màu bằng biến CSS nên chỉ cần một lớp trên {@code <html>}. Ant Design thì
+ * <b>không đi được bằng biến CSS</b>: thuật toán sinh dải màu của nó phải phân tích được mã hex,
+ * không nhận {@code var(--…)}. Thiếu thành phần này thì nền và chữ đã tối trong khi toàn bộ nút,
+ * ô nhập và hộp thoại vẫn sáng trắng — tức chế độ tối chỉ xong một nửa.</p>
+ *
+ * <p>Tách thành component riêng vì {@code useChuDe()} phải nằm TRONG {@code <ThemeProvider>}.</p>
+ */
+function AntdTheoChuDe({ children, locale }: { children: ReactNode; locale: AppLocale }) {
+  const { dangToi } = useChuDe();
+  return (
+    <ConfigProvider
+      theme={dangToi ? antdThemeDark : antdTheme}
+      locale={locale === "vi" ? viVN : enUS}
+    >
+      {children}
+    </ConfigProvider>
   );
 }

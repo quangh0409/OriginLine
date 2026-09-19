@@ -159,18 +159,24 @@ describe("member looking at a living MINOR (maximally hidden)", () => {
   });
 });
 
-describe("branch head (Tier 2) looking at a living relative", () => {
-  it("gains occupation, province and a YEAR-ONLY birth date", async () => {
+/**
+ * ĐẢO CHIỀU LỚN NHẤT khi `PrivacySettings` vào contract: **vai không còn tự
+ * mở dữ liệu nữa**. Trưởng chi từng có một nền "Tầng 2" mặc định (nghề, tỉnh,
+ * năm sinh) chỉ vì họ là Trưởng chi. Nay họ chỉ là *người cùng chi*, và họ
+ * thấy đúng những nhóm mà chủ thể đã mở tới mức `BRANCH`. Contract nói thẳng
+ * điều đó ở `ContactInfo`: "Trưởng chi được xem để liên hệ **chỉ khi**
+ * `privacy.contact` ở mức `BRANCH` trở lên".
+ */
+describe("branch head looking at a living relative who shared NOTHING", () => {
+  it("gets name, generation and branch — and nothing else", async () => {
     const { container } = await renderProfile("p-100", "branch-head");
 
     await screen.findByRole("heading", { name: /Nguyễn Văn An/ });
-    expect(screen.getByText("Kỹ sư phần mềm")).toBeInTheDocument();
-    expect(screen.getByText("Hà Nội")).toBeInTheDocument();
-    // The day is Tier 3: the wire carries a 1990-01-01 filler that must never
-    // reach the screen as a real day.
-    expect(screen.getByText("1990")).toBeInTheDocument();
-    expect(document.body.textContent).not.toContain("01/01/1990");
-    expect(document.body.textContent).not.toContain("20/07/1990");
+    // `p-100` để cả năm nhóm ở `PRIVATE`, nên chức vụ Trưởng chi không mở thêm
+    // được gì. Đây là hành vi ĐÚNG, không phải hồi quy.
+    expect(screen.queryByText("Kỹ sư phần mềm")).not.toBeInTheDocument();
+    expect(screen.queryByText("Hà Nội")).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("1990");
     expectNoHiddenFieldPlaceholders(container);
   });
 
@@ -179,6 +185,30 @@ describe("branch head (Tier 2) looking at a living relative", () => {
     await screen.findByRole("heading", { name: /Nguyễn Văn An/ });
     expect(screen.queryByRole("heading", { name: "Liên hệ" })).not.toBeInTheDocument();
     expect(document.body.textContent).not.toContain("+84 912 345 678");
+  });
+});
+
+describe("branch head looking at a living relative who DID share", () => {
+  it("sees exactly the groups that person opened, and no more", async () => {
+    // `p-102` mở: nghề + tỉnh cho cả họ, liên hệ cho cùng chi, địa chỉ đầy đủ
+    // và ngày sinh vẫn kín. Trưởng chi ở `root.chi_nhat` là người cùng chi.
+    const { container } = await renderProfile("p-102", "branch-head");
+
+    await screen.findByRole("heading", { name: /Nguyễn Văn Bình/ });
+    expect(screen.getByText("Giáo viên")).toBeInTheDocument();
+    expect(screen.getByText("+84 987 654 321")).toBeInTheDocument();
+    // …nhưng KHÔNG có ngày sinh, vì nhóm ngày-sinh-và-ảnh vẫn đóng.
+    expect(document.body.textContent).not.toContain("1985");
+    expectNoHiddenFieldPlaceholders(container);
+  });
+
+  it("proves the negative case above is not a false positive", async () => {
+    // Nếu phép lọc hỏng theo hướng "giấu tất", ca kiểm p-100 ở trên vẫn xanh.
+    // Ca này là phép thử ngược: cùng một vai, cùng một chi, khác mỗi lựa chọn
+    // của chủ thể — và kết quả phải khác.
+    await renderProfile("p-102", "branch-head");
+    await screen.findByRole("heading", { name: /Nguyễn Văn Bình/ });
+    expect(screen.getByRole("heading", { name: "Liên hệ" })).toBeInTheDocument();
   });
 });
 

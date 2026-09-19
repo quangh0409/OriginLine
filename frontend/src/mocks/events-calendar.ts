@@ -21,6 +21,12 @@ import type { EventDto, EventType, LunarDate, PersonSummaryDto } from "@/types/a
  * One event deliberately carries `leap: true` and one is a MUNG_THO for a
  * LIVING person, so both the leap-month marker and the guest privacy filter
  * (handlers/events.ts) stay exercisable by hand.
+ *
+ * Từ V10, `EventType` là **song ánh 12 giá trị**: `KHANH_THANH`, `HOP_HO`,
+ * `CUOI_HOI` không còn gộp vào `KHAC`, và `SINH_NHAT` đã tách khỏi `MUNG_THO`.
+ * Bốn mã mới đều có ít nhất một bản ghi mẫu ở đây, vì một nhãn không có dòng
+ * dữ liệu nào mang nó là một nhãn chưa ai từng nhìn thấy — đúng tình cảnh của
+ * `TIEU_TUONG`/`DAI_TUONG` trước khi V10 đưa chúng vào ràng buộc CSDL.
  */
 
 const REMINDER_OFFSETS = [7, 3, 1];
@@ -134,6 +140,84 @@ export function getMockEvents(): EventDto[] {
       daysUntil: 21,
       targetBranch: livingSummary.primaryBranch ?? null,
       isClanLevel: false,
+      reminderOffsets: REMINDER_OFFSETS,
+    });
+  }
+
+  // --- Giỗ đầu / giỗ hết -----------------------------------------------------
+  //
+  // `TIEU_TUONG` và `DAI_TUONG` có nhãn trong `messages/*.json` từ lâu nhưng
+  // KHÔNG có giá trị nào trong `ck_event_type` cho tới V10 — hai nhãn cho hai
+  // thứ không dòng dữ liệu nào mang được. Nay ràng buộc đã mở, nên bộ giả lập
+  // phải sinh ra chúng, nếu không phía giao diện vẫn không ai từng nhìn thấy.
+  const tangLe: ReadonlyArray<{ type: EventType; offset: number }> = [
+    { type: "TIEU_TUONG", offset: 26 },
+    { type: "DAI_TUONG", offset: 58 },
+  ];
+  candidates.slice(0, tangLe.length).forEach((raw, i) => {
+    const moc = tangLe[i]!;
+    const occurrence = addDays(today, moc.offset);
+    const seed = hash(`${raw.id}#${moc.type}`);
+    generated.push({
+      id: `ev-${moc.type.toLowerCase()}-${raw.id}`,
+      eventType: moc.type,
+      title: `${moc.type === "TIEU_TUONG" ? "Giỗ đầu" : "Giỗ hết"} ${raw.displayName}`,
+      person: summaryFor(raw.id) ?? null,
+      lunarDate: fakeLunar(seed, occurrence.getUTCFullYear(), occurrence.getUTCMonth() + 1),
+      nextOccurrenceSolar: isoDate(occurrence),
+      nextOccurrenceLunarYear: occurrence.getUTCFullYear(),
+      daysUntil: moc.offset,
+      targetBranch: raw.primaryBranch ?? null,
+      isClanLevel: false,
+      reminderOffsets: REMINDER_OFFSETS,
+    });
+  });
+
+  // --- Bốn mã V10: mỗi mã một bản ghi, để nhãn nào cũng có chỗ hiện ra -------
+  //
+  // `SINH_NHAT` gắn với NGƯỜI CÒN SỐNG và vì thế chịu phân tầng riêng tư chặt
+  // hơn `MUNG_THO`: bản thân ngày diễn ra sự kiện CHÍNH LÀ ngày sinh, nên nó
+  // chỉ hiện với người mà chủ thể đã mở nhóm `birthDetailAndPhoto`
+  // (contracts/openapi.yaml → EventType). Phép lọc ấy nằm ở handlers/events.ts.
+  if (livingSummary) {
+    const occurrence = addDays(today, 34);
+    generated.push({
+      id: "ev-sinh-nhat-p100",
+      eventType: "SINH_NHAT",
+      title: `Sinh nhật ${livingSummary.displayName}`,
+      person: livingSummary,
+      lunarDate: { year: occurrence.getUTCFullYear(), month: 4, day: 7, leap: false },
+      nextOccurrenceSolar: isoDate(occurrence),
+      nextOccurrenceLunarYear: occurrence.getUTCFullYear(),
+      daysUntil: 34,
+      targetBranch: livingSummary.primaryBranch ?? null,
+      isClanLevel: false,
+      reminderOffsets: REMINDER_OFFSETS,
+    });
+  }
+
+  // Ba việc họ không gắn với một cá nhân nào — trước V10 cả ba cùng đi ra dây
+  // dưới mã `KHAC`, nên qua API một buổi họp họ không phân biệt được với một
+  // đám cưới.
+  const clanOccasions: ReadonlyArray<{ id: string; eventType: EventType; title: string; offset: number }> = [
+    { id: "ev-hop-ho", eventType: "HOP_HO", title: "Họp họ đầu xuân", offset: 12 },
+    { id: "ev-khanh-thanh", eventType: "KHANH_THANH", title: "Khánh thành tu bổ từ đường", offset: 47 },
+    { id: "ev-cuoi-hoi", eventType: "CUOI_HOI", title: "Lễ cưới con cháu Chi Nhất", offset: 63 },
+  ];
+  for (const occasion of clanOccasions) {
+    const occurrence = addDays(today, occasion.offset);
+    const seed = hash(occasion.id);
+    generated.push({
+      id: occasion.id,
+      eventType: occasion.eventType,
+      title: occasion.title,
+      person: null,
+      lunarDate: fakeLunar(seed, occurrence.getUTCFullYear(), occurrence.getUTCMonth() + 1),
+      nextOccurrenceSolar: isoDate(occurrence),
+      nextOccurrenceLunarYear: occurrence.getUTCFullYear(),
+      daysUntil: occasion.offset,
+      targetBranch: null,
+      isClanLevel: occasion.eventType !== "CUOI_HOI",
       reminderOffsets: REMINDER_OFFSETS,
     });
   }

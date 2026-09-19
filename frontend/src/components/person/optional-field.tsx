@@ -32,8 +32,8 @@ export function OptionalField({ label, value, children }: OptionalFieldProps) {
 
   return (
     <div className="flex flex-col gap-0.5 py-2 sm:flex-row sm:gap-4 sm:py-1.5">
-      <dt className="shrink-0 text-[13px] text-text-muted sm:w-40 sm:pt-px">{label}</dt>
-      <dd className="m-0 min-w-0 text-[15px] leading-relaxed text-text-main">
+      <dt className="shrink-0 text-than text-text-muted sm:w-40 sm:pt-px">{label}</dt>
+      <dd className="m-0 min-w-0 text-than leading-relaxed text-text-main">
         {children ?? String(value)}
       </dd>
     </div>

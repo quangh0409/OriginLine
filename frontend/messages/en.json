@@ -14,11 +14,14 @@
     "tree": "Family tree",
     "kinship": "Kinship lookup",
     "search": "Search",
+    "directory": "Directory",
     "events": "Events & anniversaries",
     "notifications": "Notifications",
     "login": "Log in",
     "primary": "Main navigation",
-    "settings": "Settings"
+    "settings": "Settings",
+    "more": "More",
+    "language": "Language"
   },
   "auth": {
     "login": "Log in",
@@ -32,6 +35,173 @@
       "COUNCIL": "Clan council",
       "BRANCH_HEAD": "Branch head",
       "MEMBER": "Member"
+    },
+    "invitation": {
+      "pageTitle": "An invitation to join the phả",
+      "pageDescription": "The invitation page of the clan portal.",
+      "loading": "Opening the invitation…",
+      "fromInviter": "An invitation from {inviter}",
+      "forWhomLabel": "This invitation is for",
+      "branchAndGeneration": "{branch} · generation {generation}",
+      "branchOnly": "{branch}",
+      "generationOnly": "Generation {generation}",
+      "expiresOn": "This invitation code works until the end of {date}.",
+      "benefitsTitle": "If you accept, you will be able to:",
+      "benefit1": "see the people of the clan, including those still living",
+      "benefit2": "look up danh xưng — the right term to call each relative",
+      "benefit3": "receive reminders for the giỗ (death anniversaries) of your chi (branch)",
+      "benefit4": "ask for a correction when something is recorded wrongly",
+      "noWaiting": "No waiting for approval: the person who invited you named you directly, so the account is already linked to the profile above.",
+      "nextStep": "Accepting is all it takes: your account is linked to the profile above straight away.",
+      "accept": "That is me — accept the invitation",
+      "accepting": "Opening your account…",
+      "acceptFailed": "The invitation could not be accepted. This is a connection problem, not a problem with your code. Please press again.",
+      "decline": "This is not me",
+      "declineHint": "Pressing “This is not me” cancels this invitation code and tells the person who sent it. After that, nobody can use the code.",
+      "declineConfirmTitle": "Cancel this invitation code?",
+      "declineConfirmBody": "You are about to cancel the invitation code sent to {name}. Three things happen at once and cannot be undone: the code stops working for everyone; the person who invited you is notified; and joining the phả will need a new invitation code.",
+      "declineConfirmOk": "Yes, cancel the code",
+      "declineConfirmCancel": "Go back",
+      "declineFailed": "The code could not be cancelled. Please try again.",
+      "declinedTitle": "This invitation code has been cancelled",
+      "declinedBody": "The person who sent the invitation will be notified. If you pressed it by mistake, please call them for a new invitation code — the old one cannot be reused.",
+      "retry": "Try again",
+      "contactFallbackTitle": "If you need help, call the person who invited you",
+      "contactFallbackBody": "Their phone number is at the end of the message, or at the bottom of the paper invitation. They are a member of the clan, not a call centre.",
+      "problem": {
+        "EXPIRED": {
+          "title": "This invitation code has expired",
+          "body": "Each invitation code works for seven days from when it was sent, so that a mislaid paper slip cannot open the phả later on. The code you opened is past that.",
+          "next": "Please call the person who invited you and say you need a new code. They can issue one straight away; nothing has to start over."
+        },
+        "ALREADY_USED": {
+          "title": "This invitation code has already been used",
+          "body": "Each invitation code opens only once. If you accepted this invitation earlier, you no longer need the code — just log in.",
+          "next": "If you never used this code, please call the person who invited you right away: the message may have reached the wrong person, and they need to know."
+        },
+        "NOT_FOUND": {
+          "title": "No invitation could be opened with this code",
+          "body": "The code does not match any invitation. The usual causes are a link cut short when a message was forwarded, or one character missed when typing — the letter O and the digit zero are easy to confuse.",
+          "next": "Please open the exact link in the message from the person who invited you, or retype the code printed on the paper invitation. If it still fails, call them."
+        },
+        "REVOKED": {
+          "title": "This invitation code has been cancelled",
+          "body": "Someone pressed “This is not me” on this invitation, so the code was cancelled to keep the phả safe.",
+          "next": "If that was you by mistake, please call the person who invited you for a new code."
+        },
+        "RATE_LIMITED": {
+          "title": "Please try again in a few minutes",
+          "body": "Too many invitations have been opened from this device at once, so the system has paused to stop code guessing.",
+          "next": "Please wait a few minutes, then open the exact link from the message again. If it is urgent, call the person who invited you."
+        },
+        "UNAVAILABLE": {
+          "title": "The invitation could not be opened",
+          "body": "This is a connection problem between your device and the system, not a problem with the invitation code.",
+          "next": "Please check your network, then press “Try again”. Your invitation code is still valid."
+        },
+        "NEEDS_ACCOUNT": {
+          "title": "This step needs you to log in first",
+          "body": "Your invitation code is still valid — the problem is not the code. To attach the invitation to one account, the system needs to know which account is yours.",
+          "next": "If you already have a clan account, please log in and then reopen the exact link from the message. If you have never had an account, please call the person who invited you — only someone in the clan can open a new one for you."
+        },
+        "ACCOUNT_ALREADY_LINKED": {
+          "title": "This account is already linked to someone else in the phả",
+          "body": "Each account can be linked to only one person in the phả. If you accepted an invitation earlier, you no longer need this code.",
+          "next": "If you believe the account is linked to the wrong person, please call the person who invited you or the Hội đồng Tộc biểu (clan council) — only the council can unlink and relink."
+        },
+        "PERSON_ALREADY_LINKED": {
+          "title": "Someone has already accepted this invitation",
+          "body": "The profile in the phả that this invitation points to has already been claimed by another account.",
+          "next": "If that was not you, please call the person who invited you right away: the invitation may have reached the wrong person, and they need to know."
+        }
+      },
+      "acceptedTitle": "Done — you are now in the phả",
+      "acceptedBody": "Your account is linked to the profile above. There is nothing to wait for, and the invitation code is no longer needed.",
+      "acceptedOpenProfile": "View my profile in the phả",
+      "acceptedOpenTree": "View the clan phả đồ",
+      "acceptedSignIn": "Sign in",
+      "acceptedSignInHint": "Your account already has a password, so simply sign in as usual to view the genealogy."
+    },
+    "setPassword": {
+      "pageTitle": "Set your password",
+      "pageDescription": "Page for setting the first password on an account that has just accepted an invitation.",
+      "title": "Set a password for your account",
+      "intro": "Your account has been created and linked to your profile in the clan record. One thing is left: choose a password, so that from now on you can sign in yourself.",
+      "oneTimeNote": "This link works once and expires after thirty minutes. If it runs out, a new one can be arranged straight away — nothing is lost.",
+      "passwordLabel": "New password",
+      "confirmLabel": "Type the new password again",
+      "hint": "At least 8 characters. Write it down somewhere safe — nobody in the system can read this password.",
+      "show": "Show",
+      "hide": "Hide",
+      "submit": "Set password",
+      "submitting": "Setting your password…",
+      "errorEmpty": "Please type the password you want to use.",
+      "errorMismatch": "The two entries do not match yet. Press “Show” to see what you typed.",
+      "rejectedFallback": "This password cannot be used yet. Usually it is too short or too easy to guess — try a longer phrase, at least 8 characters, and avoid your own name or date of birth.",
+      "banner": {
+        "PROVIDER_DOWN": {
+          "title": "Could not reach the account system",
+          "body": "This is a problem on the server side, not with the password you typed. That password has not been saved.",
+          "next": "The link is still valid. Please wait a moment and press “Set password” again."
+        },
+        "RATE_LIMITED": {
+          "title": "Please wait a moment and try again",
+          "body": "This page has just received several attempts in a row, so it is pausing briefly. That is how we stop strangers guessing passwords — you have not done anything wrong.",
+          "next": "The link is still valid. Please wait a few minutes and press “Set password” again."
+        },
+        "UNAVAILABLE": {
+          "title": "Could not send it",
+          "body": "The connection between your device and the server is having trouble. The password you typed has not been saved, and there is nothing wrong with the password itself.",
+          "next": "The link is still valid. Please press “Set password” again."
+        }
+      },
+      "doneTitle": "All done — your password is set",
+      "doneBody": "From now on you sign in with the password you just chose. Your profile in the clan record is already linked to this account; there is no approval to wait for.",
+      "doneWhatsThere": "Once you sign in, you can see:",
+      "doneItem1": "the phả đồ (clan tree), including living members of your own chi (branch)",
+      "doneItem2": "danh xưng lookups — what to call whom, correctly",
+      "doneItem3": "giỗ (death anniversary) reminders for your own branch, by the lunar calendar",
+      "doneCta": "Sign in and open the clan tree",
+      "expiredTitle": "This password link can no longer be used",
+      "expiredAccountSafe": "Your account is still there and still linked to your profile in the clan record. Only this link has run out — you do not need a new invitation code, and you do not have to start again.",
+      "expiredBody": "The link opens only within thirty minutes of accepting the invitation, and only once — so that a message forwarded to the wrong person cannot open your account.",
+      "expiredNext": "Please call the person who invited you. They can set a temporary password for you and read it out over the phone; the very first time you sign in, the system will invite you to change it there and then.",
+      "expiredAlreadySetCta": "I already set my password — sign in",
+      "expiredAlreadySetHint": "If you opened this link once before and finished setting a password, that password still works: you only need to sign in.",
+      "noLinkTitle": "Your account already has a password",
+      "noLinkBody": "This page is used exactly once, when an account is first created. The system deliberately does not open it for an account that already has a password — if it did, anyone holding an invitation code could change your password.",
+      "noLinkNext": "Please press “Sign in” and use the password you normally use. If you have forgotten it, call the person who invited you and ask for a reset.",
+      "noLinkCta": "Sign in"
+    },
+    "accountState": {
+      "notProvisioned": {
+        "title": "We could not find you in the phả",
+        "body": "You are logged in, but this account has not yet been linked to anyone in the phả. So there is no profile to open yet, and danh xưng cannot be looked up.",
+        "todoTitle": "What to do",
+        "todo": "Please call your trưởng chi (branch head), or the person who invited you, and tell them the account is not linked to a profile in the phả. Linking is a decision of the Hội đồng Tộc biểu (clan council) — nobody else can do it, not even you."
+      },
+      "notActive": {
+        "title": "Your membership is awaiting approval",
+        "body": "You are logged in. The Hội đồng Tộc biểu (clan council) has one more confirmation to make before the part about living people opens.",
+        "todoTitle": "While you wait",
+        "todo": "The part about the ancestors who have passed away is already open to you — see below. If you have been waiting a long time with no reply, please call your trưởng chi (branch head)."
+      },
+      "technicalTitle": "Technical details",
+      "technicalHint": "This part is for support staff. You do not need to read it, and nothing here can be fixed from your device.",
+      "technicalCode": "Error code: {code}"
+    },
+    "guestMode": {
+      "title": "What can you see without logging in?",
+      "openTitle": "Open to everyone, no account needed",
+      "open1": "Profiles of ancestors who have passed away: name, years of birth and death, generation, and chi/ngành (branch)",
+      "open2": "The phả đồ (clan tree) from the Thuỷ tổ (founding ancestor) downwards, along the line of those who have passed away",
+      "open3": "The giỗ (death anniversary) recorded in each ancestor's profile, in both the lunar and the solar calendar",
+      "closedTitle": "Only members of the clan can see these",
+      "closed1": "Living people — under the law on protection of personal data",
+      "closed2": "Danh xưng lookups for living people",
+      "closed3": "Asking for corrections, and receiving giỗ reminders",
+      "notYourSetting": "This is not a setting of yours: living people are hidden from every visitor by default, and that is what the law requires, not a choice the clan made.",
+      "viewTree": "View the public phả đồ"
     }
   },
   "home": {
@@ -84,13 +254,18 @@
     "loading": "Building the family tree…",
     "loadError": "Could not load the family tree",
     "rootNotFound": "The root person of this tree was not found",
-    "loadedCount": "{count} people shown",
+    "visibleCount": "{count} people shown",
+    "loadedCount": "{count} people loaded from the server. Collapsing a branch only hides part of the view — it does not discard loaded data.",
     "fitWholeTree": "Fit whole tree",
     "fitWholeTreeHint": "Zoom out to see the whole loaded phả đồ at once. Text becomes small; pinch or zoom in to read details again.",
     "truncatedBanner": "This view is incomplete: {count} branch(es) still have people that have not been loaded. Expand a branch to see more.",
     "generationShort": "Gen. {n}",
     "statusAlive": "Living",
     "statusDeceased": "Deceased",
+    "datesUnrecorded": "Birth year not recorded",
+    "datesUnrecordedHint": "No birth year has been written down for this ancestor — contributions welcome.",
+    "datesUnshared": "Birth date not shared",
+    "datesUnsharedHint": "A living person chooses whether to share their birth date.",
     "expandBranch": "Expand this branch",
     "collapseBranch": "Collapse this branch",
     "viewMode": {
@@ -115,11 +290,31 @@
       "heir": "Heirship (kế tự)",
       "lineageEnd": "Line ended (tuyệt tự)",
       "detour": "Re-routed relationship",
+      "showOnPhone": "Show line conventions",
+      "hideOnPhone": "Hide legend",
       "showAll": "Show all marks",
       "showLess": "Show fewer marks"
     },
     "authRequired": "Please log in to view the family tree",
-    "authRequiredHint": "Under Decree 13/2023, visitors who are not logged in cannot see person records. Please log in with your clan account."
+    "authRequiredHint": "Under Decree 13/2023, visitors who are not logged in cannot see person records. Please log in with your clan account.",
+    "publicView": {
+      "label": "Note about the tree you are viewing",
+      "body": "This is the public family tree: the genealogy publishes ancestors who have passed away for everyone to see. Sign in with your clan account to see the full tree."
+    },
+    "rootPicker": {
+      "title": "Who does the tree start from?",
+      "titleAfterRejected": "This starting point could not be opened",
+      "bodyPublic": "The genealogy publishes ancestors who have passed away for everyone. Search for one of them to open the tree there, or open a tree link someone in the clan shared with you.",
+      "bodyMember": "Search for a person to open the tree there, or open a tree link someone in the clan shared with you.",
+      "label": "Find the person to start from",
+      "placeholder": "Type a name; accents optional",
+      "tooShort": "Please type at least {min} characters.",
+      "searchError": "The search did not come back. Please try again in a moment.",
+      "noMatch": "Nobody matches that name.",
+      "generation": "Generation {n}",
+      "changeRoot": "Start from someone else",
+      "useDefault": "Open the clan's default tree"
+    }
   },
   "person": {
     "profileTitle": "Person profile",
@@ -163,7 +358,145 @@
     "notFound": "This person was not found.",
     "loadError": "Could not load this profile. Please try again.",
     "pickerPlaceholder": "Type a name to search (accents optional)",
-    "pickerEmpty": "No matching person"
+    "pickerEmpty": "No matching person",
+    "relationsLoading": "Loading the relations list",
+    "relations": "Family relations",
+    "relationGroup": {
+      "parents": "Parents",
+      "spouses": "Spouses",
+      "children": "Children",
+      "siblings": "Siblings",
+      "heirs": "Line of succession"
+    },
+    "relationTag": {
+      "adoptedChild": "Adopted child",
+      "adoptiveParent": "Adoptive parent",
+      "spouseSenior": "Senior spouse",
+      "spouseSeniorWife": "Senior wife",
+      "spouseSeniorHusband": "Senior husband",
+      "spouseOrder": "Spouse no. {n}",
+      "spouseOrderWife": "Wife no. {n}",
+      "spouseOrderHusband": "Husband no. {n}",
+      "ended": "Marriage ended"
+    },
+    "relationKinshipLink": "Look up kinship with {name}",
+    "relationsEmpty": "No relation has been recorded for this person yet.",
+    "relationsTruncated": "The list was shortened because it is long. See it in full on the family tree.",
+    "relationsError": "Could not load the relations list. Please try again."
+  },
+  "privacy": {
+    "noticeLabel": "Information level shown here",
+    "livingT1": "This is the profile of a living person. Under Vietnam's personal-data rules the genealogy publishes only name, generation and direct relations; everything else is opened to people in the same branch, to the person themselves and to the clan council.",
+    "livingT2": "This is the profile of a living person. You can also see birth year, occupation and province. Phone, email, full address and the exact date of birth are opened only to the person themselves and to the clan council.",
+    "guestRelations": "You are viewing as a guest. The genealogy publishes only deceased persons to guests, so relations with living family members are not part of this list. Sign in with a clan account to see them.",
+    "sharing": {
+      "title": "Who can see what about me",
+      "why": "Fill in your occupation and where you live, then open it to the whole clan, and you will appear in the clan directory — where relatives find each other when they come home for a giỗ, move to a new city, or need someone in the family who works in the same trade.",
+      "directoryLink": "Open the clan directory",
+      "guestNever": "Whichever level you choose, a visitor who is not signed in sees nothing at all about a living person — not even a name. That is Vietnamese personal-data law, not a setting on this page.",
+      "save": "Save sharing levels",
+      "saved": "Saved.",
+      "unsaved": "You have unsaved changes.",
+      "upToDate": "These sharing levels are in effect.",
+      "saveError": "Could not save your sharing levels. Please try again.",
+      "conflict": "Your sharing levels were just changed on another device. Reload to see the current ones, then choose again.",
+      "reload": "Reload",
+      "loadError": "Could not load your sharing levels.",
+      "retry": "Try again",
+      "councilAlwaysReads": "Know this before you choose: Private means “only you and the Hội đồng Tộc biểu (clan council)”, not “only me”. The council can still read your phone number and address in order to run clan affairs — that is what this level means, not a fault."
+    },
+    "group": {
+      "occupation": "Occupation & workplace",
+      "residenceProvince": "Where I live (province/city)",
+      "residenceFull": "Full address",
+      "contact": "Contact: phone · email · Zalo",
+      "birthDetailAndPhoto": "Full date of birth & photo"
+    },
+    "groupShort": {
+      "occupation": "occupation",
+      "residenceProvince": "province where I live",
+      "residenceFull": "full address",
+      "contact": "contact details",
+      "birthDetailAndPhoto": "date of birth & photo"
+    },
+    "groupBenefit": {
+      "occupation": "So relatives in the same trade can find each other, and so younger family members studying or working far from home have someone in the clan to ask.",
+      "residenceProvince": "So family in the same province know about each other — most useful right after a move, or when coming home for the ancestral anniversary.",
+      "residenceFull": "Only needed when the clan posts invitations, giỗ offerings or the newsletter by mail.",
+      "contact": "The only way for relatives to reach you directly instead of asking around.",
+      "birthDetailAndPhoto": "A photo helps relatives recognise each other at a giỗ; a full birth date lets them wish you well on the right day."
+    },
+    "notFilledYet": "You have not filled this in yet, so there is nothing to share.",
+    "fillItIn": "Fill it in",
+    "lockedMinor": "A minor's profile is always kept at the most private level and cannot be opened up.",
+    "viewer": {
+      "GUEST": "Anyone not signed in",
+      "CLAN_MEMBER": "Clan member (another chi)",
+      "SAME_BRANCH": "Someone in your chi",
+      "COUNCIL": "Hội đồng Tộc biểu (clan council)"
+    },
+    "preview": {
+      "title": "Summary: who sees what",
+      "lead": "This table reflects exactly the levels you picked above, and only you can read it.",
+      "nothingAtAll": "Nothing at all about you, not even your name.",
+      "baselineOnly": "Name, generation, chi/ngành, and parent – spouse – child relations.",
+      "baselinePlus": "Name, generation, chi/ngành, relations, plus: {groups}."
+    },
+    "scope": {
+      "CLAN": "Whole clan",
+      "BRANCH": "My chi only",
+      "PRIVATE": "Private"
+    },
+    "scopeHint": {
+      "CLAN": "Every signed-in member of the clan can see this, and you appear in the directory.",
+      "BRANCH": "People in your chi/ngành can see this. People in other chi cannot.",
+      "PRIVATE": "Only you and the Hội đồng Tộc biểu (clan council) can see this. It does not appear in the directory."
+    }
+  },
+  "directory": {
+    "title": "Clan directory",
+    "subtitle": "Living relatives who chose to show their occupation and where they live to the whole clan. Filter by place, trade or chi to find who you are looking for.",
+    "loadError": "Could not load the directory. Please try again.",
+    "resultCount": "{count, plural, one {# person in the directory} other {# people in the directory}}",
+    "kinshipCta": "How do I address them?",
+    "kinshipCtaFor": "How should I address {name}?",
+    "coverage": {
+      "title": "{shared} of {living} living relatives have filled this in and chosen to appear",
+      "why": "The directory only lists people who chose to show themselves to the whole clan, so it is far shorter than the genealogy itself. That is by design, not missing data — the people not listed here have not chosen yet, which is not the same as not existing.",
+      "selfCta": "Set my sharing levels"
+    },
+    "filters": {
+      "name": "Search by name",
+      "namePlaceholder": "Type a name; accents optional",
+      "province": "Where they live",
+      "anyProvince": "Any province",
+      "occupation": "Occupation",
+      "anyOccupation": "Any occupation",
+      "branch": "Chi / ngành (branch)",
+      "anyBranch": "Any chi",
+      "facetOption": "{value} ({count})",
+      "clear": "Clear all filters"
+    },
+    "empty": {
+      "noOneTitle": "Nobody in the directory yet",
+      "noOneBody": "No one in the clan has chosen to show their occupation or where they live to the whole clan yet. You could be the first — it takes a minute.",
+      "clearFilters": "Clear the filters and look again",
+      "beFirst": "Open my profile",
+      "filteredTitle": "Nobody matches these filters",
+      "filteredBody": "Try removing one filter. The directory only contains people who chose to appear, so many provinces and trades have nobody in them yet."
+    },
+    "guest": {
+      "title": "The directory is for signed-in members",
+      "body": "The directory is where living relatives introduce their trade and where they live to the whole clan. Under Vietnamese personal-data law the genealogy publishes nothing about living people to visitors who are not signed in, so the directory opens only once you sign in with your clan account.",
+      "publicHint": "Ancestors who have passed away are public — you can browse the family tree right now.",
+      "viewTree": "Browse the public tree"
+    },
+    "unavailable": {
+      "title": "This server has no directory yet",
+      "body": "This installation does not serve a directory, so there is nothing to load — pressing retry will not change that. The family tree, kinship lookup and anniversary calendar all work as usual.",
+      "whoToAsk": "Ask the clan council or the system administrator to enable the directory.",
+      "viewTree": "Browse the family tree"
+    }
   },
   "kinship": {
     "title": "Kinship lookup",
@@ -245,6 +578,20 @@
     }
   },
   "personForm": {
+    "unsavedDialog": {
+      "title": "You have unsaved changes",
+      "body": "What you just entered has not been saved to the genealogy. Leaving now discards it.",
+      "draftHint": "A draft is kept on this device until you close the tab.",
+      "stay": "Stay and keep editing",
+      "leave": "Leave and discard"
+    },
+    "draft": {
+      "title": "You were part-way through this record last time",
+      "savedAt": "Draft saved at {time}.",
+      "privacyHint": "The draft stays on this device, in this tab only, and is gone when the tab closes. On a shared computer, please press “Discard draft” when you are done.",
+      "restore": "Restore what I entered",
+      "discard": "Discard draft"
+    },
     "createTitle": "Add a person",
     "editTitle": "Edit {name}",
     "create": "Add to the genealogy",
@@ -254,6 +601,7 @@
     "savedCreate": "The person has been added to the genealogy.",
     "savedEdit": "Changes saved.",
     "savedWithOverride": "Saved, with a note recording the taboo-name collision.",
+    "savedWithDuplicateOverride": "Added, with a note recording that you confirmed this is a different person.",
     "sections": {
       "names": "Names",
       "identity": "Gender and status",
@@ -274,14 +622,6 @@
     "statusHint": "Switch off for someone who has passed away. Entering a date of death also marks them as deceased — you will be asked to confirm.",
     "currentPlaceProvince": "Province / city of residence",
     "currentPlaceFull": "Full address",
-    "privacyLevel": "Sharing level",
-    "privacyLevelHint": "Living people are hidden by default. Widen this only with the person's own consent.",
-    "privacyOption": {
-      "DEFAULT": "Default rules",
-      "BRANCH_OPT_IN": "Visible within the branch",
-      "CLAN_OPT_IN": "Visible across the clan",
-      "RESTRICTED": "Maximally restricted"
-    },
     "contactHint": "Contact details are the most sensitive tier and are visible only to the person themselves and to administrators.",
     "note": "Reason / note",
     "noteHint": "This is written to the edit history so future generations can trace the change.",
@@ -330,6 +670,10 @@
       "spouseOrder": "Spouse order",
       "spouseOrderHint": "1 means the first/senior spouse."
     },
+    "conflictParty": {
+      "generation": "Generation {n}",
+      "matchedName": "{label}: {name}"
+    },
     "taboo": {
       "title": "Taboo-name warning (kỵ húy)",
       "lead": "The name entered collides with the taboo name of {count} ancestor(s).",
@@ -339,13 +683,49 @@
         "GIVEN_NAME": "Given name matches",
         "UNACCENTED": "Matches without diacritics"
       },
-      "generation": "Generation {n}",
-      "collidesWith": "Taboo name: {name}",
+      "ancestorLoadFailed": "Could not load the ancestor's record. Try again in a few minutes.",
+      "ancestorNotVisible": {
+        "title": "You are not allowed to view this ancestor",
+        "body": "The kỵ húy check looks across the whole clan by generation, so the colliding ancestor may still be living in another branch. The system does not reveal whether such a record exists.",
+        "ask": "Ask the clan council to compare the taboo names for you — they can see both sides."
+      },
       "reasonLabel": "Reason for keeping this name",
       "reasonPlaceholder": "e.g. approved by the clan council at the meeting on…",
       "reasonHint": "The reason is written to the edit history alongside the override.",
       "rename": "Go back and rename",
       "confirm": "Keep this name anyway"
+    },
+    "duplicate": {
+      "title": "Possible duplicate of an existing record",
+      "lead": "The person you entered may match {count} record(s) already in the genealogy.",
+      "explain": "This is the system's guess, based on what you just entered — not a refusal. Please compare; if you are sure this is a different person, go ahead and add them.",
+      "score": "Suspicion score {score}",
+      "signal": {
+        "TEN_TRUNG_CO_DAU": "Full name matches, with diacritics",
+        "TEN_TRUNG_KHONG_DAU": "Full name matches without diacritics",
+        "GIO_TRUNG_KHIT": "Death anniversary matches exactly",
+        "NAM_SINH_KHOP": "Birth year matches",
+        "NAM_SINH_LECH_IT": "Birth year is close",
+        "NAM_MAT_KHOP": "Year of death matches",
+        "CUNG_CHI": "Same branch",
+        "CUNG_DOI": "Same generation",
+        "KHAC_DOI": "Different generation",
+        "CUNG_NGUYEN_QUAN": "Same ancestral home",
+        "KHAC_GIOI": "Different gender"
+      },
+      "inBatch": {
+        "title": "A row not yet written, in the import batch",
+        "ref": "You entered this row yourself and it is not in the genealogy yet: {ref}",
+        "noRef": "You entered this row yourself and it is not in the genealogy yet, so there is no record to open."
+      },
+      "candidateNotVisible": {
+        "title": "You are not allowed to view the suspected record",
+        "body": "The duplicate detector scans the whole clan, so that record may be a living person in another branch. The system does not reveal whether such a record exists.",
+        "ask": "Ask the clan council to compare for you — they can see both sides."
+      },
+      "candidateLoadFailed": "Could not load the suspected record. Try again in a few minutes.",
+      "review": "Go back and check",
+      "confirm": "Different person — add anyway"
     },
     "deathConfirm": {
       "title": "You are recording a death",
@@ -428,6 +808,8 @@
     "upcomingTitle": "Coming up",
     "calendarTitle": "The next twelve months",
     "empty": "No anniversaries fall in this period.",
+    "emptyFiltered": "Nothing matches the filters you have set. Clear them to see the whole clan.",
+    "clearFilters": "Clear filters",
     "loadError": "Could not load the anniversary list. Please try again.",
     "branchFilter": "Filter by branch",
     "anyBranch": "Whole clan",
@@ -455,8 +837,13 @@
       "DAI_TUONG": "Đại tường (second year)",
       "CHAP_MA": "Grave tending (chạp mả)",
       "MUNG_THO": "Longevity celebration",
-      "KHAC": "Other rite"
-    }
+      "SINH_NHAT": "Birthday",
+      "KHANH_THANH": "Hall dedication",
+      "HOP_HO": "Clan assembly",
+      "CUOI_HOI": "Wedding",
+      "KHAC": "Other clan event"
+    },
+    "showLessInMonth": "Show less"
   },
   "push": {
     "inAppAlways": "Either way, every giỗ reminder is waiting in full in your notification centre when you open the app.",
@@ -482,7 +869,7 @@
     "error": {
       "PERMISSION_DENIED": "You declined notification permission. Every reminder still waits in the notification centre.",
       "NO_SERVICE_WORKER": "Could not enable push: no service worker.",
-      "SERVER_NOT_CONFIGURED": "The server has no push key configured yet, so this cannot be switched on. Please tell an administrator; every giỗ reminder still waits in the notification centre.",
+      "SERVER_NOT_CONFIGURED": "Push cannot be turned on because the server has no VAPID key yet. This is a system-administrator task, not a problem with your device — trying again will not help. Please report it with the code WEBPUSH_NOT_CONFIGURED (administrators: see /api/v1/admin/notifications/webpush for what is missing). Meanwhile every giỗ reminder still waits in full in your notification centre.",
       "SUBSCRIBE_FAILED": "Could not register for push notifications. Please try again later."
     },
     "ios": {
@@ -498,6 +885,581 @@
   },
   "settings": {
     "title": "Settings",
-    "subtitle": "Choose how you would like to receive clan reminders and notifications."
+    "subtitle": "Choose how you would like to receive clan reminders and notifications.",
+    "theme": {
+      "title": "Appearance",
+      "description": "Follows your device setting by default. Choose manually to override.",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "correction": {
+    "title": "Correction requests",
+    "subtitle": "Where members report an error and a Trưởng chi or the Hội đồng Tộc biểu decides.",
+    "nav": {
+      "label": "Correction requests",
+      "labelWithCount": "Correction requests — {count} awaiting review",
+      "tooltip": "Correction requests"
+    },
+    "entry": {
+      "title": "Spotted something recorded wrongly?",
+      "hint": "You cannot edit this record directly, but you can point out what is wrong so a Trưởng chi or the Hội đồng Tộc biểu can review it.",
+      "button": "Request a correction"
+    },
+    "dialog": {
+      "title": "Request a correction to {name}",
+      "lead": "Pick the entry that is wrong, give the correct value, and say why. One item at a time, so the reviewer can decide each on its own merits.",
+      "fieldLabel": "What is recorded wrongly?",
+      "currentLabel": "Currently recorded",
+      "proposedLabel": "Should be",
+      "reasonLabel": "Why do you believe this?",
+      "reasonHint": "Citing a source — a handwritten clan book, a stele, what the elders say — helps the reviewer decide quickly.",
+      "reasonPlaceholder": "e.g. our family's handwritten clan book records the 18th of the 12th lunar month; we have kept the giỗ on that day since my grandfather's time.",
+      "otherHint": "What you want to report is not in the list above (taboo names, parent–child links, moving branch…). Please describe it clearly in the reason box below.",
+      "submit": "Send request",
+      "cancel": "Close",
+      "sent": "Your correction request has been sent. A Trưởng chi will review it."
+    },
+    "fields": {
+      "death": "Date of death (giỗ date)",
+      "birth": "Date of birth",
+      "nativePlace": "Native place",
+      "occupation": "Occupation",
+      "currentPlaceProvince": "Province / city of residence",
+      "gender": "Gender",
+      "OTHER": "Something else — I will describe it"
+    },
+    "value": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "card": {
+      "before": "Currently",
+      "after": "Proposed",
+      "afterCleared": "Proposes clearing this entry",
+      "reason": "Reason given",
+      "reviewNote": "Reviewer's note: {note}",
+      "payloadHidden": "You may not see the details of this request; below are only the entries it touches.",
+      "unknownPerson": "A person in the genealogy",
+      "noPerson": "Proposal to add a new person"
+    },
+    "status": {
+      "PENDING": "Awaiting review",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Withdrawn"
+    },
+    "type": {
+      "CREATE_PERSON": "Add a person",
+      "UPDATE_PERSON": "Update details",
+      "SOFT_DELETE_PERSON": "Remove from the genealogy",
+      "ADD_RELATIONSHIP": "Add a relationship",
+      "REMOVE_RELATIONSHIP": "Remove a relationship",
+      "ADD_NAME": "Add a name layer",
+      "MOVE_BRANCH": "Move to another branch",
+      "OTHER": "Something else"
+    },
+    "queue": {
+      "tab": "Awaiting my review",
+      "empty": "Nothing is awaiting review within your scope.",
+      "emptyNoScope": "The Hội đồng Tộc biểu has not assigned you a chi/ngành yet, so nothing falls within your scope. Please contact the council to be assigned one."
+    },
+    "mine": {
+      "tab": "My requests",
+      "empty": "You have not sent any correction requests yet.",
+      "cancel": "Withdraw",
+      "cancelConfirm": "Withdraw this request? It stays in the history; it simply stops awaiting review.",
+      "cancelled": "Request withdrawn."
+    },
+    "review": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveTitle": "Approve this correction request",
+      "rejectTitle": "Reject this correction request",
+      "approveLead": "Please read “Currently” and “Proposed” side by side once more before approving.",
+      "rejectLead": "The person who sent this will read your reason. Say enough that they will still send the next one.",
+      "noteLabel": "Note (optional)",
+      "noteLabelRequired": "Reason for rejecting",
+      "notePlaceholder": "e.g. checked against the stele at the ancestral hall; the date of death in the clan book is correct.",
+      "noteRequired": "Please give a reason — whoever sent this is entitled to know why.",
+      "cancel": "Go back",
+      "approved": "Correction request approved.",
+      "rejected": "Correction request rejected.",
+      "selfReviewTitle": "You sent this request yourself",
+      "selfReviewHint": "A reviewer may not be the requester. Please leave this to the Hội đồng Tộc biểu or another Trưởng chi."
+    },
+    "person": {
+      "title": "Request a correction to {name}",
+      "subtitle": "Your request goes to a Trưởng chi or the Hội đồng Tộc biểu before it reaches the genealogy.",
+      "canEditInstead": "You can edit this record directly",
+      "canEditInsteadHint": "No request needed — use Edit to update it yourself."
+    },
+    "errors": {
+      "reasonTooShort": "Please give a fuller reason (at least 10 characters) so the reviewer has the context.",
+      "reasonTooLong": "That reason is too long (2000 characters maximum).",
+      "valueRequired": "Please enter the value you believe is correct.",
+      "dateRequired": "Please enter either the solar or the lunar date.",
+      "topicRequired": "Please choose what needs correcting.",
+      "lunarDay": "The lunar day must be between 1 and 30.",
+      "lunarMonth": "The lunar month must be between 1 and 12.",
+      "lunarMonthRequired": "If you enter a lunar day, the lunar month is required too.",
+      "submitFailed": "The request could not be sent. Please try again.",
+      "serverValidation": "The server rejected this data as invalid.",
+      "notProvisioned": "You need to sign in with a clan account to send or view correction requests.",
+      "notActive": "Your account is still awaiting approval by the Hội đồng Tộc biểu, so you cannot send requests yet.",
+      "loadFailed": "The correction requests could not be loaded.",
+      "forbidden": "You do not have permission to do this.",
+      "branchScope": "This request belongs to a chi/ngành outside the scope you were assigned.",
+      "closed": "This request has already been decided and cannot be reopened. Send a new request if you have changed your mind.",
+      "selfReview": "You cannot review your own request.",
+      "reviewFailed": "The decision could not be recorded. Please try again.",
+      "cancelFailed": "The request could not be withdrawn. Please try again.",
+      "personNotFound": "This person was not found."
+    }
+  },
+  "a11y": {
+    "skipToContent": "Skip to main content"
+  },
+  "dataImport": {
+    "title": "Initial data entry",
+    "subtitle": "Bringing one branch's original genealogy into the system",
+    "common": {
+      "branch": "Branch (chi)",
+      "batch": "Import batch",
+      "rows": "rows",
+      "people": "people",
+      "loading": "Loading…",
+      "error": "Could not load the data",
+      "retry": "Try again",
+      "close": "Close",
+      "cancel": "Never mind",
+      "noBranchTitle": "You have not been assigned a branch to import",
+      "noBranchBody": "The Clan Council assigns each chi to one branch head. Contact the Council to be given import rights for your branch.",
+      "notFoundTitle": "This import batch was not found",
+      "notFoundBody": "It may have been replaced by a newer upload. Open your batch list to see the one in use.",
+      "openBatches": "See my batches"
+    },
+    "steps": {
+      "legend": "The five-step process",
+      "current": "You are here",
+      "done": "Done",
+      "upcoming": "Not yet",
+      "s1": {
+        "name": "The Council settles the original genealogy",
+        "detail": "A signed paper copy. It is the reference for every later reconciliation — no software does this step.",
+        "who": "Clan Council"
+      },
+      "s2": {
+        "name": "Declare the chi / ngành structure",
+        "detail": "Declare the branches, then assign each one to a branch head. Only then does a branch have the code prefix its Excel template needs.",
+        "who": "Council and admin"
+      },
+      "s3": {
+        "name": "Each branch fills in its Excel file",
+        "detail": "Four branches work in parallel, not in turn. Each downloads its own template and copies from its own paper book.",
+        "who": "Branch heads"
+      },
+      "s4": {
+        "name": "Reconcile, fix, upload again",
+        "detail": "Upload, read what the system reports, fix it in Excel, upload again — until it is clean. Nothing changes in the genealogy during this step.",
+        "who": "Branch head with an elder"
+      },
+      "s5": {
+        "name": "Invite living relatives to claim their own record",
+        "detail": "Nobody fills in a living person's details for them. They receive a Zalo invitation and declare their own.",
+        "who": "Council"
+      }
+    },
+    "intro": {
+      "lead": "This page tells you where you are in the process and what comes next.",
+      "reassure": {
+        "title": "Nothing here can damage the genealogy",
+        "body": "An uploaded file sits in a holding area. The clan's genealogy only changes when you have read the reconciliation report and pressed approve yourself — and even then you can undo the whole batch for 30 days."
+      },
+      "resume": {
+        "title": "You have a batch in progress",
+        "body": "Batch {batchId} for {branch}, uploaded {when}. Work in progress lives on the server, so you can close the browser and pick it up whenever you like.",
+        "action": "Continue this batch"
+      },
+      "actions": {
+        "template": "Get my branch's Excel template",
+        "upload": "Upload a completed file",
+        "progress": "See how each branch is doing"
+      },
+      "sessionNote": "Entering a branch of 350–400 people usually takes 6–10 sittings. There is no need to finish in one go."
+    },
+    "template": {
+      "title": "Excel template, one per branch",
+      "lead": "Every branch gets its own template. From the second import onwards it comes pre-filled with the people already in your branch — edit the rows that already have codes instead of retyping them.",
+      "download": "Download the {branch} template",
+      "downloading": "Building the file…",
+      "guide": {
+        "title": "Four things to know before you start",
+        "sheets": {
+          "title": "The file has five sheets",
+          "body": "Instructions · People · Marriages · Lists · Already recorded. The Instructions sheet opens first — read it before typing a single row."
+        },
+        "code": {
+          "title": "The Code column matters most",
+          "body": "Codes come from the numbering in your branch's paper register; the workbook explains the format. Father code and mother code point back at this column. The next import reuses the same codes, so never renumber."
+        },
+        "lunar": {
+          "title": "Lunar death dates are typed as text",
+          "body": "Type 15/8 or 15/8 nhuận. The cell is already formatted as text — do not change it, or Excel will silently turn 15/8 into a solar date in the current year."
+        },
+        "living": {
+          "title": "Do not fill in details for living people",
+          "body": "The template deliberately has no phone, email, address or photo column. Living relatives declare their own details at step 5. This is a decision, not an omission."
+        }
+      },
+      "example": {
+        "title": "Delete the example rows before you submit",
+        "body": "The People sheet ships with a three-generation family as an example, on a different background. Delete those rows before uploading."
+      },
+      "next": "Finished filling it in? Upload the file",
+      "kind": {
+        "DONG_HO": "Whole clan",
+        "CHI": "Chi (branch)",
+        "NGANH": "Ngành (sub-branch)",
+        "CANH": "Cành",
+        "NHANH": "Nhánh"
+      }
+    },
+    "upload": {
+      "title": "Upload a file",
+      "lead": "Choose the branch and the completed Excel file. The system reads and reconciles it; nothing is written to the genealogy.",
+      "branchLabel": "Which branch is this file for",
+      "branchPlaceholder": "Choose a branch",
+      "fileLabel": "Completed Excel file",
+      "pick": "Choose an .xlsx file",
+      "picked": "Chosen: {name}",
+      "submit": "Upload and reconcile",
+      "submitting": "Reading the file…",
+      "needBranch": "Choose a branch first.",
+      "needFile": "Choose an .xlsx file.",
+      "limits": "Only .xlsx files, at most 10 MB and 5,000 person rows.",
+      "reassure": "Uploading is not approving. You will see the full reconciliation report before deciding to write anything.",
+      "supersede": "A new upload replaces the branch's batch in progress. The old batch is not deleted, it just stops being the one in use.",
+      "notYours": "(outside your scope)",
+      "alreadyCommitted": {
+        "title": "This exact file has already been written into the tree",
+        "body": "This branch already has a batch with the same contents that was committed. This is only a double-click guard — re-uploading to VALIDATE is never blocked. If you really mean to write it again, use the button below.",
+        "force": "I understand, upload anyway"
+      },
+      "openBatch": {
+        "title": "This branch still has a batch under review",
+        "body": "Batch {batchId} is not closed yet. Uploading a new file replaces it — it becomes “superseded” and the reconciliation work already done there cannot be continued. If you meant to carry on with the old batch, open it.",
+        "action": "Open the unfinished batch"
+      }
+    },
+    "reconcile": {
+      "title": "Reconciling batch {batchId}",
+      "fileLine": "{fileName} · {branch} · uploaded {when}",
+      "notWritten": {
+        "title": "Nothing has been written to the genealogy yet",
+        "body": "Your file is in the holding area. The clan's genealogy has not changed by one row and will only change when you press the approve button at the bottom of this page."
+      },
+      "counts": {
+        "persons": "{count} person rows",
+        "marriages": "{count} marriage rows",
+        "create": "{count} people would be added",
+        "update": "{count} already exist and would be updated"
+      },
+      "blocking": {
+        "title": "{count} errors you must fix",
+        "none": "No errors left to fix",
+        "help": "These must be fixed in the Excel file and the file uploaded again. Until then, approval is not possible.",
+        "suggestions": "Did you mean",
+        "cycle": "The loop found in the file",
+        "declared": "The file says",
+        "derived": "The system derives",
+        "sheetRow": "{sheet} · row {row}",
+        "wholeBatch": "Whole batch",
+        "notFoundCode": "Code not found",
+        "conflictRows": "{count, plural, one {Clashes with row {rows}} other {Clashes with rows {rows}}}"
+      },
+      "warning": {
+        "title": "{count} items to look over",
+        "none": "Nothing to look over",
+        "help": "These can still be imported. Read them so you know what you are accepting, then confirm below.",
+        "ack": "I have looked over all {count} items",
+        "acked": "Confirmed at {when}",
+        "duplicatesLink": "Review {count} suspected duplicate pairs",
+        "ackAgain": "I have reviewed the {count} items again",
+        "mayBeStale": "The approval gate is still closed. If you acknowledged earlier, the validator has most likely added new items since — an acknowledgement only counts for the exact list that was read."
+      },
+      "actions": {
+        "reupload": "Upload the corrected file",
+        "revalidate": "Re-run the validator",
+        "reuploadHint": "Fix it in Excel — where you are at home — then upload again. Use “Re-run the validator” when the file has not changed and you only want to check again."
+      },
+      "commit": {
+        "button": "Approve and write {count} people into the genealogy",
+        "blockedByIssues": "{count} errors still to fix — approval is not possible yet",
+        "blockedByAck": "Confirm you have looked over the items before approving",
+        "blockedByDuplicates": "{count} suspected duplicate pairs still undecided",
+        "confirmTitle": "Write {count} people into the genealogy?",
+        "confirmBody": "This is the moment the clan tree changes. If something turns out wrong you can still roll the whole batch back — as long as nobody has edited the records it created.",
+        "confirmOk": "Write to the genealogy",
+        "failed": "Could not write",
+        "blockedByStatus": "The batch is in state {status}, not ready for approval",
+        "blockedUnknown": "The server is not allowing this batch to be approved.",
+        "blockedByAckStale": "The validator produced new items to review after you acknowledged — read the new ones and acknowledge again"
+      },
+      "committing": {
+        "title": "Writing to the genealogy",
+        "phase": {
+          "QUEUED": "Queued",
+          "PERSONS": "Creating people",
+          "PARENT_EDGES": "Linking parents and children",
+          "SPOUSE_EDGES": "Linking spouses",
+          "CACHE": "Rebuilding the tree",
+          "DONE": "Done",
+          "FAILED": "Failed"
+        },
+        "estimate": "{done}/{total} rows — this figure is an estimate",
+        "leaveOk": "You may close this page; the write carries on."
+      },
+      "committed": {
+        "title": "{count} people written into the genealogy",
+        "when": "Written at {when}",
+        "viewTree": "See them on the tree"
+      },
+      "rollback": {
+        "button": "Remove this whole batch",
+        "confirmTitle": "Remove the whole of batch {batchId}?",
+        "confirmBody": "Every person and relationship this batch brought in will be taken back out of the genealogy. Nothing is permanently deleted.",
+        "reasonLabel": "Why are you removing it",
+        "confirmOk": "Remove the batch",
+        "done": "This batch has been removed from the genealogy",
+        "blockedTitle": "{count, plural, one {One blocker} other {{count} blockers}}",
+        "blockedHint": "Rolling back now would discard other people's work. Talk to them first, or ask the council to correct the records one by one.",
+        "reasonOptional": "Optional, but the reason goes into the audit log and whoever comes next will need it.",
+        "doneNote": "This batch has been rolled out of the tree. Its status stays “Committed” because it was once written — that is historical fact, not a display bug."
+      },
+      "superseded": {
+        "title": "This batch was replaced by a newer upload",
+        "body": "There is nothing to do with the old batch. Open the newest one to carry on reconciling."
+      },
+      "failed": {
+        "title": "This batch stopped because of blocking errors"
+      }
+    },
+    "duplicates": {
+      "title": "Reviewing suspected duplicates",
+      "lead": "The system only orders them for review. The decision is yours — nothing is merged automatically.",
+      "counter": "Pair {index} of {total}",
+      "score": "{score} out of 100 duplicate points",
+      "none": "No pairs to review",
+      "columns": {
+        "existing": "Already in the genealogy",
+        "incoming": "In the uploaded file",
+        "existingInFile": "Another row in the same file"
+      },
+      "evidenceTitle": "Evidence, ordered by how far it can be trusted",
+      "trustNote": "The lunar death date comes first because the whole clan observes it every year, so it is hard to get wrong. Birth year comes last because old books usually record it from memory — a year or two apart does not mean two different people.",
+      "divergence": "Differs",
+      "missingInFile": "Missing from the file",
+      "missingInTree": "Not recorded in the genealogy",
+      "missingWarning": "The highlighted items are missing from the file. Merging keeps what the genealogy already holds; it never overwrites it with a blank.",
+      "decide": {
+        "merge": "One person — merge them",
+        "distinct": "Two different people",
+        "defer": "Not sure — leave it for later",
+        "deferHint": "Choose this when you are not sure. The pair stays in the holding area until someone can ask the elders — but the batch still cannot be approved while any pair is undecided.",
+        "preselected": "A very high score — the system suggests merging, but it still waits for you.",
+        "saving": "Saving the decision…",
+        "noteLabel": "Note (optional)",
+        "notePlaceholder": "For example: checked against the 1998 Giap branch book",
+        "noteHint": "The note goes into the audit log under your name. Ten years from now it is the only sentence explaining why.",
+        "decidedAt": "{who} decided at {when}",
+        "decidedAtUnknown": "Decided at {when}",
+        "change": "Change this decision",
+        "failed": "The decision could not be saved",
+        "status": {
+          "PENDING": "Undecided",
+          "MERGED": "Chosen: one person",
+          "DISTINCT": "Chosen: two different people",
+          "DEFERRED": "Deferred — still counts as undecided"
+        }
+      },
+      "back": "Back to reconciliation",
+      "policy": "The detector only raises a suspicion from {suspect} points, and suggests merging from {preselect}. Both thresholds are published by the server.",
+      "privacyNote": "For someone already in the tree this screen receives only a key — no name, no birth year, no death anniversary. The detector scans the whole clan, so the suspected record may sit in a branch you are not allowed to see.",
+      "evidenceWithheld": "There is no comparison table for this pair: the system does not send the tree person's data into the import screens. Open their profile to see whatever you are allowed to see.",
+      "evidenceField": "Signal",
+      "treeParty": {
+        "notVisibleTitle": "You are not allowed to view this person",
+        "notVisibleBody": "The duplicate detector scans the whole clan, so the suspected record may belong to another branch. The system does not reveal whether such a record exists.",
+        "notVisibleAsk": "Ask the clan council to compare for you — they can see both sides.",
+        "loadFailed": "Could not load the tree record. Try again in a few minutes.",
+        "unnamed": "(no display name)",
+        "generation": "Generation",
+        "birthYear": "Birth year",
+        "deathLunar": "Death anniversary",
+        "lunarValue": "{day}/{month}{leap, select, 1 { leap} other {}} (lunar)",
+        "branch": "Branch",
+        "openProfile": "Open the tree profile"
+      },
+      "fileParty": {
+        "unnamed": "(row without a name)",
+        "row": "row {row}",
+        "tabooName": "Taboo name",
+        "generation": "Generation",
+        "birthYear": "Birth year",
+        "deathLunar": "Death anniversary",
+        "fatherCode": "Father code",
+        "nativePlace": "Native place"
+      },
+      "whySuspect": "Why it is suspected",
+      "noSignals": "The server sent no signal label for this pair.",
+      "plan": {
+        "title": "What will be written after your decisions",
+        "create": "{count} people will be added",
+        "update": "{count} people already exist and will be updated",
+        "undecided": "{count} pairs still undecided",
+        "allDecided": "Every pair has been decided",
+        "why": "Each time you choose “merge”, one row moves from “added” to “updated” or disappears entirely — the two numbers above follow. The server recomputes them; this screen never adds them up itself.",
+        "gateOpen": "Everything is decided. Go back to reconciliation to approve the batch.",
+        "gateClosed": "The batch cannot be approved: {count} pairs are still undecided. “Deferred” still counts as undecided."
+      },
+      "mergeNotApplicable": {
+        "title": "Cannot merge: this row is tied to two people already in the genealogy",
+        "body": "You chose “one person” for two pairs on the same row, but those pairs point at two different records that already exist in the genealogy. One row cannot be both of them.",
+        "scope": "Merging two records that are already in the genealogy belongs to the person-management screens, not to data import: only there is the full edit history and the authority to join two nodes of the tree.",
+        "whatToDo": "Set one of the two pairs back to “two different people”, then re-run validation. If two tree records genuinely need to become one, ask the clan council to do that first.",
+        "batchStopped": "The batch has stopped because of this error. Nothing has been written to the genealogy."
+      }
+    },
+    "progress": {
+      "title": "How each branch is doing",
+      "lead": "The four branches work in parallel. This table shows what is still missing in each.",
+      "notARanking": "This is not a league table. The branches have different books, different sizes and different numbers of people free to help — comparing one with another says nothing.",
+      "coordinator": "Person responsible",
+      "noCoordinator": "Nobody has taken this branch on",
+      "noCoordinatorHint": "A branch with nobody responsible stands still no matter how ready the software is. That is the Council's to solve.",
+      "inTree": "In the genealogy",
+      "expected": "The original book holds {count} people",
+      "openBatch": "Batch in progress: {batchId}",
+      "remaining": "Still outstanding",
+      "blocking": "{count} errors to fix",
+      "warnings": "{count} items to look over",
+      "undecided": "{count} suspected duplicate pairs undecided",
+      "missingGio": "{count} deceased people with no giỗ date",
+      "missingGioWhy": "Someone with no giỗ date still appears on the tree but will never trigger a death-anniversary reminder.",
+      "nothingLeft": "Nothing outstanding",
+      "open": "Open this batch",
+      "yoursToImport": "You are assigned to import this branch",
+      "notYoursToImport": "You do not import for this branch",
+      "expectedUncounted": "Nobody has counted the paper register yet"
+    },
+    "stage": {
+      "NOT_STARTED": "Not started",
+      "TEMPLATE_DOWNLOADED": "Template taken",
+      "UPLOADED": "File uploaded",
+      "RECONCILING": "Reconciling",
+      "COMMITTED": "In the genealogy"
+    },
+    "status": {
+      "DRAFT": "Just uploaded",
+      "PARSED": "Read",
+      "VALIDATED": "Reconciled, awaiting approval",
+      "COMMITTING": "Writing to the genealogy",
+      "COMMITTED": "In the genealogy",
+      "FAILED": "Errors still to fix",
+      "SUPERSEDED": "Replaced by a newer batch",
+      "VALIDATING": "Validating"
+    },
+    "issue": {
+      "IMP_PARENT_NOT_FOUND": "Father or mother code does not exist",
+      "IMP_CYCLE": "Ancestor loop",
+      "IMP_CHILD_BEFORE_PARENT": "Child born before the parent",
+      "IMP_LUNAR_DATE_NOT_EXIST": "That lunar date does not exist",
+      "IMP_DUP_CODE": "Two rows share one code",
+      "IMP_BAD_CODE_FORMAT": "Malformed code, or a code from another branch",
+      "IMP_ALIVE_WITH_DEATH": "Marked alive but has a death date",
+      "IMP_GENERATION_MISMATCH": "Declared generation does not match the father's",
+      "IMP_SPOUSE_ORDER_CONFLICT": "Two wives given the same rank",
+      "IMP_MASS_CREATE_GUARD": "Too many brand-new people in one upload",
+      "IMP_SUSPECT_DUPLICATE": "Suspected duplicate person",
+      "IMP_TABOO_COLLISION": "Clashes with an ancestor's taboo name (kỵ húy)",
+      "IMP_MISSING_GIO": "No giỗ date",
+      "IMP_GIO_DAY_30": "Giỗ on the 30th, year unknown",
+      "IMP_LONE_NODE": "Not linked to anyone",
+      "IMP_UNKNOWN_GENDER": "Gender missing",
+      "IMP_MISSING_MOTHER": "Mother code missing",
+      "IMP_ROW_DISAPPEARED": "Present in a previous import, absent from this file",
+      "IMP_SELF_PARENT": "Row declares itself as its own parent",
+      "IMP_LUNAR_DATE_UNPARSEABLE": "Lunar death date cannot be read",
+      "IMP_LUNAR_DATE_IS_SERIAL": "Excel turned the lunar death date into a number",
+      "IMP_MISSING_CODE": "Row has data but the Code cell is empty",
+      "IMP_MISSING_NAME": "Row has a code but no full name",
+      "IMP_UNKNOWN_PLACE_CODE": "Province/country code is not in the catalogue",
+      "IMP_MISSING_PLACE_CODE": "Native place given in words but no province code",
+      "IMP_HEIR_TARGET_NOT_FOUND": "The person being succeeded was not found",
+      "IMP_MERGE_NOT_APPLICABLE": "Cannot merge into two existing tree records"
+    },
+    "evidence": {
+      "DEATH_LUNAR": "Giỗ date (lunar)",
+      "TABOO_NAME": "Taboo name (tên huý)",
+      "FATHER": "Father",
+      "FULL_NAME": "Full name",
+      "GENERATION": "Generation (đời)",
+      "BIRTH_YEAR": "Birth year",
+      "ORIGIN_PLACE": "Ancestral home",
+      "hint": {
+        "DEATH_LUNAR": "Observed by the whole clan every year, so it is hard to get wrong — the most trustworthy line here.",
+        "BIRTH_YEAR": "Old books usually record it from memory; a year or two apart is common."
+      }
+    },
+    "problem": {
+      "IMP_BAD_FORMAT": "Wrong file format. Only genuine .xlsx files are accepted.",
+      "IMP_CORRUPT_FILE": "The file is corrupt and cannot be opened. Re-open it in Excel and save a fresh copy.",
+      "IMP_UNSAFE_FILE": "The file contains content that is unsafe to read. Please use the template downloaded from this system.",
+      "IMP_MISSING_SHEET": "The file is missing the Nhân khẩu sheet. Use your branch's template.",
+      "IMP_MISSING_COLUMN": "The file is missing a required column of the template.",
+      "IMP_TOO_MANY_ROWS": "Too many rows (limit 5,000). Split it into smaller files.",
+      "IMP_FILE_TOO_LARGE": "File too large. The limit is 10 MB — usually caused by embedded images.",
+      "IMP_ALREADY_COMMITTED": "This exact file has already been written into the tree for this branch.",
+      "IMP_BLOCKING_ISSUES_PRESENT": "There are still errors to fix in the file.",
+      "IMP_WARNINGS_NOT_ACKNOWLEDGED": "The items needing review have not been acknowledged.",
+      "IMP_DUPLICATES_UNDECIDED": "Some suspected duplicate pairs are still undecided.",
+      "IMP_BATCH_CLOSED": "This batch is closed. Upload a new one instead of editing it.",
+      "IMP_COMMIT_BLOCKED": "The write stopped before writing because the batch hit a case the clan's conventions have not answered. Not a single row entered the tree.",
+      "IMP_ROLLBACK_REFUSED": "Cannot roll back: someone has already edited records this batch created.",
+      "BRANCH_SCOPE_VIOLATION": "This branch is outside the scope you were assigned.",
+      "ACCOUNT_NOT_PROVISIONED": "Your account has not been provisioned yet. Please sign in again.",
+      "UNKNOWN": "That did not go through. Try again in a few minutes.",
+      "IMP_MERGE_NOT_APPLICABLE": "Cannot merge: this row is tied to two different records that already exist in the genealogy. Merging existing records belongs to the person-management screens."
+    },
+    "sheet": {
+      "NHAN_KHAU": "Nhân khẩu (People)",
+      "HON_PHOI": "Hôn phối (Marriages)",
+      "LO": "Whole batch"
+    },
+    "rows": {
+      "summary": "Preview rows: {create} to create, {update} to update",
+      "why": "The “What happens” column answers the one question that matters on a second upload: will re-uploading create duplicate people? “Update” means this code already belongs to someone in the tree and will edit that exact person.",
+      "caption": "Rows currently staged",
+      "columns": {
+        "row": "Row",
+        "code": "Code",
+        "name": "Full name",
+        "action": "What happens"
+      },
+      "action": {
+        "CREATE": "Create new",
+        "UPDATE": "Update existing",
+        "SKIP": "Skip"
+      }
+    },
+    "workbook": {
+      "download": "Download the issue list as Excel",
+      "downloading": "Preparing the file…",
+      "hint": "The workbook has three sheets: Overview, Must fix, Worth reviewing. Fix it in Excel — where you are at home — then upload the corrected file again.",
+      "failed": "The file could not be downloaded",
+      "fallbackName": "Issues-{batchId}.xlsx"
+    }
   }
 }

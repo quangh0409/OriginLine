@@ -5,7 +5,7 @@ import { Alert, Empty, Pagination, Segmented, Select, Skeleton, Tag } from "antd
 import { useTranslations } from "next-intl";
 import { useMarkNotificationRead, useNotifications } from "@/hooks/use-notifications";
 import { ApiError } from "@/lib/api/http";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import { NotificationItem } from "./notification-item";
 import type { NotificationCategory } from "@/types/api";
 
@@ -80,7 +80,7 @@ export function NotificationCenter() {
           <Tag
             bordered={false}
             className="!m-0"
-            style={{ background: colorTokens.primaryLight, color: colorTokens.primary }}
+            style={{ background: colorVars.primaryLight, color: colorVars.primary }}
           >
             {t("unread", { count: data?.unreadCount ?? 0 })}
           </Tag>

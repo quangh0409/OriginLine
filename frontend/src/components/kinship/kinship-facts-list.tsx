@@ -80,7 +80,7 @@ export function KinshipFactsList({ facts, result }: KinshipFactsListProps) {
       {isPresent(result.ruleSetScope) && (
         <Fact label={t("facts.ruleSet")}>
           {t(`ruleScope.${result.ruleSetScope}`)}
-          {result.cached && <span className="ml-1.5 text-[12px] text-text-muted">· {t("cached")}</span>}
+          {result.cached && <span className="ml-1.5 text-than text-text-muted">· {t("cached")}</span>}
         </Fact>
       )}
     </dl>
@@ -90,8 +90,8 @@ export function KinshipFactsList({ facts, result }: KinshipFactsListProps) {
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col">
-      <dt className="text-[12px] uppercase tracking-wide text-text-muted">{label}</dt>
-      <dd className="m-0 text-[15px] text-text-main">{children}</dd>
+      <dt className="text-than uppercase tracking-wide text-text-muted">{label}</dt>
+      <dd className="m-0 text-than text-text-main">{children}</dd>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { usePerson } from "@/hooks/use-person";
 import { ApiError } from "@/lib/api/http";
 import { headlineName } from "@/lib/format/name-layers";
+import { CorrectionRequestEntry } from "@/components/correction/correction-request-entry";
 import { PersonForm } from "./person-form";
 
 export interface PersonEditScreenProps {
@@ -39,8 +40,21 @@ export function PersonEditScreen({ personId }: PersonEditScreenProps) {
 
   const { person, etag } = data;
 
+  /**
+   * Không sửa được thì **không phải là ngõ cụt**.
+   *
+   * Trước đây chỗ này chỉ nói "Bạn chỉ có thể xem hồ sơ này" rồi hết — mà
+   * người đứng ở đây thường chính là người vừa phát hiện ra chỗ ghi sai.
+   * `meta.canRequestCorrection` là câu trả lời của máy chủ cho câu hỏi "vậy
+   * tôi làm được gì", và câu trả lời ấy phải hiện thành một nút bấm.
+   */
   if (!person.meta.canEdit) {
-    return <Alert type="info" showIcon message={t("errors.notEditable")} />;
+    return (
+      <div className="flex flex-col gap-3">
+        <Alert type="info" showIcon message={t("errors.notEditable")} />
+        <CorrectionRequestEntry person={person} />
+      </div>
+    );
   }
 
   if (!etag) {

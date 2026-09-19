@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PushSettingsCard } from "@/components/notifications/push-settings-card";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 
 /**
  * Notification settings.
@@ -22,15 +22,15 @@ export function NotificationSettingsScreen() {
     <div className="space-y-4">
       <section
         className="rounded-lg border p-4"
-        style={{ borderColor: colorTokens.border, background: colorTokens.bgCard }}
+        style={{ borderColor: colorVars.border, background: colorVars.bgCard }}
       >
         <h2 className="m-0 font-serif text-[16px] font-semibold text-text-main">
           {t("settings.inAppTitle")}
         </h2>
-        <p className="mb-0 mt-1 text-[13px] leading-relaxed text-text-muted">
+        <p className="mb-0 mt-1 text-than leading-relaxed text-text-muted">
           {t("settings.inAppBody")}
         </p>
-        <p className="mb-0 mt-2 text-[13px]">
+        <p className="mb-0 mt-2 text-than">
           <Link href="/notifications" className="text-primary no-underline hover:underline">
             {tNotif("title")}
           </Link>

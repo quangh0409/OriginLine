@@ -44,7 +44,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <label className="block" htmlFor="search-filter-generation">
-        <span className="mb-1 block text-[13px] text-text-muted">{t("filters.generation")}</span>
+        <span className="mb-1 block text-than text-text-muted">{t("filters.generation")}</span>
         <Select<number>
           id="search-filter-generation"
           className="w-full"
@@ -63,7 +63,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
       </label>
 
       <label className="block" htmlFor="search-filter-branch">
-        <span className="mb-1 block text-[13px] text-text-muted">{t("filters.branch")}</span>
+        <span className="mb-1 block text-than text-text-muted">{t("filters.branch")}</span>
         <Select<string>
           id="search-filter-branch"
           className="w-full"
@@ -93,7 +93,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
       </label>
 
       <label className="block" htmlFor="search-filter-native-place">
-        <span className="mb-1 block text-[13px] text-text-muted">
+        <span className="mb-1 block text-than text-text-muted">
           {t("filters.nativePlace")}
         </span>
         <Input

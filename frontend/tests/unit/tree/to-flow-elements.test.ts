@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -24,8 +26,19 @@ import {
   polylinePath,
 } from "@/components/tree/family-edges";
 import { NODE_HEIGHT, NODE_WIDTH } from "@/lib/tree/layout-constants";
-import { colorTokens } from "@/styles/tokens";
 import { edge, node } from "../../setup/tree-fixtures";
+
+/**
+ * Đọc giá trị một biến `--tree-line-*` từ `globals.css`.
+ *
+ * <p>Phải đọc tệp CSS thật chứ không đọc token TypeScript: sợi dây có HAI đầu, và cái lỗi đã xảy
+ * ra nằm ở đầu kia — mã TypeScript tham chiếu biến rất đúng, còn biến thì không tồn tại. Một ca
+ * kiểm chỉ đọc đầu này sẽ xanh trong khi phả đồ vẫn vẽ sai màu.</p>
+ */
+function bienPhaDo(ten: string): string | undefined {
+  const css = readFileSync(resolve(__dirname, "../../../src/app/globals.css"), "utf8");
+  return new RegExp(`${ten}\\s*:\\s*([^;]+);`).exec(css)?.[1]?.trim();
+}
 
 describe("toFlowNodes", () => {
   it("maps each TreeNode to a React Flow node of the custom 'person' type", () => {
@@ -82,22 +95,48 @@ function widen(stroke: StrokeStyle): StrokeStyle {
 }
 
 describe("TREE_STROKES — quy ước nét Hội đồng đã duyệt", () => {
-  it("lấy màu từ tokens, không viết mã màu cứng", () => {
-    expect(TREE_STROKES.bioChild.stroke).toContain(colorTokens.textMuted);
-    expect(TREE_STROKES.marriage.stroke).toContain(colorTokens.accent);
-    expect(TREE_STROKES.heir.stroke).toContain(colorTokens.primary);
+  it("lấy màu từ ba biến CSS của phả đồ, không viết mã màu cứng", () => {
+    expect(TREE_STROKES.bioChild.stroke).toBe("var(--tree-line-descent)");
+    expect(TREE_STROKES.marriage.stroke).toBe("var(--tree-line-marriage)");
+    expect(TREE_STROKES.heir.stroke).toBe("var(--tree-line-heir)");
   });
 
   /**
-   * Giao diện tối: token là bảng màu sáng cố định, nên nếu nét được gán thẳng mã màu thì đường
-   * huyết thống (#5e564d) đặt trên nền tối gần như biến mất. Cho mọi màu đi qua một biến CSS có
-   * giá trị dự phòng thì chỉ cần khai lại biến trong khối `.dark` là đọc được, không phải sửa
-   * TypeScript. Đây là điều kiện để nét vẽ đọc được ở CẢ hai giao diện.
+   * Thanh hôn phối dùng hổ phách TRẦM, không phải hổ phách rực.
+   *
+   * <p>Nó là ĐỒ HOẠ MANG NGHĨA — thứ duy nhất trên phả đồ nói "hai người này là vợ chồng" — nên
+   * WCAG 1.4.11 (ngưỡng 3:1) áp vào thật. `accent` (#d97706) trên nền trang chỉ đạt 2,95:1, tức
+   * TRƯỢT chứ không phải "sát ngưỡng". Bảng màu BA v2 không bị đụng: `accent` vẫn là màu mảng tô
+   * (nền chip `badges.ts`); chỗ này chỉ đổi token được dùng khi hổ phách phải làm một nét mảnh.</p>
    */
-  it("cho mọi màu đi qua biến CSS ghi đè được, để đọc được ở giao diện tối", () => {
+  it("thanh hôn phối KHÔNG dùng hổ phách rực — nét mang nghĩa phải đạt 3:1", () => {
+    // Lời khẳng định này nay nằm ở CHỖ KHAI BIẾN chứ không ở chỗ dùng: `globals.css`
+    // phải ánh xạ `--tree-line-marriage` sang `--color-accent-text` (5,02:1) chứ
+    // không sang `--color-accent` (2,95:1 — trượt, chứ không phải "sát ngưỡng").
+    expect(bienPhaDo("--tree-line-marriage")).toBe("var(--color-accent-text)");
+    // Đường vẽ vòng mang nghĩa hôn phối (tái hôn) đi cùng một màu, nếu không thì hai đường cùng
+    // nói một việc lại hiện ra hai sắc khác nhau.
+    expect(TREE_STROKES.detourMarriage.stroke).toBe(TREE_STROKES.marriage.stroke);
+  });
+
+  /**
+   * Giao diện tối: mọi nét phải đi qua một biến CSS, và **không được mang giá trị dự phòng**.
+   *
+   * <p>Bản trước đòi đúng dạng `var(--tree-line-x, #rrggbb)` — biến KÈM giá trị dự phòng lấy từ
+   * bảng màu sáng. Nghe thì an toàn, nhưng chính nó là thứ giấu lỗi suốt một thời gian dài: ba
+   * biến `--tree-line-*` **chưa từng được khai ở đâu** (`grep -rn 'tree-line-' src/` trả về đúng
+   * bốn dòng, cả bốn nằm trong chính tệp khai nét), nên giá trị dự phòng LUÔN thắng — kể cả ở chế
+   * độ tối. Đường xuống con, thanh hôn phối và đường kế tự vẽ bằng màu chế độ sáng trên nền tối,
+   * còn ca kiểm thì xanh suốt, vì nó kiểm đúng cái dạng chuỗi ấy.</p>
+   *
+   * <p>Bỏ giá trị dự phòng đổi LOẠI lỗi: một biến bị quên nay là một nét mất màu — nhìn là thấy —
+   * thay vì một nét đúng màu ở nhầm chế độ. Đầu kia của sợi dây (biến có được khai không, và có
+   * trỏ vào `--color-*` không) được ghim ở `tests/unit/a11y/frozen-palette.test.ts`.</p>
+   */
+  it("cho mọi màu đi qua biến CSS, KHÔNG kèm giá trị dự phòng đóng băng", () => {
     for (const [name, stroke] of Object.entries(TREE_STROKES)) {
       expect(stroke.stroke, `nét "${name}" không ghi đè được theo giao diện`).toMatch(
-        /^var\(--tree-line-[a-z]+, #[0-9a-f]{6}\)$/i
+        /^var\(--tree-line-[a-z]+\)$/
       );
     }
   });

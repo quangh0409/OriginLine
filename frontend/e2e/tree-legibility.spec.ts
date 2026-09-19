@@ -223,17 +223,31 @@ async function canvasCensus(page: Page): Promise<{
   }));
 }
 
-/** React Flow chuyển động mượt khi phóng/thu — đợi phép biến đổi đứng yên rồi mới đo. */
+/**
+ * React Flow chuyển động mượt khi phóng/thu — đợi phép biến đổi đứng yên rồi mới đo.
+ *
+ * <p>Đòi <b>HAI</b> lượt đọc liên tiếp trùng nhau, không phải một. Lý do là một cái đỏ giả đã xảy
+ * ra thật: {@code fitView} bay trong 300ms, và bản trước gán {@code previous} NGAY TRƯỚC vòng lặp
+ * — nếu cú bay chưa kịp bắt đầu thì hai lượt đọc đầu trùng nhau và lời chờ trả về ngay khi máy
+ * quay còn đang ở vạch xuất phát. Ca kiểm sau đó đo được mức phóng <b>0,740366</b>: con số giữa
+ * đường bay tới 0,75, tức một trạng thái người dùng không bao giờ nhìn thấy.</p>
+ *
+ * <p>Đây là siết lời chờ, KHÔNG phải nới lời khẳng định: sàn phóng 0,75 và ngưỡng chạm 44px ở
+ * những ca gọi hàm này giữ nguyên từng chữ. Thứ được sửa là phép đo đã lấy mẫu sai thời điểm.</p>
+ */
 async function waitForViewportSettled(page: Page): Promise<void> {
   const read = () => page.locator(".react-flow__viewport").getAttribute("style");
-  let previous = await read();
+  // Mồi bằng một giá trị KHÔNG THỂ trùng bất kỳ style thật nào: nhờ vậy lượt so sánh đầu tiên
+  // luôn là "chưa đứng yên", và cú bay của fitView chắc chắn được quan sát ít nhất một lần.
+  let previous: string | null = "chua-doc-lan-nao";
+  let onDinh = 0;
   await expect
     .poll(
       async () => {
         const current = await read();
-        const settled = current === previous;
+        onDinh = current === previous ? onDinh + 1 : 0;
         previous = current;
-        return settled;
+        return onDinh >= 2;
       },
       { timeout: 15_000, intervals: [150, 150, 150, 300] }
     )
@@ -287,6 +301,142 @@ async function openTree(page: Page): Promise<void> {
 /** Ảnh chụp làm bằng chứng, luôn nằm trong `.playwright-mcp/` chứ không phải gốc kho mã. */
 async function snapshot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `.playwright-mcp/tree-legibility-${name}.png`, fullPage: false });
+}
+
+/** Ngưỡng chạm tính bằng px THẬT — xem MIN_TOUCH_TARGET_PX trong lib/tree/layout-constants.ts. */
+const MIN_TOUCH_TARGET_PX = 44;
+
+interface ToggleMeasurement {
+  readonly id: string;
+  readonly width: number;
+  readonly height: number;
+  readonly knobWidth: number;
+  readonly reachesItself: boolean;
+  /** Bị một lớp phủ của canvas che — chuyện bố cục lớp phủ, không phải chuyện vùng chạm. */
+  readonly underOverlay: boolean;
+}
+
+/**
+ * Vùng chạm THẬT của từng nút bung/thu nhánh đang nằm trong canvas.
+ *
+ * <p>Cố ý đo {@code getBoundingClientRect()} sau khi React Flow đã áp phép biến đổi máy quay, chứ
+ * không đọc CSS: con số phải là số điểm ảnh mà ngón tay người dùng thật sự phải trúng. Đọc CSS thì
+ * sẽ báo 80px trong khi ở mức phóng 0.75 người dùng chỉ có 60px — và ở mức 0.21 của lỗi cũ thì CSS
+ * vẫn báo "24px, đạt chuẩn" trong lúc trên màn hình chỉ còn 5px.</p>
+ *
+ * <p>Chỉ xét nút có TÂM nằm trong canvas: React Flow giữ lại trong DOM cả những thẻ đã bị cắt khỏi
+ * khung, {@code elementFromPoint} tại đó trả về thanh điều hướng dưới cùng — đo nhầm phần tử chứ
+ * không phải phát hiện lỗi.</p>
+ */
+async function toggleTouchTargets(page: Page): Promise<ToggleMeasurement[]> {
+  return page.evaluate(() => {
+    const canvas = document.querySelector(".react-flow")?.getBoundingClientRect();
+    if (!canvas) return [];
+    const view = {
+      left: Math.max(canvas.left, 0),
+      top: Math.max(canvas.top, 0),
+      right: Math.min(canvas.right, window.innerWidth),
+      bottom: Math.min(canvas.bottom, window.innerHeight),
+    };
+
+    const out: ToggleMeasurement[] = [];
+    for (const button of document.querySelectorAll<HTMLElement>(".react-flow__node button")) {
+      const r = button.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      if (cx < view.left || cx > view.right || cy < view.top || cy > view.bottom) continue;
+
+      const knob = button.querySelector<HTMLElement>('[data-testid="tree-node-toggle-knob"]');
+      const hit = document.elementFromPoint(cx, cy);
+      const OVERLAY =
+        ".react-flow__panel, .react-flow__minimap, .react-flow__controls, .ant-drawer, [data-testid='tree-legend']";
+      out.push({
+        id: button.closest(".react-flow__node")?.getAttribute("data-id") ?? "?",
+        width: r.width,
+        height: r.height,
+        knobWidth: knob ? knob.getBoundingClientRect().width : 0,
+        reachesItself: Boolean(hit && button.contains(hit)),
+        underOverlay: Boolean(hit?.closest(OVERLAY)),
+      });
+    }
+    return out;
+  });
+}
+
+/**
+ * Kiểm cả bộ đo trên khung máy đang chạy. Tách ra để hai khối describe dưới đây dùng chung đúng một
+ * phép đo, thay vì mỗi bên tự viết một kiểu rồi lệch nhau.
+ */
+async function expectToggleTouchTargets(page: Page, frame: string): Promise<void> {
+  await openTree(page);
+  const scale = await currentScale(page);
+  // Phả đồ phải MỞ RA từ sàn dễ đọc; nếu nó mở dưới sàn thì mọi con số dưới đây đo một trạng thái
+  // người dùng không gặp.
+  expect(scale, `${frame}: phả đồ mở dưới sàn phóng`).toBeGreaterThanOrEqual(0.75);
+
+  const toggles = await toggleTouchTargets(page);
+  expect(toggles.length, `${frame}: không có nút bung nhánh nào trong canvas để đo`).toBeGreaterThan(0);
+
+  const tooSmall = toggles.filter(
+    (t) => t.width < MIN_TOUCH_TARGET_PX || t.height < MIN_TOUCH_TARGET_PX
+  );
+  expect(
+    tooSmall.map((t) => `${t.id}: ${t.width.toFixed(1)}x${t.height.toFixed(1)}px`),
+    `${frame} @ scale ${scale}: có nút bung nhánh dưới ngưỡng chạm ${MIN_TOUCH_TARGET_PX}px`
+  ).toEqual([]);
+
+  // Phần NHÌN THẤY cố ý vẫn nhỏ — 24px trong hệ toạ độ cây. Ghim lại để lần sau ai "sửa" bằng cách
+  // phóng to vòng tròn thì đọc được vì sao trước đó đã không làm thế: thẻ chỉ rộng 208px và chỗ ấy
+  // là của tên người.
+  for (const t of toggles) {
+    expect(t.knobWidth, `${frame}: ${t.id} không còn vòng tròn nhìn thấy`).toBeGreaterThan(0);
+    expect(t.knobWidth, `${frame}: vòng tròn nhìn thấy của ${t.id} đã bị phóng to`).toBeLessThan(
+      t.width
+    );
+  }
+
+  // Vùng chạm rộng ra mà lại bị chính thứ khác che thì cũng bằng không.
+  //
+  // Trừ các lớp phủ CỐ Ý của canvas (Controls / MiniMap / chú giải): chúng nằm đè lên phả đồ là
+  // thiết kế đã duyệt, thân chúng đã `pointer-events: none` và người dùng chỉ cần kéo canvas một
+  // cái — xem `clickNodeToggle` trong tree-canvas.spec.ts. Đây đúng quy ước mà
+  // `cardsNotReceivingTheirOwnTap` ở tệp này đã dùng sẵn ("bị lớp phủ che — chuyện khác").
+  expect(
+    toggles.filter((t) => !t.reachesItself && !t.underOverlay).map((t) => t.id),
+    `${frame}: có nút bung nhánh không nhận được cú chạm vào chính giữa mình`
+  ).toEqual([]);
+
+  // Và không hai vùng chạm nào chồng lên nhau — khe giữa hai anh em ruột chỉ 32px, nới ẩu là người
+  // dùng bung nhầm nhánh của người bên cạnh.
+  const overlapping: string[] = [];
+  const boxes = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>(".react-flow__node button")]
+      .map((b) => {
+        const r = b.getBoundingClientRect();
+        return {
+          id: b.closest(".react-flow__node")?.getAttribute("data-id") ?? "?",
+          left: r.left,
+          right: r.right,
+          top: r.top,
+          bottom: r.bottom,
+          w: r.width,
+        };
+      })
+      .filter((b) => b.w > 0)
+  );
+  for (let i = 0; i < boxes.length; i += 1) {
+    for (let j = i + 1; j < boxes.length; j += 1) {
+      const a = boxes[i]!;
+      const b = boxes[j]!;
+      if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) {
+        overlapping.push(`${a.id} ↔ ${b.id}`);
+      }
+    }
+  }
+  expect(overlapping.slice(0, 10), `${frame}: vùng chạm của hai người kề nhau chồng lên nhau`).toEqual(
+    []
+  );
 }
 
 test.beforeEach(async ({ page }) => {
@@ -435,6 +585,18 @@ test.describe("phả đồ trên máy để bàn", () => {
     expect(await edgesOverlappingCards(page, EDGE_TOLERANCE_PX)).toEqual([]);
   });
 
+  /**
+   * Nút bung nhánh phải là một vùng chạm THẬT SỰ chạm được — đo trên trình duyệt.
+   *
+   * <p>Lỗi cũ: nút vẽ {@code h-6 w-6} = 24px trong hệ toạ độ cây, mà cây mở ra ở mức phóng 0.75,
+   * nên trên màn hình nó chỉ còn <b>18px</b>. Đó là thao tác chính của màn hình chính, và 18px thì
+   * dưới cả sàn 24px của WCAG 2.5.8. Cách chữa không phải phóng to nút (thẻ chỉ rộng 208px, phóng
+   * to là ăn mất chỗ của tên người) mà là nới vùng chạm trong suốt quanh nó.</p>
+   */
+  test("nút bung nhánh đạt ngưỡng chạm 44px thật ở mức phóng phả đồ mở ra", async ({ page }) => {
+    await expectToggleTouchTargets(page, "máy để bàn");
+  });
+
   test("bấm vào giữa thẻ mở đúng hồ sơ người ấy, kể cả ở mức thu nhỏ", async ({ page }) => {
     await openTree(page);
     await zoomOutFar(page);
@@ -479,6 +641,10 @@ test.describe("phả đồ trên điện thoại", () => {
       overlaps,
       `có ${overlaps.length} chỗ đường nối chui vào trong thẻ:\n${describeOverlaps(overlaps)}`
     ).toEqual([]);
+  });
+
+  test("nút bung nhánh đạt ngưỡng chạm 44px thật trên màn hình điện thoại", async ({ page }) => {
+    await expectToggleTouchTargets(page, "Pixel 5");
   });
 
   test("chạm vào giữa một tấm thẻ thì trúng thẻ, không trúng đường nối (mức thu nhỏ)", async ({

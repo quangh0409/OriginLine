@@ -65,7 +65,7 @@ export function KinshipLookup() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-bg-card p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end">
           <PersonPicker
             id="kinship-from"
             label={t("fromLabel")}
@@ -97,7 +97,7 @@ export function KinshipLookup() {
             }}
           />
         </div>
-        <p className="m-0 mt-3 text-[12.5px] leading-relaxed text-text-muted">{t("hint")}</p>
+        <p className="m-0 mt-3 text-than leading-relaxed text-text-muted">{t("hint")}</p>
       </div>
 
       {!fromId || !toId ? (

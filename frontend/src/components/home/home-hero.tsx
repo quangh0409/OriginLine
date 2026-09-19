@@ -52,7 +52,7 @@ export function HomeHero() {
             <Typography.Text strong className="block text-text-main">
               {t(`cards.${key}.title`)}
             </Typography.Text>
-            <Typography.Text className="mt-1 block text-sm text-text-muted">
+            <Typography.Text className="mt-1 block text-than text-text-muted">
               {t(`cards.${key}.desc`)}
             </Typography.Text>
             <Tag className="mt-3" color="gold">

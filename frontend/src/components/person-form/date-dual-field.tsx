@@ -46,7 +46,7 @@ export function DateDualField({
 
   return (
     <fieldset className="m-0 rounded-lg border border-border bg-bg-page p-3" disabled={disabled}>
-      <legend className="px-1 text-[13px] font-medium text-text-main">{legend}</legend>
+      <legend className="px-1 text-than font-medium text-text-main">{legend}</legend>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Controller
@@ -91,7 +91,7 @@ export function DateDualField({
       </div>
 
       <div className="mt-3">
-        <p className="m-0 mb-1.5 text-[13px] font-medium text-text-main">{t("date.lunar")}</p>
+        <p className="m-0 mb-1.5 text-than font-medium text-text-main">{t("date.lunar")}</p>
         <div className="grid grid-cols-3 gap-2">
           <Controller
             control={control}
@@ -165,7 +165,7 @@ export function DateDualField({
             </Checkbox>
           )}
         />
-        <p className="m-0 mt-1 text-[12px] leading-snug text-text-muted">
+        <p className="m-0 mt-1 text-than leading-snug text-text-muted">
           {t(name === "death" ? "date.lunarDeathHint" : "date.lunarHint")}
         </p>
       </div>

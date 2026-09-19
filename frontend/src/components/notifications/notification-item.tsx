@@ -12,7 +12,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { resolveNotificationHref } from "@/lib/format/notification-link";
 import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import type { NotificationCategory, NotificationDto } from "@/types/api";
 
 const CATEGORY_ICON: Record<NotificationCategory, ReactNode> = {
@@ -56,24 +56,24 @@ export function NotificationItem({
   const content = (
     <div className="flex items-start gap-2">
         <span
-          className="mt-0.5 shrink-0 text-[15px]"
-          style={{ color: unread ? colorTokens.primary : colorTokens.textMuted }}
+          className="mt-0.5 shrink-0 text-than"
+          style={{ color: unread ? colorVars.primary : colorVars.textMuted }}
         >
           {CATEGORY_ICON[notification.category]}
         </span>
         <div className="min-w-0 flex-1">
           <p
-            className={`m-0 text-[14px] leading-snug ${unread ? "font-semibold text-text-main" : "text-text-muted"}`}
+            className={`m-0 text-than leading-snug ${unread ? "font-semibold text-text-main" : "text-text-muted"}`}
           >
             {notification.title}
           </p>
           {isPresent(notification.body) && (
-            <p className="mb-0 mt-0.5 text-[13px] leading-relaxed text-text-muted">
+            <p className="mb-0 mt-0.5 text-than leading-relaxed text-text-muted">
               {notification.body}
             </p>
           )}
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-[11.5px] text-text-muted">
+            <span className="text-than text-text-muted">
               {format.dateTime(new Date(notification.createdAt), {
                 dateStyle: "medium",
                 timeStyle: "short",
@@ -81,15 +81,15 @@ export function NotificationItem({
               })}
             </span>
             {!compact && (
-              <Tag bordered={false} className="!m-0 !text-[11px]">
+              <Tag bordered={false} className="!m-0 !text-than">
                 {t(`category.${notification.category}`)}
               </Tag>
             )}
             {isPresent(notification.reminderOffsetDays) && (
               <Tag
                 bordered={false}
-                className="!m-0 !text-[11px]"
-                style={{ background: colorTokens.warningBg, color: colorTokens.accent }}
+                className="!m-0 !text-than"
+                style={{ background: colorVars.warningBg, color: colorVars.accentText }}
               >
                 {t("offsetTag", { n: notification.reminderOffsetDays })}
               </Tag>
@@ -100,7 +100,7 @@ export function NotificationItem({
           <span
             aria-label={t("unreadDot")}
             className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
-            style={{ background: colorTokens.primary }}
+            style={{ background: colorVars.primary }}
           />
         )}
     </div>
@@ -110,8 +110,8 @@ export function NotificationItem({
     <li
       className="list-none rounded-lg border px-3 py-2.5"
       style={{
-        borderColor: unread ? colorTokens.borderDark : colorTokens.border,
-        background: unread ? colorTokens.bgCard : "transparent",
+        borderColor: unread ? colorVars.borderDark : colorVars.border,
+        background: unread ? colorVars.bgCard : "transparent",
       }}
     >
       {href ? (
@@ -127,7 +127,7 @@ export function NotificationItem({
           <Button
             type="link"
             size="small"
-            className="!h-auto !px-0 !text-[12.5px]"
+            className="!h-auto !px-0 !text-than"
             loading={markingId === notification.id}
             onClick={() => onMarkRead(notification.id)}
           >

@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Alert, Empty, Select, Skeleton } from "antd";
+import { Alert, Button, Empty, Select, Skeleton } from "antd";
 import { useTranslations } from "next-intl";
 import { useBranches } from "@/hooks/use-branches";
 import { useEvents } from "@/hooks/use-events";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import { PushEngagementSignal } from "@/components/notifications/push-engagement-signal";
 import { EventCard } from "./event-card";
 import { EventYearCalendar } from "./event-year-calendar";
@@ -65,7 +65,7 @@ export function EventsScreen() {
 
       {(branches?.length ?? 0) > 1 && (
         <label className="block max-w-sm" htmlFor="events-branch-filter">
-          <span className="mb-1 block text-[13px] text-text-muted">{t("branchFilter")}</span>
+          <span className="mb-1 block text-than text-text-muted">{t("branchFilter")}</span>
           <Select<string>
             id="events-branch-filter"
             className="w-full"
@@ -78,7 +78,7 @@ export function EventsScreen() {
             onChange={(next) => setBranchId(next ?? undefined)}
             options={(branches ?? []).map((branch) => ({ value: branch.id, label: branch.name }))}
           />
-          <span className="mt-1 block text-[12px] text-text-muted">{t("branchFilterHint")}</span>
+          <span className="mt-1 block text-than text-text-muted">{t("branchFilterHint")}</span>
         </label>
       )}
 
@@ -86,10 +86,22 @@ export function EventsScreen() {
       {isLoading && <Skeleton active paragraph={{ rows: 5 }} />}
 
       {!isLoading && !isError && events.length === 0 && (
+        // Rỗng-vì-lọc và rỗng-vì-không-có là hai chuyện khác nhau, và người dùng
+        // đọc nhầm chuyện thứ nhất thành chuyện thứ hai sẽ kết luận rằng hệ thống
+        // đã mất dữ liệu. Từ V10 khoảng cách ấy rộng thêm: `MUNG_THO` và `KHAC`
+        // nay hẹp nghĩa hơn trước, nên một bộ lọc theo hai mã ấy trả **ít dòng
+        // hơn** — đúng thiết kế, nhưng chỉ đọc ra là "đúng thiết kế" khi màn hình
+        // nói rõ rằng đang có bộ lọc.
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={<span className="text-text-muted">{t("empty")}</span>}
-        />
+          description={
+            <span className="text-text-muted">{branchId ? t("emptyFiltered") : t("empty")}</span>
+          }
+        >
+          {branchId && (
+            <Button onClick={() => setBranchId(undefined)}>{t("clearFilters")}</Button>
+          )}
+        </Empty>
       )}
 
       {events.length > 0 && (
@@ -108,7 +120,13 @@ export function EventsScreen() {
                   className="list-none rounded-lg"
                   style={
                     selectedId === event.id
-                      ? { outline: `2px solid ${colorTokens.accent}`, outlineOffset: "2px" }
+                      ? {
+                          // Vòng tiêu điểm hai lớp: lõi tương phản cao + quầng nền, để thấy được
+                          // trên MỌI nền. Dùng `accent` ở đây chỉ đạt 2,95:1 — dưới ngưỡng 3:1.
+                          outline: `2px solid ${colorVars.focusRing}`,
+                          outlineOffset: "2px",
+                          boxShadow: `0 0 0 4px ${colorVars.focusHalo}`,
+                        }
                       : undefined
                   }
                 >

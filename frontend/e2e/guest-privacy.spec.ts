@@ -120,7 +120,12 @@ test.describe("an anonymous guest", () => {
     await expect(page.getByRole("heading", { name: /Nguyễn Văn Thủy Tổ/ })).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText("Đã khuất")).toBeVisible();
+    // `exact: true`: từ khoá "Đã khuất" nay xuất hiện ở HAI chỗ trên trang — nhãn
+    // trạng thái, và câu giải thích quyền riêng tư "Gia phả chỉ công khai người đã
+    // khuất…". Không có `exact` thì Playwright báo strict mode violation, tức ca kiểm
+    // đỏ vì HAI kết quả chứ không phải vì KHÔNG có kết quả nào. Điều cần khẳng định
+    // vẫn nguyên: cái nhãn trạng thái phải nhìn thấy được.
+    await expect(page.getByText("Đã khuất", { exact: true })).toBeVisible();
     await expect(page.getByText("Tên húy")).toBeVisible();
     await expectNoLeakyPlaceholders(page);
   });
@@ -158,7 +163,9 @@ test.describe("a signed-in member, by contrast", () => {
     await expect(page.getByRole("heading", { name: /Nguyễn Văn An/ })).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText("Còn sống")).toBeVisible();
+    // `exact: true` — cùng lý do như ca "Đã khuất" ở trên: chuỗi này còn nằm trong
+    // câu giải thích riêng tư "Đây là hồ sơ của người còn sống…".
+    await expect(page.getByText("Còn sống", { exact: true })).toBeVisible();
     // ...but only at Tier 1: no contact block, no occupation.
     await expect(page.getByRole("heading", { name: "Liên hệ" })).toHaveCount(0);
     await expectNoLeakyPlaceholders(page);

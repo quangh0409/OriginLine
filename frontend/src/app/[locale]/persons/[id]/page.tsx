@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 import { AppShell } from "@/components/layout/app-shell";
+import { KhungTrang } from "@/components/common/khung-trang";
 import { PersonProfile } from "@/components/person/person-profile";
 import { PushEngagementSignal } from "@/components/notifications/push-engagement-signal";
 
@@ -24,10 +25,10 @@ export default async function PersonPage({
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-3xl px-3 py-4 sm:px-4 sm:py-6">
+      <KhungTrang>
         <PushEngagementSignal reason="PERSON_PROFILE" />
         <PersonProfile personId={id} />
-      </div>
+      </KhungTrang>
     </AppShell>
   );
 }

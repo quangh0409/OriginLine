@@ -52,7 +52,10 @@ export default defineConfig({
       // là nơi lỗi cũ xuất hiện. Bỏ nó khỏi đây thì lời khẳng định "đã kiểm trên điện thoại" chỉ
       // đúng nhờ một khung nhìn giả lập trong spec, không phải nhờ thiết bị Pixel 5 thật của
       // Playwright.
-      testMatch: [/mobile\.spec\.ts/, /tree-legibility\.spec\.ts/],
+      // `layout-containment` chạy trên CẢ HAI dự án, cùng lý do như `tree-legibility`: bất biến
+      // "thẻ con không rộng hơn thẻ cha" là chuyện của màn hẹp TRƯỚC TIÊN — 393px là nơi lề 12px
+      // và cột `flex-1` không co được lộ ra, còn 1440px thì chúng ẩn đi sau khoảng trống thừa.
+      testMatch: [/mobile\.spec\.ts/, /tree-legibility\.spec\.ts/, /layout-containment\.spec\.ts/],
     },
   ],
   webServer: {

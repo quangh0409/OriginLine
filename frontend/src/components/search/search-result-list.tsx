@@ -44,7 +44,7 @@ export function SearchResultList({
 
   if (idle) {
     return (
-      <div className="rounded-lg border border-dashed border-border bg-bg-card px-4 py-10 text-center text-[14px] text-text-muted">
+      <div className="rounded-lg border border-dashed border-border bg-bg-card px-4 py-10 text-center text-than text-text-muted">
         {t("idlePrompt")}
       </div>
     );
@@ -73,7 +73,7 @@ export function SearchResultList({
   return (
     <div className="space-y-3" aria-busy={isFetching}>
       <p
-        className="m-0 text-[13px] text-text-muted"
+        className="m-0 text-than text-text-muted"
         role="status"
         aria-live="polite"
       >

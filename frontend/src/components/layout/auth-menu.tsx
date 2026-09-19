@@ -28,8 +28,14 @@ export function AuthMenu() {
     return (
       <Tooltip title={t("mockModeHint")}>
         {/* <span> bọc ngoài: Ant Design không gắn được tooltip lên nút đang
-            disabled vì nút ấy không phát sinh sự kiện chuột. */}
-        <span>
+            disabled vì nút ấy không phát sinh sự kiện chuột.
+
+            `inline-flex` chứ không để mặc định: <span> là phần tử INLINE, nên hộp
+            của nó cao theo ngữ cảnh dòng chứ không cao theo cái nút bên trong — đo
+            trên Pixel 5 được 88px cho một cái nút 44px. 44px thừa ra ấy đội thanh
+            đầu trang lên 113px, và chiều cao thanh đầu trang chính là chiều cao bị
+            lấy mất của phả đồ bên dưới. */}
+        <span className="inline-flex">
           <Button type="text" icon={<LoginOutlined />} disabled>
             <span className="hidden sm:inline">{t("login")}</span>
           </Button>

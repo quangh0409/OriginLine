@@ -88,13 +88,20 @@ afterEach(() => {
 });
 
 describe("sự kiện push", () => {
+  /**
+   * Payload ở đây là bản sao NGUYÊN VĂN năm khoá mà
+   * `WebPushAdapter.buildPayload()` phát ra: title · body · url · tag · eventId.
+   * Trước đợt sửa này ca kiểm gửi `notificationId` — một khoá backend không bao
+   * giờ phát — nên nó xanh mà không chứng minh được điều gì về hợp đồng thật.
+   */
   it("hiện thông báo với tiêu đề và nội dung máy chủ gửi", async () => {
     firePush({
       json: () => ({
         title: "Còn 3 ngày tới giỗ Thủy tổ",
         body: "Ngày 22 tháng 9 âm lịch.",
         url: "/events?event=ev-001",
-        notificationId: "nt-001",
+        tag: "gio-11111111-2222-3333-4444-555555555555",
+        eventId: "ev-001",
       }),
       text: () => "",
     });
@@ -104,7 +111,38 @@ describe("sự kiện push", () => {
     const [title, options] = showNotification.mock.calls[0]!;
     expect(title).toBe("Còn 3 ngày tới giỗ Thủy tổ");
     expect(options.body).toBe("Ngày 22 tháng 9 âm lịch.");
-    expect(options.data).toEqual({ url: "/events?event=ev-001", notificationId: "nt-001" });
+    expect(options.data).toEqual({ url: "/events?event=ev-001", eventId: "ev-001" });
+  });
+
+  /**
+   * `tag` là khoá gộp của hệ điều hành. Backend phát nó từ `reminderJobId` để các
+   * lượt nhắc của cùng một lịch giỗ không chồng thành nhiều thông báo trên màn
+   * hình khoá. Worker KHÔNG đọc nó thì ý định ấy không bao giờ xảy ra — và không
+   * có gì báo lỗi, vì `showNotification` bỏ qua khoá lạ trong im lặng.
+   */
+  it("chuyển tiếp `tag` để hệ điều hành gộp các lượt nhắc của cùng một giỗ", async () => {
+    firePush({
+      json: () => ({ title: "Nhắc giỗ", body: "…", tag: "gio-abc" }),
+      text: () => "",
+    });
+    await Promise.all(waited);
+
+    const [, options] = showNotification.mock.calls[0]!;
+    expect(options.tag).toBe("gio-abc");
+  });
+
+  /**
+   * Ca ngược, và nó quan trọng hơn ca trên: một `tag` bịa ra sẽ gộp NHẦM hai giỗ
+   * khác nhau thành một, và thông báo sau đè mất thông báo trước — mất hẳn một
+   * lời nhắc, chứ không phải chỉ hiện xấu. Backend chỉ phát `tag` khi có
+   * `reminderJobId`, nên "không có tag" là trạng thái hợp lệ và phải giữ nguyên.
+   */
+  it("KHÔNG bịa ra tag khi máy chủ không gửi — gộp nhầm là mất một lời nhắc", async () => {
+    firePush({ json: () => ({ title: "Nhắc giỗ", body: "…" }), text: () => "" });
+    await Promise.all(waited);
+
+    const [, options] = showNotification.mock.calls[0]!;
+    expect(options.tag).toBeUndefined();
   });
 
   it("gắn biểu tượng và huy hiệu để thông báo không hiện ra trống trơn trên Android", async () => {

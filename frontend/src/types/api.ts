@@ -40,8 +40,67 @@ export type Gender = "MALE" | "FEMALE" | "UNKNOWN";
 /** Multi-layer Vietnamese naming (BA v2 domain rule — never collapse to one name). */
 export type NameType = "HUY" | "TU" | "HIEU" | "THUY" | "THUONG_GOI" | "PHAP_DANH";
 
-/** Self-selected sharing override, always widening, never narrowing an ADMIN's view. */
-export type PrivacyLevel = "DEFAULT" | "BRANCH_OPT_IN" | "CLAN_OPT_IN" | "RESTRICTED";
+/**
+ * Mức chia sẻ của MỘT nhóm trường, do **chính chủ thể** chọn
+ * (contracts/openapi.yaml → `ShareScope`).
+ *
+ *  - `PRIVATE` — **Riêng tư**: chỉ chính chủ và Hội đồng Tộc biểu / `ADMIN`.
+ *    KHÔNG phải "chỉ mình tôi" — và giao diện phải nói đúng điều đó ngay cạnh
+ *    công tắc, vì hệ quả là Hội đồng đọc được số điện thoại của người đã chọn
+ *    mức này.
+ *  - `BRANCH` — **Cùng chi**: thành viên đã đăng nhập nằm trong phạm vi `ltree`
+ *    của chi/ngành.
+ *  - `CLAN` — **Cả họ xem**: mọi thành viên đã đăng nhập.
+ *
+ * **Mặc định là KÍN**: thiếu lựa chọn ⇒ `PRIVATE`. Không giá trị nào mang
+ * nghĩa "theo mặc định hệ thống".
+ *
+ * Đây là **ý chí của chủ thể, không phải kết quả cuối**. Ba luật luôn thắng và
+ * nằm ngoài tay người dùng: khách vãng lai không thấy bất kỳ người còn sống nào
+ * kể cả khi chọn `CLAN`; trẻ vị thành niên ẩn tối đa bất kể chọn gì; người đã
+ * khuất công khai.
+ */
+export type ShareScope = "PRIVATE" | "BRANCH" | "CLAN";
+
+/**
+ * Năm nhóm trường, mỗi nhóm một mức độc lập
+ * (contracts/openapi.yaml → `PrivacySettings`).
+ *
+ * **Ai đọc được khối này:** chỉ **chính chủ** và `ADMIN`. Với mọi người gọi
+ * khác nó **vắng mặt hoàn toàn** khỏi JSON — biết người khác đang siết quyền
+ * riêng tư cũng là một dạng rò rỉ.
+ *
+ * **Ngữ nghĩa khi ghi:**
+ *  - `POST /persons` — nhóm vắng mặt ⇒ `PRIVATE`.
+ *  - `PATCH /persons/{id}` — **hợp nhất, không thay thế** (khác hẳn `names` và
+ *    `attributes`): nhóm vắng mặt giữ nguyên mức hiện có, nên giao diện năm
+ *    công tắc chỉ cần gửi đúng công tắc vừa gạt. Đóng cả năm thì đưa
+ *    `"privacy"` vào `clearFields`.
+ *
+ * `contact` là **một** công tắc cho cả điện thoại + email + Zalo. Ba giá trị ấy
+ * dẫn tới cùng một con người; tách lẻ chỉ tạo ảo giác kiểm soát.
+ */
+export interface PrivacySettings {
+  occupation: ShareScope;
+  residenceProvince: ShareScope;
+  residenceFull: ShareScope;
+  contact: ShareScope;
+  birthDetailAndPhoto: ShareScope;
+}
+
+/** Khoá của năm nhóm, theo thứ tự hiển thị: từ ít nhạy cảm tới nhạy cảm nhất. */
+export const PRIVACY_GROUPS = [
+  "occupation",
+  "residenceProvince",
+  "residenceFull",
+  "contact",
+  "birthDetailAndPhoto",
+] as const satisfies readonly (keyof PrivacySettings)[];
+
+export type PrivacyGroup = (typeof PRIVACY_GROUPS)[number];
+
+/** Ba mức, theo thứ tự mở dần. Giao diện vẽ theo đúng thứ tự này. */
+export const SHARE_SCOPES = ["CLAN", "BRANCH", "PRIVATE"] as const satisfies readonly ShareScope[];
 
 /** What tier the CURRENT caller received for this profile — never which fields are hidden. */
 export type VisibleTier = "PUBLIC" | "T1" | "T2" | "T3";
@@ -66,6 +125,24 @@ export type TreeDirection = "DESCENDANTS" | "ANCESTORS" | "BOTH";
 
 export type RuleScope = "DEFAULT" | "REGION" | "CLAN" | "BRANCH";
 
+/**
+ * Loại lễ (FR-2.3). **Song ánh 12 giá trị** với `ck_event_type` từ V10 —
+ * trước đó bốn loại khác nhau cùng đi ra dây dưới một mã `KHAC`, nên qua API
+ * một buổi họp họ không phân biệt được với một đám cưới.
+ *
+ * Hai mã cũ **đổi nghĩa**, không chỉ là thêm mã mới:
+ *  - `MUNG_THO` nay chỉ là mừng thọ **bậc cao niên**; sinh nhật thường đã tách
+ *    ra thành `SINH_NHAT`.
+ *  - `KHAC` nay chỉ là "loại khác"; nó không còn gộp khánh thành / họp họ /
+ *    cưới hỏi.
+ *
+ * Hệ quả cho giao diện: lọc theo `MUNG_THO` hoặc `KHAC` trả **ít dòng hơn**
+ * trước — đúng thiết kế, không phải mất dữ liệu.
+ *
+ * `SINH_NHAT` là sinh nhật của một người **còn sống**, nên nó chịu phân tầng
+ * riêng tư y như ngày sinh: chỉ hiện với người mà chủ thể đã mở nhóm
+ * `birthDetailAndPhoto`.
+ */
 export type EventType =
   | "GIO_TO"
   | "GIO_HO"
@@ -75,6 +152,10 @@ export type EventType =
   | "DAI_TUONG"
   | "CHAP_MA"
   | "MUNG_THO"
+  | "SINH_NHAT"
+  | "KHANH_THANH"
+  | "HOP_HO"
+  | "CUOI_HOI"
   | "KHAC";
 
 export type NotificationCategory = "GIO_REMINDER" | "EVENT" | "CHANGE_REQUEST" | "SYSTEM";
@@ -183,6 +264,24 @@ export interface RelationshipDto {
   validFrom?: string | null;
   validTo?: string | null;
   note?: string | null;
+  /**
+   * Tóm tắt của **đầu kia** xét theo hồ sơ đang xem, đã qua đúng bộ lọc phân
+   * tầng riêng tư của người gọi.
+   *
+   * Ba điều phải nhớ khi đọc trường này:
+   *
+   * 1. **Nó nằm ngoài `required`.** Lối ra nào không có khái niệm "hồ sơ đang
+   *    xem" (GraphQL) thì không gửi nó. Mọi chỗ đọc phải có đường lùi, chứ
+   *    không được coi nó luôn có.
+   * 2. **Nó không bao giờ là một tóm tắt "đã che".** Cạnh nào có đầu kia
+   *    không hiển thị được thì **cả cạnh** đã bị loại ở máy chủ. Vì vậy không
+   *    được dựng giao diện cho trạng thái "có quan hệ nhưng không rõ với ai" —
+   *    trạng thái ấy không tồn tại trên dây, và dựng nó lên là tự tay đếm hộ
+   *    người xem số quan hệ đang bị giấu.
+   * 3. **Nó không mang `badges`.** `PersonSummaryDto` không có trường ấy;
+   *    nhãn dâu/rể/đích tôn vẫn chỉ đến từ `TreeNode.badges`.
+   */
+  otherPerson?: PersonSummaryDto | null;
 }
 
 /**
@@ -214,8 +313,15 @@ export interface PersonDto {
   primaryBranch?: BranchRef | null;
   contact?: ContactInfo | null;
   attributes?: Record<string, unknown> | null;
-  /** Visible only to self + ADMIN — even the fact that someone restricts sharing is sensitive. */
-  privacyLevel?: PrivacyLevel | null;
+  /**
+   * Bản đồng thuận riêng tư của chủ thể — năm nhóm, năm mức độc lập.
+   *
+   * **Chỉ chính chủ và `ADMIN` nhận được khối này**; với vai khác nó vắng mặt
+   * hoàn toàn, vì biết người khác đang siết quyền riêng tư cũng là rò rỉ. Vì
+   * vậy `privacy !== undefined` là phép kiểm "tôi có quyền chỉnh mức ở đây
+   * không" đáng tin hơn mọi phép suy từ vai.
+   */
+  privacy?: PrivacySettings | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   /** Optimistic-lock version; mirrored in the `ETag` response header. */
@@ -289,7 +395,8 @@ export interface CreatePersonRequest {
   primaryBranchId?: string | null;
   contact?: ContactInfo | null;
   attributes?: Record<string, unknown> | null;
-  privacyLevel?: PrivacyLevel | null;
+  /** Nhóm vắng mặt ⇒ `PRIVATE`. Hệ thống không tự mở hộ ai bao giờ. */
+  privacy?: Partial<PrivacySettings> | null;
   initialRelationships?: RelationshipLinkInput[];
   /**
    * Taboo-name (kỵ húy) two-call flow (FR-1.6, contracts/README §7.9):
@@ -322,7 +429,13 @@ export interface UpdatePersonRequest {
   primaryBranchId?: string;
   contact?: ContactInfo;
   attributes?: Record<string, unknown>;
-  privacyLevel?: PrivacyLevel;
+  /**
+   * **HỢP NHẤT, không thay thế** — và đây là ngoại lệ so với `names` /
+   * `attributes` ngay bên trên, nên rất dễ dựng sai. Nhóm vắng mặt giữ nguyên
+   * mức hiện có, nên chỉ cần gửi đúng công tắc vừa gạt. Đóng cả năm nhóm thì
+   * đưa `"privacy"` vào `clearFields`, đừng gửi một object năm khoá `PRIVATE`.
+   */
+  privacy?: Partial<PrivacySettings>;
   clearFields?: string[];
   confirmTabooOverride?: boolean;
   note?: string;
@@ -664,11 +777,70 @@ export type ProblemCode =
   /** Đã đăng nhập nhưng tài khoản chưa ghép với nhân khẩu nào — hộp thư rỗng vì lý do này
    * phải nói rõ ra, chứ không phải một màn hình trắng. */
   | "ACCOUNT_NOT_LINKED"
+  // --- lời mời vào phả (contracts/openapi.yaml, nhóm `invitations`) ----------
+  // Bốn cách một mã mời hỏng, và chúng KHÔNG gộp được: mỗi ca dẫn tới một câu
+  // chữ và một lối đi tiếp khác nhau (xem src/lib/api/invitation.ts). Ca thứ tư
+  // — mã không khớp lời mời nào — dùng lại `NOT_FOUND` ở trên thay vì có mã
+  // riêng, vì nó không mang thêm nghĩa nào.
+  | "INVITATION_EXPIRED"
+  | "INVITATION_ALREADY_USED"
+  | "INVITATION_REVOKED"
+  /** Nhân khẩu mà lời mời trỏ tới đã bị một tài khoản khác nhận. `422`. */
+  | "PERSON_ALREADY_LINKED"
+  /** Tài khoản đang gọi đã gắn một nhân khẩu KHÁC. `422`. */
+  | "ACCOUNT_ALREADY_LINKED"
+  /**
+   * Liên kết đặt mật khẩu hết hạn, sai chữ ký, hoặc **đã dùng rồi**. `410`.
+   *
+   * Hạn là 30 phút, nên đây là ca **bình thường** — một cụ có thể để tin nhắn tới hôm sau mới mở.
+   * Tính một lần neo vào trạng thái thật ("tài khoản này đã có mật khẩu chưa"), không vào một cờ
+   * trong cơ sở dữ liệu: một cờ sót lại là một lối đổi mật khẩu của người khác.
+   */
+  | "SET_PASSWORD_LINK_INVALID"
+  /**
+   * Không nói chuyện được với Keycloak. `503`.
+   *
+   * Với luồng mời, thao tác ghi chỉ diễn ra **sau** khi tài khoản đã tạo xong, nên **mã mời chưa
+   * bị dùng** và người dùng thử lại được — câu chữ phải nói đúng điều đó.
+   */
+  | "IDENTITY_PROVIDER_UNAVAILABLE"
   // --- events / notification ------------------------------------------------
   | "REMINDER_GENERATION_IN_PROGRESS"
   /** Máy chủ chưa cấu hình khoá VAPID: giao diện phải nói thẳng thay vì để người dùng bấm vào
    * một công tắc chắc chắn hỏng. */
   | "WEBPUSH_NOT_CONFIGURED"
+  // --- nhập liệu ban đầu / data import (contracts/openapi.yaml ProblemCode) --
+  // Mười bốn mã này nằm trong CÙNG một enum đóng với phần trên, không phải một
+  // danh sách riêng: `src/lib/api/data-import.ts` chỉ thu hẹp kiểu này lại.
+  /** Không phải `.xlsx` thật — nhận diện bằng chữ ký tệp, không bằng đuôi. 400. */
+  | "IMP_BAD_FORMAT"
+  | "IMP_CORRUPT_FILE"
+  /** DOCTYPE / thực thể ngoài XML / zip bomb. 400. */
+  | "IMP_UNSAFE_FILE"
+  /** Tệp đọc được nhưng cấu trúc sai — 422, không phải 400: việc cần làm khác hẳn. */
+  | "IMP_MISSING_SHEET"
+  | "IMP_MISSING_COLUMN"
+  | "IMP_TOO_MANY_ROWS"
+  /** Vượt trần 10 MB. **413**, không phải 400. */
+  | "IMP_FILE_TOO_LARGE"
+  /**
+   * Chi này đã có một lô **đã ghi vào phả** mang đúng mã băm ấy — 409 kèm
+   * `overridable: true`, `overrideField: "force"`. Không phải "tệp trùng": tải
+   * lại một tệp giống hệt để *kiểm* thì không bị chặn.
+   */
+  | "IMP_ALREADY_COMMITTED"
+  | "IMP_BLOCKING_ISSUES_PRESENT"
+  | "IMP_WARNINGS_NOT_ACKNOWLEDGED"
+  | "IMP_DUPLICATES_UNDECIDED"
+  | "IMP_BATCH_CLOSED"
+  /** Bước ghi dừng lại **trước khi ghi**; chi tiết ở `GET .../issues`, không ở thân lỗi. */
+  | "IMP_COMMIT_BLOCKED"
+  /**
+   * Không gỡ được lô vì **đã có người khác động vào** dữ liệu lô ấy sinh ra —
+   * điều kiện thật là `person.version` tại lúc ghi, không phải một cửa sổ thời
+   * gian. Thân lỗi mang `blockers[]` tiếng Việt.
+   */
+  | "IMP_ROLLBACK_REFUSED"
   | "RATE_LIMITED"
   | "INTERNAL_ERROR";
 
@@ -694,20 +866,102 @@ export interface ValidationProblem extends Problem {
   errors?: ValidationFieldError[];
 }
 
+/**
+ * Một bậc trên có **tên húy** trùng với tên đang định đặt (FR-1.6).
+ *
+ * <h2>Vì sao ở đây không có tên, không có đời thứ của bậc trên</h2>
+ * Truy vấn dò kỵ húy chọn bậc trên **theo đời thứ** (`generation <` đời của
+ * người mới) — không theo sống/mất, không theo chi, và không có ngưỡng điểm
+ * nào. "Bậc trên" vì thế hoàn toàn có thể là một ông bác **còn sống ở một chi
+ * khác** mà người đang thêm nhân khẩu không có quyền biết gì về họ, kể cả việc
+ * họ tồn tại. Thân lỗi `409` đi thẳng ra HTTP, **không** đi qua bộ lọc phân
+ * tầng riêng tư, nên nó không được phép chở một giá trị đọc từ phả.
+ *
+ * Bốn trường đã **bị bỏ có chủ ý** (đừng thêm lại): `ancestorDisplayName`,
+ * `ancestorGeneration`, `tabooName`, `relationHint` — chuỗi cuối nhúng chính
+ * đời thứ của bậc trên, còn `tabooName` là `person_name.full_name` đọc từ phả
+ * chứ không phải ô người dùng vừa gõ (với `UNACCENTED` nó phát ra bản **có
+ * dấu** mà người gọi chưa từng biết).
+ *
+ * Nạp danh tính bằng `GET /api/v1/persons/{ancestorPersonId}` — đó là nơi bộ
+ * lọc phân tầng riêng tư thật sự chạy, và `404` ở đó là **ca bình thường**.
+ */
 export interface TabooConflict {
+  /** Khoá là **thứ duy nhất** nói về bậc trên. */
   ancestorPersonId: string;
-  ancestorDisplayName?: string;
-  ancestorGeneration?: number | null;
-  tabooName: string;
   matchedNameType: NameType;
+  /** Mức khớp của **ô người dùng vừa nhập** — không phải giá trị bên kia. */
   matchKind: "EXACT" | "GIVEN_NAME" | "UNACCENTED";
-  /** Display-only — do not parse this string. */
-  relationHint?: string;
+}
+
+/**
+ * Tín hiệu góp vào `DuplicateCandidate.score`.
+ *
+ * Chúng chỉ nói **trường nào của chính người dùng vừa nhập đã khớp**, nên
+ * chúng được phép có mặt trong thân lỗi 409.
+ */
+export type DuplicateSignal =
+  | "TEN_TRUNG_CO_DAU"
+  | "TEN_TRUNG_KHONG_DAU"
+  | "GIO_TRUNG_KHIT"
+  | "NAM_SINH_KHOP"
+  | "NAM_SINH_LECH_IT"
+  | "NAM_MAT_KHOP"
+  | "CUNG_CHI"
+  | "CUNG_DOI"
+  | "KHAC_DOI"
+  | "CUNG_NGUYEN_QUAN"
+  | "KHAC_GIOI";
+
+/**
+ * Một nhân khẩu **có thể đã có sẵn** trùng với người đang định thêm
+ * (`DUPLICATE_PERSON_SUSPECTED`). Cảnh báo, không phải lệnh cấm: gửi lại kèm
+ * `confirmDuplicateOverride` để vẫn ghi. Mảng giữ **thứ tự giảm dần theo
+ * `score`**.
+ *
+ * Cùng một ranh giới như {@link TabooConflict}: bộ dò quét **toàn dòng họ** và
+ * không biết người gọi là ai, nên bốn trường `displayName`, `generation`,
+ * `branchId`, `matchedName` **bị bỏ có chủ ý**. `score` / `signals` / `hint` ở
+ * lại vì chúng trả lời "vì sao nghi" mà không nói "người ấy là ai" — cắt nốt
+ * chúng thì người nhập mất khả năng đối chiếu và sẽ bấm ghi đè theo phản xạ.
+ */
+export interface DuplicateCandidate {
+  /**
+   * Hồ sơ đã có trong CSDL. **`null` là ca bình thường**: ứng viên có thể là
+   * một dòng **chưa được ghi** trong cùng lô nhập liệu, khi ấy định danh duy
+   * nhất là {@link DuplicateCandidate.ref} và **không có gì để `GET`**.
+   */
+  personId: string | null;
+  /** Mã tham chiếu dòng trong lô nhập — dữ liệu của chính người nhập. */
+  ref?: string | null;
+  /** Điểm nghi ngờ 0–100+. Không có ngưỡng nào được contract bảo đảm. */
+  score: number;
+  signals: DuplicateSignal[];
+  /** Chỉ để hiển thị — **đừng phân tích chuỗi này**. Cần logic thì đọc `signals`. */
+  hint?: string | null;
 }
 
 export interface ConflictProblem extends Problem {
   /** true => resend with `overrideField` set to keep going; false => hard conflict, reload. */
   overridable?: boolean;
   overrideField?: string; // e.g. "confirmTabooOverride"
-  conflicts?: TabooConflict[];
+  /**
+   * `KY_HUY_CONFLICT` ⇒ `TabooConflict[]`; `DUPLICATE_PERSON_SUSPECTED` ⇒
+   * `DuplicateCandidate[]`. Phân loại bằng {@link isTabooConflict} —
+   * **không** bằng `problem.code`, vì cùng một kiểu thân lỗi phục vụ cả hai.
+   */
+  conflicts?: (TabooConflict | DuplicateCandidate)[];
+}
+
+/** Phân biệt hai nhánh của `ConflictProblem.conflicts` theo khoá riêng của chúng. */
+export function isTabooConflict(
+  conflict: TabooConflict | DuplicateCandidate
+): conflict is TabooConflict {
+  return "ancestorPersonId" in conflict;
+}
+
+export function isDuplicateCandidate(
+  conflict: TabooConflict | DuplicateCandidate
+): conflict is DuplicateCandidate {
+  return !isTabooConflict(conflict);
 }

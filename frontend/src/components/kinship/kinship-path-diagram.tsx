@@ -9,7 +9,7 @@ import {
 import { Tag } from "antd";
 import { useTranslations } from "next-intl";
 import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import type { KinshipPathStep, LcaInfo } from "@/types/api";
 
 export interface KinshipPathDiagramProps {
@@ -52,37 +52,42 @@ export function KinshipPathDiagram({ path, lca }: KinshipPathDiagramProps) {
               <span
                 aria-hidden
                 className="absolute left-[13px] top-7 h-[calc(100%-1.25rem)] w-px"
-                style={{ background: colorTokens.borderDark }}
+                style={{ background: colorVars.borderDark }}
               />
             )}
 
             <span
               aria-hidden
-              className="absolute left-0 top-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border text-[12px]"
+              className="absolute left-0 top-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border text-than"
               style={{
-                background: isLca ? colorTokens.primary : colorTokens.bgCard,
-                borderColor: isLca ? colorTokens.primary : colorTokens.borderDark,
-                color: isLca ? colorTokens.bgCard : colorTokens.textMuted,
+                background: isLca ? colorVars.primary : colorVars.bgCard,
+                borderColor: isLca ? colorVars.primary : colorVars.borderDark,
+                color: isLca ? colorVars.bgCard : colorVars.textMuted,
               }}
             >
               <StepIcon direction={step.direction} />
             </span>
 
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pb-4 pt-1">
-              <span className="text-[15px] font-medium text-text-main">
+              <span className="text-than font-medium text-text-main">
                 {step.displayName}
               </span>
               {isPresent(step.generation) && (
-                <span className="text-[12px] text-text-muted">
+                <span className="text-than text-text-muted">
                   {t("generationValue", { n: step.generation })}
                 </span>
               )}
               {isLca && (
-                <Tag bordered={false} color={colorTokens.accent} className="!m-0">
+                <Tag
+                  bordered={false}
+                  color={colorVars.accentText}
+                  style={{ color: colorVars.bgPage }}
+                  className="!m-0"
+                >
                   {t("lcaTag")}
                 </Tag>
               )}
-              <span className="basis-full text-[12px] text-text-muted">
+              <span className="basis-full text-than text-text-muted">
                 {t(`direction.${step.direction}`)}
               </span>
             </div>

@@ -108,11 +108,37 @@ describe("khách tìm kiếm", () => {
   });
 });
 
+/**
+ * Khách đi **đường công khai** (`/api/v1/public/tree`), không phải đường thành
+ * viên. Đó là thay đổi đáng kể nhất của bản vá này: trước đây bộ giả lập cho
+ * khách đọc luôn `/api/v1/tree` (đã lọc), còn máy chủ thật trả `401` — nên
+ * "khách xem được phả đồ" xanh trong test mà đỏ trên hệ thống thật.
+ */
 describe("khách mở phả đồ", () => {
+  it("bản THÀNH VIÊN trả 401 cho khách — và đó là luật chạy đúng, không phải sự cố", async () => {
+    setDevRole("guest");
+
+    const error = (await treeApi
+      .getTree({ rootId: DECEASED_ROOT_ID, depth: 2 })
+      .catch((e: unknown) => e)) as ApiError;
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(401);
+  });
+
+  it("bản CÔNG KHAI mở được, và có người đã khuất để xem", async () => {
+    setDevRole("guest");
+
+    const projection = await treeApi.getPublicTree({ rootId: DECEASED_ROOT_ID, depth: 4 });
+
+    expect(projection.nodes.length).toBeGreaterThan(0);
+    expect(projection.nodes.every((n) => n.person.isAlive === false)).toBe(true);
+  });
+
   it("không có nút nào trong phóng chiếu cây là người còn sống", async () => {
     setDevRole("guest");
 
-    const projection = await treeApi.getTree({ rootId: DECEASED_ROOT_ID, depth: 4, maxNodes: 300 });
+    const projection = await treeApi.getPublicTree({ rootId: DECEASED_ROOT_ID, depth: 4 });
 
     expect(projection.nodes.length).toBeGreaterThan(0);
     expect(projection.nodes.every((n) => n.person.isAlive === false)).toBe(true);
@@ -121,7 +147,7 @@ describe("khách mở phả đồ", () => {
   it("không có cạnh nào trỏ tới một nút đã bị lọc bỏ (cạnh mồ côi cũng là rò rỉ)", async () => {
     setDevRole("guest");
 
-    const projection = await treeApi.getTree({ rootId: DECEASED_ROOT_ID, depth: 4, maxNodes: 300 });
+    const projection = await treeApi.getPublicTree({ rootId: DECEASED_ROOT_ID, depth: 4 });
     const ids = new Set(projection.nodes.map((n) => n.person.id));
 
     for (const edge of projection.edges) {
@@ -134,11 +160,26 @@ describe("khách mở phả đồ", () => {
     setDevRole("guest");
 
     const error = (await treeApi
-      .getTree({ rootId: LIVING_ID, depth: 2 })
+      .getPublicTree({ rootId: LIVING_ID, depth: 2 })
       .catch((e: unknown) => e)) as ApiError;
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(404);
+  });
+
+  it("bản công khai KHÔNG đổi câu trả lời theo vai người gọi", async () => {
+    // Máy chủ thật ép ngữ cảnh Khách trước khi đọc dữ liệu, nên phản hồi giống
+    // hệt nhau với mọi người gọi — chính điều đó mới cho phép `Cache-Control:
+    // public`. Nếu một ngày nào đó bản công khai bắt đầu nhìn vai, header ấy
+    // biến mọi proxy trung gian thành một chỗ rò rỉ.
+    setDevRole("guest");
+    const asGuest = await treeApi.getPublicTree({ rootId: DECEASED_ROOT_ID, depth: 2 });
+
+    setDevRole("admin");
+    const asAdmin = await treeApi.getPublicTree({ rootId: DECEASED_ROOT_ID, depth: 2 });
+
+    expect(asAdmin.nodes.map((n) => n.id)).toEqual(asGuest.nodes.map((n) => n.id));
+    expect(asAdmin.nodes.every((n) => n.person.isAlive === false)).toBe(true);
   });
 });
 

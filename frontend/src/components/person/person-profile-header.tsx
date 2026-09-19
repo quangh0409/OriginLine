@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { headlineHanNom, headlineName } from "@/lib/format/name-layers";
 import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import { PersonBadgeList } from "./person-badge-list";
 import type { PersonBadge, PersonDto } from "@/types/api";
 
@@ -39,9 +39,12 @@ export function PersonProfileHeader({
     <header
       className="rounded-lg border px-4 py-4 sm:px-5"
       style={{
-        background: deceased ? colorTokens.bgDeceased : colorTokens.bgCard,
-        borderColor: deceased ? colorTokens.borderDark : colorTokens.border,
-        borderTop: `3px solid ${deceased ? colorTokens.primary : colorTokens.accent}`,
+        background: deceased ? colorVars.bgDeceased : colorVars.bgCard,
+        borderColor: deceased ? colorVars.borderDark : colorVars.border,
+        // `accentText`, không phải `accent`: vạch 3px này PHÂN BIỆT người còn sống với người đã
+        // khuất, tức là đồ hoạ mang nghĩa — WCAG 1.4.11 đòi 3:1 so với nền. Hổ phách rực chỉ đạt
+        // 2,95:1. Cùng bản vá đã áp cho thanh hôn phối trên phả đồ.
+        borderTop: `3px solid ${deceased ? colorVars.primary : colorVars.accentText}`,
       }}
     >
       <div className="flex items-start gap-3 sm:gap-4">
@@ -51,8 +54,8 @@ export function PersonProfileHeader({
           icon={<UserOutlined />}
           className="shrink-0"
           style={{
-            backgroundColor: deceased ? colorTokens.borderDark : colorTokens.primaryLight,
-            color: deceased ? colorTokens.bgCard : colorTokens.primary,
+            backgroundColor: deceased ? colorVars.borderDark : colorVars.primaryLight,
+            color: deceased ? colorVars.bgCard : colorVars.primary,
           }}
           alt=""
         />
@@ -67,15 +70,24 @@ export function PersonProfileHeader({
               </h1>
             )}
             {deceased ? (
-              <Tag bordered={false} color={colorTokens.primary} className="!m-0">
+              // `style.color` là bắt buộc, không phải trang trí: `<Tag color={…}>` của
+              // Ant Design ép chữ về TRẮNG, và trắng trên đỏ trầm ở CHẾ ĐỘ TỐI (#e08a72)
+              // chỉ đạt 2,07:1 — đo được trên hồ sơ nhân khẩu. `bgPage` đúng ở cả hai
+              // chiều: nền kem trên mảng trầm khi sáng, mực tối trên mảng sáng khi tối.
+              <Tag
+                bordered={false}
+                color={colorVars.primary}
+                style={{ color: colorVars.bgPage }}
+                className="!m-0"
+              >
                 {t("deceased")}
               </Tag>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-[13px] text-text-muted">
+              <span className="inline-flex items-center gap-1.5 text-than text-text-muted">
                 <span
                   aria-hidden
                   className="h-2 w-2 rounded-full"
-                  style={{ background: colorTokens.success }}
+                  style={{ background: colorVars.success }}
                 />
                 {t("alive")}
               </span>
@@ -92,7 +104,7 @@ export function PersonProfileHeader({
             </p>
           )}
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-text-muted">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-than text-text-muted">
             {isPresent(person.generation) && (
               <span>{t("generationValue", { n: person.generation })}</span>
             )}
@@ -110,7 +122,9 @@ export function PersonProfileHeader({
             role guess on the client — a member sees no edit button at all
             rather than one that fails with 403 on submit. */}
         {showEditAction && person.meta.canEdit && (
-          <Link href={`/persons/${person.id}/edit`}>
+          // `inline-flex` — xem chú thích ở person-profile.tsx: <a> bọc <Button>
+          // mặc định là `display: inline`, nên vùng chạm tụt về 20px dù nút đã 44px.
+          <Link href={`/persons/${person.id}/edit`} className="inline-flex">
             <Button icon={<EditOutlined />} size="small">
               <span className="hidden sm:inline">{t("edit")}</span>
             </Button>

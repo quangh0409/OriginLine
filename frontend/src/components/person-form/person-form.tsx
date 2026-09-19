@@ -1,11 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { Alert, App, Button, Input, Radio, Select, Switch } from "antd";
+import { Alert, App, Button, Input, Radio, Switch } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { usePersonSubmit, type DeathConfirmationRequest } from "@/hooks/use-person-submit";
+import {
+  usePersonSubmit,
+  type DeathConfirmationRequest,
+  type SubmitOverrides,
+} from "@/hooks/use-person-submit";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { useMe } from "@/hooks/use-me";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { headlineName } from "@/lib/format/name-layers";
 import { zodResolver } from "@/lib/form/zod-resolver";
 import { ApiError } from "@/lib/api/http";
@@ -15,6 +22,9 @@ import { NameLayersField } from "./name-layers-field";
 import { RelationshipLinkField } from "./relationship-link-field";
 import { DeathConfirmDialog } from "./death-confirm-dialog";
 import { TabooConflictDialog } from "./taboo-conflict-dialog";
+import { DuplicateConflictDialog } from "./duplicate-conflict-dialog";
+import { DraftRestoreBanner } from "./draft-restore-banner";
+import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 import {
   effectiveIsAlive,
   emptyPersonFormValues,
@@ -44,6 +54,20 @@ export type PersonFormProps =
  *  - `generation` — derived from the graph;
  *  - kỵ húy collisions — the backend answers 409 and this form reacts
  *    (see usePersonSubmit + TabooConflictDialog).
+ *
+ * <h2>Không có gì được phép biến mất trong im lặng</h2>
+ * Một Trưởng chi 55 tuổi nhập bảy mục trong nửa tiếng; một cú vuốt lùi trước
+ * đây xoá sạch, không một câu hỏi. Trước đó `isDirty` chỉ dùng để in dòng chữ
+ * "Có thay đổi chưa lưu" rồi thôi. Nay nó điều khiển hai lớp bảo vệ:
+ *
+ *  1. {@link useUnsavedChanges} — chặn đóng tab, chặn vuốt lùi, chặn liên kết
+ *     trong ứng dụng, và hỏi trước khi để đi;
+ *  2. {@link useFormDraft} — nháp cục bộ trong `sessionStorage` (tab-scoped, có
+ *     chủ ý vì nháp chứa dữ liệu Tầng 3 của người còn sống; xem javadoc của
+ *     hook để biết cả quyết định riêng tư).
+ *
+ * Lớp (1) lo tai nạn có thể hỏi được; lớp (2) lo tai nạn không hỏi kịp — sập
+ * trình duyệt, hết pin, trình duyệt di động tự giải phóng tab nền.
  */
 export function PersonForm(props: PersonFormProps) {
   const t = useTranslations("personForm");
@@ -58,6 +82,7 @@ export function PersonForm(props: PersonFormProps) {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors, isDirty },
   } = useForm<PersonFormValues>({
     resolver: zodResolver<PersonFormValues>(schema),
@@ -65,6 +90,47 @@ export function PersonForm(props: PersonFormProps) {
       props.mode === "edit" ? personToFormValues(props.person) : emptyPersonFormValues(),
     mode: "onBlur",
   });
+
+  // --- Nháp cục bộ ---------------------------------------------------------
+  // Khoá gắn với CẢ đối tượng đang sửa LẪN tài khoản đang đăng nhập: hai người
+  // dùng chung một máy ở nhà thờ họ không bao giờ nhìn thấy nháp của nhau.
+  const { data: me } = useMe();
+  const draftKey = me
+    ? `person:${props.mode === "edit" ? props.person.id : "new"}:${me.appUserId ?? "anon"}`
+    : null;
+  const draft = useFormDraft<PersonFormValues>({ key: draftKey });
+
+  /**
+   * `watch(callback)` chứ không phải `watch()`.
+   *
+   * Dạng có callback báo thay đổi mà **không** vẽ lại thành phần — giữ nguyên
+   * tính chất "gõ một tiểu sử dài không vẽ lại cả biểu mẫu" mà react-hook-form
+   * sinh ra để có. Dạng không callback sẽ đăng ký lại toàn bộ giá trị vào lần
+   * vẽ và phá đúng điều đó.
+   *
+   * Điều kiện là `name` chứ **không phải** `isDirty`: `isDirty` chỉ đúng ở lần
+   * vẽ SAU thay đổi, nên đọc nó ngay trong callback thì lần sửa đầu tiên luôn
+   * bị bỏ qua — và với một người chỉ sửa đúng một ô rồi đóng tab, "lần đầu
+   * tiên" cũng là lần duy nhất. `name` có giá trị khi và chỉ khi một ô thật sự
+   * đổi; lần gọi khởi tạo của react-hook-form không mang `name`.
+   */
+  const saveDraft = draft.save;
+  useEffect(() => {
+    const subscription = watch((values, { name }) => {
+      if (!name) return;
+      saveDraft(values as PersonFormValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, saveDraft]);
+
+  const restoreDraft = useCallback(() => {
+    const found = draft.restorable;
+    if (!found) return;
+    // `keepDefaultValues` giữ nguyên mốc so sánh ban đầu, nhờ đó dữ liệu vừa
+    // khôi phục vẫn được tính là "chưa lưu" — vì nó chưa lưu thật.
+    reset(found.values, { keepDefaultValues: true });
+    draft.dismiss();
+  }, [draft, reset]);
 
   const target = useMemo(
     () =>
@@ -78,18 +144,20 @@ export function PersonForm(props: PersonFormProps) {
     submit,
     confirmOverride,
     cancelOverride,
+    confirmDuplicateOverride,
+    cancelDuplicateOverride,
     confirmDeath,
     cancelDeath,
     conflicts,
+    duplicates,
     deathConfirmation,
     isSubmitting,
     error,
   } = usePersonSubmit(target);
 
   const buildPayload = (values: PersonFormValues) => ({
-    create: (options: { confirmTabooOverride?: boolean; overrideReason?: string }) =>
-      toCreateRequest(values, options),
-    update: (options: { confirmTabooOverride?: boolean; overrideReason?: string }) => {
+    create: (options: SubmitOverrides) => toCreateRequest(values, options),
+    update: (options: Omit<SubmitOverrides, "confirmDuplicateOverride">) => {
       // `props.person` is the pre-edit snapshot; the mapper needs it so a
       // field hidden by the caller's privacy tier is left alone instead of
       // being cleared. See toUpdateRequest. Unreachable in create mode —
@@ -128,7 +196,22 @@ export function PersonForm(props: PersonFormProps) {
     };
   };
 
+  /**
+   * Chốt chặn rời trang. `release()` phải được gọi TRƯỚC khi điều hướng sau khi
+   * lưu — nếu không, chính cú `router.push` của mình lại kích hoạt hộp thoại
+   * "bạn có thay đổi chưa lưu", vốn là điều vô lý ngay sau một lần lưu thành
+   * công.
+   */
+  const unsaved = useUnsavedChanges({
+    when: isDirty,
+    navigate: (href) => router.push(href),
+  });
+
   const afterSave = (saved: PersonDto) => {
+    unsaved.release();
+    // Lưu xong thì nháp hết lý do tồn tại — và nó có thể đang giữ dữ liệu Tầng
+    // 3 của một người còn sống, nên xoá ngay chứ không đợi đóng tab.
+    draft.clear();
     message.success(t(props.mode === "edit" ? "savedEdit" : "savedCreate"));
     router.push(`/persons/${saved.id}`);
   };
@@ -143,6 +226,14 @@ export function PersonForm(props: PersonFormProps) {
     <>
       <form onSubmit={handleSubmit(onValid)} className="space-y-4" noValidate>
         {error && <SubmitError error={error} />}
+
+        {draft.restorable && (
+          <DraftRestoreBanner
+            savedAt={draft.restorable.savedAt}
+            onRestore={restoreDraft}
+            onDiscard={draft.clear}
+          />
+        )}
 
         <Section title={t("sections.names")}>
           <NameLayersField control={control} errors={errors} setValue={setValue} />
@@ -180,7 +271,7 @@ export function PersonForm(props: PersonFormProps) {
                         checkedChildren={tPerson("alive")}
                         unCheckedChildren={tPerson("deceased")}
                       />
-                      <span className="text-[13px] text-text-muted">
+                      <span className="text-than text-text-muted">
                         {field.value ? tPerson("alive") : tPerson("deceased")}
                       </span>
                     </span>
@@ -238,27 +329,18 @@ export function PersonForm(props: PersonFormProps) {
             <TextField control={control} name="contact.zaloId" label={tPerson("zalo")} />
           </div>
 
-          <div className="mt-3">
-            <Controller
-              control={control}
-              name="privacyLevel"
-              render={({ field }) => (
-                <FormField label={t("privacyLevel")} hint={t("privacyLevelHint")}>
-                  {({ id }) => (
-                    <Select
-                      id={id}
-                      {...field}
-                      size="large"
-                      className="w-full sm:max-w-sm"
-                      options={(
-                        ["DEFAULT", "BRANCH_OPT_IN", "CLAN_OPT_IN", "RESTRICTED"] as const
-                      ).map((value) => ({ value, label: t(`privacyOption.${value}`) }))}
-                    />
-                  )}
-                </FormField>
-              )}
-            />
-          </div>
+          {/*
+            KHÔNG có ô chọn mức chia sẻ ở đây — đó là chủ ý, đừng thêm lại.
+
+            Biểu mẫu này do người khác khai HỘ (trưởng chi khai cho cả chi). Một ô chọn mức
+            chia sẻ đặt ở đây cho phép người khai nới rộng quyền riêng tư của một người còn
+            sống mà chính người ấy không hề biết — đúng điều mà dòng gợi ý cũ ngay bên dưới
+            nó tự cấm: "chỉ nới rộng khi chính người đó đồng ý".
+
+            Mức chia sẻ nay thuộc `PrivacySharingCard`, thẻ chỉ hiện với chính chủ
+            (`meta.isSelf`). Ở đây ta không gửi `privacy` gì cả, và máy chủ hiểu vắng mặt là
+            `PRIVATE` — mặc định kín, không ai mở hộ ai.
+          */}
         </Section>
 
         <Section title={t("sections.biography")}>
@@ -307,16 +389,34 @@ export function PersonForm(props: PersonFormProps) {
           />
         </Section>
 
-        <div className="sticky bottom-0 flex gap-2 border-t border-border bg-bg-page/95 py-3 backdrop-blur">
+        <div className="sticky bottom-0 flex flex-wrap items-center gap-2 border-t border-border bg-bg-page/95 py-3 backdrop-blur">
           <Button type="primary" size="large" htmlType="submit" loading={isSubmitting}>
             {t(props.mode === "edit" ? "save" : "create")}
           </Button>
-          <Button size="large" onClick={() => router.back()} disabled={isSubmitting}>
+          {/* "Huỷ" đi qua chốt: đây là nút dễ bấm nhầm nhất trên màn hình. */}
+          <Button
+            size="large"
+            onClick={() => unsaved.guard(() => router.back())}
+            disabled={isSubmitting}
+          >
             {t("cancel")}
           </Button>
-          {isDirty && <span className="self-center text-[12px] text-text-muted">{t("unsaved")}</span>}
+          {isDirty && <span className="self-center text-than text-text-muted">{t("unsaved")}</span>}
+          {/* Nháp nằm trên MÁY NÀY. Người dùng phải xoá được ngay, không phải đi
+              tìm trong cài đặt — nhất là khi đang ngồi ở máy dùng chung. */}
+          {draft.hasStoredDraft && !draft.restorable && (
+            <Button size="small" type="link" onClick={draft.clear}>
+              {t("draft.discard")}
+            </Button>
+          )}
         </div>
       </form>
+
+      <UnsavedChangesDialog
+        open={unsaved.pending !== null}
+        onStay={unsaved.stay}
+        onLeave={unsaved.confirmLeave}
+      />
 
       <DeathConfirmDialog
         request={deathConfirmation}
@@ -336,7 +436,27 @@ export function PersonForm(props: PersonFormProps) {
         onConfirm={(reason) => {
           void confirmOverride(reason).then((saved) => {
             if (saved) {
+              unsaved.release();
+              draft.clear();
               message.success(t("savedWithOverride"));
+              router.push(`/persons/${saved.id}`);
+            }
+          });
+        }}
+      />
+
+      {/* Cổng thứ hai của cùng một lần gửi: vượt kỵ húy xong vẫn có thể đụng
+          nghi trùng, nên hai hộp thoại nối tiếp chứ không loại trừ nhau. */}
+      <DuplicateConflictDialog
+        candidates={duplicates}
+        submitting={isSubmitting}
+        onCancel={cancelDuplicateOverride}
+        onConfirm={() => {
+          void confirmDuplicateOverride().then((saved) => {
+            if (saved) {
+              unsaved.release();
+              draft.clear();
+              message.success(t("savedWithDuplicateOverride"));
               router.push(`/persons/${saved.id}`);
             }
           });
@@ -358,7 +478,7 @@ function Section({
   return (
     <section className="rounded-lg border border-border bg-bg-card px-4 py-3 sm:px-5 sm:py-4">
       <h2 className="m-0 font-serif text-base font-semibold text-primary sm:text-lg">{title}</h2>
-      {hint && <p className="m-0 mb-2 mt-0.5 text-[12px] text-text-muted">{hint}</p>}
+      {hint && <p className="m-0 mb-2 mt-0.5 text-than text-text-muted">{hint}</p>}
       <div className="mt-2">{children}</div>
     </section>
   );

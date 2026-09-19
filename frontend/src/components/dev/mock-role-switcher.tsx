@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Select, Tooltip } from "antd";
+import { Select } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import {
@@ -54,8 +54,14 @@ export function MockRoleSwitcher() {
     // bằng phần khiến MỌI trang tràn ngang 34px trên Pixel 5 (393px). Bản production không dựng
     // component này (MOCKING_ENABLED = false) nên thanh đầu trang thật không hề rộng như vậy;
     // giấu nó trên màn hình nhỏ để bản chạy thử đo được đúng bố cục mà người dùng sẽ thấy.
-    <div className="hidden md:block">
-    <Tooltip title={t("roleTooltip")}>
+    // `title` chứ không phải <Tooltip>: bong bóng của Ant Design mở khi ô nhận
+    // TIÊU ĐIỂM và vẽ đè lên chính nó, nên phép kiểm C-4.4 đọc được "phần tử được
+    // tiêu điểm bị lớp khác che khuất" — và người dùng bàn phím thì mất dấu thật.
+    // `md:flex md:items-center` chứ không `md:block`: <Select> của Ant Design là
+    // `inline-flex`, và một hộp KHỐI chứa nội dung inline cao theo hộp dòng chứ không
+    // theo con của nó — đo được 88px cho một ô 44px, và 44px thừa ấy đội thanh đầu
+    // trang lên một nấc.
+    <div className="hidden md:flex md:items-center" title={t("roleTooltip")}>
       <Select<DevRole>
         size="small"
         value={role}
@@ -68,7 +74,6 @@ export function MockRoleSwitcher() {
         }}
         options={DEV_ROLES.map((value) => ({ value, label: t(`role.${value}`) }))}
       />
-    </Tooltip>
     </div>
   );
 }

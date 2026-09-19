@@ -31,8 +31,55 @@ describe("BADGE_META", () => {
     for (const [badge, meta] of Object.entries(BADGE_META)) {
       expect(meta.vi, `vi label for ${badge}`).toBeTruthy();
       expect(meta.en, `en label for ${badge}`).toBeTruthy();
-      expect(meta.color, `color for ${badge}`).toMatch(/^#[0-9a-fA-F]{6}$/);
     }
+  });
+
+  /**
+   * Mảng tô của huy hiệu phải ĐI QUA biến CSS, không phải một mã màu đóng băng.
+   *
+   * <p>Ca này trước đây khẳng định ngược lại — mọi màu phải khớp `/^#[0-9a-fA-F]{6}$/` —
+   * và chính lời khẳng định ấy là thứ ghim cả bảng huy hiệu vào chế độ SÁNG: một
+   * chuỗi hex đã cố định vào lượt render, `prefers-color-scheme` không với tới.</p>
+   *
+   * <p>Hai ngoại lệ CÓ TÊN, và chỉ hai: Dâu và Rể. Mã màu của chúng đang chờ Hội đồng
+   * Tộc biểu quyết (dâu/rể có được một sắc riêng ngoài bảng màu dòng họ hay không là
+   * câu hỏi về NGHĨA, không phải về CSS), nên chúng cố ý còn là hex và cố ý còn làm
+   * `no-hardcoded-colors.test.ts` đỏ. Liệt kê đích danh ở đây để khi Hội đồng quyết
+   * xong, ca này đỏ và nhắc người sửa quay lại — thay vì im lặng cho qua mãi mãi.</p>
+   */
+  it("mảng tô đi qua biến CSS, trừ hai sắc đang chờ Hội đồng quyết", () => {
+    const CHO_HOI_DONG = new Set(["DAU", "RE"]);
+    for (const [badge, meta] of Object.entries(BADGE_META)) {
+      if (CHO_HOI_DONG.has(badge)) {
+        expect(meta.color, `${badge} vẫn đang chờ Hội đồng — xem no-hardcoded-colors`).toMatch(
+          /^#[0-9a-fA-F]{6}$/
+        );
+        continue;
+      }
+      expect(
+        meta.color,
+        `${badge}: mã màu cứng ở đây KHÔNG đảo theo chế độ tối. Dùng colorVars.*`
+      ).toMatch(/^var\(--color-[a-z-]+\)$/);
+    }
+  });
+
+  /**
+   * MẢNG TÔ VÀ MỰC ĐI THÀNH CẶP.
+   *
+   * <p>`<Tag color={…}>` của Ant Design ép chữ về TRẮNG. Trắng trên hổ phách chỉ đạt
+   * 3,19:1 ở chế độ sáng và <b>2,07:1</b> ở chế độ tối — đo được trên phả đồ — trong
+   * khi ba huy hiệu quan trọng nhất của phả hệ (Đích tôn · Thừa tự · Kế tự) nằm đúng
+   * trên mảng đó. `token-contrast.test.ts` đã khẳng định bảng màu LUÔN cung cấp một
+   * màu mực đọc được cho mọi mảng tô; ca này khẳng định rằng nơi vẽ THẬT SỰ dùng nó.</p>
+   */
+  it("mọi huy hiệu dùng biến CSS đều mang theo một màu mực", () => {
+    const thieuMuc = Object.entries(BADGE_META)
+      .filter(([, meta]) => meta.color.startsWith("var(") && !meta.ink)
+      .map(([badge]) => badge);
+    expect(
+      thieuMuc,
+      "thiếu `ink` thì Ant Design vẽ chữ TRẮNG lên mảng tô — 2,07:1 ở chế độ tối"
+    ).toEqual([]);
   });
 
   it("keeps the Vietnamese domain wording rather than translating it away", () => {

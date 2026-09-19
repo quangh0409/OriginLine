@@ -4,7 +4,7 @@ import { Tag } from "antd";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import type { PersonSummaryDto } from "@/types/api";
 
 export interface SearchResultCardProps {
@@ -57,7 +57,7 @@ export function SearchResultCard({ person }: SearchResultCardProps) {
           aria-hidden
           className="mt-2 h-2 w-2 shrink-0 rounded-full"
           style={{
-            background: person.isAlive ? colorTokens.success : colorTokens.borderDark,
+            background: person.isAlive ? colorVars.success : colorVars.borderDark,
           }}
         />
         <span className="min-w-0 flex-1">
@@ -66,17 +66,17 @@ export function SearchResultCard({ person }: SearchResultCardProps) {
               {person.displayName}
             </span>
             {isPresent(person.nameHanNom) && (
-              <span className="font-serif text-[14px] text-text-muted">
+              <span className="font-serif text-than text-text-muted">
                 {person.nameHanNom}
               </span>
             )}
-            <span className="text-[12px] text-text-muted">
+            <span className="text-than text-text-muted">
               {person.isAlive ? tPerson("alive") : tPerson("deceased")}
             </span>
           </span>
 
           {metaParts.length > 0 && (
-            <span className="mt-0.5 block text-[13px] leading-relaxed text-text-muted">
+            <span className="mt-0.5 block text-than leading-relaxed text-text-muted">
               {metaParts.join(" · ")}
             </span>
           )}
@@ -84,8 +84,8 @@ export function SearchResultCard({ person }: SearchResultCardProps) {
           {isPresent(person.matchedNameType) && (
             <Tag
               bordered={false}
-              className="!mt-1.5 !text-[11.5px]"
-              style={{ background: colorTokens.warningBg, color: colorTokens.textMuted }}
+              className="!mt-1.5 !text-than"
+              style={{ background: colorVars.warningBg, color: colorVars.textMuted }}
             >
               {t("matchedOn", { layer: tPerson(`nameType.${person.matchedNameType}`) })}
             </Tag>

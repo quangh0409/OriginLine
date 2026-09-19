@@ -1,0 +1,58 @@
+/*
+ * Vá những chỗ mà CSS của @xyflow/react quyết định thay ta, và ta không đồng ý.
+ *
+ * Vì sao là CSS Module chứ không phải Tailwind: ba nút điều khiển máy quay và cả tấm thẻ nhân khẩu
+ * đều do THƯ VIỆN dựng ra hoặc do thư viện tự gắn trạng thái, nên không có chỗ nào gắn lớp Tailwind
+ * vào. Biến thể tuỳ ý kiểu `[&_.react-flow__controls-button]:!h-11` đã thử: lớp có ra tới DOM nhưng
+ * Tailwind không sinh luật tương ứng, nút vẫn 26px — đo được trên trình duyệt. Một tệp CSS đặt CẠNH
+ * component thì chắc chắn, đọc được, và vẫn không đụng tới `styles/`.
+ *
+ * Đặc thù chọn lọc: `.canvas .react-flow__node` (0,2,0) thắng `.react-flow__node` (0,1,0) của thư
+ * viện mà không cần `!important`.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Nút phóng to / thu nhỏ / vừa khung
+ * ------------------------------------------------------------------ */
+
+/*
+ * Mặc định của thư viện là 26×26px — dưới cả sàn 24px của WCAG 2.5.8 khi tính viền, và trên điện
+ * thoại thì không bấm nổi. Đây lại là ĐƯỜNG THOÁT bằng nút bấm duy nhất khi người dùng lỡ kéo phả
+ * đồ đi mất; trên điện thoại không có chuột để lăn, nên nó không được phép là thứ khó bấm nhất
+ * màn hình.
+ */
+.controls :global(.react-flow__controls-button) {
+  width: 44px;
+  height: 44px;
+}
+
+/* Biểu tượng mặc định của thư viện là 12px, chìm nghỉm trong ô 44px. */
+.controls :global(.react-flow__controls-button svg) {
+  max-width: 16px;
+  max-height: 16px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Vòng tiêu điểm bàn phím trên thẻ nhân khẩu
+ * ------------------------------------------------------------------ */
+
+/*
+ * React Flow cho thẻ nhân khẩu nhận tiêu điểm bàn phím (đó là điều đúng: người dùng bàn phím phải
+ * đi được qua từng người), nhưng dấu hiệu tiêu điểm mặc định của nó là một quầng
+ * `box-shadow: 0 0 0 0.5px #1a192b` — đo trên nền kem của sản phẩm chỉ ra **1,07:1**, tức gần như
+ * vô hình, trong khi WCAG 2.4.11/1.4.11 đòi 3:1.
+ *
+ * Thay bằng vòng viền lấy từ token `--color-focus-ring` (#2b2825, 12,55:1 trên nền kem): cùng một
+ * vòng tiêu điểm với phần còn lại của sản phẩm, và tự đổi theo chế độ tối vì nó đi qua biến CSS.
+ * `outline-offset` dương để vòng chạy NGOÀI mép thẻ, không đè lên tên người.
+ */
+.canvas :global(.react-flow__node:focus-visible) {
+  /* `!important` để giữ được ý đồ riêng của canvas sau khi quy tắc chung ở
+     globals.css buộc phải mang `!important` (xem chú thích ở đó: Ant Design gỡ
+     vòng tiêu điểm của mọi liên kết bằng một quy tắc tiêm lúc chạy). Thẻ nhân
+     khẩu muốn vòng DÀY hơn và KHÔNG có quầng — nó đã có `shadow-sm` của riêng
+     mình, chồng thêm quầng trắng lên là hai lớp bóng đá nhau. */
+  outline: 3px solid var(--color-focus-ring) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}

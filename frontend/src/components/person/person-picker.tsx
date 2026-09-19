@@ -5,7 +5,7 @@ import { Select, Spin, Tag } from "antd";
 import { useTranslations } from "next-intl";
 import { usePersonSearch } from "@/hooks/use-person-search";
 import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import type { PersonSummaryDto } from "@/types/api";
 
 export interface PersonPickerProps {
@@ -66,7 +66,7 @@ export function PersonPicker({
 
   return (
     <label className="block" htmlFor={id}>
-      {label && <span className="mb-1 block text-[13px] text-text-muted">{label}</span>}
+      {label && <span className="mb-1 block text-than text-text-muted">{label}</span>}
       <Select
         id={id}
         showSearch
@@ -110,18 +110,18 @@ function PersonOptionRow({ person }: { person: PersonSummaryDto }) {
           <span
             aria-hidden
             className="h-1.5 w-1.5 shrink-0 rounded-full"
-            style={{ background: person.isAlive ? colorTokens.success : colorTokens.textMuted }}
+            style={{ background: person.isAlive ? colorVars.success : colorVars.textMuted }}
           />
           <span className="truncate text-text-main">{person.displayName}</span>
         </div>
-        <div className="truncate pl-3 text-[11.5px] text-text-muted">
+        <div className="truncate pl-3 text-than text-text-muted">
           {isPresent(person.generation) && t("generationValue", { n: person.generation })}
           {isPresent(person.primaryBranch?.name) && ` · ${person.primaryBranch?.name}`}
           {years.length > 0 && ` · ${years}`}
         </div>
       </div>
       {isPresent(person.nameHanNom) && (
-        <Tag bordered={false} className="!m-0 !font-serif !text-[11px]">
+        <Tag bordered={false} className="!m-0 !font-serif !text-than">
           {person.nameHanNom}
         </Tag>
       )}

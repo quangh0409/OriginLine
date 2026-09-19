@@ -4,27 +4,19 @@ import { AppShell } from "@/components/layout/app-shell";
 import { TreeCanvas } from "@/components/tree/tree-canvas";
 
 /**
- * Thủy tổ — matches the id both src/mocks/data.ts (PersonDto fixtures) and
- * src/mocks/tree-graph/build-graph.ts (generated graph root) agree on. A
- * real deployment would resolve "the clan's root person" server-side
- * (branch/clan config), not hard-code an id — this default only exists so
- * the page has something to render without a person-search flow yet (F6,
- * a later sprint).
- */
-const MOCK_ROOT_ID = "p-001";
-
-/**
- * Gốc mặc định của phả đồ.
+ * Trang phả đồ.
  *
- * Với backend thật, `p-001` không tồn tại — nhân khẩu thật mang UUID. Cho tới
- * khi có endpoint "thủy tổ của dòng họ" (chưa nằm trong hợp đồng Giai đoạn 1),
- * gốc được nạp từ `NEXT_PUBLIC_DEFAULT_ROOT_ID`; bỏ trống thì rơi về id của
- * bộ dữ liệu giả lập để `npm run dev:mock` chạy nguyên như cũ.
+ * `?rootId=` là thứ DUY NHẤT trang này biết — và là thứ duy nhất **cần** biết.
+ * Thiếu nó không còn là một câu hỏi: `<TreeCanvas>` gọi `/tree` không kèm
+ * `rootId` và máy chủ chọn gốc theo **vai + phạm vi chi** của người gọi, nên
+ * `/tree` trần mở ra cây ngay, cho cả khách lẫn thành viên. Lý do đầy đủ ở
+ * `src/lib/tree/root-id.ts`.
  *
- * `?rootId=` trên URL luôn thắng — đó là lối vào từ ô tìm kiếm.
+ * Trước đây trang này tự chọn gốc và rơi về id của bộ dữ liệu giả lập khi không
+ * có cấu hình. Với backend thật, id ấy không phải UUID nên
+ * `GET /api/v1/tree?rootId=p-001` trả **400 cho mọi vai** — kể cả quản trị — và
+ * màn hình dịch `400` ấy thành "Không tải được cây phả đồ".
  */
-const DEFAULT_ROOT_ID = process.env.NEXT_PUBLIC_DEFAULT_ROOT_ID ?? MOCK_ROOT_ID;
-
 export default async function TreePage({
   params,
   searchParams,
@@ -38,7 +30,7 @@ export default async function TreePage({
 
   return (
     <AppShell>
-      <TreeCanvas rootId={rootId && rootId.trim().length > 0 ? rootId : DEFAULT_ROOT_ID} />
+      <TreeCanvas rootId={rootId} />
     </AppShell>
   );
 }

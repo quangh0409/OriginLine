@@ -4,9 +4,9 @@ import { useState } from "react";
 import { Alert, Button, Input, Modal, Tag } from "antd";
 import { WarningFilled } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
-import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import type { TabooConflict } from "@/types/api";
+import { ConflictParty } from "./conflict-party";
 
 export interface TabooConflictDialogProps {
   conflicts: TabooConflict[] | null;
@@ -25,13 +25,23 @@ const REASON_MIN = 5;
  * and not a silent rejection. It must answer three questions before the user
  * can proceed:
  *
- *   WHO   — `ancestorDisplayName`
- *   WHERE — `ancestorGeneration` + `relationHint`, so "đời thứ 3, Chi Nhất"
- *           locates the ancestor in the clan rather than naming a stranger
+ *   WHO   — hydrated from `GET /persons/{ancestorPersonId}`, NOT from the 409
+ *   WHERE — the đời thứ on that same hydrated profile
  *   HOW   — `matchKind`: an EXACT collision is far graver than an UNACCENTED
  *           one (which can be pure coincidence, e.g. Hòa vs Hoà), and the
  *           council has not yet decided whether unaccented matches should even
  *           warn (contracts/README §6.5). Labelling the kind lets a user judge.
+ *
+ * WHO and WHERE used to arrive inside the 409 as `ancestorDisplayName` /
+ * `ancestorGeneration` / `tabooName` / `relationHint`. All four are gone on
+ * purpose: the kỵ húy query picks ancestors by **đời thứ alone** — not by
+ * living/deceased, not by chi — so the "ancestor" can be a great-uncle still
+ * alive in another branch whom the person adding this record may not know
+ * anything about. See {@link ConflictParty} for the full reasoning and for why
+ * its `404` branch is a NORMAL case rather than a failure.
+ *
+ * `matchKind` survives because it describes **the user's own input**, never a
+ * value read from the tree.
  *
  * Overriding requires a typed reason. It travels to the backend as the
  * request `note` alongside `confirmTabooOverride: true` and lands in the audit
@@ -58,7 +68,7 @@ export function TabooConflictDialog({
       }}
       title={
         <span className="flex items-center gap-2">
-          <WarningFilled style={{ color: colorTokens.accent }} />
+          <WarningFilled style={{ color: colorVars.accentText }} />
           {t("taboo.title")}
         </span>
       }
@@ -91,37 +101,39 @@ export function TabooConflictDialog({
       <ul className="m-0 mb-4 list-none space-y-2 p-0">
         {(conflicts ?? []).map((conflict) => (
           <li
-            key={`${conflict.ancestorPersonId}-${conflict.tabooName}`}
+            key={`${conflict.ancestorPersonId}-${conflict.matchedNameType}-${conflict.matchKind}`}
             className="rounded border px-3 py-2"
-            style={{ borderColor: colorTokens.borderDark, background: colorTokens.warningBg }}
+            style={{ borderColor: colorVars.borderDark, background: colorVars.warningBg }}
+            data-testid={`taboo-conflict-${conflict.ancestorPersonId}`}
           >
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="font-serif text-[15px] font-semibold text-text-main">
-                {conflict.ancestorDisplayName ?? conflict.tabooName}
-              </span>
-              <Tag
-                bordered={false}
-                color={conflict.matchKind === "EXACT" ? colorTokens.primary : colorTokens.textMuted}
-                className="!m-0"
-              >
-                {t(`taboo.matchKind.${conflict.matchKind}`)}
-              </Tag>
-            </div>
-            <div className="mt-0.5 text-[12.5px] text-text-muted">
-              {isPresent(conflict.ancestorGeneration) &&
-                t("taboo.generation", { n: conflict.ancestorGeneration })}
-              {/* Display-only string from the backend — never parsed. */}
-              {isPresent(conflict.relationHint) && ` · ${conflict.relationHint}`}
-            </div>
-            <div className="mt-1 text-[12.5px] text-text-muted">
-              {t("taboo.collidesWith", { name: conflict.tabooName })}
-            </div>
+            {/* HOW — thuộc về ô người dùng vừa gõ, nên nó luôn hiện được, kể cả
+                khi danh tính bậc trên bị bộ lọc riêng tư giữ lại. */}
+            <Tag
+              bordered={false}
+              color={conflict.matchKind === "EXACT" ? colorVars.primary : colorVars.textMuted}
+              className="!m-0 !mb-1"
+            >
+              {t(`taboo.matchKind.${conflict.matchKind}`)}
+            </Tag>
+
+            {/* WHO + WHERE — nạp theo khoá, qua đúng bộ lọc phân tầng riêng tư. */}
+            <ConflictParty
+              personId={conflict.ancestorPersonId}
+              matchedNameType={conflict.matchedNameType}
+              notVisible={{
+                title: t("taboo.ancestorNotVisible.title"),
+                body: t("taboo.ancestorNotVisible.body"),
+                ask: t("taboo.ancestorNotVisible.ask"),
+              }}
+              loadFailedLabel={t("taboo.ancestorLoadFailed")}
+              testId={`taboo-ancestor-${conflict.ancestorPersonId}`}
+            />
           </li>
         ))}
       </ul>
 
       <label className="block">
-        <span className="mb-1 block text-[13px] font-medium text-text-main">
+        <span className="mb-1 block text-than font-medium text-text-main">
           {t("taboo.reasonLabel")}
         </span>
         <Input.TextArea
@@ -132,7 +144,7 @@ export function TabooConflictDialog({
           showCount
           placeholder={t("taboo.reasonPlaceholder")}
         />
-        <span className="mt-1 block text-[12px] text-text-muted">{t("taboo.reasonHint")}</span>
+        <span className="mt-1 block text-than text-text-muted">{t("taboo.reasonHint")}</span>
       </label>
     </Modal>
   );

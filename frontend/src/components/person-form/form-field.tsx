@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 
 export interface FormFieldProps {
   label: string;
@@ -37,11 +37,11 @@ export function FormField({ label, error, hint, required, children }: FormFieldP
           (`getByLabelText("Họ và tên")`) đều trượt. Dấu * chỉ là tín hiệu thị giác; thông tin
           "bắt buộc" đã được truyền đúng cách qua thuộc tính `required` của chính ô nhập. */}
       <div className="flex items-baseline gap-1">
-        <label htmlFor={id} className="text-[13px] font-medium text-text-main">
+        <label htmlFor={id} className="text-than font-medium text-text-main">
           {label}
         </label>
         {required && (
-          <span aria-hidden style={{ color: colorTokens.primary }}>
+          <span aria-hidden style={{ color: colorVars.primary }}>
             *
           </span>
         )}
@@ -50,12 +50,12 @@ export function FormField({ label, error, hint, required, children }: FormFieldP
       {children({ id, status: error ? "error" : undefined, describedBy: describedBy || undefined })}
 
       {hint && (
-        <p id={hintId} className="m-0 text-[12px] leading-snug text-text-muted">
+        <p id={hintId} className="m-0 text-than leading-snug text-text-muted">
           {hint}
         </p>
       )}
       {error && (
-        <p id={errorId} role="alert" className="m-0 text-[12px]" style={{ color: colorTokens.danger }}>
+        <p id={errorId} role="alert" className="m-0 text-than" style={{ color: colorVars.danger }}>
           {error}
         </p>
       )}

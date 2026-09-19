@@ -106,7 +106,6 @@ export function personFormSchema(t: Translate) {
           .default(""),
         zaloId: z.string().trim().max(64).default(""),
       }),
-      privacyLevel: z.enum(["DEFAULT", "BRANCH_OPT_IN", "CLAN_OPT_IN", "RESTRICTED"]),
       primaryBranchId: z.string().trim().default(""),
       relationship: z.object({
         enabled: z.boolean().default(false),
@@ -219,7 +218,6 @@ export function emptyPersonFormValues(): PersonFormValues {
     occupation: "",
     biography: "",
     contact: { phone: "", email: "", zaloId: "" },
-    privacyLevel: "DEFAULT",
     primaryBranchId: "",
     relationship: {
       enabled: false,
@@ -280,7 +278,6 @@ export function personToFormValues(person: PersonDto): PersonFormValues {
       email: person.contact?.email ?? "",
       zaloId: person.contact?.zaloId ?? "",
     },
-    privacyLevel: person.privacyLevel ?? "DEFAULT",
     primaryBranchId: person.primaryBranch?.id ?? "",
   };
 }
@@ -309,7 +306,12 @@ const orNull = (value: string) => (value === "" ? null : value);
 
 export function toCreateRequest(
   values: PersonFormValues,
-  options: { confirmTabooOverride?: boolean; overrideReason?: string } = {}
+  options: {
+    confirmTabooOverride?: boolean;
+    /** Cờ của `409 DUPLICATE_PERSON_SUSPECTED` — chỉ có ở `POST`, không có ở `PATCH`. */
+    confirmDuplicateOverride?: boolean;
+    overrideReason?: string;
+  } = {}
 ): CreatePersonRequest {
   const contact =
     values.contact.phone || values.contact.email || values.contact.zaloId
@@ -342,7 +344,6 @@ export function toCreateRequest(
     biography: orNull(values.biography),
     primaryBranchId: orNull(values.primaryBranchId),
     contact,
-    privacyLevel: values.privacyLevel,
     initialRelationships:
       values.relationship.enabled && values.relationship.otherPersonId
         ? [
@@ -360,6 +361,7 @@ export function toCreateRequest(
     // Never defaulted to true: the first POST must go WITHOUT it so the
     // backend gets the chance to raise a kỵ húy conflict (FR-1.6).
     confirmTabooOverride: options.confirmTabooOverride ? true : undefined,
+    confirmDuplicateOverride: options.confirmDuplicateOverride ? true : undefined,
     note: options.overrideReason?.trim() || orNull(values.note),
   };
 }
@@ -474,7 +476,6 @@ export function toUpdateRequest(
     currentPlaceFull: diff("currentPlaceFull", values.currentPlaceFull),
     occupation: diff("occupation", values.occupation),
     biography: diff("biography", values.biography),
-    privacyLevel: values.privacyLevel,
     confirmTabooOverride: options.confirmTabooOverride ? true : undefined,
     note: options.overrideReason?.trim() || orNull(values.note) || undefined,
   };

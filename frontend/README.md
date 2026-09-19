@@ -44,13 +44,18 @@ npm run lint
   chạy. Hai cơ chế loại trừ nhau theo thiết kế.
 
 ```bash
-NEXT_PUBLIC_API_MOCKING=disabled NEXT_PUBLIC_API_BASE_URL=http://localhost:8090 NEXT_PUBLIC_KEYCLOAK_URL=http://localhost:8081 NEXT_PUBLIC_DEFAULT_ROOT_ID=3b54e802-a966-5570-b69b-3d01b808b0e3 npx next dev -p 3000
+NEXT_PUBLIC_API_MOCKING=disabled NEXT_PUBLIC_API_BASE_URL=http://localhost:8090 NEXT_PUBLIC_KEYCLOAK_URL=http://localhost:8081 npx next dev -p 3000
 ```
 
-`NEXT_PUBLIC_DEFAULT_ROOT_ID` là thủy tổ của bộ dữ liệu demo (Nguyễn Đình
-Bách). Bỏ trống thì trang phả đồ rơi về `p-001` — id của bộ giả lập, **không
-tồn tại** trong CSDL thật. Chưa có endpoint "thủy tổ của dòng họ" trong hợp
-đồng Giai đoạn 1, nên đây tạm là một biến môi trường.
+**Đừng đặt `NEXT_PUBLIC_DEFAULT_ROOT_ID`** — biến ấy đã bị bỏ, và đặt lại nó
+làm hỏng đúng thứ vừa được dựng. Máy chủ nay tự chọn gốc phả đồ **theo vai
+người gọi**: khách và Hội đồng mở ra thuỷ tổ, trưởng chi mở ra cụ tổ của chính
+chi mình, thành viên mở ra gốc ngành mình. Ghim một gốc qua biến môi trường thì
+mọi vai đều mở cùng một cây.
+
+Trang phả đồ gọi `/api/v1/tree` (hoặc `/api/v1/public/tree` với khách) **không
+kèm `rootId`** và dùng gốc máy chủ trả về. `?rootId=` trên URL vẫn thắng tuyệt
+đối — đó là cách chia sẻ một nhánh cụ thể cho người khác.
 
 Tài khoản dev: `admin.giapha` / `truongchi` / `thanhvien`, mật khẩu đều
 `giapha123`.
@@ -206,8 +211,8 @@ cd frontend && npm run e2e:real
 ```
 
 Ghi đè được bằng biến môi trường: `E2E_API_BASE_URL`, `E2E_KEYCLOAK_URL`,
-`E2E_KEYCLOAK_REALM`, `E2E_KEYCLOAK_CLIENT_ID`, `E2E_DEFAULT_ROOT_ID`,
-`E2E_USERNAME`, `E2E_PASSWORD`. Ảnh chụp màn hình từng bước lưu ở
+`E2E_KEYCLOAK_REALM`, `E2E_KEYCLOAK_CLIENT_ID`, `E2E_USERNAME`, `E2E_PASSWORD`.
+(`E2E_DEFAULT_ROOT_ID` đã bỏ cùng với `NEXT_PUBLIC_DEFAULT_ROOT_ID` — xem trên.) Ảnh chụp màn hình từng bước lưu ở
 `.playwright-mcp/real-auth/`.
 
 Hai cái bẫy đã gặp:

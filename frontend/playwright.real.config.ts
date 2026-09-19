@@ -21,10 +21,6 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 const API_BASE_URL = process.env.E2E_API_BASE_URL ?? "http://localhost:8090";
 const KEYCLOAK_URL = process.env.E2E_KEYCLOAK_URL ?? "http://localhost:8081";
-/** Thủy tổ của bộ dữ liệu demo (`demo/` sinh ra 1506 nhân khẩu, 7 đời). */
-const DEFAULT_ROOT_ID =
-  process.env.E2E_DEFAULT_ROOT_ID ?? "3b54e802-a966-5570-b69b-3d01b808b0e3";
-
 export default defineConfig({
   testDir: "./e2e/real-auth",
   outputDir: ".playwright-mcp/test-results-real",
@@ -70,7 +66,12 @@ export default defineConfig({
       NEXT_PUBLIC_KEYCLOAK_URL: KEYCLOAK_URL,
       NEXT_PUBLIC_KEYCLOAK_REALM: process.env.E2E_KEYCLOAK_REALM ?? "giapha",
       NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: process.env.E2E_KEYCLOAK_CLIENT_ID ?? "giapha-frontend",
-      NEXT_PUBLIC_DEFAULT_ROOT_ID: DEFAULT_ROOT_ID,
+      // KHÔNG đặt `NEXT_PUBLIC_DEFAULT_ROOT_ID` ở đây, và đó là chủ ý.
+      //
+      // Máy chủ nay tự chọn gốc phả đồ theo VAI người gọi: khách và Hội đồng mở ra thuỷ tổ,
+      // trưởng chi mở ra cụ tổ của chính chi mình, thành viên mở ra gốc ngành mình. Ghim một
+      // gốc ở đây thì mọi vai đều mở cùng một cây, và bộ E2E chạy với backend thật sẽ **không
+      // bao giờ** đi qua nhánh vừa được dựng — tức nó xanh mà không kiểm gì.
     },
   },
 });

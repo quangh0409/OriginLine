@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { usePushPrompt } from "@/hooks/use-push-prompt";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
 import { PushEnableError } from "@/lib/push/push-client";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import { IosInstallGuide } from "./ios-install-guide";
 
 /**
@@ -55,18 +55,18 @@ export function PushPermissionPrompt() {
       role="dialog"
       aria-label={t("prompt.title")}
       className="fixed inset-x-2 bottom-16 z-40 rounded-lg border bg-bg-card p-3 shadow-lg sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-96"
-      style={{ borderColor: colorTokens.borderDark }}
+      style={{ borderColor: colorVars.borderDark }}
     >
       <div className="flex items-start gap-3">
         <BellOutlined className="mt-1 text-lg text-primary" aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="m-0 font-serif text-[15px] font-semibold text-text-main">
+          <p className="m-0 font-serif text-than font-semibold text-text-main">
             {t("prompt.title")}
           </p>
-          <p className="mb-0 mt-1 text-[13px] leading-relaxed text-text-muted">
+          <p className="mb-0 mt-1 text-than leading-relaxed text-text-muted">
             {shouldSuggestIosInstall ? t("prompt.iosBody") : t("prompt.body")}
           </p>
-          <p className="mb-0 mt-1 text-[12.5px] leading-relaxed text-text-muted">
+          <p className="mb-0 mt-1 text-than leading-relaxed text-text-muted">
             {t("inAppAlways")}
           </p>
 
@@ -77,7 +77,7 @@ export function PushPermissionPrompt() {
           )}
 
           {failure && (
-            <p className="mb-0 mt-2 text-[12.5px]" style={{ color: colorTokens.danger }}>
+            <p className="mb-0 mt-2 text-than" style={{ color: colorVars.danger }}>
               {failure}
             </p>
           )}

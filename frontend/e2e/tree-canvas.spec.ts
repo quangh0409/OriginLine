@@ -79,10 +79,28 @@ async function zoomOut(page: Page, notches = 900): Promise<void> {
   await page.mouse.wheel(0, notches);
 }
 
-async function loadedCount(page: Page): Promise<number> {
+/**
+ * Con số thanh công cụ IN RA: số nhân khẩu đang hiện trên canvas.
+ *
+ * Đọc từ chính CHỮ hiển thị chứ không từ thuộc tính — nhãn và con số phải cùng nói một sự thật,
+ * và đây là chỗ khẳng định điều đó.
+ */
+async function visibleCount(page: Page): Promise<number> {
   const chip = await page.getByText(/nhân khẩu đang hiển thị/).innerText();
   return Number(chip.replace(/\D+/g, "")) || 0;
 }
+
+/**
+ * Số nhân khẩu đã TẢI VỀ — không in ra chữ (người trong họ không quan tâm phả đồ đã tải bao
+ * nhiêu), nhưng vẫn phải quan sát được: đây là bề mặt duy nhất chứng minh giao kèo "không bao
+ * giờ tải cả cây".
+ */
+async function loadedCount(page: Page): Promise<number> {
+  const raw = await page.getByTestId("tree-node-count").getAttribute("data-loaded-count");
+  return Number(raw ?? "0") || 0;
+}
+
+
 
 test.beforeEach(async ({ page }) => {
   // A member sees living relatives at Tier 1, which is the realistic canvas.
@@ -99,6 +117,8 @@ test("renders the phả đồ from the thủy tổ with real people on it", asyn
   const names = await visibleNodeNames(page);
   expect(names.length).toBeGreaterThan(1);
   expect(names.join(" ")).toContain("Nguyễn Văn Thủy Tổ");
+  // Đã tải nhiều hơn số thẻ đang vẽ: nạp trước một vòng, cộng phép cắt thẻ ngoài khung của
+  // React Flow.
   expect(await loadedCount(page)).toBeGreaterThan(names.length);
 
   expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
@@ -125,6 +145,7 @@ test("switches between phân cấp, tỏa tròn and ma trận, keeping the loade
   await page.goto("/tree");
   await waitForTreeReady(page);
   const loadedBefore = await loadedCount(page);
+  const visibleBefore = await visibleCount(page);
 
   for (const mode of ["Tỏa tròn", "Ma trận đời", "Phân cấp"]) {
     await segmented(page, mode).click();
@@ -132,6 +153,8 @@ test("switches between phân cấp, tỏa tròn and ma trận, keeping the loade
     // A view switch changes the layout algorithm only — it must never discard
     // fetched branches or reset what the user expanded.
     expect(await loadedCount(page), `after switching to ${mode}`).toBe(loadedBefore);
+    // Đổi cách vẽ thì không ai xuất hiện thêm và không ai biến mất.
+    expect(await visibleCount(page), `after switching to ${mode}`).toBe(visibleBefore);
   }
 
   expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
@@ -303,10 +326,18 @@ test("collapsing a branch does not discard what was already fetched", async ({ p
   await clickNodeToggle(page, nodeId);
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   const loadedAfterExpand = await loadedCount(page);
+  const visibleAfterExpand = await visibleCount(page);
 
   await clickNodeToggle(page, nodeId);
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   expect(await loadedCount(page)).toBe(loadedAfterExpand);
+
+  // ...nhưng số ĐANG HIỂN THỊ thì phải vơi đi. Lỗi cũ: thanh công cụ in ra số đã TẢI dưới nhãn
+  // "{count} nhân khẩu đang hiển thị", nên thu một nhánh lại thì màn hình vơi đi mà con số đứng im
+  // — người dùng đọc ra là "bấm không ăn".
+  await expect
+    .poll(() => visibleCount(page), { timeout: 15_000 })
+    .toBeLessThan(visibleAfterExpand);
 });
 
 test("opens a person profile from a node without unmounting the canvas", async ({ page }) => {
@@ -343,4 +374,48 @@ test("shows an honest not-found for a root id nobody can reach", async ({ page }
   await expect(page.getByText("Không tìm thấy nhân khẩu gốc của cây")).toBeVisible({
     timeout: 30_000,
   });
+});
+
+/**
+ * `?view=` — chế độ xem sống trên URL.
+ *
+ * Vì sao ca này đáng có: đường lan truyền chính của sản phẩm là người trong họ gửi
+ * nhau một liên kết qua Zalo. Chừng nào chế độ xem còn là `useState` thuần thì hai
+ * chế độ Tỏa tròn / Ma trận đời chỉ là "thứ mình tôi thấy" — không gửi được, không
+ * đánh dấu được, mở lại là mất. design/03 ghi FR-1.4 chỉ đạt "một phần" đúng vì thế.
+ *
+ * Ca này cũng canh một cái bẫy ĐÃ XẢY RA một lần rồi ở <LanguageSwitcher>: ghi một
+ * tham số vào URL bằng cách dựng `URLSearchParams` MỚI sẽ làm rơi mọi tham số khác.
+ * Ở đây thứ bị rơi sẽ là `?rootId=` — tức người nhận liên kết mở ra một cây khác.
+ */
+test("?view= mở đúng chế độ xem, và đổi chế độ không làm rơi ?rootId=", async ({ page }) => {
+  await page.goto("/tree?rootId=p-001&view=toa");
+  await waitForTreeReady(page);
+  await expect(
+    page.locator(".ant-segmented-item-selected").filter({ hasText: "Tỏa tròn" })
+  ).toBeVisible();
+
+  await segmented(page, "Ma trận đời").click();
+  await waitForTreeReady(page);
+  await expect.poll(() => new URL(page.url()).searchParams.get("view")).toBe("matran");
+  expect(
+    new URL(page.url()).searchParams.get("rootId"),
+    "đổi chế độ xem làm rơi mất gốc cây — đúng lỗi đã sửa một lần ở bộ chuyển ngôn ngữ"
+  ).toBe("p-001");
+
+  // Phân cấp là mặc định nên nó KHÔNG ghi ra URL: liên kết ngắn nhất cho trường hợp
+  // thường gặp nhất, và `/tree` trần vẫn phải mở đúng phả đồ quen thuộc.
+  await segmented(page, "Phân cấp").click();
+  await waitForTreeReady(page);
+  await expect.poll(() => new URL(page.url()).searchParams.get("view")).toBeNull();
+  expect(new URL(page.url()).searchParams.get("rootId")).toBe("p-001");
+});
+
+/** Một giá trị lạ trên URL không được biến phả đồ thành màn hình lỗi — URL là thứ người ta gõ tay. */
+test("?view= với giá trị lạ rơi về Phân cấp thay vì báo lỗi", async ({ page }) => {
+  await page.goto("/tree?view=khong-co-che-do-nay");
+  await waitForTreeReady(page);
+  await expect(
+    page.locator(".ant-segmented-item-selected").filter({ hasText: "Phân cấp" })
+  ).toBeVisible();
 });

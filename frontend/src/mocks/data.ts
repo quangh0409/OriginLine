@@ -1,3 +1,4 @@
+import { preProjectionMeta } from "./privacy";
 import type {
   EventDto,
   KinshipRuleSetDto,
@@ -44,7 +45,7 @@ export const THUY_TO: PersonDto = {
   },
   nativePlace: "Nam Định",
   primaryBranch: { id: "b-root", name: "Thủy tổ", path: "root", region: "BAC" },
-  meta: { visibleTier: "PUBLIC", canEdit: false, canDelete: false, canRequestCorrection: false },
+  meta: preProjectionMeta("PUBLIC"),
 };
 
 const chi1Ancestor: PersonDto = {
@@ -60,7 +61,7 @@ const chi1Ancestor: PersonDto = {
   birth: { solar: "1805-05-01", lunar: { year: 1805, month: 3, day: 13, leap: false }, precision: "DAY" },
   death: { solar: "1878-01-20", lunar: { year: 1877, month: 12, day: 15, leap: false }, precision: "DAY" },
   primaryBranch: { id: "b-chi1", name: "Chi Nhất", path: "root.chi_nhat", region: "BAC" },
-  meta: { visibleTier: "PUBLIC", canEdit: false, canDelete: false, canRequestCorrection: false },
+  meta: preProjectionMeta("PUBLIC"),
 };
 
 const chi2Ancestor: PersonDto = {
@@ -73,7 +74,7 @@ const chi2Ancestor: PersonDto = {
   birth: { solar: "1808-08-12", lunar: { year: 1808, month: 6, day: 22, leap: false }, precision: "DAY" },
   death: { solar: "1881-04-02", lunar: { year: 1881, month: 3, day: 4, leap: false }, precision: "DAY" },
   primaryBranch: { id: "b-chi2", name: "Chi Nhị", path: "root.chi_nhi", region: "BAC" },
-  meta: { visibleTier: "PUBLIC", canEdit: false, canDelete: false, canRequestCorrection: false },
+  meta: preProjectionMeta("PUBLIC"),
 };
 
 // A daughter recorded fully & equally (BA v2 §12 resolved decision).
@@ -87,7 +88,7 @@ const chi1Daughter: PersonDto = {
   birth: { solar: "1830-01-15", lunar: { year: 1829, month: 12, day: 2, leap: false }, precision: "DAY" },
   death: { solar: "1901-06-06", lunar: { year: 1901, month: 4, day: 20, leap: false }, precision: "DAY" },
   primaryBranch: { id: "b-chi1", name: "Chi Nhất", path: "root.chi_nhat", region: "BAC" },
-  meta: { visibleTier: "PUBLIC", canEdit: false, canDelete: false, canRequestCorrection: false },
+  meta: preProjectionMeta("PUBLIC"),
 };
 
 // Son-in-law (rể) married into the family — recorded per FR-1.2. Badge `RE`
@@ -100,7 +101,7 @@ const chi1SonInLaw: PersonDto = {
   displayName: "Trần Văn Khoa",
   names: [{ nameType: "HUY", fullName: "Trần Văn Khoa", isPrimary: true }],
   primaryBranch: { id: "b-chi1", name: "Chi Nhất", path: "root.chi_nhat", region: "BAC" },
-  meta: { visibleTier: "PUBLIC", canEdit: false, canDelete: false, canRequestCorrection: false },
+  meta: preProjectionMeta("PUBLIC"),
 };
 
 // ---- Living persons — full-fidelity "master" records ----------------------
@@ -120,11 +121,21 @@ export const LIVING_MEMBER_FULL: PersonDto = {
   nativePlace: "Nam Định",
   contact: { phone: "+84 912 345 678", email: "an.nguyen@example.com" },
   primaryBranch: { id: "b-chi1", name: "Chi Nhất", path: "root.chi_nhat", region: "BAC" },
-  meta: { visibleTier: "T3", canEdit: false, canDelete: false, canRequestCorrection: false },
+  meta: preProjectionMeta("T3"),
 };
 
-// Maximally hidden by default per BA v2 §10 — RESTRICTED privacy level.
-export const LIVING_MINOR_FULL: PersonDto = {
+/**
+ * Người chưa thành niên — ẩn tối đa (BA v2 §10), và **không mở được** kể cả khi tự nguyện.
+ *
+ * Cố ý KHÔNG có ngày sinh: bản thật suy tuổi từ ngày sinh ở máy chủ, nên đây là ca "máy chủ
+ * biết người này chưa thành niên mà giao diện thì không có dữ liệu để tự suy ra" — đúng ca cần
+ * khoá để chứng minh giao diện tôn trọng quyết định của máy chủ thay vì tự đoán lại.
+ *
+ * Trước đây ca này được đánh dấu bằng `privacyLevel: "RESTRICTED"`. Hợp đồng đã bỏ trường ấy,
+ * nên đánh dấu bằng một cờ **chỉ có trong bộ giả lập** — mượn một trường đã chết của hợp đồng
+ * để làm việc khác chính là cách bộ giả lập lặng lẽ trôi khỏi API thật.
+ */
+export const LIVING_MINOR_FULL: PersonDto & { readonly chuaThanhNienGiaLap: true } = {
   id: "p-101",
   isAlive: true,
   generation: 6,
@@ -132,8 +143,55 @@ export const LIVING_MINOR_FULL: PersonDto = {
   displayName: "Nguyễn Thị Bé",
   names: [{ nameType: "THUONG_GOI", fullName: "Nguyễn Thị Bé", isPrimary: true }],
   primaryBranch: { id: "b-chi1", name: "Chi Nhất", path: "root.chi_nhat", region: "BAC" },
-  privacyLevel: "RESTRICTED",
-  meta: { visibleTier: "T1", canEdit: false, canDelete: false, canRequestCorrection: false },
+  chuaThanhNienGiaLap: true,
+  meta: preProjectionMeta("T1"),
+};
+
+/**
+ * Hai hồ sơ ứng với **người đang đăng nhập** trong bộ giả lập (xem
+ * `src/mocks/identity.ts`): `p-102` là tài khoản vai Thành viên, `p-103` là
+ * tài khoản vai Trưởng chi.
+ *
+ * Cố ý tách khỏi `p-100`: `p-100` giữ vai "người bà con còn sống mà một thành
+ * viên KHÁC đang xem", và hồ sơ ấy phải tiếp tục hiện ở Tầng 1 **không** có nút
+ * Sửa. Không có hai hồ sơ này thì không có cách nào dựng được hai ca quan
+ * trọng nhất của phân quyền: "thành viên sửa hồ sơ của chính mình" và "Trưởng
+ * chi không tự duyệt đề nghị của chính mình".
+ *
+ * Cả hai KHÔNG được ghép vào đồ thị `tree-graph/` — họ chỉ tồn tại ở
+ * `/persons/{id}`. Ghép thêm node vào đồ thị sinh tự động sẽ làm lệch các phép
+ * đo hình học của phả đồ mà chẳng đổi được gì cho luồng đính chính.
+ */
+export const LOGGED_IN_MEMBER_FULL: PersonDto = {
+  id: "p-102",
+  isAlive: true,
+  generation: 5,
+  gender: "MALE",
+  displayName: "Nguyễn Văn Bình",
+  names: [{ nameType: "THUONG_GOI", fullName: "Nguyễn Văn Bình", isPrimary: true }],
+  birth: { solar: "1985-03-11", precision: "DAY" },
+  occupation: "Giáo viên",
+  currentPlaceProvince: "Nam Định",
+  nativePlace: "Nam Định",
+  contact: { phone: "+84 987 654 321", email: "binh.nguyen@example.com" },
+  primaryBranch: { id: "b-chi1", name: "Chi Nhất", path: "root.chi_nhat", region: "BAC" },
+  meta: preProjectionMeta("T3"),
+};
+
+export const LOGGED_IN_BRANCH_HEAD_FULL: PersonDto = {
+  id: "p-103",
+  isAlive: true,
+  generation: 4,
+  gender: "MALE",
+  displayName: "Nguyễn Văn Cẩn",
+  names: [{ nameType: "THUONG_GOI", fullName: "Nguyễn Văn Cẩn", isPrimary: true }],
+  birth: { solar: "1968-09-02", precision: "DAY" },
+  occupation: "Lương y",
+  currentPlaceProvince: "Nam Định",
+  nativePlace: "Nam Định",
+  contact: { phone: "+84 913 222 111", email: null },
+  primaryBranch: { id: "b-chi1", name: "Chi Nhất", path: "root.chi_nhat", region: "BAC" },
+  meta: preProjectionMeta("T3"),
 };
 
 export const ALL_PERSONS: PersonDto[] = [
@@ -144,9 +202,16 @@ export const ALL_PERSONS: PersonDto[] = [
   chi1SonInLaw,
   LIVING_MEMBER_FULL,
   LIVING_MINOR_FULL,
+  LOGGED_IN_MEMBER_FULL,
+  LOGGED_IN_BRANCH_HEAD_FULL,
 ];
 
-export const LIVING_PERSON_IDS = new Set([LIVING_MEMBER_FULL.id, LIVING_MINOR_FULL.id]);
+export const LIVING_PERSON_IDS = new Set([
+  LIVING_MEMBER_FULL.id,
+  LIVING_MINOR_FULL.id,
+  LOGGED_IN_MEMBER_FULL.id,
+  LOGGED_IN_BRANCH_HEAD_FULL.id,
+]);
 
 export function findPersonMock(id: string): PersonDto | undefined {
   return ALL_PERSONS.find((p) => p.id === id);

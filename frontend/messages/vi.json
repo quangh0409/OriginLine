@@ -14,11 +14,14 @@
     "tree": "Cây phả đồ",
     "kinship": "Tra danh xưng",
     "search": "Tìm kiếm",
+    "directory": "Danh bạ họ",
     "events": "Sự kiện & Giỗ",
     "notifications": "Thông báo",
     "login": "Đăng nhập",
     "primary": "Điều hướng chính",
-    "settings": "Cài đặt"
+    "settings": "Cài đặt",
+    "more": "Thêm",
+    "language": "Ngôn ngữ"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -32,6 +35,173 @@
       "COUNCIL": "Hội đồng Tộc biểu",
       "BRANCH_HEAD": "Trưởng chi / ngành",
       "MEMBER": "Thành viên"
+    },
+    "invitation": {
+      "pageTitle": "Lời mời vào phả",
+      "pageDescription": "Trang nhận lời mời của cổng thông tin dòng họ.",
+      "loading": "Đang mở lời mời…",
+      "fromInviter": "Lời mời từ {inviter}",
+      "forWhomLabel": "Lời mời này dành cho",
+      "branchAndGeneration": "{branch} · đời {generation}",
+      "branchOnly": "{branch}",
+      "generationOnly": "Đời {generation}",
+      "expiresOn": "Mã mời này còn dùng được đến hết ngày {date}.",
+      "benefitsTitle": "Nhận lời mời, ông/bà sẽ:",
+      "benefit1": "xem được người trong họ, cả người đang sống",
+      "benefit2": "tra được danh xưng — gọi ai là gì cho đúng",
+      "benefit3": "nhận nhắc ngày giỗ của chi mình",
+      "benefit4": "xin đính chính khi thấy chỗ ghi sai",
+      "noWaiting": "Không phải chờ duyệt: người mời đã chỉ đích danh ông/bà, nên tài khoản được nối sẵn với hồ sơ ở trên.",
+      "nextStep": "Bấm nhận lời mời là xong: tài khoản được nối ngay với hồ sơ ở trên.",
+      "accept": "Đúng là tôi — nhận lời mời",
+      "accepting": "Đang mở tài khoản…",
+      "acceptFailed": "Chưa nhận được lời mời. Đây là trục trặc đường truyền, không phải do mã của ông/bà. Xin bấm lại.",
+      "decline": "Không phải tôi",
+      "declineHint": "Bấm “Không phải tôi” sẽ huỷ mã mời này và báo lại cho người đã mời. Sau đó không ai vào được bằng mã ấy nữa.",
+      "declineConfirmTitle": "Huỷ mã mời này?",
+      "declineConfirmBody": "Ông/bà sắp huỷ mã mời gửi cho {name}. Ba việc xảy ra ngay và không thu hồi được: mã này hết dùng được với mọi người; người đã mời nhận được thông báo; và muốn vào phả thì phải xin một mã mời mới.",
+      "declineConfirmOk": "Đúng, huỷ mã mời",
+      "declineConfirmCancel": "Quay lại",
+      "declineFailed": "Chưa huỷ được mã mời. Xin thử lại.",
+      "declinedTitle": "Đã huỷ mã mời này",
+      "declinedBody": "Người đã gửi lời mời sẽ nhận được thông báo. Nếu ông/bà bấm nhầm, xin gọi lại cho người ấy để xin một mã mời mới — mã cũ không dùng lại được.",
+      "retry": "Thử lại",
+      "contactFallbackTitle": "Cần giúp thì gọi người đã mời ông/bà",
+      "contactFallbackBody": "Số điện thoại của người mời có ở cuối tin nhắn, hoặc dưới cùng phiếu mời giấy. Người ấy là người trong họ, không phải tổng đài.",
+      "problem": {
+        "EXPIRED": {
+          "title": "Mã mời này đã hết hạn",
+          "body": "Mỗi mã mời chỉ dùng được trong bảy ngày kể từ lúc gửi, để một tờ phiếu thất lạc không mở được phả về sau. Mã ông/bà vừa mở đã quá hạn ấy.",
+          "next": "Xin gọi cho người đã mời ông/bà và nói là cần một mã mới. Người ấy cấp lại được ngay, không phải làm lại từ đầu."
+        },
+        "ALREADY_USED": {
+          "title": "Mã mời này đã được dùng rồi",
+          "body": "Mỗi mã mời chỉ mở được một lần. Nếu chính ông/bà đã nhận lời mời này trước đây thì nay không cần mã nữa — chỉ cần đăng nhập.",
+          "next": "Nếu ông/bà chưa từng dùng mã này, xin gọi ngay cho người đã mời: có thể tin nhắn đã tới nhầm người, và người ấy cần biết để xử lý."
+        },
+        "NOT_FOUND": {
+          "title": "Không mở được lời mời nào với mã này",
+          "body": "Mã vừa nhận không khớp với lời mời nào. Hay gặp nhất là đường dẫn bị cắt ngắn lúc chuyển tiếp tin nhắn, hoặc mã gõ thiếu một ký tự — chữ O và số không rất dễ nhầm nhau.",
+          "next": "Xin mở lại đúng đường dẫn trong tin nhắn của người mời, hoặc gõ lại mã in trên phiếu mời. Nếu vẫn không được, xin gọi cho người đã mời ông/bà."
+        },
+        "REVOKED": {
+          "title": "Mã mời này đã bị huỷ",
+          "body": "Có người đã bấm “Không phải tôi” trên lời mời này, nên mã bị huỷ để giữ an toàn cho phả.",
+          "next": "Nếu chính ông/bà bấm nhầm, xin gọi cho người đã mời để xin một mã mời mới."
+        },
+        "RATE_LIMITED": {
+          "title": "Xin thử lại sau ít phút",
+          "body": "Đã có quá nhiều lượt mở lời mời từ máy này trong một lúc, nên hệ thống tạm dừng lại để chặn người dò mã.",
+          "next": "Xin đợi vài phút rồi mở lại đúng đường dẫn trong tin nhắn. Nếu gấp, xin gọi cho người đã mời ông/bà."
+        },
+        "UNAVAILABLE": {
+          "title": "Chưa mở được lời mời",
+          "body": "Đây là trục trặc đường truyền giữa máy của ông/bà và hệ thống, không phải do mã mời sai.",
+          "next": "Xin kiểm tra kết nối mạng rồi bấm “Thử lại”. Mã mời vẫn còn nguyên giá trị."
+        },
+        "NEEDS_ACCOUNT": {
+          "title": "Bước này cần ông/bà đăng nhập trước",
+          "body": "Mã mời vẫn còn nguyên giá trị — lỗi không nằm ở mã. Để nối lời mời vào đúng một tài khoản, hệ thống cần biết ông/bà đăng nhập bằng tài khoản nào.",
+          "next": "Nếu ông/bà đã có tài khoản dòng họ, xin đăng nhập rồi mở lại đúng đường dẫn trong tin nhắn. Nếu chưa từng có tài khoản, xin gọi cho người đã mời — hiện chỉ người trong họ mở được tài khoản mới."
+        },
+        "ACCOUNT_ALREADY_LINKED": {
+          "title": "Tài khoản này đã gắn với một người khác trong phả",
+          "body": "Mỗi tài khoản chỉ gắn được với một người trong phả. Nếu ông/bà đã nhận một lời mời trước đây thì nay không cần mã này nữa.",
+          "next": "Nếu ông/bà cho rằng tài khoản đang gắn nhầm người, xin gọi cho người đã mời hoặc cho Hội đồng Tộc biểu — chỉ Hội đồng gỡ và nối lại được."
+        },
+        "PERSON_ALREADY_LINKED": {
+          "title": "Đã có người nhận lời mời này trước",
+          "body": "Hồ sơ trong phả mà lời mời trỏ tới đã được một tài khoản khác nhận rồi.",
+          "next": "Nếu không phải ông/bà, xin gọi ngay cho người đã mời: có thể lời mời đã tới nhầm người, và người ấy cần biết để xử lý."
+        }
+      },
+      "acceptedTitle": "Xong rồi — ông/bà đã có mặt trong phả",
+      "acceptedBody": "Tài khoản đã được nối với hồ sơ ở trên. Không phải chờ ai duyệt, và không cần mã mời nữa.",
+      "acceptedOpenProfile": "Xem hồ sơ của tôi trong phả",
+      "acceptedOpenTree": "Xem phả đồ dòng họ",
+      "acceptedSignIn": "Đăng nhập",
+      "acceptedSignInHint": "Tài khoản của ông/bà đã có mật khẩu từ trước, nên chỉ cần đăng nhập như thường lệ là xem được phả."
+    },
+    "setPassword": {
+      "pageTitle": "Đặt mật khẩu",
+      "pageDescription": "Trang đặt mật khẩu lần đầu cho tài khoản vừa nhận lời mời vào phả.",
+      "title": "Đặt mật khẩu cho tài khoản của ông/bà",
+      "intro": "Tài khoản đã lập xong và đã nối với hồ sơ trong phả. Còn đúng một việc nữa: chọn một mật khẩu, để từ mai ông/bà tự đăng nhập được.",
+      "oneTimeNote": "Liên kết này dùng được một lần và hết hạn sau ba mươi phút. Quá giờ thì xin lại được ngay, không mất gì cả.",
+      "passwordLabel": "Mật khẩu mới",
+      "confirmLabel": "Gõ lại mật khẩu mới",
+      "hint": "Ít nhất 8 ký tự. Ông/bà nên viết ra sổ — không ai trong hệ thống đọc được mật khẩu này.",
+      "show": "Hiện",
+      "hide": "Ẩn",
+      "submit": "Đặt mật khẩu",
+      "submitting": "Đang đặt mật khẩu…",
+      "errorEmpty": "Xin gõ mật khẩu ông/bà muốn dùng.",
+      "errorMismatch": "Hai lần gõ chưa giống nhau. Bấm “Hiện” để xem mình vừa gõ gì.",
+      "rejectedFallback": "Mật khẩu này chưa dùng được. Thường là vì nó quá ngắn hoặc quá dễ đoán — xin thử một cụm từ dài hơn, ít nhất 8 ký tự, và đừng dùng tên mình hay ngày sinh.",
+      "banner": {
+        "PROVIDER_DOWN": {
+          "title": "Chưa nối được với hệ thống tài khoản",
+          "body": "Đây là trục trặc phía máy chủ, không phải do mật khẩu ông/bà vừa gõ. Mật khẩu ấy chưa được lưu lại.",
+          "next": "Liên kết vẫn còn dùng được. Xin chờ một lát rồi bấm “Đặt mật khẩu” lần nữa."
+        },
+        "RATE_LIMITED": {
+          "title": "Xin chờ một lát rồi thử lại",
+          "body": "Trang này vừa nhận nhiều lượt gửi liên tiếp nên tạm dừng một chút. Đây là cách chặn người lạ dò mật khẩu, không phải do ông/bà làm sai.",
+          "next": "Liên kết vẫn còn dùng được. Xin chờ vài phút rồi bấm “Đặt mật khẩu” lần nữa."
+        },
+        "UNAVAILABLE": {
+          "title": "Chưa gửi đi được",
+          "body": "Đường truyền giữa máy của ông/bà và máy chủ đang trục trặc. Mật khẩu vừa gõ chưa được lưu lại, và không phải do mật khẩu ấy sai.",
+          "next": "Liên kết vẫn còn dùng được. Xin bấm “Đặt mật khẩu” lần nữa."
+        }
+      },
+      "doneTitle": "Xong rồi — mật khẩu đã đặt",
+      "doneBody": "Từ nay ông/bà đăng nhập bằng mật khẩu vừa chọn. Hồ sơ trong phả đã nối sẵn với tài khoản này, không phải chờ ai duyệt.",
+      "doneWhatsThere": "Đăng nhập xong, ông/bà xem được:",
+      "doneItem1": "phả đồ dòng họ, cả những người đang sống trong chi mình",
+      "doneItem2": "danh xưng — gọi ai là gì cho đúng",
+      "doneItem3": "nhắc ngày giỗ của chi mình, theo ngày âm",
+      "doneCta": "Đăng nhập, xem phả đồ",
+      "expiredTitle": "Liên kết đặt mật khẩu không còn dùng được",
+      "expiredAccountSafe": "Tài khoản của ông/bà vẫn còn nguyên và vẫn nối với hồ sơ trong phả. Thứ hết hạn chỉ là cái liên kết này — ông/bà không phải xin lại mã mời và không phải làm lại từ đầu.",
+      "expiredBody": "Liên kết chỉ mở được trong ba mươi phút kể từ lúc nhận lời mời, và chỉ dùng được một lần — để một tin nhắn chuyển tiếp nhầm không mở được tài khoản của ông/bà.",
+      "expiredNext": "Xin gọi cho người đã mời ông/bà. Người ấy đặt cho ông/bà một mật khẩu tạm và đọc qua điện thoại; ngay lần đăng nhập đầu, hệ thống sẽ mời ông/bà đổi lại tại chỗ.",
+      "expiredAlreadySetCta": "Tôi đã đặt mật khẩu rồi — đăng nhập",
+      "expiredAlreadySetHint": "Nếu ông/bà đã bấm liên kết này một lần trước đó và đặt xong, thì mật khẩu ấy vẫn dùng được: chỉ cần đăng nhập.",
+      "noLinkTitle": "Tài khoản của ông/bà đã có mật khẩu rồi",
+      "noLinkBody": "Trang này chỉ dùng đúng một lần, lúc tài khoản mới lập. Hệ thống cố ý không mở nó cho một tài khoản đã có mật khẩu — nếu mở, người khác cầm được một mã mời sẽ đổi được mật khẩu của ông/bà.",
+      "noLinkNext": "Xin bấm “Đăng nhập” và dùng mật khẩu ông/bà vẫn dùng. Nếu quên mật khẩu, gọi cho người đã mời ông/bà để xin đặt lại.",
+      "noLinkCta": "Đăng nhập"
+    },
+    "accountState": {
+      "notProvisioned": {
+        "title": "Chưa tìm thấy ông/bà trong phả",
+        "body": "Ông/bà đã đăng nhập được, nhưng tài khoản này chưa được nối với ai trong phả. Vì thế chưa có hồ sơ nào để mở, và chưa tra được danh xưng.",
+        "todoTitle": "Việc cần làm",
+        "todo": "Xin gọi cho trưởng chi của mình, hoặc cho người đã mời ông/bà, và nói rằng tài khoản chưa được nối với hồ sơ trong phả. Việc nối là quyết định của Hội đồng Tộc biểu — không ai tự làm hộ được, kể cả ông/bà."
+      },
+      "notActive": {
+        "title": "Hồ sơ của ông/bà đang chờ duyệt",
+        "body": "Ông/bà đã đăng nhập được. Hội đồng Tộc biểu còn một bước xác nhận nữa trước khi mở phần của người đang sống.",
+        "todoTitle": "Trong lúc chờ",
+        "todo": "Phần các cụ đã khuất vẫn mở sẵn cho ông/bà — xem ở dưới. Nếu đã chờ lâu mà chưa thấy hồi âm, xin gọi cho trưởng chi của mình."
+      },
+      "technicalTitle": "Chi tiết kỹ thuật",
+      "technicalHint": "Phần này dành cho người hỗ trợ. Ông/bà không cần đọc, và không có gì ở đây sửa được từ máy của mình.",
+      "technicalCode": "Mã lỗi: {code}"
+    },
+    "guestMode": {
+      "title": "Chưa đăng nhập thì xem được gì?",
+      "openTitle": "Xem được ngay, không cần tài khoản",
+      "open1": "Hồ sơ các cụ đã khuất: tên, năm sinh – năm mất, đời và chi/ngành",
+      "open2": "Phả đồ từ Thuỷ tổ trở xuống, theo đường các cụ đã khuất",
+      "open3": "Ngày giỗ ghi trong hồ sơ các cụ, cả ngày âm lẫn ngày dương",
+      "closedTitle": "Phải là người trong họ mới xem được",
+      "closed1": "Người đang sống — theo quy định của pháp luật về bảo vệ dữ liệu cá nhân",
+      "closed2": "Tra danh xưng cho người đang sống",
+      "closed3": "Xin đính chính chỗ ghi sai, và nhận nhắc ngày giỗ",
+      "notYourSetting": "Đây không phải thiết lập riêng của ông/bà: người đang sống ẩn mặc định với mọi khách, và đó là quy định của pháp luật chứ không phải lựa chọn của dòng họ.",
+      "viewTree": "Xem phả đồ công khai"
     }
   },
   "home": {
@@ -84,13 +254,18 @@
     "loading": "Đang dựng cây phả đồ…",
     "loadError": "Không tải được cây phả đồ",
     "rootNotFound": "Không tìm thấy nhân khẩu gốc của cây",
-    "loadedCount": "{count} nhân khẩu đang hiển thị",
+    "visibleCount": "{count} nhân khẩu đang hiển thị",
+    "loadedCount": "Đã tải {count} nhân khẩu từ máy chủ. Thu gọn một nhánh chỉ ẩn bớt phần đang hiện, không bỏ dữ liệu đã tải.",
     "fitWholeTree": "Thu toàn cây",
     "fitWholeTreeHint": "Thu nhỏ để thấy trọn phả đồ đang tải. Chữ sẽ nhỏ đi; chụm hai ngón hoặc bấm phóng to để xem lại chi tiết.",
     "truncatedBanner": "Cây đang hiển thị chưa đầy đủ: {count} nhánh còn người chưa được tải. Mở rộng từng nhánh để xem thêm.",
     "generationShort": "Đời {n}",
     "statusAlive": "Còn sống",
     "statusDeceased": "Đã khuất",
+    "datesUnrecorded": "Chưa ghi năm sinh",
+    "datesUnrecordedHint": "Người đã khuất trong gia phả này chưa có năm sinh — mời con cháu bổ sung.",
+    "datesUnshared": "Chưa chia sẻ ngày sinh",
+    "datesUnsharedHint": "Ngày sinh của người còn sống do chính họ chọn chia sẻ.",
     "expandBranch": "Mở rộng nhánh này",
     "collapseBranch": "Thu gọn nhánh này",
     "viewMode": {
@@ -115,11 +290,31 @@
       "heir": "Kế tự / thừa tự",
       "lineageEnd": "Tuyệt tự",
       "detour": "Quan hệ vẽ vòng",
+      "showOnPhone": "Xem quy ước nét",
+      "hideOnPhone": "Thu chú giải",
       "showAll": "Xem đủ quy ước",
       "showLess": "Thu gọn chú giải"
     },
     "authRequired": "Xin đăng nhập để xem phả đồ",
-    "authRequiredHint": "Theo Nghị định 13/2023, khách chưa đăng nhập không được xem thông tin nhân khẩu. Xin đăng nhập bằng tài khoản dòng họ của bạn."
+    "authRequiredHint": "Theo Nghị định 13/2023, khách chưa đăng nhập không được xem thông tin nhân khẩu. Xin đăng nhập bằng tài khoản dòng họ của bạn.",
+    "publicView": {
+      "label": "Ghi chú về bản phả đồ đang xem",
+      "body": "Đây là bản phả đồ công khai: gia phả công bố các cụ đã khuất cho mọi người xem. Đăng nhập bằng tài khoản dòng họ để xem phả đồ đầy đủ."
+    },
+    "rootPicker": {
+      "title": "Phả đồ bắt đầu từ ai?",
+      "titleAfterRejected": "Chưa mở được phả đồ từ điểm bắt đầu này",
+      "bodyPublic": "Gia phả công bố các cụ đã khuất cho mọi người. Hãy tìm tên một cụ để mở cây từ đó, hoặc mở liên kết phả đồ mà người trong họ đã chia sẻ cho bạn.",
+      "bodyMember": "Hãy tìm tên một người để mở cây từ đó, hoặc mở liên kết phả đồ mà người trong họ đã chia sẻ cho bạn.",
+      "label": "Tìm người làm gốc cây",
+      "placeholder": "Gõ tên, không dấu cũng được",
+      "tooShort": "Xin gõ ít nhất {min} ký tự.",
+      "searchError": "Chưa tìm được. Xin thử lại sau giây lát.",
+      "noMatch": "Không có ai khớp tên này.",
+      "generation": "Đời {n}",
+      "changeRoot": "Chọn người khác làm gốc",
+      "useDefault": "Mở phả đồ mặc định của dòng họ"
+    }
   },
   "person": {
     "profileTitle": "Hồ sơ nhân khẩu",
@@ -163,7 +358,145 @@
     "notFound": "Không tìm thấy nhân khẩu này.",
     "loadError": "Không tải được hồ sơ. Vui lòng thử lại.",
     "pickerPlaceholder": "Gõ tên để tìm (không cần bỏ dấu)",
-    "pickerEmpty": "Không tìm thấy ai phù hợp"
+    "pickerEmpty": "Không tìm thấy ai phù hợp",
+    "relationsLoading": "Đang tải danh sách quan hệ",
+    "relations": "Quan hệ trong dòng họ",
+    "relationGroup": {
+      "parents": "Cha mẹ",
+      "spouses": "Vợ / Chồng",
+      "children": "Con",
+      "siblings": "Anh chị em",
+      "heirs": "Nối dõi"
+    },
+    "relationTag": {
+      "adoptedChild": "Con nuôi",
+      "adoptiveParent": "Cha mẹ nuôi",
+      "spouseSenior": "Vợ / chồng cả",
+      "spouseSeniorWife": "Vợ cả",
+      "spouseSeniorHusband": "Chồng cả",
+      "spouseOrder": "Vợ / chồng thứ {n}",
+      "spouseOrderWife": "Vợ thứ {n}",
+      "spouseOrderHusband": "Chồng thứ {n}",
+      "ended": "Hôn phối đã kết thúc"
+    },
+    "relationKinshipLink": "Tra danh xưng với {name}",
+    "relationsEmpty": "Gia phả chưa ghi nhận quan hệ nào cho người này.",
+    "relationsTruncated": "Danh sách dài nên đã rút gọn. Xem đầy đủ trên cây phả đồ.",
+    "relationsError": "Chưa tải được danh sách quan hệ. Vui lòng thử lại."
+  },
+  "privacy": {
+    "noticeLabel": "Mức thông tin đang hiển thị",
+    "livingT1": "Đây là hồ sơ của người còn sống. Theo quy định bảo vệ dữ liệu cá nhân, gia phả chỉ công bố tên, đời và các quan hệ trực tiếp; những mục khác chỉ mở cho người cùng chi, cho chính người đó và cho ban quản trị.",
+    "livingT2": "Đây là hồ sơ của người còn sống. Bạn xem được thêm năm sinh, nghề nghiệp và tỉnh/thành. Số điện thoại, thư điện tử, địa chỉ đầy đủ và ngày sinh chi tiết chỉ mở cho chính người đó và ban quản trị.",
+    "guestRelations": "Bạn đang xem với tư cách khách. Gia phả chỉ công bố người đã khuất cho khách, nên quan hệ với người còn sống không nằm trong danh sách này. Đăng nhập bằng tài khoản dòng họ để xem đầy đủ.",
+    "sharing": {
+      "title": "Ai xem được gì về tôi",
+      "why": "Điền nghề nghiệp và nơi ở rồi chọn cho cả họ xem, bạn sẽ có mặt trong Danh bạ dòng họ — nơi bà con tìm nhau khi về quê giỗ chạp, khi chuyển đến một thành phố mới, hay khi cần một người trong họ cùng nghề.",
+      "directoryLink": "Xem Danh bạ dòng họ",
+      "guestNever": "Dù bạn chọn mức nào, người chưa đăng nhập cũng không thấy bất cứ điều gì của người còn sống — kể cả tên. Đó là quy định của pháp luật về dữ liệu cá nhân, không phải một lựa chọn ở đây.",
+      "save": "Lưu mức chia sẻ",
+      "saved": "Đã lưu.",
+      "unsaved": "Có thay đổi chưa lưu.",
+      "upToDate": "Mức chia sẻ đang được áp dụng.",
+      "saveError": "Chưa lưu được mức chia sẻ. Vui lòng thử lại.",
+      "conflict": "Mức chia sẻ vừa được đổi ở một thiết bị khác. Tải lại để xem mức mới nhất rồi chọn lại.",
+      "reload": "Tải lại",
+      "loadError": "Chưa tải được mức chia sẻ của bạn.",
+      "retry": "Thử lại",
+      "councilAlwaysReads": "Cần biết trước khi chọn: mức Riêng tư nghĩa là “chỉ bạn và Hội đồng Tộc biểu”, chứ không phải “chỉ mình tôi”. Hội đồng vẫn đọc được số điện thoại và địa chỉ của bạn để lo việc họ — đó là định nghĩa của mức này, không phải trục trặc."
+    },
+    "group": {
+      "occupation": "Nghề nghiệp & nơi làm việc",
+      "residenceProvince": "Nơi ở (tỉnh/thành)",
+      "residenceFull": "Địa chỉ đầy đủ",
+      "contact": "Liên hệ: điện thoại · thư điện tử · Zalo",
+      "birthDetailAndPhoto": "Ngày sinh đầy đủ & ảnh"
+    },
+    "groupShort": {
+      "occupation": "nghề nghiệp",
+      "residenceProvince": "tỉnh/thành đang ở",
+      "residenceFull": "địa chỉ đầy đủ",
+      "contact": "liên hệ",
+      "birthDetailAndPhoto": "ngày sinh & ảnh"
+    },
+    "groupBenefit": {
+      "occupation": "Để bà con cùng nghề tìm được nhau, và để con cháu đi học đi làm xa có người trong họ chỉ đường.",
+      "residenceProvince": "Để người trong họ ở cùng tỉnh biết nhau — hữu ích nhất khi mới chuyển đến hoặc khi về quê dịp giỗ Tổ.",
+      "residenceFull": "Chỉ cần khi dòng họ gửi thiếp mời, quà giỗ hay bản tin qua đường bưu điện.",
+      "contact": "Cách duy nhất để người trong họ gọi được cho bạn mà không phải hỏi vòng qua người khác.",
+      "birthDetailAndPhoto": "Ảnh giúp bà con nhận ra mặt nhau ở đám giỗ; ngày sinh đầy đủ để họ mừng bạn đúng ngày."
+    },
+    "notFilledYet": "Bạn chưa điền mục này, nên hiện chưa có gì để chia sẻ.",
+    "fillItIn": "Điền ngay",
+    "lockedMinor": "Hồ sơ của người chưa thành niên luôn được giữ ở mức kín nhất và không mở ra được.",
+    "viewer": {
+      "GUEST": "Người chưa đăng nhập",
+      "CLAN_MEMBER": "Thành viên dòng họ (chi khác)",
+      "SAME_BRANCH": "Người cùng chi với bạn",
+      "COUNCIL": "Hội đồng Tộc biểu"
+    },
+    "preview": {
+      "title": "Bảng tóm tắt: ai xem được gì",
+      "lead": "Bảng này tính theo đúng những mức bạn vừa chọn ở trên, và chỉ mình bạn đọc được nó.",
+      "nothingAtAll": "Không thấy gì về bạn, kể cả tên.",
+      "baselineOnly": "Tên, đời, chi/ngành và các quan hệ cha – mẹ – vợ/chồng – con.",
+      "baselinePlus": "Tên, đời, chi/ngành, quan hệ, và thêm: {groups}."
+    },
+    "scope": {
+      "CLAN": "Cả họ xem",
+      "BRANCH": "Cùng chi",
+      "PRIVATE": "Riêng tư"
+    },
+    "scopeHint": {
+      "CLAN": "Mọi thành viên dòng họ đã đăng nhập đều xem được, và bạn có mặt trong danh bạ.",
+      "BRANCH": "Người trong chi/ngành của bạn xem được. Người chi khác thì không.",
+      "PRIVATE": "Chỉ bạn và Hội đồng Tộc biểu xem được. Mục này không hiện trong danh bạ."
+    }
+  },
+  "directory": {
+    "title": "Danh bạ dòng họ",
+    "subtitle": "Bà con còn sống đã tự chọn cho cả họ xem nghề nghiệp và nơi ở. Lọc theo nơi ở, theo nghề hoặc theo chi để tìm người cần tìm.",
+    "loadError": "Chưa tải được danh bạ. Vui lòng thử lại.",
+    "resultCount": "{count} người trong danh bạ",
+    "kinshipCta": "Tôi gọi là?",
+    "kinshipCtaFor": "Tôi gọi {name} là gì?",
+    "coverage": {
+      "title": "{shared} / {living} người còn sống đã điền và chọn hiện ở đây",
+      "why": "Danh bạ chỉ hiện những người đã tự chọn cho cả họ xem, nên nó ngắn hơn gia phả rất nhiều. Đó là đúng thiết kế, không phải thiếu dữ liệu — và những người chưa có tên ở đây là chưa chọn, chứ không phải không có.",
+      "selfCta": "Đặt mức chia sẻ của tôi"
+    },
+    "filters": {
+      "name": "Tìm theo tên",
+      "namePlaceholder": "Gõ tên, không dấu cũng được",
+      "province": "Nơi ở",
+      "anyProvince": "Mọi tỉnh/thành",
+      "occupation": "Nghề nghiệp",
+      "anyOccupation": "Mọi nghề",
+      "branch": "Chi / ngành",
+      "anyBranch": "Mọi chi",
+      "facetOption": "{value} ({count})",
+      "clear": "Bỏ hết bộ lọc"
+    },
+    "empty": {
+      "noOneTitle": "Danh bạ chưa có ai",
+      "noOneBody": "Chưa có người nào trong dòng họ chọn cho cả họ xem nghề nghiệp hay nơi ở của mình. Bạn có thể là người đầu tiên — chỉ mất một phút.",
+      "clearFilters": "Bỏ bộ lọc và xem lại danh bạ",
+      "beFirst": "Mở hồ sơ của tôi",
+      "filteredTitle": "Không có ai khớp bộ lọc này",
+      "filteredBody": "Thử bỏ bớt một bộ lọc. Danh bạ chỉ chứa người đã tự chọn hiện, nên nhiều tỉnh và nhiều nghề chưa có ai."
+    },
+    "guest": {
+      "title": "Danh bạ dành cho thành viên đã đăng nhập",
+      "body": "Danh bạ là nơi bà con còn sống tự giới thiệu nghề nghiệp và nơi ở cho cả họ xem. Theo quy định của pháp luật về bảo vệ dữ liệu cá nhân, gia phả không công bố thông tin của người còn sống cho người chưa đăng nhập, nên danh bạ chỉ mở sau khi bạn đăng nhập bằng tài khoản dòng họ.",
+      "publicHint": "Phần các cụ đã khuất thì mở cho tất cả mọi người — bạn xem phả đồ được ngay bây giờ.",
+      "viewTree": "Xem phả đồ công khai"
+    },
+    "unavailable": {
+      "title": "Máy chủ chưa mở danh bạ",
+      "body": "Bản cài đặt này chưa có danh bạ, nên không có gì để tải — bấm thử lại bao nhiêu lần cũng vậy. Phả đồ, tra danh xưng và lịch giỗ vẫn dùng bình thường.",
+      "whoToAsk": "Xin báo Hội đồng Tộc biểu hoặc quản trị hệ thống để bật danh bạ cho dòng họ.",
+      "viewTree": "Xem phả đồ"
+    }
   },
   "kinship": {
     "title": "Tra cứu danh xưng",
@@ -245,6 +578,20 @@
     }
   },
   "personForm": {
+    "unsavedDialog": {
+      "title": "Bạn có thay đổi chưa lưu",
+      "body": "Những gì bạn vừa nhập chưa được lưu vào gia phả. Rời khỏi trang bây giờ là mất phần đã nhập.",
+      "draftHint": "Bản nháp được giữ tạm trên máy này cho tới khi bạn đóng tab.",
+      "stay": "Ở lại tiếp tục nhập",
+      "leave": "Rời đi, bỏ phần đã nhập"
+    },
+    "draft": {
+      "title": "Lần trước bạn đang nhập dở hồ sơ này",
+      "savedAt": "Nháp lưu lúc {time}.",
+      "privacyHint": "Nháp chỉ nằm trên máy này và trong tab này; đóng tab là mất. Nếu đang dùng máy chung, xin bấm “Bỏ nháp” khi xong việc.",
+      "restore": "Khôi phục phần đã nhập",
+      "discard": "Bỏ nháp"
+    },
     "createTitle": "Thêm nhân khẩu",
     "editTitle": "Sửa hồ sơ {name}",
     "create": "Thêm vào gia phả",
@@ -254,6 +601,7 @@
     "savedCreate": "Đã thêm nhân khẩu vào gia phả.",
     "savedEdit": "Đã lưu thay đổi.",
     "savedWithOverride": "Đã lưu kèm ghi chú về việc trùng tên húy.",
+    "savedWithDuplicateOverride": "Đã thêm, kèm ghi nhận bạn xác nhận đây là người khác.",
     "sections": {
       "names": "Tên gọi",
       "identity": "Giới tính & tình trạng",
@@ -274,14 +622,6 @@
     "statusHint": "Tắt công tắc khi người này đã khuất. Nhập ngày mất cũng có nghĩa là người này đã mất — hệ thống sẽ hỏi lại để bạn xác nhận.",
     "currentPlaceProvince": "Tỉnh/Thành phố đang ở",
     "currentPlaceFull": "Địa chỉ đầy đủ",
-    "privacyLevel": "Mức chia sẻ thông tin",
-    "privacyLevelHint": "Người còn sống mặc định được ẩn. Chỉ nới rộng khi chính người đó đồng ý.",
-    "privacyOption": {
-      "DEFAULT": "Mặc định theo quy định",
-      "BRANCH_OPT_IN": "Cho phép trong chi/ngành",
-      "CLAN_OPT_IN": "Cho phép trong cả dòng họ",
-      "RESTRICTED": "Hạn chế tối đa"
-    },
     "contactHint": "Thông tin liên hệ thuộc tầng riêng tư cao nhất, chỉ người trong cuộc và quản trị viên xem được.",
     "note": "Lý do / ghi chú",
     "noteHint": "Nội dung này được lưu vào nhật ký chỉnh sửa để con cháu về sau còn tra được.",
@@ -330,6 +670,10 @@
       "spouseOrder": "Thứ bậc vợ/chồng",
       "spouseOrderHint": "1 là vợ cả / chồng cả."
     },
+    "conflictParty": {
+      "generation": "Đời thứ {n}",
+      "matchedName": "{label}: {name}"
+    },
     "taboo": {
       "title": "Cảnh báo trùng tên húy (kỵ húy)",
       "lead": "Tên vừa nhập trùng với tên húy của {count} bậc trên.",
@@ -339,13 +683,49 @@
         "GIVEN_NAME": "Trùng tên riêng",
         "UNACCENTED": "Trùng khi bỏ dấu"
       },
-      "generation": "Đời thứ {n}",
-      "collidesWith": "Tên húy: {name}",
+      "ancestorLoadFailed": "Không tra được hồ sơ bậc trên. Thử lại sau ít phút.",
+      "ancestorNotVisible": {
+        "title": "Bạn không có quyền xem bậc trên này",
+        "body": "Phép dò kỵ húy xét cả dòng họ theo đời thứ, nên bậc trên bị trùng có thể đang còn sống ở một chi khác. Hệ thống không cho biết hồ sơ đó có tồn tại hay không.",
+        "ask": "Nhờ Hội đồng Tộc biểu đối chiếu tên húy giúp — họ nhìn được cả hai bên."
+      },
       "reasonLabel": "Lý do vẫn giữ tên này",
       "reasonPlaceholder": "Ví dụ: đã được Hội đồng Tộc biểu chấp thuận trong phiên họp ngày…",
       "reasonHint": "Lý do sẽ được lưu vào nhật ký chỉnh sửa cùng với việc bỏ qua cảnh báo.",
       "rename": "Quay lại đổi tên",
       "confirm": "Vẫn giữ tên này"
+    },
+    "duplicate": {
+      "title": "Nghi trùng với hồ sơ đã có",
+      "lead": "Người bạn vừa nhập có thể trùng với {count} hồ sơ đã có trong gia phả.",
+      "explain": "Đây là phỏng đoán của hệ thống dựa trên chính những gì bạn vừa nhập, không phải lệnh cấm. Xin đối chiếu lại; nếu chắc chắn đây là người khác thì cứ thêm.",
+      "score": "Điểm nghi ngờ {score}",
+      "signal": {
+        "TEN_TRUNG_CO_DAU": "Trùng họ tên đủ dấu",
+        "TEN_TRUNG_KHONG_DAU": "Trùng họ tên khi bỏ dấu",
+        "GIO_TRUNG_KHIT": "Ngày giỗ trùng khít",
+        "NAM_SINH_KHOP": "Trùng năm sinh",
+        "NAM_SINH_LECH_IT": "Năm sinh lệch ít",
+        "NAM_MAT_KHOP": "Trùng năm mất",
+        "CUNG_CHI": "Cùng chi",
+        "CUNG_DOI": "Cùng đời",
+        "KHAC_DOI": "Khác đời",
+        "CUNG_NGUYEN_QUAN": "Cùng nguyên quán",
+        "KHAC_GIOI": "Khác giới tính"
+      },
+      "inBatch": {
+        "title": "Một dòng chưa ghi trong lô nhập liệu",
+        "ref": "Dòng này do chính bạn nhập và chưa vào gia phả: {ref}",
+        "noRef": "Dòng này do chính bạn nhập và chưa vào gia phả, nên chưa có hồ sơ để mở."
+      },
+      "candidateNotVisible": {
+        "title": "Bạn không có quyền xem hồ sơ bị nghi trùng",
+        "body": "Bộ dò trùng quét cả dòng họ, nên hồ sơ ấy có thể là người còn sống ở một chi khác. Hệ thống không cho biết hồ sơ đó có tồn tại hay không.",
+        "ask": "Nhờ Hội đồng Tộc biểu đối chiếu giúp — họ nhìn được cả hai bên."
+      },
+      "candidateLoadFailed": "Không tra được hồ sơ bị nghi trùng. Thử lại sau ít phút.",
+      "review": "Quay lại kiểm tra",
+      "confirm": "Đây là người khác, vẫn thêm"
     },
     "deathConfirm": {
       "title": "Bạn đang nhập thông tin người mất",
@@ -428,6 +808,8 @@
     "upcomingTitle": "Sắp tới",
     "calendarTitle": "Lịch mười hai tháng tới",
     "empty": "Chưa có ngày giỗ nào trong khoảng thời gian này.",
+    "emptyFiltered": "Không có việc họ nào khớp bộ lọc đang đặt. Bỏ bộ lọc để xem cả dòng họ.",
+    "clearFilters": "Bỏ bộ lọc",
     "loadError": "Không tải được danh sách giỗ. Vui lòng thử lại.",
     "branchFilter": "Lọc theo chi / ngành",
     "anyBranch": "Cả dòng họ",
@@ -455,8 +837,13 @@
       "DAI_TUONG": "Đại tường",
       "CHAP_MA": "Chạp mả",
       "MUNG_THO": "Mừng thọ",
-      "KHAC": "Lễ khác"
-    }
+      "SINH_NHAT": "Sinh nhật",
+      "KHANH_THANH": "Khánh thành",
+      "HOP_HO": "Họp họ",
+      "CUOI_HOI": "Cưới hỏi",
+      "KHAC": "Việc họ khác"
+    },
+    "showLessInMonth": "Thu gọn"
   },
   "push": {
     "inAppAlways": "Dù bật hay không, mọi lời nhắc giỗ vẫn nằm đầy đủ trong trung tâm thông báo khi bạn mở ứng dụng.",
@@ -482,7 +869,7 @@
     "error": {
       "PERMISSION_DENIED": "Bạn đã từ chối quyền thông báo. Mọi lời nhắc vẫn còn trong trung tâm thông báo.",
       "NO_SERVICE_WORKER": "Chưa bật được vì thiếu service worker.",
-      "SERVER_NOT_CONFIGURED": "Máy chủ chưa cấu hình khoá thông báo đẩy nên chưa bật được. Xin báo quản trị viên; mọi lời nhắc giỗ vẫn nằm đủ trong trung tâm thông báo.",
+      "SERVER_NOT_CONFIGURED": "Thông báo đẩy chưa bật được vì máy chủ chưa có khoá VAPID. Đây là việc của quản trị viên hệ thống, không phải lỗi thiết bị của bạn — bấm lại cũng chưa được. Xin nhờ báo quản trị viên kèm mã lỗi WEBPUSH_NOT_CONFIGURED (quản trị viên xem /api/v1/admin/notifications/webpush để biết cần làm gì). Trong lúc chờ, mọi lời nhắc giỗ vẫn nằm đủ trong trung tâm thông báo.",
       "SUBSCRIBE_FAILED": "Không đăng ký được thông báo đẩy. Vui lòng thử lại sau."
     },
     "ios": {
@@ -498,6 +885,581 @@
   },
   "settings": {
     "title": "Cài đặt",
-    "subtitle": "Chọn cách bạn muốn nhận nhắc giỗ và thông báo của dòng họ."
+    "subtitle": "Chọn cách bạn muốn nhận nhắc giỗ và thông báo của dòng họ.",
+    "theme": {
+      "title": "Giao diện",
+      "description": "Mặc định theo cài đặt của máy bạn. Chọn tay nếu muốn khác.",
+      "system": "Theo hệ thống",
+      "light": "Sáng",
+      "dark": "Tối"
+    }
+  },
+  "correction": {
+    "title": "Yêu cầu đính chính",
+    "subtitle": "Nơi thành viên báo chỗ ghi sai và Trưởng chi, Hội đồng Tộc biểu xem xét.",
+    "nav": {
+      "label": "Yêu cầu đính chính",
+      "labelWithCount": "Yêu cầu đính chính — {count} yêu cầu chờ duyệt",
+      "tooltip": "Yêu cầu đính chính"
+    },
+    "entry": {
+      "title": "Thấy chỗ nào ghi chưa đúng?",
+      "hint": "Bạn không sửa trực tiếp được hồ sơ này, nhưng có thể chỉ ra chỗ sai để Trưởng chi hoặc Hội đồng Tộc biểu xem xét.",
+      "button": "Đề nghị đính chính"
+    },
+    "dialog": {
+      "title": "Đề nghị đính chính hồ sơ {name}",
+      "lead": "Xin chọn một chỗ ghi chưa đúng, nêu giá trị đúng và cho biết vì sao. Mỗi lần một mục để người duyệt quyết được từng việc.",
+      "fieldLabel": "Chỗ nào ghi chưa đúng?",
+      "currentLabel": "Đang ghi trong gia phả",
+      "proposedLabel": "Đề nghị sửa thành",
+      "reasonLabel": "Vì sao bạn cho là như vậy?",
+      "reasonHint": "Nêu nguồn — gia phả chép tay, văn bia, lời các cụ — giúp Trưởng chi quyết nhanh hơn.",
+      "reasonPlaceholder": "Ví dụ: gia phả chép tay nhà cháu ghi cụ mất ngày 18 tháng Chạp; nhà cháu vẫn làm giỗ cụ ngày ấy từ đời ông nội.",
+      "otherHint": "Việc bạn muốn báo không nằm trong danh sách trên (tên húy, quan hệ cha–con, chuyển chi…). Xin mô tả thật rõ ở ô lý do bên dưới để Trưởng chi hiểu đúng ý.",
+      "submit": "Gửi đề nghị",
+      "cancel": "Đóng",
+      "sent": "Đã gửi đề nghị đính chính. Trưởng chi sẽ xem xét."
+    },
+    "fields": {
+      "death": "Ngày mất (ngày giỗ)",
+      "birth": "Ngày sinh",
+      "nativePlace": "Quê quán",
+      "occupation": "Nghề nghiệp",
+      "currentPlaceProvince": "Tỉnh/Thành phố đang ở",
+      "gender": "Giới tính",
+      "OTHER": "Điều khác — tôi sẽ mô tả bằng lời"
+    },
+    "value": {
+      "yes": "Có",
+      "no": "Không"
+    },
+    "card": {
+      "before": "Đang ghi",
+      "after": "Đề nghị sửa thành",
+      "afterCleared": "Đề nghị bỏ trống mục này",
+      "reason": "Lý do người gửi nêu",
+      "reviewNote": "Ghi chú của người duyệt: {note}",
+      "payloadHidden": "Bạn không có quyền xem nội dung chi tiết của đề nghị này; dưới đây chỉ là các mục mà đề nghị động tới.",
+      "unknownPerson": "Nhân khẩu trong gia phả",
+      "noPerson": "Đề nghị thêm nhân khẩu mới"
+    },
+    "status": {
+      "PENDING": "Chờ duyệt",
+      "APPROVED": "Đã duyệt",
+      "REJECTED": "Đã từ chối",
+      "CANCELLED": "Đã rút lại"
+    },
+    "type": {
+      "CREATE_PERSON": "Thêm nhân khẩu",
+      "UPDATE_PERSON": "Sửa thông tin",
+      "SOFT_DELETE_PERSON": "Gỡ khỏi gia phả",
+      "ADD_RELATIONSHIP": "Thêm quan hệ",
+      "REMOVE_RELATIONSHIP": "Bỏ quan hệ",
+      "ADD_NAME": "Thêm lớp tên",
+      "MOVE_BRANCH": "Chuyển chi/ngành",
+      "OTHER": "Việc khác"
+    },
+    "queue": {
+      "tab": "Chờ tôi duyệt",
+      "empty": "Không còn yêu cầu nào chờ duyệt trong phạm vi của bạn.",
+      "emptyNoScope": "Bạn chưa được Hội đồng Tộc biểu giao chi/ngành nào, nên chưa có yêu cầu nào thuộc phạm vi của bạn. Xin liên hệ Hội đồng để được phân công."
+    },
+    "mine": {
+      "tab": "Đề nghị của tôi",
+      "empty": "Bạn chưa gửi đề nghị đính chính nào.",
+      "cancel": "Rút lại",
+      "cancelConfirm": "Rút lại đề nghị này? Đề nghị vẫn được lưu trong lịch sử, chỉ là không còn chờ duyệt.",
+      "cancelled": "Đã rút lại đề nghị."
+    },
+    "review": {
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "approveTitle": "Duyệt yêu cầu đính chính",
+      "rejectTitle": "Từ chối yêu cầu đính chính",
+      "approveLead": "Xin đọc lại một lượt phần “Đang ghi” và “Đề nghị sửa thành” trước khi duyệt.",
+      "rejectLead": "Người gửi sẽ đọc được lý do bạn nêu. Xin nói rõ để lần sau họ còn gửi tiếp.",
+      "noteLabel": "Ghi chú (không bắt buộc)",
+      "noteLabelRequired": "Lý do từ chối",
+      "notePlaceholder": "Ví dụ: đã đối chiếu văn bia ngoài từ đường, ngày mất ghi trong gia phả là đúng.",
+      "noteRequired": "Xin nêu lý do từ chối — người gửi có quyền biết vì sao.",
+      "cancel": "Quay lại",
+      "approved": "Đã duyệt yêu cầu đính chính.",
+      "rejected": "Đã từ chối yêu cầu đính chính.",
+      "selfReviewTitle": "Đề nghị này do chính bạn gửi",
+      "selfReviewHint": "Người duyệt không được là người gửi. Xin để Hội đồng Tộc biểu hoặc một Trưởng chi khác quyết."
+    },
+    "person": {
+      "title": "Đề nghị đính chính hồ sơ {name}",
+      "subtitle": "Đề nghị của bạn sẽ được Trưởng chi hoặc Hội đồng Tộc biểu xem xét trước khi vào gia phả.",
+      "canEditInstead": "Bạn sửa trực tiếp được hồ sơ này",
+      "canEditInsteadHint": "Không cần gửi đề nghị — xin vào mục Sửa hồ sơ để cập nhật thẳng."
+    },
+    "errors": {
+      "reasonTooShort": "Xin nêu lý do rõ hơn (ít nhất 10 ký tự) để người duyệt hiểu bối cảnh.",
+      "reasonTooLong": "Lý do quá dài (tối đa 2000 ký tự).",
+      "valueRequired": "Xin nhập giá trị bạn cho là đúng.",
+      "dateRequired": "Xin nhập ngày dương lịch hoặc ngày âm lịch.",
+      "topicRequired": "Xin chọn mục cần đính chính.",
+      "lunarDay": "Ngày âm lịch phải từ 1 đến 30.",
+      "lunarMonth": "Tháng âm lịch phải từ 1 đến 12.",
+      "lunarMonthRequired": "Đã nhập ngày thì phải nhập cả tháng âm lịch.",
+      "submitFailed": "Không gửi được đề nghị. Vui lòng thử lại.",
+      "serverValidation": "Dữ liệu chưa hợp lệ theo kiểm tra của máy chủ.",
+      "notProvisioned": "Bạn cần đăng nhập bằng tài khoản dòng họ để gửi hoặc xem yêu cầu đính chính.",
+      "notActive": "Tài khoản của bạn đang chờ Hội đồng Tộc biểu duyệt, chưa gửi được đề nghị.",
+      "loadFailed": "Không tải được danh sách yêu cầu đính chính.",
+      "forbidden": "Bạn không có quyền thực hiện việc này.",
+      "branchScope": "Yêu cầu này thuộc chi/ngành ngoài phạm vi bạn được giao.",
+      "closed": "Yêu cầu này đã được xử lý xong, không quyết lại được. Nếu cần đổi ý, xin gửi một yêu cầu mới.",
+      "selfReview": "Bạn không thể tự duyệt đề nghị của chính mình.",
+      "reviewFailed": "Không ghi nhận được quyết định. Vui lòng thử lại.",
+      "cancelFailed": "Không rút lại được đề nghị. Vui lòng thử lại.",
+      "personNotFound": "Không tìm thấy nhân khẩu này."
+    }
+  },
+  "a11y": {
+    "skipToContent": "Bỏ qua, tới nội dung chính"
+  },
+  "dataImport": {
+    "title": "Nhập liệu ban đầu",
+    "subtitle": "Đưa bản phả gốc của một chi vào hệ thống",
+    "common": {
+      "branch": "Chi",
+      "batch": "Lô nhập",
+      "rows": "dòng",
+      "people": "người",
+      "loading": "Đang tải…",
+      "error": "Không tải được dữ liệu",
+      "retry": "Thử lại",
+      "close": "Đóng",
+      "cancel": "Thôi",
+      "noBranchTitle": "Bạn chưa được giao chi nào để nhập liệu",
+      "noBranchBody": "Hội đồng Tộc biểu giao từng chi cho một Trưởng chi. Liên hệ Hội đồng để được giao quyền nhập chi của mình.",
+      "notFoundTitle": "Không tìm thấy lô nhập này",
+      "notFoundBody": "Lô có thể đã được thay bằng một lần tải lên mới hơn. Mở danh sách lô để xem lô đang dùng.",
+      "openBatches": "Xem các lô của tôi"
+    },
+    "steps": {
+      "legend": "Quy trình năm bước",
+      "current": "Đang ở bước này",
+      "done": "Đã xong",
+      "upcoming": "Chưa tới",
+      "s1": {
+        "name": "Hội đồng chốt bản phả gốc",
+        "detail": "Một bản giấy có chữ ký. Đây là mốc so sánh cho mọi lần đối soát về sau — phần mềm không làm thay bước này.",
+        "who": "Hội đồng Tộc biểu"
+      },
+      "s2": {
+        "name": "Khai khung chi, ngành",
+        "detail": "Khai các chi và ngành, rồi giao mỗi chi cho một Trưởng chi. Xong bước này mới có tiền tố mã để sinh mẫu Excel.",
+        "who": "Hội đồng và Quản trị"
+      },
+      "s3": {
+        "name": "Mỗi chi nhập bằng Excel",
+        "detail": "Bốn chi làm song song, không phải chờ nhau. Mỗi chi tải mẫu riêng, điền theo sổ giấy của chi mình.",
+        "who": "Trưởng chi"
+      },
+      "s4": {
+        "name": "Đối soát, sửa, tải lại",
+        "detail": "Tải lên rồi xem máy báo gì. Sửa trong Excel, tải lại, lặp tới khi sạch. Phả chưa đổi gì trong suốt bước này.",
+        "who": "Trưởng chi và một bậc cao niên"
+      },
+      "s5": {
+        "name": "Mời người còn sống tự nhận hồ sơ",
+        "detail": "Người còn sống không nhập hộ. Họ nhận lời mời qua Zalo rồi tự khai phần của mình.",
+        "who": "Hội đồng"
+      }
+    },
+    "intro": {
+      "lead": "Trang này cho bạn biết mình đang ở đâu trong quy trình, và bước tiếp theo phải làm gì.",
+      "reassure": {
+        "title": "Không có thao tác nào ở đây làm hỏng phả",
+        "body": "Tệp bạn tải lên nằm ở khu vực chờ. Phả của dòng họ chỉ thay đổi khi bạn đọc kết quả đối soát rồi tự tay bấm duyệt — và kể cả sau đó, bạn vẫn gỡ được toàn bộ lô trong 30 ngày."
+      },
+      "resume": {
+        "title": "Bạn còn một lô đang làm dở",
+        "body": "Lô {batchId} của {branch}, tải lên {when}. Việc đang dở nằm trên máy chủ nên bạn đóng trình duyệt rồi mở lại lúc nào cũng thấy.",
+        "action": "Làm tiếp lô này"
+      },
+      "actions": {
+        "template": "Lấy mẫu Excel của chi tôi",
+        "upload": "Tải tệp đã điền lên",
+        "progress": "Xem tiến độ các chi"
+      },
+      "sessionNote": "Nhập một chi 350–400 người thường mất 6–10 buổi. Không cần làm xong trong một lần."
+    },
+    "template": {
+      "title": "Mẫu Excel cho từng chi",
+      "lead": "Mỗi chi có một mẫu riêng. Từ lần nhập thứ hai trở đi, mẫu mang sẵn những người đã có trong phả của chi bạn — sửa ngay trên dòng đã có mã, đừng gõ lại từ đầu.",
+      "download": "Tải mẫu của {branch}",
+      "downloading": "Đang tạo tệp…",
+      "guide": {
+        "title": "Bốn điều cần biết trước khi điền",
+        "sheets": {
+          "title": "Tệp có năm trang",
+          "body": "Hướng dẫn · Nhân khẩu · Hôn phối · Danh mục · Đã có. Mở tệp ra là thấy trang Hướng dẫn trước tiên — đọc trang đó trước khi gõ dòng nào."
+        },
+        "code": {
+          "title": "Cột Mã là thứ quan trọng nhất",
+          "body": "Mã lấy từ số thứ tự trong sổ giấy của chi bạn, và mẫu Excel hướng dẫn cách đánh. Mã cha và Mã mẹ trỏ vào cột Mã này. Lần nhập sau vẫn dùng đúng mã ấy, nên đừng đánh số lại."
+        },
+        "lunar": {
+          "title": "Ngày mất âm gõ dạng chữ",
+          "body": "Gõ 15/8 hoặc 15/8 nhuận. Ô đã được đặt là ô chữ — đừng đổi định dạng, vì Excel sẽ tự nuốt 15/8 thành một ngày dương lịch của năm nay."
+        },
+        "living": {
+          "title": "Không điền hộ người còn sống",
+          "body": "Mẫu cố ý không có cột điện thoại, thư điện tử, địa chỉ, ảnh. Người còn sống tự khai phần của mình ở bước 5. Đây là quyết định, không phải thiếu sót."
+        }
+      },
+      "example": {
+        "title": "Xoá các dòng ví dụ trước khi nộp",
+        "body": "Trang Nhân khẩu có sẵn một gia đình ba đời làm mẫu, tô nền khác. Xoá hết các dòng đó rồi hãy tải lên."
+      },
+      "next": "Điền xong rồi? Tải tệp lên",
+      "kind": {
+        "DONG_HO": "Dòng họ",
+        "CHI": "Chi",
+        "NGANH": "Ngành",
+        "CANH": "Cành",
+        "NHANH": "Nhánh"
+      }
+    },
+    "upload": {
+      "title": "Tải tệp lên",
+      "lead": "Chọn chi và tệp Excel đã điền. Hệ thống đọc tệp rồi đối soát, chưa ghi gì vào phả.",
+      "branchLabel": "Tệp này là của chi nào",
+      "branchPlaceholder": "Chọn chi",
+      "fileLabel": "Tệp Excel đã điền",
+      "pick": "Chọn tệp .xlsx",
+      "picked": "Đã chọn: {name}",
+      "submit": "Tải lên và đối soát",
+      "submitting": "Đang đọc tệp…",
+      "needBranch": "Chọn chi trước đã.",
+      "needFile": "Chọn một tệp .xlsx.",
+      "limits": "Chỉ nhận tệp .xlsx, tối đa 10 MB và 5.000 dòng nhân khẩu.",
+      "reassure": "Tải lên chưa phải là duyệt. Bạn sẽ được xem toàn bộ kết quả đối soát trước khi quyết định ghi vào phả.",
+      "supersede": "Tải lên tệp mới sẽ thay cho lô đang dở của cùng chi. Lô cũ không bị xoá, chỉ thôi được dùng.",
+      "notYours": "(ngoài phạm vi của bạn)",
+      "alreadyCommitted": {
+        "title": "Tệp y hệt này đã được ghi vào phả",
+        "body": "Chi này đã có một lô mang đúng nội dung ấy và đã ghi vào phả rồi. Đây chỉ là chốt chặn bấm hai lần — tải lại để KIỂM thì không bị chặn. Nếu bạn cố ý muốn ghi lại lần nữa thì bấm nút dưới.",
+        "force": "Tôi hiểu, vẫn tải lên"
+      },
+      "openBatch": {
+        "title": "Chi này còn một lô đang đối soát",
+        "body": "Lô {batchId} chưa chốt. Tải tệp mới lên sẽ thay lô ấy — nó chuyển sang “đã có lô mới hơn” và phần đối soát bạn đã làm trong đó không dùng tiếp được. Nếu bạn định làm tiếp lô cũ thì mở nó ra.",
+        "action": "Mở lô đang dở"
+      }
+    },
+    "reconcile": {
+      "title": "Đối soát lô {batchId}",
+      "fileLine": "{fileName} · {branch} · tải lên {when}",
+      "notWritten": {
+        "title": "Chưa có gì được ghi vào phả",
+        "body": "Tệp của bạn đang nằm ở khu vực chờ. Phả của dòng họ chưa đổi một dòng nào và sẽ chỉ đổi khi bạn bấm nút duyệt ở cuối trang."
+      },
+      "counts": {
+        "persons": "{count} dòng nhân khẩu",
+        "marriages": "{count} dòng hôn phối",
+        "create": "{count} người sẽ thêm mới",
+        "update": "{count} người đã có, sẽ cập nhật"
+      },
+      "blocking": {
+        "title": "{count} lỗi phải sửa",
+        "none": "Không còn lỗi phải sửa",
+        "help": "Những lỗi này phải sửa trong tệp Excel rồi tải lại. Chưa sửa xong thì chưa duyệt được.",
+        "suggestions": "Có phải bạn định ghi",
+        "cycle": "Đường vòng trong tệp",
+        "declared": "Trong tệp ghi",
+        "derived": "Hệ thống suy ra",
+        "sheetRow": "{sheet} · dòng {row}",
+        "wholeBatch": "Cả lô",
+        "notFoundCode": "Mã không tìm thấy",
+        "conflictRows": "{count, plural, one {Trùng với dòng {rows}} other {Trùng với các dòng {rows}}}"
+      },
+      "warning": {
+        "title": "{count} mục cần xem lại",
+        "none": "Không có mục nào cần xem lại",
+        "help": "Những mục này vẫn nhập được. Xem qua để biết mình đang nhận gì, rồi xác nhận ở dưới.",
+        "ack": "Tôi đã xem xong {count} mục cần xem lại",
+        "acked": "Đã xác nhận xem lúc {when}",
+        "duplicatesLink": "Xem {count} cặp nghi trùng",
+        "ackAgain": "Tôi đã xem lại {count} mục cần xem lại",
+        "mayBeStale": "Cửa duyệt vẫn chưa mở. Nếu bạn đã xác nhận trước đó thì rất có thể bộ kiểm vừa sinh thêm mục mới — xác nhận cũ chỉ tính cho đúng danh sách người ta đã đọc."
+      },
+      "actions": {
+        "reupload": "Tải lại tệp đã sửa",
+        "revalidate": "Kiểm lại lô này",
+        "reuploadHint": "Sửa trong Excel — nơi bạn quen tay — rồi tải lại. “Kiểm lại” dùng khi tệp chưa đổi mà chỉ muốn chạy lại bộ kiểm."
+      },
+      "commit": {
+        "button": "Duyệt và ghi {count} người vào phả",
+        "blockedByIssues": "Còn {count} lỗi phải sửa — chưa duyệt được",
+        "blockedByAck": "Xác nhận đã xem phần cần xem lại thì mới duyệt được",
+        "blockedByDuplicates": "Còn {count} cặp nghi trùng chưa quyết",
+        "confirmTitle": "Ghi {count} người vào phả?",
+        "confirmBody": "Đây là lúc phả của dòng họ thay đổi. Nếu sau này phát hiện sai, bạn vẫn xin gỡ được cả lô — chừng nào chưa ai trong họ sửa những hồ sơ do lô này tạo ra.",
+        "confirmOk": "Ghi vào phả",
+        "failed": "Không ghi được",
+        "blockedByStatus": "Lô đang ở trạng thái {status}, chưa tới bước duyệt",
+        "blockedUnknown": "Máy chủ chưa cho phép duyệt lô này.",
+        "blockedByAckStale": "Bộ kiểm đã sinh thêm mục cần xem lại sau lần bạn xác nhận — hãy đọc phần mới rồi xác nhận lại"
+      },
+      "committing": {
+        "title": "Đang ghi vào phả",
+        "phase": {
+          "QUEUED": "Đang xếp hàng",
+          "PERSONS": "Đang tạo nhân khẩu",
+          "PARENT_EDGES": "Đang nối cha con",
+          "SPOUSE_EDGES": "Đang nối hôn phối",
+          "CACHE": "Đang dựng lại phả đồ",
+          "DONE": "Xong",
+          "FAILED": "Hỏng"
+        },
+        "estimate": "{done}/{total} dòng — con số này là ước lượng",
+        "leaveOk": "Bạn đóng trang này cũng được, việc ghi vẫn chạy tiếp."
+      },
+      "committed": {
+        "title": "Đã ghi {count} người vào phả",
+        "when": "Ghi lúc {when}",
+        "viewTree": "Xem trên phả đồ"
+      },
+      "rollback": {
+        "button": "Gỡ toàn bộ lô này",
+        "confirmTitle": "Gỡ toàn bộ lô {batchId}?",
+        "confirmBody": "Toàn bộ người và quan hệ do lô này đưa vào sẽ được gỡ khỏi phả. Không có gì bị xoá vĩnh viễn.",
+        "reasonLabel": "Vì sao gỡ",
+        "confirmOk": "Gỡ lô",
+        "done": "Đã gỡ lô này khỏi phả",
+        "blockedTitle": "{count, plural, one {Một vướng mắc} other {{count} vướng mắc}}",
+        "blockedHint": "Gỡ lô lúc này sẽ làm mất công của những người đã sửa. Hãy hỏi lại họ, hoặc nhờ Hội đồng sửa tay từng hồ sơ.",
+        "reasonOptional": "Không bắt buộc, nhưng lý do đi vào nhật ký và người sau cần biết vì sao lô này bị gỡ.",
+        "doneNote": "Lô này đã được gỡ khỏi phả. Trạng thái vẫn là “Đã vào phả” vì nó đã từng được ghi — đó là sự thật lịch sử, không phải lỗi hiển thị."
+      },
+      "superseded": {
+        "title": "Lô này đã được thay bằng lần tải lên mới hơn",
+        "body": "Không cần làm gì với lô cũ. Mở lô mới nhất để đối soát tiếp."
+      },
+      "failed": {
+        "title": "Lô này dừng lại vì còn lỗi chặn"
+      }
+    },
+    "duplicates": {
+      "title": "Đối chiếu người nghi trùng",
+      "lead": "Hệ thống chỉ xếp thứ tự xem xét. Quyết định là của bạn — không có cặp nào tự gộp.",
+      "counter": "Cặp {index} trên {total}",
+      "score": "{score} trên 100 điểm nghi trùng",
+      "none": "Không có cặp nào cần đối chiếu",
+      "columns": {
+        "existing": "Đã có trong phả",
+        "incoming": "Trong tệp vừa tải",
+        "existingInFile": "Dòng khác trong cùng tệp"
+      },
+      "evidenceTitle": "Bằng chứng, xếp theo độ tin",
+      "trustNote": "Ngày giỗ xếp trên cùng vì cả họ cúng hằng năm nên khó chép sai. Năm sinh xếp cuối vì sổ cũ thường chép theo trí nhớ — lệch một hai năm không có nghĩa là hai người.",
+      "divergence": "Chỗ lệch",
+      "missingInFile": "Tệp bỏ trống",
+      "missingInTree": "Phả không ghi",
+      "missingWarning": "Tệp thiếu những mục được tô. Hợp nhất sẽ giữ nguyên dữ liệu đã có trong phả, không ghi đè bằng chỗ trống.",
+      "decide": {
+        "merge": "Là một người — hợp nhất",
+        "distinct": "Là hai người khác nhau",
+        "defer": "Chưa rõ — để lại sau",
+        "deferHint": "Chọn cái này khi chưa chắc. Cặp sẽ nằm yên ở khu vực chờ cho tới khi hỏi được các cụ trong họ — nhưng lô vẫn chưa duyệt được chừng nào còn cặp chưa quyết.",
+        "preselected": "Điểm rất cao — hệ thống đề nghị hợp nhất, nhưng vẫn chờ bạn bấm.",
+        "saving": "Đang ghi quyết định…",
+        "noteLabel": "Ghi chú (không bắt buộc)",
+        "notePlaceholder": "Ví dụ: đối chiếu với sổ chi Giáp bản 1998",
+        "noteHint": "Ghi chú đi vào nhật ký cùng tên bạn. Người đọc phả mười năm sau sẽ chỉ còn câu này để hiểu vì sao.",
+        "decidedAt": "{who} đã quyết lúc {when}",
+        "decidedAtUnknown": "Đã quyết lúc {when}",
+        "change": "Đổi quyết định",
+        "failed": "Không ghi được quyết định",
+        "status": {
+          "PENDING": "Chưa quyết",
+          "MERGED": "Đã chọn: là một người",
+          "DISTINCT": "Đã chọn: hai người khác nhau",
+          "DEFERRED": "Đã hoãn — vẫn tính là chưa quyết"
+        }
+      },
+      "back": "Về màn đối soát",
+      "policy": "Máy chỉ nghi ngờ từ {suspect} điểm trở lên, và đề nghị hợp nhất từ {preselect} điểm. Hai ngưỡng này do máy chủ công bố.",
+      "privacyNote": "Với người đã có trong phả, màn này chỉ nhận được một khoá — không tên, không năm sinh, không ngày giỗ. Bộ dò quét cả dòng họ, nên người bị nghi có thể ở một chi khác mà bạn không có quyền xem.",
+      "evidenceWithheld": "Không có bảng đối chiếu cho cặp này: hệ thống không gửi dữ liệu của người bên phả sang màn nhập liệu. Hãy mở hồ sơ của họ để xem những gì bạn được phép xem.",
+      "evidenceField": "Dấu hiệu",
+      "treeParty": {
+        "notVisibleTitle": "Bạn không có quyền xem người này",
+        "notVisibleBody": "Bộ dò trùng quét cả dòng họ, nên hồ sơ bị nghi có thể thuộc một chi khác. Hệ thống không cho biết hồ sơ đó có tồn tại hay không.",
+        "notVisibleAsk": "Nhờ Hội đồng Tộc biểu đối chiếu giúp — họ nhìn được cả hai bên.",
+        "loadFailed": "Không tải được hồ sơ bên phả. Thử lại sau ít phút.",
+        "unnamed": "(chưa có tên hiển thị)",
+        "generation": "Đời",
+        "birthYear": "Năm sinh",
+        "deathLunar": "Ngày giỗ",
+        "lunarValue": "{day}/{month}{leap, select, 1 { nhuận} other {}} (âm)",
+        "branch": "Chi",
+        "openProfile": "Mở hồ sơ trong phả"
+      },
+      "fileParty": {
+        "unnamed": "(dòng không có họ tên)",
+        "row": "dòng {row}",
+        "tabooName": "Tên huý",
+        "generation": "Đời",
+        "birthYear": "Năm sinh",
+        "deathLunar": "Ngày giỗ",
+        "fatherCode": "Mã cha",
+        "nativePlace": "Nguyên quán"
+      },
+      "whySuspect": "Vì sao nghi",
+      "noSignals": "Máy chủ không gửi nhãn tín hiệu cho cặp này.",
+      "plan": {
+        "title": "Kế hoạch ghi sau các quyết định của bạn",
+        "create": "{count} người sẽ thêm mới",
+        "update": "{count} người đã có, sẽ cập nhật",
+        "undecided": "{count} cặp chưa quyết",
+        "allDecided": "Đã quyết hết các cặp",
+        "why": "Mỗi lần bạn chọn “hợp nhất”, một dòng chuyển từ “thêm mới” sang “cập nhật” hoặc biến mất hẳn — hai con số trên đổi theo. Chúng do máy chủ tính lại, không phải do màn hình này cộng trừ.",
+        "gateOpen": "Đã quyết hết. Quay lại màn đối soát để duyệt lô.",
+        "gateClosed": "Lô chưa duyệt được: còn {count} cặp chưa quyết. “Hoãn” vẫn tính là chưa quyết."
+      },
+      "mergeNotApplicable": {
+        "title": "Không hợp nhất được: dòng này dính tới hai người đã có trong phả",
+        "body": "Bạn đã chọn “là một người” cho hai cặp cùng một dòng, nhưng hai cặp ấy trỏ sang hai hồ sơ khác nhau đã có trong phả. Một dòng không thể vừa là người này vừa là người kia.",
+        "scope": "Hợp nhất hai hồ sơ đã có trong phả là việc của màn quản lý nhân khẩu, không phải của màn nhập liệu: ở đó mới có đủ lịch sử sửa đổi và đủ quyền để gộp hai node của phả đồ.",
+        "whatToDo": "Chọn lại “là hai người khác nhau” cho một trong hai cặp, rồi kiểm lại lô. Nếu đúng là hai hồ sơ trong phả cần gộp làm một, hãy nhờ Hội đồng Tộc biểu làm việc ấy trước.",
+        "batchStopped": "Lô đang dừng lại vì lỗi này. Chưa có gì được ghi vào phả."
+      }
+    },
+    "progress": {
+      "title": "Tiến độ theo chi",
+      "lead": "Bốn chi nhập song song. Bảng này cho biết còn thiếu gì ở mỗi chi.",
+      "notARanking": "Đây không phải bảng xếp hạng. Các chi có sổ giấy, số người và số người rảnh khác nhau — so chi này với chi kia không nói lên điều gì.",
+      "coordinator": "Người phụ trách",
+      "noCoordinator": "Chưa có người nhận chi này",
+      "noCoordinatorHint": "Chi chưa có người phụ trách thì đứng im, dù phần mềm đã sẵn sàng. Đây là việc của Hội đồng.",
+      "inTree": "Đã vào phả",
+      "expected": "Bản phả gốc có {count} người",
+      "openBatch": "Lô đang dở: {batchId}",
+      "remaining": "Còn lại",
+      "blocking": "{count} lỗi phải sửa",
+      "warnings": "{count} mục cần xem lại",
+      "undecided": "{count} cặp nghi trùng chưa quyết",
+      "missingGio": "{count} người đã mất chưa có ngày giỗ",
+      "missingGioWhy": "Người thiếu ngày giỗ vẫn nằm trong phả đồ nhưng sẽ không bao giờ được nhắc giỗ.",
+      "nothingLeft": "Không còn gì đang chờ",
+      "open": "Mở lô này",
+      "yoursToImport": "Bạn được giao nhập chi này",
+      "notYoursToImport": "Bạn không nhập liệu cho chi này",
+      "expectedUncounted": "Chưa ai đếm bản phả giấy"
+    },
+    "stage": {
+      "NOT_STARTED": "Chưa bắt đầu",
+      "TEMPLATE_DOWNLOADED": "Đã lấy mẫu",
+      "UPLOADED": "Đã tải tệp lên",
+      "RECONCILING": "Đang đối soát",
+      "COMMITTED": "Đã vào phả"
+    },
+    "status": {
+      "DRAFT": "Mới tải lên",
+      "PARSED": "Đã đọc xong",
+      "VALIDATED": "Đã đối soát, chờ duyệt",
+      "COMMITTING": "Đang ghi vào phả",
+      "COMMITTED": "Đã vào phả",
+      "FAILED": "Còn lỗi phải sửa",
+      "SUPERSEDED": "Đã có lô mới hơn",
+      "VALIDATING": "Đang kiểm"
+    },
+    "issue": {
+      "IMP_PARENT_NOT_FOUND": "Mã cha hoặc mã mẹ không tồn tại",
+      "IMP_CYCLE": "Vòng lặp tổ tiên",
+      "IMP_CHILD_BEFORE_PARENT": "Con sinh trước cha",
+      "IMP_LUNAR_DATE_NOT_EXIST": "Ngày âm không tồn tại",
+      "IMP_DUP_CODE": "Hai dòng cùng một mã",
+      "IMP_BAD_CODE_FORMAT": "Mã sai dạng hoặc không thuộc chi này",
+      "IMP_ALIVE_WITH_DEATH": "Ghi còn sống nhưng có ngày mất",
+      "IMP_GENERATION_MISMATCH": "Đời khai không khớp đời của cha",
+      "IMP_SPOUSE_ORDER_CONFLICT": "Hai người vợ cùng một bậc",
+      "IMP_MASS_CREATE_GUARD": "Quá nhiều người mới trong một lần tải",
+      "IMP_SUSPECT_DUPLICATE": "Nghi trùng người",
+      "IMP_TABOO_COLLISION": "Trùng tên huý của bậc trên",
+      "IMP_MISSING_GIO": "Thiếu ngày giỗ",
+      "IMP_GIO_DAY_30": "Ngày giỗ mồng 30, chưa rõ năm",
+      "IMP_LONE_NODE": "Không nối với ai trong phả",
+      "IMP_UNKNOWN_GENDER": "Thiếu giới",
+      "IMP_MISSING_MOTHER": "Thiếu mã mẹ",
+      "IMP_ROW_DISAPPEARED": "Người có ở lần nhập trước, không còn trong tệp này",
+      "IMP_SELF_PARENT": "Tự khai là cha/mẹ của chính mình",
+      "IMP_LUNAR_DATE_UNPARSEABLE": "Ngày mất âm không đọc được",
+      "IMP_LUNAR_DATE_IS_SERIAL": "Ngày mất âm bị Excel nuốt thành con số",
+      "IMP_MISSING_CODE": "Dòng có dữ liệu nhưng trống cột Mã",
+      "IMP_MISSING_NAME": "Có Mã nhưng trống Họ tên",
+      "IMP_UNKNOWN_PLACE_CODE": "Mã tỉnh/quốc gia không có trong danh mục",
+      "IMP_MISSING_PLACE_CODE": "Có nguyên quán nhưng thiếu mã tỉnh",
+      "IMP_HEIR_TARGET_NOT_FOUND": "Không tìm thấy người được kế tự",
+      "IMP_MERGE_NOT_APPLICABLE": "Không hợp nhất được vào hai người đã có trong phả"
+    },
+    "evidence": {
+      "DEATH_LUNAR": "Ngày giỗ",
+      "TABOO_NAME": "Tên huý",
+      "FATHER": "Cha",
+      "FULL_NAME": "Họ tên",
+      "GENERATION": "Đời",
+      "BIRTH_YEAR": "Năm sinh",
+      "ORIGIN_PLACE": "Nguyên quán",
+      "hint": {
+        "DEATH_LUNAR": "Cả họ cúng hằng năm nên khó chép sai — bằng chứng đáng tin nhất ở đây.",
+        "BIRTH_YEAR": "Sổ cũ thường chép theo trí nhớ; lệch một hai năm là chuyện thường."
+      }
+    },
+    "problem": {
+      "IMP_BAD_FORMAT": "Tệp không đúng định dạng. Chỉ nhận tệp .xlsx thật.",
+      "IMP_CORRUPT_FILE": "Tệp hỏng, không mở được. Hãy mở lại trong Excel rồi lưu ra một tệp mới.",
+      "IMP_UNSAFE_FILE": "Tệp có nội dung không an toàn để đọc. Hãy dùng mẫu tải từ hệ thống.",
+      "IMP_MISSING_SHEET": "Tệp thiếu trang Nhân khẩu. Hãy dùng đúng mẫu của chi mình.",
+      "IMP_MISSING_COLUMN": "Tệp thiếu một cột bắt buộc của mẫu.",
+      "IMP_TOO_MANY_ROWS": "Tệp quá nhiều dòng (trần 5.000). Tách thành nhiều tệp nhỏ hơn.",
+      "IMP_FILE_TOO_LARGE": "Tệp quá lớn. Giới hạn là 10 MB — thường là do có ảnh nhúng.",
+      "IMP_ALREADY_COMMITTED": "Tệp y hệt này đã được ghi vào phả cho chi này rồi.",
+      "IMP_BLOCKING_ISSUES_PRESENT": "Còn lỗi phải sửa trong tệp.",
+      "IMP_WARNINGS_NOT_ACKNOWLEDGED": "Chưa xác nhận đã xem phần cần xem lại.",
+      "IMP_DUPLICATES_UNDECIDED": "Còn cặp nghi trùng chưa quyết.",
+      "IMP_BATCH_CLOSED": "Lô này đã chốt. Muốn đổi thì tải lên một lô mới.",
+      "IMP_COMMIT_BLOCKED": "Bước ghi dừng lại trước khi ghi vì lô chạm một ca quy ước dòng họ chưa trả lời. Chưa một dòng nào vào phả.",
+      "IMP_ROLLBACK_REFUSED": "Không gỡ được lô: đã có người sửa hồ sơ do lô này tạo ra.",
+      "BRANCH_SCOPE_VIOLATION": "Chi này không thuộc phạm vi bạn được giao.",
+      "ACCOUNT_NOT_PROVISIONED": "Tài khoản chưa được khởi tạo. Xin đăng nhập lại.",
+      "UNKNOWN": "Không thực hiện được. Thử lại sau ít phút.",
+      "IMP_MERGE_NOT_APPLICABLE": "Không hợp nhất được: dòng này đang dính tới hai hồ sơ khác nhau đã có trong phả. Hợp nhất hai hồ sơ đã có là việc của màn quản lý nhân khẩu."
+    },
+    "sheet": {
+      "NHAN_KHAU": "Nhân khẩu",
+      "HON_PHOI": "Hôn phối",
+      "LO": "Cả lô"
+    },
+    "rows": {
+      "summary": "Xem trước các dòng: {create} người thêm mới, {update} người cập nhật",
+      "why": "Cột “Sẽ làm gì” trả lời câu hỏi quan trọng nhất khi nộp lần thứ hai: tải lại có sinh ra người trùng không. “Cập nhật” nghĩa là mã này đã có chủ trong phả và sẽ sửa đúng người ấy.",
+      "caption": "Các dòng đang chờ trong khu vực chờ",
+      "columns": {
+        "row": "Dòng",
+        "code": "Mã",
+        "name": "Họ tên",
+        "action": "Sẽ làm gì"
+      },
+      "action": {
+        "CREATE": "Thêm mới",
+        "UPDATE": "Cập nhật người đã có",
+        "SKIP": "Bỏ qua"
+      }
+    },
+    "workbook": {
+      "download": "Tải danh sách lỗi ra Excel",
+      "downloading": "Đang tạo tệp…",
+      "hint": "Tệp có ba trang: Tổng quan · Lỗi phải sửa · Nên xem lại. Sửa trong Excel — nơi bạn quen tay — rồi tải tệp đã sửa lên lại.",
+      "failed": "Không tải được tệp",
+      "fallbackName": "Danh-sach-can-sua-{batchId}.xlsx"
+    }
   }
 }

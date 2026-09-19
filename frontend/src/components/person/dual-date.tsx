@@ -33,11 +33,11 @@ export function DualDate({ date }: DualDateProps) {
       {solar && (
         <span>
           {solar}
-          <span className="ml-1.5 text-[12px] text-text-muted">{t("solarSuffix")}</span>
+          <span className="ml-1.5 text-than text-text-muted">{t("solarSuffix")}</span>
         </span>
       )}
       {lunar && (
-        <span className="text-[14px] text-text-muted">
+        <span className="text-than text-text-muted">
           {lunar.granularity === "DAY"
             ? t("lunarDayMonth", { day: lunar.day, month: lunar.month })
             : lunar.granularity === "MONTH"

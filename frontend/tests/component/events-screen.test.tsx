@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import { renderWithProviders } from "../setup/render";
 import { TestLink, resetRouterMock, routerMock } from "../setup/next-navigation-mock";
 import type { EventDto } from "@/types/api";
@@ -238,5 +238,103 @@ describe("màn hình sự kiện", () => {
     await waitFor(() => {
       expect(screen.queryByText(/Mừng thọ/)).not.toBeInTheDocument();
     });
+  });
+});
+
+/**
+ * V10 — `EventType` thành **song ánh 12 giá trị**.
+ *
+ * Trước đó `KHANH_THANH`, `HOP_HO`, `CUOI_HOI` cùng đi ra dây dưới mã `KHAC`,
+ * nên qua API một buổi họp họ không phân biệt được với một đám cưới; và
+ * `SINH_NHAT` bị hoá thành `MUNG_THO`, tức sinh nhật một đứa trẻ và lễ mừng
+ * thọ một cụ 90 tuổi là cùng một thứ.
+ *
+ * Hai mã cũ vì thế **đổi nghĩa**, không chỉ là có thêm hàng xóm: `MUNG_THO`
+ * nay chỉ còn là mừng thọ bậc cao niên, `KHAC` nay chỉ còn là loại khác.
+ */
+describe("mười hai loại lễ đều có nhãn đọc được", () => {
+  const nhan: ReadonlyArray<[EventDto["eventType"], string]> = [
+    ["GIO_TO", "Giỗ Tổ"],
+    ["GIO_HO", "Giỗ họ"],
+    ["GIO_CHI", "Giỗ chi"],
+    ["GIO_THUONG", "Giỗ thường"],
+    ["TIEU_TUONG", "Tiểu tường"],
+    ["DAI_TUONG", "Đại tường"],
+    ["CHAP_MA", "Chạp mả"],
+    ["MUNG_THO", "Mừng thọ"],
+    ["SINH_NHAT", "Sinh nhật"],
+    ["KHANH_THANH", "Khánh thành"],
+    ["HOP_HO", "Họp họ"],
+    ["CUOI_HOI", "Cưới hỏi"],
+    ["KHAC", "Việc họ khác"],
+  ];
+
+  it.each(nhan)("%s hiện ra là “%s”, không phải MISSING_MESSAGE", (eventType, label) => {
+    const { container } = renderWithProviders(
+      <EventCard event={giỗ({ eventType, title: null })} />,
+      { role: "member" }
+    );
+
+    expect(screen.getAllByText(label).length).toBeGreaterThan(0);
+    expect(container.textContent).not.toContain("MISSING_MESSAGE");
+  });
+
+  it("có đủ nhãn ở cả hai ngôn ngữ", () => {
+    // `TIEU_TUONG`/`DAI_TUONG` từng có nhãn ở đây mà KHÔNG có giá trị nào trong
+    // ràng buộc CSDL — hai nhãn cho hai thứ không tồn tại. V10 đã đưa chúng vào
+    // `ck_event_type`, nên phép đối chiếu này nay có nghĩa ở cả hai phía.
+    for (const [eventType] of nhan) {
+      renderWithProviders(<EventCard event={giỗ({ eventType, title: null })} />, {
+        role: "member",
+        locale: "en",
+      });
+      expect(screen.queryByText(/MISSING_MESSAGE/)).not.toBeInTheDocument();
+      cleanup();
+    }
+  });
+});
+
+describe("SINH_NHAT chịu phân tầng chặt hơn MUNG_THO", () => {
+  it("khách không thấy sinh nhật của người còn sống", async () => {
+    renderWithProviders(<EventsScreen />, { role: "guest" });
+
+    await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
+    await waitFor(() => {
+      expect(screen.queryByText(/Sinh nhật/)).not.toBeInTheDocument();
+    });
+  });
+
+  it("thành viên thường cũng không thấy, vì ngày diễn ra CHÍNH LÀ ngày sinh", async () => {
+    // Đây là điểm khác `MUNG_THO`: mừng thọ là việc của cả họ theo mốc
+    // 60/70/80/90 và không nói ra ngày sinh; sinh nhật thì nói. Ngày sinh nằm
+    // trong nhóm `birthDetailAndPhoto` do chính chủ bật, và `p-100` đóng nhóm
+    // ấy — nên một thành viên khác không được nhận sự kiện này.
+    renderWithProviders(<EventsScreen />, { role: "member" });
+
+    await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
+    await waitFor(() => {
+      expect(screen.queryByText(/Sinh nhật Nguyễn Văn An/)).not.toBeInTheDocument();
+    });
+  });
+
+  it("mừng thọ thì thành viên vẫn thấy — hai mã, hai luật", async () => {
+    renderWithProviders(<EventsScreen />, { role: "member" });
+
+    expect(
+      await screen.findByText(/Mừng thọ Nguyễn Văn An/, undefined, { timeout: 15_000 })
+    ).toBeInTheDocument();
+  });
+});
+
+describe("việc họ không gắn với cá nhân nào", () => {
+  it("họp họ, khánh thành và cưới hỏi đều tới được màn hình", async () => {
+    renderWithProviders(<EventsScreen />, { role: "member" });
+
+    await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
+    // Mỗi sự kiện xuất hiện hai lần — một ô trong lịch năm, một thẻ trong danh
+    // sách "Sắp tới" — nên đếm theo `AllBy`.
+    expect((await screen.findAllByText("Họp họ đầu xuân")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Khánh thành tu bổ từ đường").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Lễ cưới con cháu Chi Nhất").length).toBeGreaterThan(0);
   });
 });

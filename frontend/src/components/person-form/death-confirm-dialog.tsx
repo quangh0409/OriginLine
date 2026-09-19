@@ -4,7 +4,7 @@ import { Alert, Button, Modal } from "antd";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
 import { DualDate } from "@/components/person/dual-date";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import type { DeathConfirmationRequest } from "@/hooks/use-person-submit";
 
 export interface DeathConfirmDialogProps {
@@ -52,7 +52,7 @@ export function DeathConfirmDialog({
       maskClosable={!submitting}
       title={
         <span className="flex items-center gap-2">
-          <ExclamationCircleFilled style={{ color: colorTokens.primary }} />
+          <ExclamationCircleFilled style={{ color: colorVars.primary }} />
           {t("deathConfirm.title")}
         </span>
       }
@@ -85,24 +85,24 @@ export function DeathConfirmDialog({
       {request?.deathDate && (
         <div
           className="mb-3 rounded border px-3 py-2"
-          style={{ borderColor: colorTokens.borderDark, background: colorTokens.warningBg }}
+          style={{ borderColor: colorVars.borderDark, background: colorVars.warningBg }}
         >
-          <div className="text-[13px] font-medium text-text-main">
+          <div className="text-than font-medium text-text-main">
             {t("deathConfirm.dateLabel")}
           </div>
-          <div className="mt-0.5 font-serif text-[15px] text-text-main">
+          <div className="mt-0.5 font-serif text-than text-text-main">
             <DualDate date={request.deathDate} />
           </div>
-          <div className="mt-1 text-[12.5px] text-text-muted">
+          <div className="mt-1 text-than text-text-muted">
             {t("deathConfirm.dateHint")}
           </div>
         </div>
       )}
 
-      <p className="m-0 mb-1 text-[13px] font-medium text-text-main">
+      <p className="m-0 mb-1 text-than font-medium text-text-main">
         {t("deathConfirm.consequencesTitle")}
       </p>
-      <ul className="m-0 mb-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-text-main">
+      <ul className="m-0 mb-2 list-disc space-y-1 pl-5 text-than leading-relaxed text-text-main">
         <li>{t("deathConfirm.consequencePublic", { name: request?.personName ?? "" })}</li>
         <li>{t("deathConfirm.consequenceGio")}</li>
         <li>{t("deathConfirm.consequenceIrreversible")}</li>

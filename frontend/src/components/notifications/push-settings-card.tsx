@@ -5,7 +5,7 @@ import { Alert, Skeleton, Switch, Tag } from "antd";
 import { useTranslations } from "next-intl";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
 import { PushEnableError, type PushDeviceStatus } from "@/lib/push/push-client";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import { IosInstallGuide } from "./ios-install-guide";
 
 /** Statuses where the switch is meaningless — explain instead of offering it. */
@@ -64,7 +64,7 @@ export function PushSettingsCard() {
           <h2 className="m-0 font-serif text-[16px] font-semibold text-text-main">
             {t("settings.title")}
           </h2>
-          <p className="mb-0 mt-1 text-[13px] leading-relaxed text-text-muted">
+          <p className="mb-0 mt-1 text-than leading-relaxed text-text-muted">
             {t("settings.body")}
           </p>
         </div>
@@ -82,15 +82,15 @@ export function PushSettingsCard() {
       {isOn && (
         <Tag
           bordered={false}
-          className="!mt-3 !text-[11.5px]"
-          style={{ background: colorTokens.successBg, color: colorTokens.success }}
+          className="!mt-3 !text-than"
+          style={{ background: colorVars.successBg, color: colorVars.success }}
         >
           {t("settings.onThisDevice")}
         </Tag>
       )}
 
       {/* The load-bearing sentence of the whole feature: push is additive. */}
-      <p className="mb-0 mt-3 text-[12.5px] leading-relaxed text-text-muted">
+      <p className="mb-0 mt-3 text-than leading-relaxed text-text-muted">
         {t("inAppAlways")}
       </p>
 

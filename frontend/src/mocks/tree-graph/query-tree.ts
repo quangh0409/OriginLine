@@ -10,16 +10,30 @@ export interface QueryTreeParams {
   maxNodes?: number; // clamped to [1, 2000]
   /** Mock stand-in for the backend's PrivacyTierFilter (W6) — guest -> false for any living person. */
   isVisible: (person: RawPerson) => boolean;
+  /**
+   * Mock stand-in cho phần ĐỒNG THUẬN của cùng bộ lọc ấy: một người còn sống có
+   * thể hiển thị được (nên node vẫn ra) mà **năm sinh vẫn không đi kèm**, vì
+   * `birthDetailAndPhoto` là nhóm do chính chủ bật.
+   *
+   * Tách khỏi `isVisible` vì hai câu hỏi khác nhau về hệ quả: `isVisible` bỏ cả
+   * người, cái này chỉ bỏ một trường. Trộn chúng lại thì hoặc mất người khỏi
+   * cây, hoặc rò năm sinh — không có lựa chọn thứ ba.
+   *
+   * Mặc định `!isAlive` giữ cho các lượt gọi cũ vẫn đúng phía KÍN.
+   */
+  canSeeBirthYear?: (person: RawPerson) => boolean;
 }
 
-function toSummary(p: RawPerson): PersonSummaryDto {
+function toSummary(p: RawPerson, showBirthYear: boolean): PersonSummaryDto {
   return {
     id: p.id,
     displayName: p.displayName,
     gender: p.gender,
     generation: p.generation,
     isAlive: p.isAlive,
-    birthYear: p.birthYear ?? undefined,
+    // `undefined` chứ không phải `null`: `HttpResponse.json` bỏ hẳn khoá khỏi
+    // JSON, đúng ngữ nghĩa "vắng mặt, không phải rỗng" của REST contract.
+    birthYear: showBirthYear ? (p.birthYear ?? undefined) : undefined,
     deathYear: p.deathYear ?? undefined,
     primaryBranch: p.primaryBranch ?? undefined,
     nativePlace: p.nativePlace ?? undefined,
@@ -58,6 +72,7 @@ export function queryTreeProjection(graph: MockGraph, params: QueryTreeParams): 
   const depthLimit = clamp(params.depth ?? 3, 1, 10);
   const direction: TreeDirection = params.direction ?? "DESCENDANTS";
   const includeSpouses = params.includeSpouses ?? true;
+  const canSeeBirthYear = params.canSeeBirthYear ?? ((person: RawPerson) => !person.isAlive);
   const maxNodes = clamp(params.maxNodes ?? 500, 1, 2000);
   // Safety valve only — keeps a pathological depth+size combination from
   // walking the whole ~4,000-node mock graph before we even get to apply
@@ -137,7 +152,7 @@ export function queryTreeProjection(graph: MockGraph, params: QueryTreeParams): 
 
     return {
       id,
-      person: toSummary(person),
+      person: toSummary(person, canSeeBirthYear(person)),
       depth: depthById.get(id) ?? 0,
       parentIds,
       spouseIds,

@@ -3,13 +3,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { personsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api/http";
 import { queryKeys } from "@/lib/query/keys";
-import type {
-  ConflictProblem,
-  CreatePersonRequest,
-  DateDual,
-  PersonDto,
-  TabooConflict,
-  UpdatePersonRequest,
+import {
+  isDuplicateCandidate,
+  isTabooConflict,
+  type ConflictProblem,
+  type CreatePersonRequest,
+  type DateDual,
+  type DuplicateCandidate,
+  type PersonDto,
+  type TabooConflict,
+  type UpdatePersonRequest,
 } from "@/types/api";
 
 /**
@@ -29,9 +32,21 @@ export type PersonSubmitTarget =
   | { mode: "create" }
   | { mode: "update"; personId: string; etag: string };
 
+/**
+ * Hai cờ ghi đè, hai cổng nối tiếp nhau.
+ *
+ * `confirmDuplicateOverride` **chỉ có ở `POST`** — hợp đồng không đặt phép
+ * chống trùng lên `PATCH`, nên `update` cố tình không nhận nó.
+ */
+export interface SubmitOverrides {
+  confirmTabooOverride?: boolean;
+  confirmDuplicateOverride?: boolean;
+  overrideReason?: string;
+}
+
 export interface PersonSubmitPayload {
-  create: (options: { confirmTabooOverride?: boolean; overrideReason?: string }) => CreatePersonRequest;
-  update: (options: { confirmTabooOverride?: boolean; overrideReason?: string }) => UpdatePersonRequest;
+  create: (options: SubmitOverrides) => CreatePersonRequest;
+  update: (options: Omit<SubmitOverrides, "confirmDuplicateOverride">) => UpdatePersonRequest;
 }
 
 /**
@@ -53,6 +68,16 @@ export interface PersonSubmitPayload {
 export function usePersonSubmit(target: PersonSubmitTarget) {
   const queryClient = useQueryClient();
   const [conflicts, setConflicts] = useState<TabooConflict[] | null>(null);
+  const [duplicates, setDuplicates] = useState<DuplicateCandidate[] | null>(null);
+  /**
+   * Cờ kỵ húy đã được chấp nhận ở vòng trước.
+   *
+   * Cần giữ lại vì hai cổng nối tiếp nhau: người dùng có thể vượt kỵ húy rồi
+   * mới đụng cổng nghi trùng. Nếu vòng gửi thứ ba quên cờ thứ nhất thì máy chủ
+   * lại đáp 409 kỵ húy và hộp thoại kia bật lên lần nữa — một vòng lặp mà
+   * người dùng không có cách nào thoát.
+   */
+  const acceptedTaboo = useRef<{ reason: string } | null>(null);
   const [deathConfirmation, setDeathConfirmation] = useState<DeathConfirmationRequest | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
@@ -61,7 +86,7 @@ export function usePersonSubmit(target: PersonSubmitTarget) {
   const send = useCallback(
     async (
       payload: PersonSubmitPayload,
-      options: { confirmTabooOverride?: boolean; overrideReason?: string }
+      options: SubmitOverrides
     ): Promise<PersonDto | null> => {
       setIsSubmitting(true);
       setError(null);
@@ -73,6 +98,7 @@ export function usePersonSubmit(target: PersonSubmitTarget) {
             etag: `"v${created.version ?? 1}"`,
           });
           setConflicts(null);
+          setDuplicates(null);
           return created;
         }
 
@@ -86,13 +112,22 @@ export function usePersonSubmit(target: PersonSubmitTarget) {
         void queryClient.invalidateQueries({ queryKey: ["tree"] });
         void queryClient.invalidateQueries({ queryKey: ["tree-branch"] });
         setConflicts(null);
+        setDuplicates(null);
         return data;
       } catch (caught) {
         if (caught instanceof ApiError) {
           const problem = caught.problem as ConflictProblem | undefined;
+          // `conflicts[]` nay là một hợp của hai kiểu; phân loại theo KHOÁ
+          // riêng của chúng, không theo `code` — cùng một thân lỗi phục vụ cả
+          // hai cổng, và một ngày nào đó có thể phục vụ thêm cổng thứ ba.
           if (caught.code === "KY_HUY_CONFLICT" && problem?.conflicts?.length) {
             pendingPayload.current = payload;
-            setConflicts(problem.conflicts);
+            setConflicts(problem.conflicts.filter(isTabooConflict));
+            return null;
+          }
+          if (caught.code === "DUPLICATE_PERSON_SUSPECTED" && problem?.conflicts?.length) {
+            pendingPayload.current = payload;
+            setDuplicates(problem.conflicts.filter(isDuplicateCandidate));
             return null;
           }
           setError(caught);
@@ -120,6 +155,7 @@ export function usePersonSubmit(target: PersonSubmitTarget) {
    */
   const submit = useCallback(
     (payload: PersonSubmitPayload, deathGuard?: DeathConfirmationRequest | null) => {
+      acceptedTaboo.current = null;
       if (deathGuard) {
         pendingPayload.current = payload;
         setDeathConfirmation(deathGuard);
@@ -149,6 +185,7 @@ export function usePersonSubmit(target: PersonSubmitTarget) {
     (reason: string) => {
       const payload = pendingPayload.current;
       if (!payload) return Promise.resolve(null);
+      acceptedTaboo.current = { reason };
       return send(payload, { confirmTabooOverride: true, overrideReason: reason });
     },
     [send]
@@ -156,16 +193,45 @@ export function usePersonSubmit(target: PersonSubmitTarget) {
 
   const cancelOverride = useCallback(() => {
     pendingPayload.current = null;
+    acceptedTaboo.current = null;
     setConflicts(null);
+  }, []);
+
+  /**
+   * Người dùng đã đối chiếu và khẳng định đây là người khác.
+   *
+   * Không đòi lý do gõ tay như kỵ húy: nghi trùng chỉ là một phỏng đoán thống
+   * kê, còn kỵ húy là một điều kiêng kỵ của dòng họ mà việc bỏ qua phải để lại
+   * dấu vết. Bắt gõ lý do cho một cảnh báo hay báo nhầm chỉ dạy người dùng gõ
+   * bừa — và thói quen ấy sẽ theo họ sang cả hộp thoại kỵ húy.
+   */
+  const confirmDuplicateOverride = useCallback(() => {
+    const payload = pendingPayload.current;
+    if (!payload) return Promise.resolve(null);
+    const taboo = acceptedTaboo.current;
+    return send(payload, {
+      confirmDuplicateOverride: true,
+      confirmTabooOverride: taboo ? true : undefined,
+      overrideReason: taboo?.reason,
+    });
+  }, [send]);
+
+  const cancelDuplicateOverride = useCallback(() => {
+    pendingPayload.current = null;
+    acceptedTaboo.current = null;
+    setDuplicates(null);
   }, []);
 
   return {
     submit,
     confirmOverride,
     cancelOverride,
+    confirmDuplicateOverride,
+    cancelDuplicateOverride,
     confirmDeath,
     cancelDeath,
     conflicts,
+    duplicates,
     deathConfirmation,
     isSubmitting,
     error,

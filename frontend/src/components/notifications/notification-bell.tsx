@@ -66,7 +66,7 @@ export function NotificationBell() {
           <div className="mt-2 border-t border-border pt-2 text-center">
             <Link
               href="/notifications"
-              className="text-[13px] text-primary no-underline hover:underline"
+              className="text-than text-primary no-underline hover:underline"
               onClick={() => setOpen(false)}
             >
               {t("viewAll")}
@@ -75,12 +75,25 @@ export function NotificationBell() {
         </div>
       }
     >
-      <Badge count={unreadCount} size="small" offset={[-2, 2]}>
-        <BellOutlined
-          className="cursor-pointer text-lg text-text-main hover:text-primary"
-          aria-label={t("title")}
-        />
-      </Badge>
+      {/* <button> THẬT, không phải một <span> có aria-label.
+          Trước đợt sửa này chỗ này là <BellOutlined aria-label=…/>, tức một
+          <span>: không nằm trong vòng Tab, nên người dùng bàn phím KHÔNG mở nổi
+          hộp thông báo — mà đây là bề mặt nhắc giỗ chính của bản MVP. Nó cũng lọt
+          khỏi mọi phép đo vùng chạm, vì bộ thu thập chỉ nhặt điều khiển thật.
+          `min-h-11`/`min-w-11` là vùng chạm; nhãn chữ hiện từ `lg` trở lên, còn
+          dưới đó thanh tab đáy đã mang mục "Thông báo" có nhãn đầy đủ. */}
+      <button
+        type="button"
+        aria-label={t("title")}
+        aria-expanded={open}
+        data-testid="notification-bell"
+        className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-1.5 rounded border-0 bg-transparent px-2 text-text-main hover:bg-primary-light hover:text-primary"
+      >
+        <Badge count={unreadCount} size="small" offset={[-2, 2]}>
+          <BellOutlined aria-hidden className="text-lg text-text-main" />
+        </Badge>
+        <span className="hidden text-than lg:inline">{t("title")}</span>
+      </button>
     </Popover>
   );
 }

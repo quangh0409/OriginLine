@@ -5,17 +5,17 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { eventUrgency } from "@/lib/format/event";
 import { isPresent } from "@/lib/privacy/present";
-import { colorTokens } from "@/styles/tokens";
+import { colorVars } from "@/styles/tokens";
 import { EventDualDate } from "./event-dual-date";
 import { EventTypeTag } from "./event-type-tag";
 import type { EventDto } from "@/types/api";
 
 const URGENCY_STYLE: Record<string, { background: string; color: string }> = {
-  TODAY: { background: colorTokens.primary, color: "#ffffff" },
-  IMMINENT: { background: colorTokens.primaryLight, color: colorTokens.primary },
-  SOON: { background: colorTokens.warningBg, color: colorTokens.accent },
-  LATER: { background: colorTokens.bgDeceased, color: colorTokens.textMuted },
-  PAST: { background: colorTokens.bgDeceased, color: colorTokens.textMuted },
+  TODAY: { background: colorVars.primary, color: colorVars.bgCard },
+  IMMINENT: { background: colorVars.primaryLight, color: colorVars.primary },
+  SOON: { background: colorVars.warningBg, color: colorVars.accentText },
+  LATER: { background: colorVars.bgDeceased, color: colorVars.textMuted },
+  PAST: { background: colorVars.bgDeceased, color: colorVars.textMuted },
 };
 
 /**
@@ -47,7 +47,7 @@ export function EventCard({ event }: { event: EventDto }) {
         </div>
 
         {isPresent(event.daysUntil) && (
-          <Tag bordered={false} className="!m-0 !text-[12px] !font-medium" style={urgencyStyle}>
+          <Tag bordered={false} className="!m-0 !text-than !font-medium" style={urgencyStyle}>
             {urgency === "TODAY"
               ? t("today")
               : urgency === "PAST"
@@ -61,21 +61,24 @@ export function EventCard({ event }: { event: EventDto }) {
         <EventTypeTag eventType={event.eventType} />
 
         {event.isClanLevel ? (
-          <Tag bordered={false} className="!m-0 !text-[11.5px]">
+          <Tag bordered={false} className="!m-0 !text-than">
             {t("clanLevel")}
           </Tag>
         ) : (
           isPresent(event.targetBranch?.name) && (
-            <Tag bordered={false} className="!m-0 !text-[11.5px]">
+            <Tag bordered={false} className="!m-0 !text-than">
               {event.targetBranch?.name}
             </Tag>
           )
         )}
 
         {isPresent(event.person) && (
+          // `min-h-11` + `inline-flex`: liên kết này nằm trong một hàng flex nên nó
+          // KHÔNG được hưởng ngoại lệ "liên kết giữa dòng chữ" của WCAG 2.5.8 —
+          // nó đứng riêng, là một điều khiển thật, và đo được 20px.
           <Link
             href={`/persons/${event.person.id}`}
-            className="text-[12.5px] text-primary no-underline hover:underline"
+            className="inline-flex min-h-11 items-center rounded px-1 text-than text-primary no-underline hover:bg-primary-light hover:underline"
           >
             {t("viewPerson")}
           </Link>
@@ -83,13 +86,13 @@ export function EventCard({ event }: { event: EventDto }) {
       </div>
 
       {isPresent(event.reminderOffsets) && (
-        <p className="mb-0 mt-2 text-[12px] text-text-muted">
+        <p className="mb-0 mt-2 text-than text-text-muted">
           {t("reminderOffsets", { days: event.reminderOffsets.join(", ") })}
         </p>
       )}
 
       {isPresent(event.note) && (
-        <p className="mb-0 mt-1.5 text-[13px] leading-relaxed text-text-muted">{event.note}</p>
+        <p className="mb-0 mt-1.5 text-than leading-relaxed text-text-muted">{event.note}</p>
       )}
     </article>
   );

@@ -48,7 +48,7 @@ export function SearchBox({ value, onChange, busy, id }: SearchBoxProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      <p className="mb-0 mt-1.5 text-[12.5px] text-text-muted">{t("unaccentedHint")}</p>
+      <p className="mb-0 mt-1.5 text-than text-text-muted">{t("unaccentedHint")}</p>
     </div>
   );
 }

@@ -33,23 +33,23 @@ export function PersonNameLayers({ person }: PersonNameLayersProps) {
             key={`${layer.nameType}-${layer.id ?? index}`}
             className="flex flex-col gap-0.5 py-2 sm:flex-row sm:items-baseline sm:gap-4"
           >
-            <span className="flex shrink-0 items-center gap-2 text-[13px] text-text-muted sm:w-40">
+            <span className="flex shrink-0 items-center gap-2 text-than text-text-muted sm:w-40">
               {t(`nameType.${layer.nameType}`)}
               {layer.isPrimary && (
-                <Tag bordered={false} className="!m-0 !px-1.5 !text-[10px]">
+                <Tag bordered={false} className="!m-0 !px-1.5 !text-than">
                   {t("primaryName")}
                 </Tag>
               )}
             </span>
             <span className="min-w-0">
-              <span className="text-[15px] text-text-main">{layer.fullName}</span>
+              <span className="text-than text-text-main">{layer.fullName}</span>
               {isPresent(layer.nameHanNom) && (
-                <span className="ml-2 font-serif text-[15px] text-text-muted" lang="zh-Hant">
+                <span className="ml-2 font-serif text-than text-text-muted" lang="zh-Hant">
                   {layer.nameHanNom}
                 </span>
               )}
               {isPresent(layer.note) && (
-                <span className="mt-0.5 block text-[12px] text-text-muted">{layer.note}</span>
+                <span className="mt-0.5 block text-than text-text-muted">{layer.note}</span>
               )}
             </span>
           </li>

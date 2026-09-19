@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 import { AppShell } from "@/components/layout/app-shell";
+import { KhungTrang } from "@/components/common/khung-trang";
 import { PersonEditScreen } from "@/components/person-form/person-edit-screen";
 
 /** F4 — sửa nhân khẩu. Loading, RBAC and ETag handling live in the client screen. */
@@ -14,9 +15,9 @@ export default async function EditPersonPage({
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-3xl px-3 py-4 sm:px-4 sm:py-6">
+      <KhungTrang>
         <PersonEditScreen personId={id} />
-      </div>
+      </KhungTrang>
     </AppShell>
   );
 }

@@ -2,7 +2,6 @@ import type { Edge, Node } from "@xyflow/react";
 import type { TreeEdge, TreeNode } from "@/types/api";
 import type { NodePosition } from "./layout-hierarchical";
 import type { AuxiliaryLink, FamilyJunction, FamilyUnit } from "./family-layout-types";
-import { colorTokens } from "@/styles/tokens";
 
 export interface PersonNodeData extends Record<string, unknown> {
   treeNode: TreeNode;
@@ -42,19 +41,35 @@ export interface StrokeStyle {
 }
 
 /**
- * Mỗi màu đi qua một biến CSS có giá trị dự phòng lấy từ {@link colorTokens}. Không viết mã màu
- * cứng ở đây, và cũng không khoá cứng bảng màu sáng: khi giao diện tối được bật (tailwind
- * `darkMode: "class"`), chỉ cần khai lại ba biến `--tree-line-*` trong khối `.dark` là toàn bộ
- * phả đồ đọc được, không phải sửa một dòng TypeScript nào. Chừng nào chưa khai, trình duyệt dùng
- * đúng token của giao diện sáng.
+ * Màu nét vẽ, đi thẳng qua ba biến CSS khai ở `globals.css` (`:root`).
+ *
+ * <p><b>KHÔNG có giá trị dự phòng, và đó là điều cố ý.</b> Bản trước viết
+ * `var(--tree-line-descent, ${colorTokens.textMuted})` với chú thích nói rằng "chỉ cần khai lại
+ * ba biến trong khối .dark là xong". Ba biến ấy <b>chưa từng được khai ở đâu</b> — nên giá trị dự
+ * phòng luôn thắng, kể cả ở chế độ tối, và đường xuống con / thanh hôn phối / đường kế tự vẽ bằng
+ * màu chế độ sáng trên nền tối. Không phép kiểm nào thấy, vì mã ở đây không viết hex mà gọi tên
+ * token.</p>
+ *
+ * <p>Một giá trị dự phòng lấy từ bảng màu SÁNG là thứ biến một biến bị quên thành một lỗi im
+ * lặng. Bỏ nó đi thì cùng lỗi ấy trở thành một nét vẽ mất màu — nhìn là thấy. Ba biến được ghim
+ * bằng {@code tests/unit/a11y/frozen-palette.test.ts}, ca kiểm đọc CẢ HAI đầu sợi dây: nơi tham
+ * chiếu (tệp này) và nơi khai (globals.css).</p>
  */
 const LINE_COLOR = {
   /** `--muc-nhat` — đường huyết thống. */
-  descent: `var(--tree-line-descent, ${colorTokens.textMuted})`,
-  /** Hổ phách — hôn phối. */
-  marriage: `var(--tree-line-marriage, ${colorTokens.accent})`,
+  descent: "var(--tree-line-descent)",
+  /**
+   * Hôn phối — hổ phách TRẦM (`accentText`, #9c5a06), không phải hổ phách rực (`accent`, #d97706).
+   *
+   * Thanh hôn phối là ĐỒ HOẠ MANG NGHĨA: nó là thứ duy nhất nói "hai người này là vợ chồng", nên
+   * WCAG 1.4.11 (ngưỡng 3:1) áp vào thật. Hổ phách rực trên nền trang chỉ đạt 2,95:1 — trượt, chứ
+   * không phải "sát ngưỡng". Bảng màu của BA v2 KHÔNG bị đụng tới: `accent` giữ nguyên cho mảng tô
+   * và nền chip; chỗ này chỉ đổi TOKEN ĐƯỢC DÙNG khi hổ phách phải làm một nét mảnh mang nghĩa
+   * (`accentText` đạt 5,02:1). Ở chế độ tối `accentText` ánh xạ thẳng về `accent` nên không đổi gì.
+   */
+  marriage: "var(--tree-line-marriage)",
   /** Đỏ trầm — kế tự / thừa tự. */
-  heir: `var(--tree-line-heir, ${colorTokens.primary})`,
+  heir: "var(--tree-line-heir)",
 } as const;
 
 /** Nét đứt của con nuôi và của hôn phối đã kết thúc dùng chung một mẫu; màu mới là thứ phân biệt. */

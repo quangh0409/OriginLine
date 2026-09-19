@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 import { AppShell } from "@/components/layout/app-shell";
+import { KhungTrang } from "@/components/common/khung-trang";
 import { PersonForm } from "@/components/person-form/person-form";
 
 /**
@@ -22,10 +23,10 @@ export default async function NewPersonPage({
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-3xl px-3 py-4 sm:px-4 sm:py-6">
+      <KhungTrang>
         <h1 className="mb-4 font-serif text-2xl font-bold text-text-main">{t("createTitle")}</h1>
         <PersonForm mode="create" />
-      </div>
+      </KhungTrang>
     </AppShell>
   );
 }

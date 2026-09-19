@@ -23,7 +23,7 @@ export function EventDualDate({ event }: { event: EventDto }) {
 
   return (
     <span className="inline-flex flex-col gap-0.5">
-      <span className="text-[15px] font-medium text-text-main">
+      <span className="text-than font-medium text-text-main">
         {t("lunarDayMonth", { day: lunar.day, month: lunar.month })}
         {lunar.leap && <span className="ml-1 font-semibold text-accent">{t("lunarLeap")}</span>}
         {isPresent(event.nextOccurrenceLunarYear) && (
@@ -34,7 +34,7 @@ export function EventDualDate({ event }: { event: EventDto }) {
       </span>
 
       {solar && (
-        <span className="text-[13px] text-text-muted">
+        <span className="text-than text-text-muted">
           {t("solarDate", {
             date: `${String(solar.day).padStart(2, "0")}/${String(solar.month).padStart(2, "0")}/${solar.year}`,
           })}
@@ -42,7 +42,7 @@ export function EventDualDate({ event }: { event: EventDto }) {
       )}
 
       {isPresent(lunar.canChi) && (
-        <span className="text-[12.5px] text-text-muted">{lunar.canChi}</span>
+        <span className="text-than text-text-muted">{lunar.canChi}</span>
       )}
     </span>
   );

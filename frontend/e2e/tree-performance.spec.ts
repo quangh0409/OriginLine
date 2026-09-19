@@ -99,9 +99,15 @@ test.afterAll(() => {
   }
 });
 
+/**
+ * Số nhân khẩu đã TẢI VỀ, đọc từ thuộc tính máy đọc được trên thẻ đếm của thanh công cụ.
+ *
+ * Chữ trên thẻ ấy là số đang HIỂN THỊ (nó phải khớp với nhãn của chính nó); phép đo dưới đây
+ * cần con số kia — "lượt nạp đầu tiên đã kéo về bao nhiêu phần của đồ thị".
+ */
 async function loadedCount(page: import("@playwright/test").Page): Promise<number> {
-  const chip = await page.getByText(/nhân khẩu đang hiển thị/).innerText();
-  return Number(chip.replace(/\D+/g, "")) || 0;
+  const raw = await page.getByTestId("tree-node-count").getAttribute("data-loaded-count");
+  return Number(raw ?? "0") || 0;
 }
 
 test.beforeEach(async ({ page }) => {

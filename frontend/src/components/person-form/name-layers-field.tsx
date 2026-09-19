@@ -75,7 +75,7 @@ export function NameLayersField({ control, errors, setValue }: NameLayersFieldPr
                   className="rounded-lg border border-border bg-bg-page p-3"
                 >
                   <div className="mb-2 flex items-center justify-between gap-2">
-                    <Radio value={index} className="!text-[13px]">
+                    <Radio value={index} className="!text-than">
                       {t("names.primary")}
                     </Radio>
                     <Button
@@ -89,7 +89,7 @@ export function NameLayersField({ control, errors, setValue }: NameLayersFieldPr
                     />
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-[minmax(0,10rem)_1fr]">
+                  <div className="grid gap-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)]">
                     <Controller
                       control={control}
                       name={`names.${index}.nameType`}
@@ -192,7 +192,7 @@ export function NameLayersField({ control, errors, setValue }: NameLayersFieldPr
       {/* Schema-level error (e.g. "exactly one primary") has no single input
           to hang off, so it is surfaced next to the list as a whole. */}
       {typeof errors.names?.message === "string" && (
-        <p role="alert" className="m-0 text-[12px] text-[color:var(--color-primary)]">
+        <p role="alert" className="m-0 text-than text-[color:var(--color-primary)]">
           {errors.names.message}
         </p>
       )}

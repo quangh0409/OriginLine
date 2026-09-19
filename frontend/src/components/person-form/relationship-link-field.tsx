@@ -50,7 +50,7 @@ export function RelationshipLinkField({ control, errors, watch }: RelationshipLi
           </Checkbox>
         )}
       />
-      <p className="m-0 mt-1 text-[12px] leading-snug text-text-muted">{t("relation.hint")}</p>
+      <p className="m-0 mt-1 text-than leading-snug text-text-muted">{t("relation.hint")}</p>
 
       {enabled && (
         <div className="mt-3 space-y-3">

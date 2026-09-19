@@ -315,6 +315,16 @@ test("the expand/collapse toggle is a real touch target, and the canvas opens ab
       right: Math.min(canvas.right, window.innerWidth),
       bottom: Math.min(canvas.bottom, window.innerHeight),
     };
+    // Ba lớp phủ của canvas (Controls / MiniMap / chú giải) CỐ Ý nằm đè lên phả đồ; thân chúng
+    // đã `pointer-events: none` nên thẻ nhân khẩu bên dưới vẫn chạm được, nhưng vài nút bấm bên
+    // trong chúng thì buộc phải nhận sự kiện. Nút bung nhánh rơi đúng dưới một trong số đó là
+    // chuyện BỐ CỤC LỚP PHỦ, không phải chuyện kích thước vùng chạm — người dùng kéo canvas một
+    // cái là xong, và `clickNodeToggle` trong tree-canvas.spec.ts làm đúng như vậy.
+    // e2e/tree-legibility.spec.ts đã theo quy ước loại trừ này từ trước ("bị lớp phủ che — chuyện
+    // khác"); ca này thiếu nó nên xanh được là nhờ may: đo ngày 2026-09-06 trên Pixel 5, nút "Xem
+    // đầy đủ quy ước" của thẻ chú giải nằm ở y 600.1–616.6 và mép đáy thẻ p-011 ở y 604.5, nên nút
+    // bung nhánh của p-011 bị che — tái hiện y hệt với cả nút 24px cũ lẫn vùng chạm 80px mới.
+    const OVERLAY = ".react-flow__panel, .react-flow__minimap, .react-flow__controls, .ant-drawer";
     let checked = 0;
     const blocked: string[] = [];
     for (const button of document.querySelectorAll<HTMLElement>(".react-flow__node button")) {
@@ -322,8 +332,9 @@ test("the expand/collapse toggle is a real touch target, and the canvas opens ab
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
       if (cx < view.left || cx > view.right || cy < view.top || cy > view.bottom) continue;
-      checked += 1;
       const hit = document.elementFromPoint(cx, cy);
+      if (hit?.closest(OVERLAY) || hit?.closest('[data-testid="tree-legend"]')) continue;
+      checked += 1;
       if (!(hit && button.contains(hit))) {
         blocked.push(
           `${button.closest(".react-flow__node")?.getAttribute("data-id")} bị che bởi ` +
@@ -335,6 +346,12 @@ test("the expand/collapse toggle is a real touch target, and the canvas opens ab
   });
   expect(hits.checked, "không có nút mở rộng nào nằm trong canvas để kiểm tra").toBeGreaterThan(0);
   expect(hits.blocked, "có thứ được vẽ đè lên nút mở rộng nhánh").toEqual([]);
+
+  // Và cái chính: vùng chạm phải đạt 44px THẬT, không phải 24px "ở tỉ lệ 1:1". Phép kiểm 1:1 ở
+  // trên vẫn giữ vì nó bắt được lỗi "phả đồ mở dưới sàn phóng"; phép kiểm này bắt lỗi còn lại —
+  // nút đúng chuẩn trong hệ toạ độ cây mà trên màn hình vẫn không chạm nổi. Trước khi sửa: 18px.
+  expect(box.width, `vùng chạm chỉ ${box.width}px ở mức phóng ${scale}`).toBeGreaterThanOrEqual(44);
+  expect(box.height, `vùng chạm chỉ ${box.height}px ở mức phóng ${scale}`).toBeGreaterThanOrEqual(44);
 });
 
 test("a person profile reads top to bottom on a phone", async ({ page }) => {

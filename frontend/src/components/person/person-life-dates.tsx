@@ -36,7 +36,7 @@ export function PersonLifeDates({ person }: PersonLifeDatesProps) {
           <span className="flex flex-col gap-0.5">
             <DualDate date={person.death} />
             {hasDeathLunar && (
-              <span className="text-[12px] text-text-muted">{t("gioNote")}</span>
+              <span className="text-than text-text-muted">{t("gioNote")}</span>
             )}
           </span>
         </OptionalField>

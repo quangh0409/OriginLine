@@ -15,7 +15,7 @@ export function PersonBiography({ person }: PersonBiographyProps) {
 
   return (
     <PersonSection title={t("biography")} hasContent={isPresent(person.biography)}>
-      <p className="m-0 whitespace-pre-line text-[15px] leading-relaxed text-text-main">
+      <p className="m-0 whitespace-pre-line text-than leading-relaxed text-text-main">
         {person.biography}
       </p>
     </PersonSection>

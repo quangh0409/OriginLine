@@ -7,12 +7,10 @@ declare const self: ServiceWorkerGlobalScope;
  * generated public/sw.js at build time (see next.config.js
  * `customWorkerDir`).
  *
- * This is intentionally scaffolding only for F0: the two handlers below are
- * the "place already set up" for Web Push (approved into Giai đoạn 1, per
- * plan §1.3). Sprint 4 (F7) wires the actual subscription flow
- * (pushManager.subscribe + POST /api/v1/push/subscriptions) and will likely
- * extend the payload contract below — keep it in sync with the backend's
- * WebPushAdapter payload shape once that lands.
+ * HỢP ĐỒNG PAYLOAD — đối chiếu với `WebPushAdapter.buildPayload()` ở backend.
+ * Backend phát đúng năm khoá: `title`, `body`, `url`, `tag`, `eventId`. Kiểu
+ * bên dưới phải là bản sao của đúng năm khoá ấy; lệch một khoá là im lặng mất
+ * một tính năng, không phải lỗi biên dịch.
  */
 
 interface GiaPhaPushPayload {
@@ -20,7 +18,29 @@ interface GiaPhaPushPayload {
   body: string;
   /** Deep link to open on click, e.g. an event or person profile. */
   url?: string;
-  notificationId?: string;
+  /**
+   * Khoá gộp thông báo của HỆ ĐIỀU HÀNH.
+   *
+   * <p>Backend phát khoá này (`"gio-" + reminderJobId`) để các lượt nhắc của cùng
+   * một lịch giỗ gộp lại thành MỘT thông báo thay vì chồng đống trên màn hình
+   * khoá. Trước đợt sửa này worker không đọc nó, nên ý định ấy chưa bao giờ xảy
+   * ra: người dùng nhận ba thông báo riêng cho cùng một ngày giỗ.</p>
+   *
+   * <p>Không đặt giá trị dự phòng. `tag` là tuỳ chọn ở backend (chỉ có khi
+   * `reminderJobId != null`), và bịa ra một tag chung sẽ gộp NHẦM hai giỗ khác
+   * nhau thành một — thông báo sau đè mất thông báo trước. Thiếu tag thì để hệ
+   * điều hành xử lý như thông báo độc lập, đúng như hôm nay.</p>
+   */
+  tag?: string;
+  /**
+   * Định danh sự kiện, để mã trong trang biết thông báo vừa mở là của giỗ nào.
+   *
+   * <p>Trước đây chỗ này khai `notificationId` — một khoá backend KHÔNG BAO GIỜ
+   * phát, nên `notification.data.notificationId` luôn là `undefined`. Sửa ở phía
+   * worker chứ không bắt backend phát thêm: backend hiện không có định danh nào
+   * đúng nghĩa "notification id" để mà phát, còn `eventId` thì có thật.</p>
+   */
+  eventId?: string;
 }
 
 self.addEventListener("push", (event: PushEvent) => {
@@ -43,7 +63,10 @@ self.addEventListener("push", (event: PushEvent) => {
       body: payload.body,
       icon: "/icons/icon-192.png",
       badge: "/icons/badge-72.png",
-      data: { url: payload.url ?? "/", notificationId: payload.notificationId },
+      // `tag` chỉ được truyền khi backend có gửi: `undefined` là "không gộp",
+      // còn một chuỗi rỗng sẽ gộp MỌI thông báo lại thành một.
+      ...(payload.tag ? { tag: payload.tag } : {}),
+      data: { url: payload.url ?? "/", eventId: payload.eventId },
     })
   );
 });

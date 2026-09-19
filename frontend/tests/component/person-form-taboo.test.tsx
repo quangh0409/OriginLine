@@ -21,6 +21,13 @@ const { PersonForm } = await import("@/components/person-form/person-form");
 const TABOO_NAME = "Nguyễn Văn Thủy Tổ";
 /** Nobody in the ~4,000-node mock graph is called this. */
 const FREE_NAME = "Nguyễn Văn Khôngtrùngvớiai";
+/**
+ * Va chạm kỵ húy với một bậc trên mà người gọi KHÔNG được phép xem
+ * (`src/mocks/handlers/persons.ts` — khoá `p-781` cố ý không tra được, nên
+ * `GET /persons/{id}` trả 404 y như máy chủ thật trả cho một người còn sống ở
+ * chi khác).
+ */
+const TABOO_NAME_HIDDEN_ANCESTOR = "Nguyễn Văn Bậc Trên Ẩn";
 
 /**
  * F4 — form thêm/sửa nhân khẩu, exercised end to end against MSW: validation,
@@ -247,6 +254,96 @@ describe("kỵ húy warning (FR-1.6)", () => {
     const posts = captured.filter((r) => r.method === "POST");
     expect(posts).toHaveLength(1);
     expect((posts[0]!.body as Record<string, unknown>).confirmTabooOverride).toBeUndefined();
+  });
+});
+
+/**
+ * Ca bậc trên KHÔNG tra được — hệ quả trực tiếp của việc hợp đồng bỏ bốn trường
+ * `ancestorDisplayName` / `ancestorGeneration` / `tabooName` / `relationHint`.
+ *
+ * <p>Truy vấn dò kỵ húy chọn bậc trên theo <b>đời thứ</b>, không theo sống/mất
+ * và không theo chi, nên "bậc trên" có thể là một ông bác còn sống ở một chi
+ * khác mà người đang thêm nhân khẩu không có quyền biết gì về họ — kể cả việc
+ * họ tồn tại. Thân lỗi 409 đi thẳng ra HTTP, không qua bộ lọc phân tầng riêng
+ * tư, nên danh tính phải nạp riêng qua `GET /persons/{id}`.</p>
+ *
+ * <p>Đây <b>không</b> phải ca thường gặp: bậc trên gần như luôn là người đã
+ * khuất, mà người đã khuất công khai (xem ca "hiện y như trước" ngay trên).
+ * Nhưng khi nó xảy ra thì hộp thoại phải im lặng đúng chỗ và ồn ào đúng chỗ.</p>
+ */
+describe("kỵ húy · bậc trên mà người gọi không được phép xem", () => {
+  it("không hiện một cái tên nào — kể cả tên người dùng vừa gõ, dưới dạng 'tên húy bên kia'", async () => {
+    const { user } = renderWithProviders(<PersonForm mode="create" />, { role: "admin" });
+
+    await typeName(user, TABOO_NAME_HIDDEN_ANCESTOR);
+    await user.click(screen.getByRole("button", { name: "Thêm vào gia phả" }));
+
+    const dialog = await screen.findByRole("dialog");
+    const item = await within(dialog).findByTestId("taboo-conflict-p-781");
+    await within(item).findByTestId("taboo-ancestor-p-781-not-visible");
+
+    // Không có khối danh tính nào được dựng.
+    expect(within(item).queryByTestId("taboo-ancestor-p-781-visible")).not.toBeInTheDocument();
+    // Và không một mẩu tên nào lọt ra: 409 không chở tên, GET không trả tên.
+    expect(within(item).queryByText(/Bậc Trên Ẩn/)).not.toBeInTheDocument();
+    expect(within(item).queryByText(/Tên húy:/)).not.toBeInTheDocument();
+    expect(within(item).queryByText(/Đời thứ/)).not.toBeInTheDocument();
+  });
+
+  it("nói 'bạn không có quyền xem', không nói 'không tìm thấy', và chỉ ra chỗ để đi tiếp", async () => {
+    const { user } = renderWithProviders(<PersonForm mode="create" />, { role: "admin" });
+
+    await typeName(user, TABOO_NAME_HIDDEN_ANCESTOR);
+    await user.click(screen.getByRole("button", { name: "Thêm vào gia phả" }));
+
+    const dialog = await screen.findByRole("dialog");
+    const blocked = await within(dialog).findByTestId("taboo-ancestor-p-781-not-visible");
+
+    expect(within(blocked).getByText(/không có quyền xem bậc trên này/i)).toBeInTheDocument();
+    // Không rò rỉ việc bản ghi có tồn tại hay không.
+    expect(
+      within(blocked).getByText(/không cho biết hồ sơ đó có tồn tại hay không/i)
+    ).toBeInTheDocument();
+    // Một chỗ để đi: người nhìn được cả hai bên.
+    expect(within(blocked).getByText(/Hội đồng Tộc biểu/i)).toBeInTheDocument();
+    // Tuyệt đối không phải câu lỗi kỹ thuật.
+    expect(within(dialog).queryByText(/Không tra được hồ sơ bậc trên/i)).not.toBeInTheDocument();
+    expect(within(dialog).queryByText(/không tìm thấy/i)).not.toBeInTheDocument();
+  });
+
+  it("404 không phải lỗi: mục va chạm không mang vai trò alert nào", async () => {
+    const { user } = renderWithProviders(<PersonForm mode="create" />, { role: "admin" });
+
+    await typeName(user, TABOO_NAME_HIDDEN_ANCESTOR);
+    await user.click(screen.getByRole("button", { name: "Thêm vào gia phả" }));
+
+    const dialog = await screen.findByRole("dialog");
+    const item = await within(dialog).findByTestId("taboo-conflict-p-781");
+    await within(item).findByTestId("taboo-ancestor-p-781-not-visible");
+
+    // `role="alert"` DUY NHẤT trong hộp thoại là lời dẫn cảnh báo kỵ húy — thứ
+    // người dùng thật sự phải hành động. Ca 404 thì không: nó chỉ là câu trả
+    // lời đúng của hệ thống, nên nó không được cướp lượt đọc của trình đọc màn
+    // hình.
+    expect(within(item).queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("vẫn nói được MỨC KHỚP và vẫn cho ghi đè — mức khớp nói về ô người dùng vừa gõ", async () => {
+    const captured = captureRequests();
+    const { user } = renderWithProviders(<PersonForm mode="create" />, { role: "admin" });
+
+    await typeName(user, TABOO_NAME_HIDDEN_ANCESTOR);
+    await user.click(screen.getByRole("button", { name: "Thêm vào gia phả" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Trùng khít")).toBeInTheDocument();
+
+    await user.type(within(dialog).getByRole("textbox"), "Hội đồng Tộc biểu đã đối chiếu hộ");
+    await user.click(within(dialog).getByRole("button", { name: "Vẫn giữ tên này" }));
+
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalled());
+    const posts = captured.filter((r) => r.method === "POST");
+    expect((posts[1]!.body as Record<string, unknown>).confirmTabooOverride).toBe(true);
   });
 });
 
