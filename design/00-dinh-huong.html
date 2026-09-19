@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Định hướng thiết kế — Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Hệ thống Quản lý Gia phả &amp; Cổng thông tin Dòng họ · Tài liệu 00</p>
+  <h1>Định hướng thiết kế</h1>
+  <p class="tom-tat">
+    Tài liệu này là <strong>ràng buộc chung</strong> cho mọi tài liệu thiết kế còn lại trong thư mục
+    <code>design/</code>. Nó không mô tả màn hình nào cả — nó chốt <em>cách nghĩ</em>, để năm phần
+    tài liệu do năm người khác nhau viết vẫn ra một sản phẩm chứ không phải năm sản phẩm.
+    Chỗ nào tài liệu khác mâu thuẫn với tài liệu này, <strong>tài liệu này thắng</strong>.
+  </p>
+</header>
+
+<h2>1. Luận điểm gốc: người dùng trung bình không tồn tại</h2>
+
+<p>
+  Dự án phục vụ người từ <strong>16 đến 70 tuổi</strong>. Phản xạ thông thường là thiết kế cho người
+  ở giữa — khoảng 43 tuổi. <strong>Đó là sai lầm nghiêm trọng nhất có thể mắc ở đây</strong>, vì hai
+  đầu của dải tuổi này không phải là hai biến thể của cùng một người. Họ có nhu cầu <em>ngược
+  nhau</em>:
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Chiều</th><th>Thành viên 16–25 (kiều bào, thế hệ trẻ)</th><th>Tộc trưởng / Hội đồng 60–70</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Thiết bị</b></td>
+      <td>Điện thoại, dùng một tay, đang di chuyển</td>
+      <td>Máy tính bảng hoặc màn hình lớn, ngồi yên, có thể đeo kính</td>
+    </tr>
+    <tr>
+      <td><b>Thị lực</b></td>
+      <td>Chấp nhận chữ 14px, ưa mật độ dày</td>
+      <td><b>Lão thị</b> — cần 18px trở lên, tương phản cao, không chữ mảnh</td>
+    </tr>
+    <tr>
+      <td><b>Quy ước ứng dụng</b></td>
+      <td>Hiểu ngay biểu tượng ba gạch, vuốt, kéo-thả, bottom sheet</td>
+      <td><b>Không</b> mặc nhiên hiểu. Biểu tượng không nhãn là một câu đố</td>
+    </tr>
+    <tr>
+      <td><b>Ngôn ngữ</b></td>
+      <td>Có thể đọc tiếng Anh tốt hơn tiếng Việt; không rành từ Hán-Việt</td>
+      <td>Tiếng Việt là gốc; thuật ngữ dòng họ là ngôn ngữ mẹ đẻ</td>
+    </tr>
+    <tr>
+      <td><b>Quan hệ với dữ liệu</b></td>
+      <td>Người <em>đọc</em>. Tò mò, ít khi sửa</td>
+      <td>Người <b>có thẩm quyền</b>. Họ là nguồn sự thật, và họ <b>sợ làm hỏng</b></td>
+    </tr>
+    <tr>
+      <td><b>Kiên nhẫn</b></td>
+      <td>Thấp. 3 giây không tải xong là bỏ</td>
+      <td>Cao, nhưng <b>không tha thứ cho sự mơ hồ</b> — thà chậm mà chắc</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Hệ quả then chốt</p>
+  <p>
+    Không thể lấy trung bình hai cột này. Lấy trung bình cho ra chữ 16px — <em>vẫn nhỏ</em> với cụ
+    70 tuổi và <em>vẫn thừa chỗ</em> với bạn 16 tuổi; biểu tượng có nhãn nhưng nhãn viết tắt —
+    <em>vẫn khó hiểu</em> với người này và <em>vẫn thừa</em> với người kia. Kết quả là một sản phẩm
+    không phục vụ tốt ai cả.
+  </p>
+  <p>
+    <b>Nguyên tắc thay thế: thiết kế cho hai đầu, để phần giữa tự lo được.</b> Ai đọc được ở
+    18px thì cũng đọc được ở 16px. Ai hiểu nhãn chữ đầy đủ thì cũng hiểu nhãn ngắn. Chiều ngược
+    lại thì không đúng. Nên <b>sàn phải đặt theo người khó nhất</b>, và sự phong phú thêm vào cho
+    người thạo phải là thứ <em>tuỳ chọn</em>, không phải mặc định.
+  </p>
+</div>
+
+<h2>1b. Trục thứ hai: thuộc hay không thuộc huyết thống</h2>
+
+<p>
+  Bảng hai cột ở mục 1 chia người dùng theo <b>tuổi</b>. Đó là một trục đúng nhưng
+  <b>không đủ</b>, và chỗ nó để hở lại là chỗ đắt nhất của sản phẩm.
+</p>
+
+<p>
+  <b>Người con dâu, người con rể không nằm ở đầu nào của dải tuổi.</b> Một người dâu 28 tuổi thạo
+  ứng dụng như bất kỳ ai cùng lứa. Nhưng cô <b>không thuộc huyết thống</b>, và điều đó thay đổi
+  toàn bộ quan hệ của cô với sản phẩm: cô là người <b>phải xưng hô đúng nhiều nhất và biết ít
+  nhất</b>.
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đây là lỗi cấu trúc, không phải lỗi giao diện</p>
+  <p>
+    <code>TreeProjectionService.traverse()</code> chỉ duyệt theo hai chiều huyết thống —
+    <code>descendants()</code> và <code>ancestors()</code>. Cạnh vợ/chồng <b>không phải chiều
+    duyệt</b>; nó chỉ được gắn vào ở tầng cạnh, sau khi các node đã thu thập xong.
+  </p>
+  <p>
+    Hệ quả: người dâu/rể <b>chỉ tồn tại trong cây khi bạn đời của họ đã được duyệt trước</b> — họ
+    không bao giờ là hạt giống. Và đặt họ làm gốc cũng vô nghĩa, vì <code>ancestors()</code> sẽ trả
+    về gia đình ruột của chính họ, những người không có trong dữ liệu dòng họ này. Cây sẽ cụt phía
+    trên.
+  </p>
+  <p>
+    Vì vậy <b>không vá được bằng cách thêm một nút bấm.</b> Nếu cây là lối vào duy nhất thì bộ luật
+    danh xưng — 157 luật, trong đó 30 luật nhóm J6 được Hội đồng duyệt riêng cho chiều dâu/rể — đang
+    phục vụ đúng người cần nó nhất bằng <b>con số không</b>.
+  </p>
+</div>
+
+<h3>Ba hệ quả bắt buộc cho mọi tài liệu thiết kế</h3>
+
+<ul>
+  <li>
+    <b>Tra danh xưng phải độc lập với cây phả đồ.</b> Không phải "nên" mà là bắt buộc. Cây là cấu
+    trúc <em>huyết thống</em>; danh xưng là quan hệ <em>xã hội</em>. Hai thứ không trùng nhau. Buộc
+    danh xưng vào cây là loại bỏ đúng nhóm cần nó nhất — cộng thêm con nuôi và người nhập họ qua
+    kế tự.
+  </li>
+  <li>
+    <b>Người dâu/rể cần điểm neo riêng.</b> Điểm neo tự nhiên của họ là <em>bạn đời</em>, không phải
+    thuỷ tổ. Màn hình hạ cánh sau khi nhập môn nên là "họ nhà chồng / nhà vợ", không phải hồ sơ cá
+    nhân — hồ sơ của họ gần như trống, hạ cánh ở đó là một lời nhắc rằng họ là người ngoài.
+  </li>
+  <li>
+    <b>Cách hỏi lúc nhập môn phải song song, không phân biệt trong–ngoài.</b> Dùng
+    <i>"Ông/bà có tên trong phả họ Nguyễn, hay về làm dâu / làm rể họ Nguyễn?"</i> — hai vế ngang
+    hàng. Tránh mọi cách diễn đạt dựng lên khung "người trong họ" đối lập "người ngoài".
+  </li>
+</ul>
+
+<div class="khoi">
+  <p class="nhan">Câu hỏi pháp lý chưa ai trả lời</p>
+  <p>
+    BA v2 §10 chốt "ẩn danh hoá thay vì xoá cứng", với lý do <b>giữ cây khỏi gãy</b>. Lập luận đó
+    <b>yếu hẳn ở ca dâu/rể</b>: xoá một người con dâu không làm gãy đường huyết thống nào — con vẫn
+    nối với bố qua cạnh huyết thống. Trong khi cơ sở pháp lý để đòi xoá lại <b>mạnh hơn</b>: họ
+    không tự nguyện gia nhập bộ dữ liệu, họ <em>được nhập vào</em> bởi nhà chồng. Ca ly hôn còn gay
+    gắt hơn.
+  </p>
+  <p>
+    Đây là câu hỏi cho BA và Hội đồng, không phải cho người thiết kế. Tài liệu thiết kế <b>nêu ra,
+    không tự quyết</b>.
+  </p>
+</div>
+
+<h2>2. Bảy nguyên tắc bắt buộc</h2>
+
+<h3>1 · Không có “chế độ người già”</h3>
+<p>
+  Tuyệt đối không làm một công tắc tên kiểu “Chế độ dễ nhìn cho người lớn tuổi”. Hai lý do, cả hai
+  đều quyết định: <b>nó xúc phạm</b> — không ai tự nhận mình cần chế độ đó, nên chẳng ai bật; và
+  <b>nó cho phép phần còn lại của sản phẩm cẩu thả</b>, vì đã có một cái van xả để đổ lỗi.
+</p>
+<p>
+  Thay vào đó: mặc định đã rộng rãi sẵn, tôn trọng cỡ chữ hệ điều hành, và nếu có tuỳ chọn mật độ
+  thì đặt tên theo <em>mật độ</em> (“Thoáng” / “Vừa” / “Gọn”) chứ không theo <em>tuổi</em>.
+</p>
+
+<h3>2 · Cỡ chữ và vùng chạm là sàn, không phải mục tiêu</h3>
+<p>
+  Thân bài tối thiểu <b>16px</b>, nội dung chính <b>17–18px</b>. Vùng chạm tối thiểu
+  <b>44×44px</b> — đây là ngưỡng của WCAG 2.2 và đã có tiền lệ đau thương trong dự án: phả đồ từng
+  mở ở mức phóng 0.21 khiến nút bung nhánh còn <b>5px</b>, tức là không thao tác được.
+  <b>Không có ngoại lệ</b> cho “chỗ này chật quá”. Chật thì bỏ bớt thứ khác.
+</p>
+
+<h3>3 · Biểu tượng luôn đi kèm chữ</h3>
+<p>
+  Biểu tượng đứng một mình chỉ hoạt động khi người dùng đã biết quy ước. Ba gạch, ba chấm, cái phễu,
+  mũi tên chia sẻ — đó là <em>từ vựng học được</em>, không phải trực giác. Trong sản phẩm này, mọi
+  điều khiển mang hành động phải có nhãn chữ. Biểu tượng chỉ để <em>tăng tốc nhận diện</em> cho
+  người đã quen, không bao giờ để thay chữ.
+</p>
+
+<h3>4 · Không thao tác khó thu hồi nào diễn ra trong im lặng</h3>
+<p>
+  Người có thẩm quyền cao nhất trong dòng họ cũng là người <b>sợ làm hỏng nhất</b>. Nỗi sợ đó là
+  thứ ngăn họ đóng góp dữ liệu — mà dữ liệu của họ chính là giá trị của sản phẩm. Nên: mọi thao tác
+  khó thu hồi phải xác nhận <b>và nói rõ hệ quả</b>, không chỉ hỏi “bạn chắc chứ?”.
+</p>
+<p>
+  Có sẵn một khuôn mẫu tốt trong sản phẩm: hộp thoại khi nhập ngày mất — nó nêu đích danh người,
+  chiếu lại ngày vừa nhập kèm ngày âm để soi lỗi gõ, rồi liệt kê ba hệ quả (hồ sơ thành công khai
+  với cả khách, sinh lịch nhắc giỗ, thứ đã lộ không thu về được). <b>Đó là mẫu chuẩn.</b>
+</p>
+
+<h3>5 · Nói tiếng của dòng họ, không nói tiếng của phần mềm</h3>
+<p>
+  “Thêm người vào phả”, không phải “Tạo bản ghi”. “Xin đính chính”, không phải “Gửi yêu cầu thay
+  đổi”. “Ngày giỗ”, không phải “Sự kiện định kỳ”. Thuật ngữ dòng họ — <em>danh xưng, chi, ngành,
+  đích tôn, kỵ húy, tuyệt tự, kế tự</em> — <b>giữ nguyên</b>, kể cả trong bản tiếng Anh, vì chúng
+  mang nghĩa mà bản dịch làm mất.
+</p>
+
+<h3>6 · Song ngữ không đối xứng</h3>
+<p>
+  Tiếng Việt là ngôn ngữ gốc, tiếng Anh phục vụ kiều bào không đọc thạo tiếng Việt. Bản tiếng Anh
+  <b>không phải là bản dịch máy móc</b>: thuật ngữ dòng họ giữ nguyên tiếng Việt kèm giải thích
+  ngắn ở lần xuất hiện đầu. Một người Mỹ gốc Việt cần hiểu <em>“chú” là ai</em>, không cần một chữ
+  “uncle” xoá mất phân biệt chú/bác/cậu.
+</p>
+
+<h3>7 · Quyền riêng tư là mặc định nhìn thấy được, không phải điều khoản</h3>
+<p>
+  Phân tầng T1/T2/T3 theo BA v2 §10 và Nghị định 13/2023 không được là thứ ẩn trong cấu hình.
+  Người dùng phải <b>thấy được</b> rằng thông tin của mình đang ở tầng nào và ai xem được — bằng
+  giao diện, không bằng trang chính sách. Người đã khuất là công khai; người sống ẩn mặc định.
+</p>
+
+<h2>3. Ba quyết định vật liệu đã chốt</h2>
+
+<p>
+  Ba thứ này đã tồn tại trong sản phẩm đang chạy. Mọi tài liệu thiết kế <b>xây trên chúng</b>, không
+  đề xuất thay, trừ khi nêu rõ lý do và cái giá của việc thay.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Bảng màu</h4>
+    <p>
+      Đỏ trầm <code>#8c2d19</code>, hổ phách <code>#d97706</code>, nền kem <code>#f8f6f2</code>,
+      mực <code>#2b2825</code>. Chép nguyên từ <code>frontend/src/styles/tokens.ts</code>, vốn chép
+      từ BA v2.
+    </p>
+    <p class="day">Có sẵn nền “giấy cũ” <code>#f2ede2</code> <b>dành riêng cho người đã khuất</b> — đọc như sự tôn kính, không phải như trạng thái bị vô hiệu hoá.</p>
+  </div>
+  <div class="the">
+    <h4>Chữ</h4>
+    <p>
+      Thân bài dùng bộ chữ có dấu tiếng Việt đầy đủ. Không dùng bộ chữ mảnh (weight 300 trở xuống)
+      cho nội dung đọc — dấu tiếng Việt chồng tầng, chữ mảnh làm dấu biến mất ở cỡ nhỏ.
+    </p>
+    <p class="day">Tên người và tên chi là <b>dữ liệu</b>, không phải nhãn giao diện: không bao giờ viết hoa toàn bộ, không bao giờ cắt bớt bằng dấu ba chấm nếu tránh được.</p>
+  </div>
+  <div class="the">
+    <h4>Chế độ sáng/tối</h4>
+    <p>
+      Sản phẩm tôn trọng lựa chọn của hệ điều hành, có ba trạng thái: sáng, tối, và “theo hệ thống”
+      (mặc định, không đánh dấu gì).
+    </p>
+    <p class="day">Mọi màu phải khai ở <code>:root</code> trước; màu chỉ tồn tại trong khối tối là lỗi kinh điển gây trang không đọc được.</p>
+  </div>
+</div>
+
+<h2>4. Phạm vi tính năng cần phủ</h2>
+
+<p>
+  Tài liệu thiết kế phải phủ <b>23 yêu cầu chức năng</b> của BA v2, trải trên bốn giai đoạn, cộng
+  tầng AI dự kiến sau. Không được chỉ thiết kế phần đã làm xong.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Nhóm</th><th>Nội dung</th><th>Giai đoạn</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>FR-1</b> Gia phả</td>
+      <td>Cây chi/ngành · quan hệ phức tạp (đa thê, kế tự, đích tôn) · LCA &amp; danh xưng · ba chế độ xem · xoá mềm · kỵ húy · GEDCOM · bình đẳng giới · liên kết thông gia</td>
+      <td><span class="chip gd1">GĐ 1</span> <span class="chip gd2">GĐ 2</span></td>
+    </tr>
+    <tr>
+      <td><b>FR-2</b> Lịch &amp; nhắc</td>
+      <td>Quy đổi âm–dương · nhắc giỗ 7/3/1 ngày · phân loại lễ (giỗ tổ, tiểu tường, đại tường, chạp mả, mừng thọ) · bản tin &amp; bảng vàng · gửi bất đồng bộ</td>
+      <td><span class="chip gd1">GĐ 1</span> <span class="chip gd2">GĐ 2</span></td>
+    </tr>
+    <tr>
+      <td><b>FR-3</b> Di sản</td>
+      <td>Thư viện văn bia, hương ước, gia huấn, câu đối · mộ phần có GPS · từ đường &amp; bài vị · văn khấn, sao hạn, Tam Tai</td>
+      <td><span class="chip gd3">GĐ 3</span></td>
+    </tr>
+    <tr>
+      <td><b>FR-4</b> Quản trị</td>
+      <td>Phân quyền theo chi · duyệt đính chính · quỹ họ &amp; sổ vàng · báo cáo dân số học · tìm kiếm có dấu/không dấu</td>
+      <td><span class="chip gd2">GĐ 2</span> <span class="chip gd3">GĐ 3</span></td>
+    </tr>
+    <tr>
+      <td><b>Tầng AI</b></td>
+      <td>Hỏi đáp quan hệ bằng lời · OCR Hán-Nôm · sinh văn khấn · phát hiện trùng lặp khi nhập hàng loạt</td>
+      <td><span class="chip gd4">Sau GĐ 4</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Cách viết tài liệu trong thư mục này</h2>
+
+<ul>
+  <li><b>Một trang HTML độc lập</b> cho mỗi chủ đề, nạp <code>assets/design-doc.css</code> bằng đường dẫn tương đối. Không sao chép CSS vào trang.</li>
+  <li><b>Khung dây vẽ bằng SVG thuần</b>, dùng các lớp <code>.wf-*</code> có sẵn trong stylesheet. Không nhúng ảnh, không dùng thư viện.</li>
+  <li><b>Tiếng Việt</b>, giữ thuật ngữ dòng họ. Viết cho người đọc gồm cả Hội đồng Tộc biểu — tránh biệt ngữ kỹ thuật khi có từ thường dùng được.</li>
+  <li><b>Nêu cái giá, không chỉ nêu ý tưởng.</b> Mọi đề xuất phải kèm đánh đổi và chỗ nó có thể sai. Một tài liệu thiết kế chỉ toàn ưu điểm là một tài liệu chưa nghĩ xong.</li>
+  <li><b>Không bịa số.</b> Số nào lấy từ sản phẩm đang chạy thì ghi rõ nguồn; số nào là đề xuất thì nói là đề xuất.</li>
+</ul>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Điều dễ làm sai nhất</p>
+  <p>
+    Cám dỗ lớn nhất khi thiết kế cho dải tuổi rộng là <b>làm mọi thứ to lên và đơn giản đi</b>, rồi
+    gọi đó là dễ dùng. Kết quả thường là một sản phẩm trông như đồ chơi, khiến người trẻ bỏ đi và
+    người già cảm thấy bị coi thường. <b>Dễ dùng không đến từ việc bớt đi, mà từ việc sắp đúng thứ
+    tự và gọi đúng tên.</b> Một bảng dày đặc có nhãn rõ ràng còn dễ dùng hơn ba màn hình rỗng có
+    nút to.
+  </p>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu này là ràng buộc, không phải gợi ý. Thứ tự ưu tiên khi có mâu thuẫn:
+    <b>BA v2 → tài liệu này → các tài liệu thiết kế khác</b>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

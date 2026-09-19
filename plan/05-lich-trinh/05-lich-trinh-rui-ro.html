@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 05 — Lịch trình, phụ thuộc &amp; rủi ro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<p class="dieu-huong">
+  <a href="../00-tong-the.html">← 00 · Bản chốt phạm vi</a> ·
+  <span>05 · Lịch trình &amp; rủi ro</span>
+</p>
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 05 · Lịch trình, phụ thuộc &amp; rủi ro</p>
+  <h1>Ghép năm mảnh thành một lịch chạy được</h1>
+  <p class="tom-tat">
+    Tài liệu này <strong>không quyết định làm gì</strong> — phạm vi đã chốt ở
+    <code>plan/00-tong-the.html</code>. Nó trả lời bốn câu: <strong>việc nào chặn việc nào</strong>,
+    <strong>mất bao lâu</strong>, <strong>đo bằng gì thì gọi là xong</strong>, và
+    <strong>dừng lúc nào thì vẫn còn thứ dùng được</strong>.
+  </p>
+</header>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Kết luận đặt ngay đầu, để ai chỉ đọc một đoạn thì đọc đoạn này</p>
+  <p>
+    <b>Đường găng của dự án này không đi qua phần khó nhất về kỹ thuật.</b> Ba context rỗng
+    (<code>heritage</code> · <code>fund</code> · <code>reporting</code>) là đợt nặng mã nhất, nhưng
+    chúng <i>không</i> nằm trên đường găng — chúng nằm <i>sau</i> nó.
+  </p>
+  <p>
+    Đường găng đi qua <b>ba việc không viết bằng mã</b>: thủ tục duyệt Zalo OA/ZNS · người phụ trách
+    nhập liệu từng chi · người viết nội dung. Cả ba đều có <b>thời gian chờ dài</b>, đều
+    <b>ngoài tầm điều khiển của đội phần mềm</b>, và đều <b>bắt đầu được ngay hôm nay mà không cần
+    chờ dòng mã nào</b>. Không khởi động chúng trong tuần này thì mọi ước lượng dưới đây sai.
+  </p>
+</div>
+
+<h2>1. Những gì tài liệu này đã tự kiểm chứng</h2>
+
+<p>
+  Bốn tài liệu con 01–04 đang được viết <b>song song</b> với tài liệu này. Lúc lập lịch,
+  <code>ls</code> bốn thư mục <code>plan/01-dong-gd1/</code>, <code>plan/02-nhap-lieu/</code>,
+  <code>plan/03-giai-doan-3/</code>, <code>plan/04-frontend/</code> đều <b>trả về rỗng</b>. Vì vậy
+  lịch này lập trên <b>bản chốt phạm vi cộng khảo sát mã nguồn thật</b>, không lập trên tài liệu của
+  người khác. Dưới đây là những gì đã đọc và đếm được, kèm đường dẫn.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Điều đã kiểm</th><th>Kết quả đo</th><th>Nơi kiểm</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Không có provider Zalo nào</td>
+      <td>Chỉ có <code>InAppProvider</code> và <code>WebPushAdapter</code>. <code>Channel.ZALO</code> đã có trong enum và routing key <code>notify.zalo</code>, nhưng <b>không có adapter</b>.</td>
+      <td><code>backend/src/main/java/vn/giapha/notification/infrastructure/</code> · <code>domain/Channel.java</code></td>
+    </tr>
+    <tr>
+      <td>Duyệt đính chính xong nhưng gia phả không đổi</td>
+      <td><code>ChangeRequestApprovedEvent</code> chỉ xuất hiện ở nơi <b>phát</b> và ở test. <b>Không có một người nhận nào</b> trong <code>src/main</code>.</td>
+      <td><code>membership/application/ChangeRequestService.java:137</code> · grep toàn <code>backend/src/main</code></td>
+    </tr>
+    <tr>
+      <td>Khách vẫn không xem được gì</td>
+      <td><code>SecurityConfig</code> mở sẵn <code>GET /api/v1/public/**</code> nhưng <b>không controller nào ánh xạ vào đó</b>.</td>
+      <td><code>config/SecurityConfig.java:106</code> · grep <code>/api/v1/public</code> trong controller → 0</td>
+    </tr>
+    <tr>
+      <td>Web Push tự cài mã hoá</td>
+      <td>Không có thư viện web-push nào trong <code>pom.xml</code>. Mã hoá viết tay: <code>P256.java</code>, <code>WebPushCipher.java</code>, <code>VapidSigner.java</code>.</td>
+      <td><code>notification/infrastructure/webpush/</code> · grep <code>web-push|bouncycastle|jose4j</code> → 0</td>
+    </tr>
+    <tr>
+      <td>Chưa có liên kết “bỏ qua, tới nội dung chính”</td>
+      <td>grep <code>skip-link|skipToContent|Skip to</code> trên <code>frontend/src</code> → <b>0 kết quả</b>. Sáu lỗi tiếp cận ở <code>design/README.md</code> vẫn còn nguyên.</td>
+      <td><code>frontend/src/</code> · <code>design/README.md</code> mục “Chưa sửa”</td>
+    </tr>
+    <tr>
+      <td>Ba context rỗng thật</td>
+      <td>Mỗi context đúng <b>5 file</b>, toàn bộ là <code>package-info.java</code>. Không aggregate, không port, không adapter.</td>
+      <td><code>vn/giapha/{heritage,fund,reporting}/</code></td>
+    </tr>
+    <tr>
+      <td>Chưa có nền media</td>
+      <td>MinIO <b>có</b> chạy trong <code>infra/docker-compose.yml</code>, nhưng <code>backend/pom.xml</code> <b>không có</b> SDK S3/MinIO nào. Đợt D bắt đầu từ số 0 ở phần lưu ảnh.</td>
+      <td>grep <code>minio|awssdk|s3</code> trong <code>backend/pom.xml</code> → 0</td>
+    </tr>
+    <tr>
+      <td>Chưa có quan trắc</td>
+      <td>Không <code>opentelemetry</code>, không <code>micrometer-tracing</code> trong pom; không Prometheus/Grafana/Loki trong docker-compose.</td>
+      <td><code>backend/pom.xml</code> · <code>infra/docker-compose.yml</code></td>
+    </tr>
+    <tr>
+      <td>Chưa có gì cho nhập liệu hàng loạt</td>
+      <td>Không mã GEDCOM, không khu vực chờ, không bộ gộp trùng.</td>
+      <td>grep <code>gedcom|staging|ImportBatch</code> trên <code>backend/src/main/java</code></td>
+    </tr>
+    <tr>
+      <td>Khối lượng mã hiện có</td>
+      <td><b>507</b> file <code>.java</code> ở <code>src/main</code> · <b>115</b> file ở <code>src/test</code> (854 <code>@Test</code> + 32 <code>@ParameterizedTest</code>) · <b>59</b> file test frontend · <b>8</b> file E2E · <b>12</b> route Next.js · migration dừng ở <code>V7</code>.</td>
+      <td>đếm bằng <code>find</code>/<code>grep</code> trên repo</td>
+    </tr>
+    <tr>
+      <td class="xau">Không tự chạy được build</td>
+      <td><code>java -version</code> → <b>1.8.0_202</b>, <code>JAVA_HOME</code> trỏ JDK 8. <b>Không chạy được <code>mvn test</code></b> trên máy này.</td>
+      <td>đo trực tiếp · đúng như cảnh báo ở <code>CLAUDE.md</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Nói rõ ranh giới bằng chứng</p>
+  <p>
+    Con số <b>1.827 test backend · 679 test frontend · 61 E2E</b> dùng làm mốc hiệu chuẩn ở mục 4
+    lấy từ <code>plan/00-tong-the.html</code> mục 1. <b>Tôi không tự chạy được suite để xác nhận</b>
+    (JDK 8 trên máy). Cái tôi tự đếm được là số <i>file</i> và số <i>chú thích</i>
+    <code>@Test</code> — hai con số khác nhau, vì test tham số hoá sinh nhiều ca từ một chú thích.
+    Dùng mốc này để <b>so tương đối giữa các đợt</b>, không dùng để hứa với ai.
+  </p>
+</div>
+
+<h2>2. Đường găng thật</h2>
+
+<p>
+  Đường găng là chuỗi việc mà <b>trượt một mắt là trượt cả ngày bàn giao</b>. Cách tìm nó không phải
+  hỏi “việc nào khó nhất” mà hỏi “việc nào có thời gian chờ dài nhất và không rút ngắn được bằng
+  cách thêm người”.
+</p>
+
+<figure>
+<svg viewBox="0 0 950 620" role="img" aria-labelledby="tt-1">
+  <title id="tt-1">Sơ đồ phụ thuộc hai làn: làn phần mềm ở trên, làn người và giấy tờ ở dưới; đường găng đi qua làn dưới</title>
+  <defs>
+    <marker id="mui" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+    <marker id="mui-do" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" style="fill: var(--do-tram)"/>
+    </marker>
+  </defs>
+
+  <text class="wf-phu" x="16" y="24" style="font-weight:600; letter-spacing:.08em">LÀN 1 · PHẦN MỀM — đội dự án tự làm xong được</text>
+
+  <rect class="wf-o" x="16"  y="56" width="168" height="84" rx="4"/>
+  <text class="wf-chu" x="30" y="80" style="font-weight:600">Đợt A</text>
+  <text class="wf-phu" x="30" y="100">đóng Giai đoạn 1</text>
+  <text class="wf-phu" x="30" y="116">Zalo adapter · bộ áp dụng</text>
+  <text class="wf-phu" x="30" y="132">đính chính · công khai · a11y</text>
+
+  <rect class="wf-o" x="204" y="56" width="168" height="84" rx="4"/>
+  <text class="wf-chu" x="218" y="80" style="font-weight:600">Đợt B</text>
+  <text class="wf-phu" x="218" y="100">đường ống nhập liệu</text>
+  <text class="wf-phu" x="218" y="116">Excel · khu chờ · đối soát</text>
+  <text class="wf-phu" x="218" y="132">gộp trùng · thiếp mời</text>
+
+  <rect class="wf-o" x="392" y="56" width="168" height="84" rx="4"/>
+  <text class="wf-chu" x="406" y="80" style="font-weight:600">Đợt C</text>
+  <text class="wf-phu" x="406" y="100">giữ chân người dùng</text>
+  <text class="wf-phu" x="406" y="116">trang chủ · lịch việc họ</text>
+  <text class="wf-phu" x="406" y="132">sinh nhật · GEDCOM</text>
+
+  <rect class="wf-o" x="580" y="56" width="168" height="84" rx="4"/>
+  <text class="wf-chu" x="594" y="80" style="font-weight:600">Đợt D</text>
+  <text class="wf-phu" x="594" y="100">ba context rỗng</text>
+  <text class="wf-phu" x="594" y="116">heritage · fund</text>
+  <text class="wf-phu" x="594" y="132">reporting · góc ảnh cũ</text>
+
+  <rect class="wf-o" x="768" y="56" width="168" height="84" rx="4"/>
+  <text class="wf-chu" x="782" y="80" style="font-weight:600">Đợt E</text>
+  <text class="wf-phu" x="782" y="100">kiểm tải · quan trắc</text>
+  <text class="wf-phu" x="782" y="116">PDPD · đào tạo</text>
+  <text class="wf-phu" x="782" y="132">bàn giao khoá</text>
+
+  <line class="wf-net" x1="184" y1="98" x2="204" y2="98" marker-end="url(#mui)"/>
+  <line class="wf-net" x1="372" y1="98" x2="392" y2="98" marker-end="url(#mui)"/>
+  <line class="wf-net" x1="560" y1="98" x2="580" y2="98" marker-end="url(#mui)"/>
+  <line class="wf-net" x1="748" y1="98" x2="768" y2="98" marker-end="url(#mui)"/>
+
+  <rect class="wf-khung" x="110" y="176" width="164" height="52" rx="4"/>
+  <text class="wf-chu" x="192" y="198" text-anchor="middle" style="font-size:12px; font-weight:600">Cổng A</text>
+  <text class="wf-phu" x="192" y="216" text-anchor="middle">gửi được một tin ZNS thật</text>
+
+  <rect class="wf-khung" x="300" y="176" width="164" height="52" rx="4"/>
+  <text class="wf-chu" x="382" y="198" text-anchor="middle" style="font-size:12px; font-weight:600">Cổng B</text>
+  <text class="wf-phu" x="382" y="216" text-anchor="middle">4 chi có dữ liệu thật</text>
+
+  <rect class="wf-khung" x="490" y="176" width="164" height="52" rx="4"/>
+  <text class="wf-chu" x="572" y="198" text-anchor="middle" style="font-size:12px; font-weight:600">Cổng D</text>
+  <text class="wf-phu" x="572" y="216" text-anchor="middle">kho đã có hàng</text>
+
+  <polyline class="wf-net" points="192,176 192,98 204,98" marker-end="url(#mui)"/>
+  <polyline class="wf-net" points="382,176 382,98 392,98" marker-end="url(#mui)"/>
+  <polyline class="wf-net" points="572,176 572,98 580,98" marker-end="url(#mui)"/>
+
+  <line x1="0" y1="252" x2="950" y2="252" style="stroke: var(--vien-dam); stroke-width:1; stroke-dasharray:1 4"/>
+  <text class="wf-phu" x="16" y="278" style="font-weight:600; letter-spacing:.08em">LÀN 2 · NGƯỜI &amp; GIẤY TỜ — đội dự án KHÔNG làm thay được</text>
+
+  <rect class="wf-o" x="16"  y="296" width="190" height="80" rx="4" style="stroke: var(--do-tram)"/>
+  <text class="wf-chu" x="30" y="318" style="font-weight:600; font-size:12px">Đăng ký Zalo OA</text>
+  <text class="wf-chu" x="30" y="336" style="font-weight:600; font-size:12px">+ duyệt mẫu tin ZNS</text>
+  <text class="wf-phu" x="30" y="356">3–6 tuần · ước lượng</text>
+  <text class="wf-phu" x="30" y="370">ngoài tầm kiểm soát</text>
+
+  <rect class="wf-o" x="232" y="296" width="190" height="80" rx="4" style="stroke: var(--do-tram)"/>
+  <text class="wf-chu" x="246" y="318" style="font-weight:600; font-size:12px">Nhập liệu thật</text>
+  <text class="wf-chu" x="246" y="336" style="font-weight:600; font-size:12px">4 chi × 350–400 người</text>
+  <text class="wf-phu" x="246" y="356">3–6 tuần nếu đủ người</text>
+  <text class="wf-phu" x="246" y="370">chi thiếu người thì đứng im</text>
+
+  <rect class="wf-o" x="448" y="296" width="230" height="80" rx="4" style="stroke: var(--do-tram)"/>
+  <text class="wf-chu" x="462" y="318" style="font-weight:600; font-size:12px">Thu thập nội dung</text>
+  <text class="wf-phu" x="462" y="338">ảnh văn bia · phiên âm Hán-Nôm</text>
+  <text class="wf-phu" x="462" y="354">toạ độ mộ · bài bản tin · vinh danh</text>
+  <text class="wf-phu" x="462" y="370">trải 12+ tuần, đỉnh vào dịp Tết</text>
+
+  <rect class="wf-o" x="16"  y="430" width="190" height="64" rx="4"/>
+  <text class="wf-chu" x="30" y="452" style="font-weight:600; font-size:12px">Cử người nhập liệu</text>
+  <text class="wf-chu" x="30" y="468" style="font-weight:600; font-size:12px">cho từng chi</text>
+  <text class="wf-phu" x="30" y="486">khởi động tuần này · hạn T02</text>
+
+  <rect class="wf-o" x="232" y="430" width="190" height="64" rx="4"/>
+  <text class="wf-chu" x="246" y="452" style="font-weight:600; font-size:12px">Cử người viết</text>
+  <text class="wf-chu" x="246" y="468" style="font-weight:600; font-size:12px">nội dung</text>
+  <text class="wf-phu" x="246" y="486">khởi động tuần này · hạn T03</text>
+
+  <rect class="wf-o" x="704" y="430" width="230" height="64" rx="4" style="stroke-dasharray:5 4"/>
+  <text class="wf-chu" x="718" y="452" style="font-weight:600; font-size:12px">3 câu hỏi Hội đồng Tộc biểu</text>
+  <text class="wf-phu" x="718" y="472">huy hiệu Dâu/Rể · quyền xoá dâu rể</text>
+  <text class="wf-phu" x="718" y="488">di chúc · chặn cả A, B và D</text>
+
+  <polyline points="206,462 250,462 250,376" fill="none" style="stroke: var(--do-tram); stroke-width:2.2" marker-end="url(#mui-do)"/>
+  <polyline points="422,462 470,462 470,376" fill="none" style="stroke: var(--do-tram); stroke-width:2.2" marker-end="url(#mui-do)"/>
+  <polyline points="111,296 111,264 192,264 192,228" fill="none" style="stroke: var(--do-tram); stroke-width:2.2" marker-end="url(#mui-do)"/>
+  <polyline points="327,296 327,270 382,270 382,228" fill="none" style="stroke: var(--do-tram); stroke-width:2.2" marker-end="url(#mui-do)"/>
+  <polyline points="563,296 563,264 572,264 572,228" fill="none" style="stroke: var(--do-tram); stroke-width:2.2" marker-end="url(#mui-do)"/>
+
+  <polyline points="819,430 819,282 192,282" fill="none" style="stroke: var(--muc-nhat); stroke-width:1.4; stroke-dasharray:5 4"/>
+  <line x1="192" y1="282" x2="192" y2="234" style="stroke: var(--muc-nhat); stroke-width:1.4; stroke-dasharray:5 4" marker-end="url(#mui)"/>
+  <line x1="382" y1="282" x2="382" y2="234" style="stroke: var(--muc-nhat); stroke-width:1.4; stroke-dasharray:5 4" marker-end="url(#mui)"/>
+  <line x1="572" y1="282" x2="572" y2="234" style="stroke: var(--muc-nhat); stroke-width:1.4; stroke-dasharray:5 4" marker-end="url(#mui)"/>
+
+  <line x1="16" y1="552" x2="56" y2="552" style="stroke: var(--do-tram); stroke-width:2.2"/>
+  <text class="wf-phu" x="64" y="556">đường găng thật — trượt một mắt là trượt ngày bàn giao</text>
+  <line x1="16" y1="580" x2="56" y2="580" class="wf-net"/>
+  <text class="wf-phu" x="64" y="584">phụ thuộc thường</text>
+  <line x1="420" y1="580" x2="460" y2="580" style="stroke: var(--muc-nhat); stroke-width:1.4; stroke-dasharray:5 4"/>
+  <text class="wf-phu" x="468" y="584">chặn, nhưng chưa có ai quyết</text>
+</svg>
+<figcaption>
+  <strong>Làn trên là thứ đội dự án tự làm xong được; làn dưới là thứ không.</strong> Mọi mũi tên đỏ
+  đều đi từ dưới lên — nghĩa là <b>ba cổng nghiệm thu đều bị chặn bởi việc ngoài phần mềm</b>, không
+  bởi việc trong phần mềm. Đợt D là đợt nặng mã nhất nhưng nó chỉ nhận một mũi tên đỏ, và mũi tên ấy
+  đến từ <i>nội dung</i>, không từ <i>mã</i>: viết xong <code>heritage</code> mà không ai đi chụp văn
+  bia thì cổng D vẫn đóng. Đường nét đứt từ ba câu hỏi Hội đồng chạm vào cả ba cổng — đó là lý do
+  mục 8 đặt hạn chót cho từng câu.
+</figcaption>
+</figure>
+
+<div class="khoi chot">
+  <p class="nhan">Đường găng, viết thành một dòng</p>
+  <p>
+    <b>Cử người nhập liệu (T01–T02) → nhập liệu thật 4 chi (T08–T13, có thể trượt tới T16) → Cổng B →
+    đợt C và đợt D → Cổng D → đợt E → bàn giao.</b>
+  </p>
+  <p>
+    Có <b>một nhánh găng thứ hai chạy song song và ngắn hơn</b>: đăng ký Zalo OA (T01–T06) → Cổng A.
+    Nó không dài bằng nhánh chính, nhưng nó <b>chặn sớm hơn</b> — nó quyết định đợt A đóng được ở
+    T06 hay T10. Và nó là nhánh <b>duy nhất</b> mà đội dự án không có cách nào đẩy nhanh ngoài việc
+    nộp hồ sơ sớm.
+  </p>
+</div>
+
+<h3>Việc nào sẽ trượt trước nhất</h3>
+
+<p>
+  Nếu phải đặt cược một mục, tôi đặt vào <b>nhập liệu thật của chi có sổ Hán-Nôm</b>. Lý do không
+  phải vì nó khó nhất, mà vì nó là mục duy nhất hội đủ ba điều kiện của một việc trượt:
+  <b>không ai trong đội dự án làm thay được</b>, <b>không đo được tiến độ giữa chừng bằng máy</b>
+  (một chi báo “đang làm” suốt bốn tuần trông y hệt một chi không làm gì), và
+  <b>người thực hiện làm việc này ngoài giờ, không lương, xen giữa việc nhà</b>.
+</p>
+<p>
+  Cách chống đã ghi ở <code>plan/00-tong-the.html</code> mục 4 và tôi giữ nguyên:
+  <b>chụp ảnh trước, phiên âm sau</b>. Chụp ảnh sổ Hán-Nôm là việc một buổi và ai cũng làm được;
+  phiên âm là việc của người biết chữ Hán và có thể kéo dài vô hạn. Tách hai việc ra thì chi ấy
+  không chặn ba chi kia, và ảnh chụp là thứ có giá trị vĩnh viễn ngay cả khi phiên âm không bao giờ
+  xong.
+</p>
+
+<h2>3. Ba việc phải khởi động NGAY trong tuần này</h2>
+
+<p>
+  Ba việc dưới đây <b>không cần chờ dòng mã nào</b>, <b>không tiêu nguồn lực lập trình</b>, và mỗi
+  việc chậm một tuần là cả lịch chậm một tuần. Chúng nằm ở làn dưới của sơ đồ trên.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>1 · Đăng ký Zalo OA + duyệt mẫu tin ZNS</h4>
+    <p><b>Vì sao ngay:</b> đây là thủ tục giấy tờ với bên thứ ba. Đội phần mềm viết
+    <code>ZaloZnsAdapter</code> trong khoảng hai tuần — port <code>NotificationProvider</code>,
+    enum <code>Channel.ZALO</code> và routing key <code>notify.zalo</code> <b>đã có sẵn</b>, đã xác
+    minh trong mã. Nhưng adapter viết xong mà chưa có OA đã duyệt thì <b>không gửi được một tin
+    nào</b>, và tiêu chí ra đợt A yêu cầu một tin ZNS thật tới một số điện thoại thật.</p>
+    <p><b>Việc con, theo thứ tự:</b> (a) chuẩn bị giấy tờ pháp nhân hoặc giấy tờ đại diện dòng họ ·
+    (b) tạo OA và nộp xác thực · (c) đăng ký dịch vụ ZNS · (d) soạn <b>ba</b> mẫu tin và nộp duyệt:
+    nhắc giỗ trước 7 ngày, trước 3 ngày, trước 1 ngày · (e) xin hạn mức gửi ước tính theo số nhân
+    khẩu nhân số giỗ mỗi năm.</p>
+    <p class="day"><b>Chủ sở hữu:</b> chủ đầu tư / Ban liên lạc dòng họ, không phải đội phần mềm.
+    <b>Điểm kiểm T04:</b> hồ sơ đã nộp, có mã hồ sơ. <b>Hạn:</b> OA duyệt xong trước hết T06.</p>
+  </div>
+
+  <div class="the">
+    <h4>2 · Chỉ định người phụ trách nhập liệu từng chi</h4>
+    <p><b>Vì sao ngay:</b> đây là mục nằm thẳng trên đường găng. Mỗi chi 350–400 người, ước 6–10
+    buổi; bốn chi song song thì 3–6 tuần. Nhưng <b>chi nào chưa có người thì đứng im</b>, và không
+    có tính năng phần mềm nào giải được việc đó. Bốn chi nhưng chỉ ba người thì thời gian không phải
+    nhân bốn phần ba — nó là <b>vô hạn cho chi thứ tư</b>.</p>
+    <p><b>Việc con:</b> (a) mỗi chi cử một người chịu trách nhiệm chính, có tên trong biên bản ·
+    (b) mỗi chi cử một người dự phòng — người chính bận việc nhà là chuyện bình thường ·
+    (c) kiểm kê nguồn giấy tờ mỗi chi đang có: sổ quốc ngữ, sổ Hán-Nôm, gia phả chép tay, hay
+    không có gì · (d) chốt một buổi tập huấn chung sau khi đường ống nhập chạy được.</p>
+    <p class="day"><b>Chủ sở hữu:</b> Hội đồng Tộc biểu và từng Trưởng chi.
+    <b>Hạn:</b> hết T02 (21–27/09/2026). <b>Kiểm được:</b> có bốn cái tên, không phải bốn lời hứa.</p>
+  </div>
+
+  <div class="the">
+    <h4>3 · Chỉ định người viết nội dung</h4>
+    <p><b>Vì sao ngay:</b> đợt D xây bốn cái kho — thư viện di sản, từ đường, mộ phần, bản tin — và
+    kho <b>không tự sinh hàng</b>. Nội dung có thời gian dẫn dài hơn mã: một bài vinh danh cần phỏng
+    vấn, một toạ độ mộ cần đi ra nghĩa trang, một ảnh văn bia cần chọn ngày nắng. Bắt đầu ở đợt D
+    thì đợt D ra <b>bốn màn hình đẹp và trống</b>.</p>
+    <p><b>Bốn vai riêng biệt, đừng gộp:</b> người <i>chụp ảnh</i> (văn bia, từ đường, mộ, ảnh cũ) ·
+    người <i>đo toạ độ GPS</i> mộ phần · người <i>phiên âm Hán-Nôm</i> · người <i>viết bài</i>
+    (bản tin, vinh danh, sự kiện làng). Bốn vai này hiếm khi là một người, và ép làm một người là
+    cách chắc chắn nhất để cả bốn cùng không xong.</p>
+    <p class="day"><b>Chủ sở hữu:</b> Hội đồng Tộc biểu.
+    <b>Hạn:</b> hết T03 (28/09–04/10/2026). <b>Chỉ tiêu đầu tiên, hạn T10:</b> 10 mục di sản và 3
+    bài bản tin ở dạng bản thảo — trước khi có màn hình nào để đăng lên.</p>
+  </div>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Một mẹo lịch mà chỉ dòng họ mới dùng được</p>
+  <p>
+    <b>Tết Đinh Mùi rơi khoảng 06/02/2027 — tức tuần T21.</b> Kiểm lại bằng chính
+    <code>LunarConverter</code> trước khi in lên lịch chính thức, đừng chép theo trí nhớ. Đó là dịp
+    <b>duy nhất trong năm</b> con cháu xa quê về đông đủ, nhà thờ mở cửa, các cụ cao niên có mặt để
+    đối chiếu thế thứ, và người ta sẵn lòng đi tảo mộ.
+  </p>
+  <p>
+    Vì vậy lịch dưới đây cố ý <b>đặt đỉnh thu thập nội dung vào quanh Tết (T18–T21)</b> và cố ý
+    <b>không đặt cutover, migration <code>V8</code> hay bất kỳ việc rủi ro nào vào T20–T23</b>.
+    Đội cũng nghỉ Tết — giả định “làm việc liên tục xuyên T21–T22” là giả định sai và tôi không đặt
+    nó vào bảng.
+  </p>
+</div>
+
+<h2>4. Lịch 28 tuần và ước lượng công sức</h2>
+
+<h3>Giả định về đội — nói trước, để ai không đồng ý thì phản đối bảng chứ không phản đối kết luận</h3>
+
+<ul>
+  <li><b>2 kỹ sư backend + 2 kỹ sư frontend toàn thời gian</b> → <b>4 người-tuần lập trình mỗi tuần
+  lịch</b>. Cộng PM/BA bán thời gian và thiết kế bán thời gian, không tính vào 4 người-tuần đó.</li>
+  <li><b>Nhập liệu và thu thập nội dung do người của dòng họ làm</b>, không trừ vào 4 người-tuần
+  trên. Nếu thực tế đội phần mềm phải nhập liệu hộ, mọi ước lượng dưới đây sai và đợt B kéo dài
+  gấp đôi.</li>
+  <li><b>Hiệu chuẩn:</b> Giai đoạn 1 lên lịch <b>4 sprint × 2 tuần</b>
+  (<code>.claude/plan-giai-doan-1.html</code> §6) cho 8 workstream backend và 10 workstream
+  frontend, và sản phẩm đo được là 507 file <code>src/main</code> cộng 115 file <code>src/test</code>.
+  Tức khoảng <b>63 file main mỗi tuần lịch</b>. Dùng để so tương đối, không để hứa.</li>
+  <li><b>Chưa cộng đệm.</b> Mọi số trong bảng là thời gian làm việc thuần. Đệm 15% cho ốm, việc đột
+  xuất và sửa lỗi phát sinh <b>chưa nằm trong bảng</b> — xem mục 10.</li>
+</ul>
+
+<figure>
+<svg viewBox="0 0 950 545" role="img" aria-labelledby="tt-2">
+  <title id="tt-2">Lịch 28 tuần từ tuần 14/09/2026 đến tuần 22/03/2027, mười hàng công việc chia hai loại: phần mềm và người</title>
+  <defs>
+    <pattern id="soc" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="7" height="7" style="fill: var(--nen-giay)"/>
+      <line x1="0" y1="0" x2="0" y2="7" style="stroke: var(--muc-nhat); stroke-width:2"/>
+    </pattern>
+  </defs>
+
+  <rect x="726" y="52" width="53" height="344" style="fill: var(--vang-nen)"/>
+  <text class="wf-phu" x="752" y="46" text-anchor="middle" style="font-weight:600">Tết</text>
+
+  <text class="wf-phu" x="196" y="30" text-anchor="middle">T01</text><text class="wf-phu" x="196" y="43" text-anchor="middle">14/09</text>
+  <text class="wf-phu" x="302" y="30" text-anchor="middle">T05</text><text class="wf-phu" x="302" y="43" text-anchor="middle">12/10</text>
+  <text class="wf-phu" x="408" y="30" text-anchor="middle">T09</text><text class="wf-phu" x="408" y="43" text-anchor="middle">09/11</text>
+  <text class="wf-phu" x="514" y="30" text-anchor="middle">T13</text><text class="wf-phu" x="514" y="43" text-anchor="middle">07/12</text>
+  <text class="wf-phu" x="620" y="30" text-anchor="middle">T17</text><text class="wf-phu" x="620" y="43" text-anchor="middle">04/01</text>
+  <text class="wf-phu" x="832" y="30" text-anchor="middle">T25</text><text class="wf-phu" x="832" y="43" text-anchor="middle">01/03</text>
+
+  <line x1="196" y1="52" x2="938" y2="52" style="stroke: var(--vien-dam); stroke-width:1"/>
+  <line x1="196" y1="396" x2="938" y2="396" style="stroke: var(--vien-dam); stroke-width:1"/>
+
+  <text class="wf-chu" x="12" y="66" style="font-size:12px">Đợt A — mã (5 việc)</text>
+  <text class="wf-phu" x="12" y="80">T01–T03 · 3 tuần</text>
+  <rect x="196" y="58" width="79.5" height="20" rx="2" class="wf-nhan"/>
+
+  <text class="wf-chu" x="12" y="100" style="font-size:12px">Zalo OA + duyệt mẫu ZNS</text>
+  <text class="wf-phu" x="12" y="114">T01–T06 · giấy tờ, có thể trượt</text>
+  <rect x="196" y="92" width="159" height="20" rx="2" style="fill: var(--lam)"/>
+  <rect x="355" y="92" width="79.5" height="20" rx="2" fill="url(#soc)"/>
+
+  <text class="wf-chu" x="12" y="134" style="font-size:12px">Cử người nhập liệu / chi</text>
+  <text class="wf-phu" x="12" y="148">T01–T02 · hạn cứng</text>
+  <rect x="196" y="126" width="53" height="20" rx="2" style="fill: var(--lam)"/>
+
+  <text class="wf-chu" x="12" y="168" style="font-size:12px">Đợt B — đường ống nhập</text>
+  <text class="wf-phu" x="12" y="182">T04–T07 · 4 tuần</text>
+  <rect x="275.5" y="160" width="106" height="20" rx="2" class="wf-nhan"/>
+
+  <text class="wf-chu" x="12" y="202" style="font-size:12px">Nhập liệu thật 4 chi</text>
+  <text class="wf-phu" x="12" y="216">T08–T13 (+3 tuần trượt)</text>
+  <rect x="381.5" y="194" width="159" height="20" rx="2" style="fill: var(--lam)"/>
+  <rect x="540.5" y="194" width="79.5" height="20" rx="2" fill="url(#soc)"/>
+
+  <text class="wf-chu" x="12" y="236" style="font-size:12px">Cử người viết nội dung</text>
+  <text class="wf-phu" x="12" y="250">T01–T03 · hạn cứng</text>
+  <rect x="196" y="228" width="79.5" height="20" rx="2" style="fill: var(--lam)"/>
+
+  <text class="wf-chu" x="12" y="270" style="font-size:12px">Thu thập nội dung</text>
+  <text class="wf-phu" x="12" y="284">T04–T21 · đỉnh vào Tết</text>
+  <rect x="275.5" y="262" width="477" height="20" rx="2" style="fill: var(--lam)"/>
+
+  <text class="wf-chu" x="12" y="304" style="font-size:12px">Đợt C — giữ chân</text>
+  <text class="wf-phu" x="12" y="318">T14–T18 · 5 tuần</text>
+  <rect x="540.5" y="296" width="132.5" height="20" rx="2" class="wf-nhan"/>
+
+  <text class="wf-chu" x="12" y="338" style="font-size:12px">Đợt D — 3 context rỗng</text>
+  <text class="wf-phu" x="12" y="352">T17–T24 · 8 tuần, trừ Tết</text>
+  <rect x="620" y="330" width="212" height="20" rx="2" class="wf-nhan"/>
+
+  <text class="wf-chu" x="12" y="372" style="font-size:12px">Đợt E — kiểm tải &amp; bàn giao</text>
+  <text class="wf-phu" x="12" y="386">T25–T28 · 4 tuần</text>
+  <rect x="832" y="364" width="106" height="20" rx="2" class="wf-nhan"/>
+
+  <line x1="355" y1="52" x2="355" y2="404" style="stroke: var(--do-tram); stroke-width:1; stroke-dasharray:3 3"/>
+  <line x1="620" y1="52" x2="620" y2="404" style="stroke: var(--do-tram); stroke-width:1; stroke-dasharray:3 3"/>
+  <line x1="673" y1="52" x2="673" y2="420" style="stroke: var(--do-tram); stroke-width:1; stroke-dasharray:3 3"/>
+  <line x1="832" y1="52" x2="832" y2="404" style="stroke: var(--do-tram); stroke-width:1; stroke-dasharray:3 3"/>
+  <line x1="938" y1="52" x2="938" y2="404" style="stroke: var(--do-tram); stroke-width:1; stroke-dasharray:3 3"/>
+
+  <path d="M355,404 l7,7 l-7,7 l-7,-7 z" class="wf-nhan"/>
+  <path d="M620,404 l7,7 l-7,7 l-7,-7 z" class="wf-nhan"/>
+  <path d="M673,420 l7,7 l-7,7 l-7,-7 z" class="wf-nhan"/>
+  <path d="M832,404 l7,7 l-7,7 l-7,-7 z" class="wf-nhan"/>
+  <path d="M938,404 l7,7 l-7,7 l-7,-7 z" class="wf-nhan"/>
+
+  <text class="wf-phu" x="355" y="435" text-anchor="middle" style="font-weight:600">Cổng A · T06</text>
+  <text class="wf-phu" x="620" y="435" text-anchor="middle" style="font-weight:600">Cổng B · T16</text>
+  <text class="wf-phu" x="673" y="451" text-anchor="middle" style="font-weight:600">Cổng C · T18</text>
+  <text class="wf-phu" x="832" y="435" text-anchor="middle" style="font-weight:600">Cổng D · T24</text>
+  <text class="wf-phu" x="930" y="451" text-anchor="end" style="font-weight:600">Bàn giao · T28</text>
+
+  <rect x="12" y="492" width="22" height="12" rx="2" class="wf-nhan"/>
+  <text class="wf-phu" x="42" y="502">việc của đội phần mềm</text>
+  <rect x="220" y="492" width="22" height="12" rx="2" style="fill: var(--lam)"/>
+  <text class="wf-phu" x="250" y="502">việc của dòng họ — không thuê đội làm thay được</text>
+  <rect x="620" y="492" width="22" height="12" rx="2" fill="url(#soc)"/>
+  <text class="wf-phu" x="650" y="502">vùng trượt đã tính trước</text>
+  <path d="M21,522 l7,7 l-7,7 l-7,-7 z" class="wf-nhan"/>
+  <text class="wf-phu" x="42" y="534">cổng nghiệm thu — không đóng thì không sang đợt sau</text>
+</svg>
+<figcaption>
+  <strong>Đợt A xong mã ở T03 nhưng cổng A chỉ mở ở T06</strong> — ba tuần ấy là thời gian ngồi chờ
+  Zalo, và nó chỉ ngắn lại nếu hồ sơ nộp sớm. Thanh dài nhất trong cả biểu đồ không phải đợt D
+  (8 tuần) mà là <b>thu thập nội dung (18 tuần)</b>, một việc không có dòng mã nào. Hai vùng gạch
+  chéo là trượt <b>đã tính trước</b>, không phải trượt bất ngờ: nếu dùng hết cả hai thì cổng D lùi từ
+  T24 sang T27 và ngày bàn giao lùi sang đầu tháng 4/2027.
+</figcaption>
+</figure>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Đợt</th><th>Khối lượng — đo được hoặc suy ra từ đâu</th><th>Ước lượng người-tuần</th><th>Tuần lịch</th><th>Độ tin cậy</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="chip must">A</span><br><b>Đóng GĐ 1</b></td>
+      <td>
+        <b>Đo được:</b> port <code>NotificationProvider</code>, <code>Channel.ZALO</code>, routing key
+        <code>notify.zalo</code> đã có → adapter là <i>thêm</i>, không phải <i>sửa luồng</i>.
+        <code>ChangeRequestApprovedEvent</code> 0 người nhận. 0 controller ở <code>/api/v1/public/**</code>.
+        6 lỗi tiếp cận liệt kê ở <code>design/README.md</code>.<br>
+        <b>Chia:</b> Zalo adapter 2 BE · bộ áp dụng đính chính 2 BE + 0,5 FE · endpoint công khai
+        1,5 BE + 1 FE · xác minh Web Push thiết bị thật 1 BE · 6 lỗi tiếp cận 2 FE.
+      </td>
+      <td class="so">BE 6,5<br>FE 3,5<br><b>≈ 10</b></td>
+      <td class="so">3 tuần mã<br>+3 tuần chờ<br><span class="wf-phu">T01–T06</span></td>
+      <td><span class="tot">Cao</span><br><span class="wf-phu">việc đã khoanh vùng chính xác trong mã</span></td>
+    </tr>
+    <tr>
+      <td><span class="chip must">B</span><br><b>Đưa dòng họ vào</b></td>
+      <td>
+        <b>Đo được:</b> hiện không có mã nhập liệu hàng loạt, không khu vực chờ, không gộp trùng —
+        bắt đầu từ 0.<br>
+        <b>Chia:</b> mẫu Excel + bộ đọc + báo lỗi theo dòng 2 BE · khu vực chờ và duyệt 2 BE + 1,5 FE ·
+        đối soát và gộp trùng 2 BE + 1,5 FE · thiếp mời Zalo 1 BE + 0,5 FE · hồ sơ người sống tự
+        quản 1 BE + 1,5 FE · danh bạ dòng họ 0,5 BE + 1,5 FE.<br>
+        <b>Nhập liệu:</b> 4 chi, mỗi chi 350–400 người, 6–10 buổi — <i>không</i> tính vào người-tuần đội.
+      </td>
+      <td class="so">BE 8,5<br>FE 6,5<br><b>≈ 15</b></td>
+      <td class="so">4 tuần mã<br>+6 tuần nhập<br>(có thể 9)<br><span class="wf-phu">T04–T16</span></td>
+      <td><span class="canh">Trung bình</span><br><span class="wf-phu">mã ước được; nhập liệu phụ thuộc người</span></td>
+    </tr>
+    <tr>
+      <td><span class="chip should">C</span><br><b>Nợ GĐ 2</b></td>
+      <td>
+        <b>Suy ra:</b> GEDCOM là mục nặng nhất — chuẩn 5.5.1 và 7.0 khác nhau, và tên đa lớp
+        (húy/tự/hiệu/thụy/pháp danh) không có tag GEDCOM tương ứng nên phải <i>quyết ánh xạ</i>,
+        không chỉ parse.<br>
+        <b>Chia:</b> GEDCOM xuất và nhập 4 BE · trang chủ mới cộng mô hình bài viết tối thiểu
+        2 BE + 3 FE · lịch việc họ và xuất <code>.ics</code> 1,5 BE + 2 FE · sinh nhật và lời chúc
+        1 BE + 1 FE.
+      </td>
+      <td class="so">BE 8,5<br>FE 6<br><b>≈ 15</b></td>
+      <td class="so">5 tuần<br><span class="wf-phu">T14–T18</span></td>
+      <td><span class="canh">Trung bình</span><br><span class="wf-phu">GEDCOM dễ phình khi gặp file thật</span></td>
+    </tr>
+    <tr>
+      <td><span class="chip should">D</span><br><b>Giai đoạn 3</b></td>
+      <td>
+        <b>Suy ra bằng loại suy, không đo được:</b> ba context hiện mỗi context 5 file rỗng. Lấy
+        <code>events</code> (57 file) và <code>membership</code> (64 file) làm thước:
+        <code>heritage</code> ước 100–130 file (di sản + từ đường + mộ phần + media asset),
+        <code>fund</code> ước 40–60, <code>reporting</code> ước 25–40 (read model, nhẹ hơn).<br>
+        <b>Cộng thêm:</b> nền media dùng chung — hiện <b>không có SDK S3/MinIO nào trong pom</b> —
+        và migration <code>V8</code>+ chạy trên dữ liệu thật đã có từ đợt B.<br>
+        <b>Chia:</b> nền media 2 BE · heritage 5 BE + 4 FE · fund 3 BE + 2,5 FE · reporting 2 BE +
+        2 FE · góc ảnh cũ 0,5 BE + 1,5 FE.
+      </td>
+      <td class="so">BE 12,5<br>FE 10<br><b>≈ 22</b></td>
+      <td class="so">8 tuần<br>(đã trừ 1,5 tuần Tết)<br><span class="wf-phu">T17–T24</span></td>
+      <td><span class="xau">Thấp</span><br><span class="wf-phu">ba context chưa có một dòng nào để đo</span></td>
+    </tr>
+    <tr>
+      <td><span class="chip could">E</span><br><b>Giai đoạn 4</b></td>
+      <td>
+        <b>Đo được:</b> quan trắc bắt đầu từ 0 — không <code>opentelemetry</code>, không
+        <code>micrometer-tracing</code> trong <code>backend/pom.xml</code>, không
+        Prometheus/Grafana/Loki trong <code>infra/docker-compose.yml</code>.<br>
+        <b>Chia:</b> quan trắc 3 BE · kiểm tải cây ≥20.000 nhân khẩu 2 BE · rà soát bảo mật và
+        PDPD 2 BE cộng thời gian của người ngoài đội · sao lưu và diễn tập phục hồi 1 BE ·
+        đào tạo cộng tài liệu bàn giao 2 (chia BE/FE/PM).
+      </td>
+      <td class="so">BE 8<br>FE 2<br><b>≈ 10</b></td>
+      <td class="so">4 tuần<br><span class="wf-phu">T25–T28</span></td>
+      <td><span class="canh">Trung bình</span><br><span class="wf-phu">PDPD phụ thuộc người rà soát ngoài đội</span></td>
+    </tr>
+    <tr>
+      <td><b>Tổng</b></td>
+      <td>Chưa cộng đệm 15%. Chưa cộng thời gian PM/BA/thiết kế.</td>
+      <td class="so"><b>≈ 72</b><br>người-tuần</td>
+      <td class="so"><b>28 tuần</b><br>14/09/26<br>→ 28/03/27</td>
+      <td><span class="canh">Trung bình</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Vì sao 72 người-tuần lại “vừa khít” 28 tuần lịch nhân 4 người</p>
+  <p>
+    Nó <b>không</b> vừa khít — 72 người-tuần chia cho 4 người là 18 tuần làm việc, còn lịch dài 28
+    tuần. <b>Mười tuần chênh lệch là thời gian chờ, không phải thời gian rảnh:</b> chờ Zalo duyệt
+    (T04–T06), chờ bốn chi nhập xong dữ liệu (T08–T13), chờ nội dung đủ để mở cổng D, và nghỉ Tết.
+    Đội có việc lấp vào — nhưng đó là việc <i>không</i> mở được cổng nào.
+  </p>
+  <p>
+    Đây chính là hình dạng của một dự án mà đường găng đi qua làn người: <b>thêm lập trình viên
+    không rút ngắn được lịch</b>. Nếu ai đề nghị tăng đội để về đích sớm, câu trả lời là không —
+    tiền nên đổ vào việc giúp bốn chi nhập liệu nhanh hơn.
+  </p>
+</div>
+
+<h2>5. Bảng phụ thuộc</h2>
+
+<p>
+  Mỗi dòng có <b>chủ sở hữu</b>, <b>thứ chặn nó</b>, <b>thứ nó chặn</b>, và <b>cách kiểm</b>. Dòng
+  nào không có đủ ba thứ đó thì không phải một mục kế hoạch, nó là một lời chúc.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>#</th><th>Việc</th><th>Chủ sở hữu</th><th>Bị chặn bởi</th><th>Chặn việc gì</th><th>Kiểm bằng</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="so">P-1</td><td><b>Nộp hồ sơ Zalo OA + 3 mẫu ZNS</b></td><td>Chủ đầu tư</td><td class="tot">Không gì cả — làm được ngay</td><td>A-1, Cổng A, và mọi lần nhắc giỗ về sau</td><td>Có mã hồ sơ Zalo trước hết T04</td></tr>
+    <tr><td class="so">P-2</td><td><b>Cử người nhập liệu 4 chi</b></td><td>Hội đồng Tộc biểu</td><td class="tot">Không gì cả</td><td>P-4 → Cổng B → C, D, E</td><td>Biên bản có 4 tên chính và 4 tên dự phòng, hết T02</td></tr>
+    <tr><td class="so">P-3</td><td><b>Cử người viết nội dung (4 vai)</b></td><td>Hội đồng Tộc biểu</td><td class="tot">Không gì cả</td><td>P-5 → Cổng D</td><td>4 tên cho 4 vai, hết T03</td></tr>
+    <tr><td class="so">P-4</td><td><b>Nhập liệu thật 4 chi</b></td><td>Trưởng chi</td><td>P-2 · B-1..B-3 (đường ống chạy được) · Q-2</td><td>Cổng B và toàn bộ C/D/E</td><td>SQL: mỗi <code>branch</code> có ≥300 nhân khẩu đã duyệt khỏi khu chờ</td></tr>
+    <tr><td class="so">P-5</td><td><b>Thu thập nội dung</b></td><td>Người được cử ở P-3</td><td>P-3 · Q-3 (bản mô tả việc)</td><td>Cổng D</td><td>Chỉ tiêu giữa kỳ T10: 10 mục di sản và 3 bài bản thảo</td></tr>
+    <tr><td class="so">A-1</td><td><code>ZaloZnsAdapter</code> + queue <code>notify.zalo</code></td><td>Backend</td><td class="tot">Không gì cả để <i>viết</i>; P-1 để <i>nghiệm thu</i></td><td>Cổng A</td><td><code>notification_log</code> có dòng <code>channel=ZALO, status=SENT</code> kèm <code>provider_message_id</code> thật</td></tr>
+    <tr><td class="so">A-2</td><td>Bộ áp dụng yêu cầu đính chính</td><td>Backend</td><td>Không gì cả</td><td>Cổng A · đợt B (Trưởng chi cần sửa được dữ liệu vừa nhập)</td><td>grep ra ≥1 người nhận của <code>ChangeRequestApprovedEvent</code>; test tích hợp: duyệt xong <code>SELECT</code> ra giá trị mới</td></tr>
+    <tr><td class="so">A-3</td><td>Endpoint công khai cho khách</td><td>Backend + Frontend</td><td>Không gì cả</td><td>Cổng A · trang chủ công khai của đợt C</td><td>E2E: khách xem được người đã khuất, nhận 403/404 với mọi người còn sống</td></tr>
+    <tr><td class="so">A-4</td><td>Web Push tới thiết bị thật</td><td>Backend</td><td>Cần 1 máy Android và 1 iPhone iOS ≥16.4 đã cài PWA</td><td>Cổng A</td><td>Ảnh chụp thông báo trên hai máy thật — test đơn vị <b>không</b> đủ, vì mã hoá viết tay</td></tr>
+    <tr><td class="so">A-5</td><td>6 lỗi tiếp cận còn lại</td><td>Frontend</td><td>Một phần phụ thuộc Q-1 (màu huy hiệu)</td><td>Cổng A</td><td>Bộ kiểm tự động: 0 điều khiển dưới 44px, 0 đoạn chữ dưới 16px, tiêu điểm ≥3:1</td></tr>
+    <tr><td class="so">B-1</td><td>Mẫu Excel + bộ đọc + báo lỗi theo dòng</td><td>Backend</td><td>Cổng A đóng</td><td>P-4</td><td>File 400 dòng sai kiểu → báo lỗi chỉ đúng số dòng và tên cột</td></tr>
+    <tr><td class="so">B-2</td><td>Khu vực chờ + duyệt</td><td>Backend + Frontend</td><td>B-1</td><td>P-4</td><td>SQL: 100% dòng nhập vào khu chờ, 0 dòng ghi thẳng <code>person</code></td></tr>
+    <tr><td class="so">B-3</td><td>Đối soát + gộp trùng</td><td>Backend + Frontend</td><td>B-2</td><td>Cổng B</td><td>Đề xuất được cặp trùng, <b>không tự gộp</b>; mỗi lần gộp có <code>audit_log</code></td></tr>
+    <tr><td class="so">B-4</td><td>Hồ sơ người sống tự quản + đồng ý</td><td>Backend + Frontend</td><td>Q-2</td><td>Cổng B · rà soát PDPD ở đợt E</td><td>SQL: 0 người sống có dữ liệu Tier-3 mà không có bản ghi đồng ý</td></tr>
+    <tr><td class="so">C-1</td><td>Nền media dùng chung (MinIO)</td><td>Backend</td><td class="canh">Không gì cả — <b>đề nghị kéo lên đợt C</b></td><td>Ảnh bìa bản tin (C) · toàn bộ heritage (D)</td><td>Ảnh tải lên MinIO, bảng chỉ giữ khoá; 0 byte media trong Postgres</td></tr>
+    <tr><td class="so">C-2</td><td>Trang chủ mới (bản tin · vinh danh · sự kiện làng)</td><td>Frontend + Backend</td><td>C-1 · P-5 (cần bài thật)</td><td>Cổng C</td><td>≥3 bài thật, ≥1 vinh danh thật — không phải dữ liệu profile <code>demo</code></td></tr>
+    <tr><td class="so">C-3</td><td>GEDCOM xuất/nhập</td><td>Backend</td><td>Cổng B (cần dữ liệu thật để thử vòng khứ hồi)</td><td>Không chặn ai — <b>đây là mục nên cắt đầu tiên nếu thiếu thời gian</b></td><td>Xuất → nạp vào DB trắng → số nhân khẩu và số cạnh cha–con khớp 100%</td></tr>
+    <tr><td class="so">D-1</td><td><code>heritage</code> · <code>fund</code> · <code>reporting</code></td><td>Backend + Frontend</td><td>C-1 · Cổng B · Q-3</td><td>Cổng D</td><td><code>ModularityTests</code> xanh; không thư mục nào còn chỉ có <code>package-info.java</code></td></tr>
+    <tr><td class="so">D-2</td><td>Migration <code>V8</code>+</td><td>Backend</td><td>Cổng B (chạy trên bản sao dữ liệu thật)</td><td>D-1</td><td>Chạy được trên bản sao dữ liệu đợt B, có thời gian đo được và script lùi đã thử</td></tr>
+    <tr><td class="so">E-1</td><td>Quan trắc (OTel/Prometheus/Grafana/Loki)</td><td>Backend</td><td class="canh">Không gì cả — <b>nên bắt đầu ở đợt D</b>, không đợi E</td><td>E-2 (không có số đo thì kiểm tải vô nghĩa)</td><td>Dashboard đọc được: tỉ lệ lỗi, p95, độ sâu hàng đợi, số job giỗ</td></tr>
+    <tr><td class="so">E-2</td><td>Kiểm tải cây lớn</td><td>Backend</td><td>E-1 · Cổng B</td><td>Bàn giao</td><td>≥20.000 nhân khẩu: p95 LCA dưới 500ms, p95 render nhánh dưới 2000ms, 50 phiên đồng thời</td></tr>
+    <tr><td class="so">E-3</td><td>Rà soát bảo mật &amp; PDPD</td><td>Người ngoài đội + Backend</td><td>Q-2 · B-4</td><td>Bàn giao</td><td>Có văn bản: bản đồ dữ liệu cá nhân, cơ sở pháp lý từng trường, quy trình xoá đo được dưới 30 ngày</td></tr>
+    <tr><td class="so">Q-1</td><td>Hội đồng quyết màu huy hiệu Dâu/Rể</td><td>Hội đồng Tộc biểu</td><td>Không gì cả</td><td>A-5, Cổng A</td><td>Có quyết định ghi biên bản</td></tr>
+    <tr><td class="so">Q-2</td><td>Hội đồng quyết quyền xoá của dâu/rể</td><td>Hội đồng Tộc biểu</td><td>Không gì cả</td><td>B-4, P-4, E-3</td><td>Có quyết định ghi biên bản</td></tr>
+    <tr><td class="so">Q-3</td><td>Hội đồng quyết di chúc tách hay không</td><td>Hội đồng Tộc biểu</td><td>Không gì cả</td><td>P-5 (bản mô tả việc), D-1, D-2</td><td>Có quyết định ghi biên bản</td></tr>
+    <tr><td class="so">X-1</td><td class="xau"><b>Cài JDK 21 trên máy dev và dựng CI</b></td><td>Đội phần mềm</td><td>Không gì cả</td><td><b>Mọi thứ.</b> Hiện <code>java</code> là 1.8.0_202 → không chạy được <code>mvn test</code></td><td><code>java -version</code> báo 21; <code>mvn test</code> chạy hết và ra số trên CI</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Hai đề nghị chuyển hạng mục sớm hơn — không đổi thứ tự năm đợt</p>
+  <p>
+    <code>plan/00-tong-the.html</code> xếp <b>nền media dùng chung</b> vào đợt D. Nhưng đợt C dựng
+    trang chủ mới với bản tin, vinh danh và sự kiện làng — và <b>bài viết nào cũng có ảnh</b>. Nếu
+    nền media chưa có ở đợt C thì hoặc đợt C ra một trang chủ không ảnh, hoặc ai đó nhét ảnh vào cơ
+    sở dữ liệu, phá ràng buộc bắt buộc ở mục 5 của bản chốt.
+  </p>
+  <p>
+    <b>Đề nghị 1: kéo C-1 (nền media) lên đầu đợt C</b>, ước 2 người-tuần backend.
+    <b>Đề nghị 2: dựng E-1 (quan trắc) trong đợt D</b> — quan trắc là <i>công cụ</i> để làm đợt D,
+    không phải <i>sản phẩm</i> của đợt E; chi phí không đổi, chỉ đổi chỗ đứng trong lịch.
+  </p>
+  <p>
+    Cả hai <b>không</b> phải sắp lại năm đợt A–E; thứ tự đợt giữ nguyên. Đây là chuyển hạng mục bên
+    trong lộ trình, và nó thuộc thẩm quyền <code>po</code>, không thuộc tôi. Tôi nêu để có người
+    quyết.
+  </p>
+</div>
+
+<h2>6. Tiêu chí ra từng đợt</h2>
+
+<p>
+  Lấy mẫu từ 11 tiêu chí ra Giai đoạn 1 (<code>.claude/plan-giai-doan-1.html</code> §8). Nguyên tắc
+  giữ nguyên: <b>mỗi dòng phải kiểm được bằng máy hoặc quan sát được bằng mắt</b>. Không dòng nào
+  được viết là “hoạt động tốt”, “ổn định” hay “đã hoàn thiện”.
+</p>
+
+<h3>Cổng A — đóng Giai đoạn 1 · hạn T06 (19–25/10/2026)</h3>
+<ol>
+  <li><b>Một tin ZNS thật</b> gửi tới một số điện thoại thật bằng mẫu đã duyệt. <code>notification_log</code> có dòng <code>channel=ZALO</code>, <code>status=SENT</code>, và một <code>provider_message_id</code> do Zalo trả về — không phải giá trị giả lập.</li>
+  <li>Chặn gateway Zalo lại → tin vào <code>notify.dlq</code>, đếm được qua RabbitMQ management API, <b>0 tin biến mất</b>. Chạy lại consumer trên cùng tin đó → <b>không gửi trùng</b> (khoá <code>reminder_job_id + recipient</code>).</li>
+  <li>Trưởng chi bấm Duyệt một <code>ChangeRequest</code> sửa tên → <code>SELECT</code> trên <code>person_name</code> trả <b>giá trị mới</b>. grep <code>ChangeRequestApprovedEvent</code> trong <code>src/main</code> ra <b>≥1 người nhận</b> (hiện là 0).</li>
+  <li>Người duyệt nhìn thấy giá trị “trước” của trường mình sắp ghi đè, <b>kể cả khi đó là dữ liệu Tier-3 của người còn sống</b> — hoặc bị chặn duyệt hẳn. Chọn một, có test khẳng định. <b>Không được để duyệt mù.</b></li>
+  <li>Từ chối không kèm lý do → máy chủ trả HTTP 400. Kiểm bằng <code>curl</code>, không kiểm qua giao diện.</li>
+  <li>Có <b>ít nhất một <code>@RestController</code></b> ánh xạ vào <code>/api/v1/public/**</code>. Test E2E: khách chưa đăng nhập <code>GET</code> được hồ sơ một người đã khuất, và nhận 403/404 cho <b>mọi</b> người còn sống.</li>
+  <li>Web Push tới <b>hai thiết bị thật</b>: một Android Chrome, một iPhone iOS ≥16.4 đã cài PWA vào màn hình chính. Bằng chứng là ảnh chụp màn hình. Lý do gắt: mã hoá tự cài (<code>P256</code>, <code>WebPushCipher</code>, <code>VapidSigner</code>) — test đơn vị xanh chỉ chứng minh mã khớp với chính nó.</li>
+  <li>Subscription bị thu hồi (404/410) → dòng biến khỏi <code>push_subscription</code>. Kiểm bằng SQL sau khi gỡ PWA trên máy thật.</li>
+  <li>Sáu lỗi tiếp cận đóng, đo tự động: liên kết thanh đầu trang ≥44×44px · màn lịch giỗ <b>0/76</b> điều khiển dưới sàn (hiện 73/76) · hồ sơ nhân khẩu <b>0</b> đoạn chữ dưới 16px (hiện 39/61) · <code>&lt;Select&gt;</code> AntD có vòng tiêu điểm ≥3:1 (hiện 1,00:1) · điểm dừng Tab đầu tiên là liên kết “bỏ qua, tới nội dung chính” (hiện không tồn tại) · huy hiệu đếm thông báo ≥4,5:1 ở cả chế độ sáng và tối.</li>
+  <li><code>mvn test</code> xanh <b>và <code>ModularityTests</code> xanh</b>; <code>npm run typecheck</code>, <code>next lint</code>, vitest, Playwright xanh. <b>0 test đỏ, 0 <code>skip</code> mới</b> không có lý do ghi ngay trong mã.</li>
+  <li>NFR-1 đo lại <b>sau khi thêm trang công khai SSR</b>, trên <code>next build &amp;&amp; next start</code>: điều hướng tới thẻ nhân khẩu đầu tiên vẫn dưới 2000ms, trung vị 7 lần chạy.</li>
+</ol>
+
+<h3>Cổng B — dòng họ đã ở trong hệ thống · hạn T16 (28/12/2026–03/01/2027)</h3>
+<ol>
+  <li>Mẫu Excel tải về được, có sheet hướng dẫn. Một file điền sai kiểu bị từ chối kèm thông báo <b>chỉ đúng số dòng và tên cột</b>, không phải “có lỗi xảy ra”.</li>
+  <li>Nhập file 400 dòng → SQL đếm: <b>100%</b> vào khu vực chờ, <b>0</b> dòng ghi thẳng vào <code>person</code>.</li>
+  <li>Bộ gộp trùng <b>đề xuất</b> cặp trùng trên dữ liệu thật và <b>không tự gộp</b>. Mỗi lần gộp có dòng <code>audit_log</code> đủ <code>before</code> và <code>after</code>.</li>
+  <li><b>Cả bốn chi</b> có ít nhất một tài khoản Trưởng chi đăng nhập thật qua Keycloak (không phải tài khoản dev), và mỗi chi có <b>≥300 nhân khẩu</b> đã duyệt khỏi khu chờ — <code>SELECT count(*) GROUP BY branch</code>.</li>
+  <li>Đối soát: tổng số nhân khẩu mỗi chi khớp sổ giấy của chi ấy với sai lệch <b>≤2%</b>, có biên bản Trưởng chi ký. Quan sát được, không đo bằng máy — và đây là dòng quan trọng nhất của cổng này.</li>
+  <li>SQL trả <b>0 dòng</b> cho: người còn sống có dữ liệu Tier-3 mà không có bản ghi đồng ý.</li>
+  <li>Thiếp mời Zalo đã gửi; tỉ lệ đăng nhập lần đầu đọc được từ <code>app_user.created_at</code> — con số bao nhiêu thì tuỳ, nhưng phải <b>đọc được</b>, vì nó là chỉ số duy nhất nói sản phẩm có người dùng hay không.</li>
+  <li>Một thành viên thường tự sửa được hồ sơ của chính mình — E2E với tài khoản Member thật, không phải Admin.</li>
+  <li>Cây phả đồ render nhánh <b>sâu nhất của dữ liệu thật</b> dưới 2000ms; LCA trên cặp <b>xa nhất của dữ liệu thật</b> dưới 500ms. Cho tới đây, hai con số này mới chỉ đo trên dữ liệu giả.</li>
+  <li><b>Diễn tập phục hồi:</b> <code>pg_dump</code> rồi restore vào máy trắng; số cạnh trong <code>giapha_graph</code> và số dòng <code>relationship</code> <b>khớp nhau và khớp bản gốc</b>. Đây là lần đầu hệ thống có dữ liệu <b>không tái tạo được</b> — không chứng minh phục hồi được ở đây thì mọi đợt sau đều đang đánh cược.</li>
+</ol>
+
+<h3>Cổng C — người dùng quay lại · hạn T18 (11–17/01/2027)</h3>
+<ol>
+  <li>Trang chủ hiển thị <b>≥3 bài bản tin thật, ≥1 mục vinh danh thật, ≥1 sự kiện làng thật</b> — SQL khẳng định không bản ghi nào sinh từ profile <code>demo</code>.</li>
+  <li>Lịch việc họ xuất được <code>.ics</code>; file mở được trên Google Calendar <b>và</b> Lịch iOS; ngày âm ghi trong file khớp kết quả <code>LunarConverter</code> cho cùng sự kiện.</li>
+  <li>Nhắc sinh nhật chỉ gửi cho người <b>còn sống</b>, và chỉ tới người được phép thấy năm sinh (Tier 2) — test khẳng định cả hai điều kiện.</li>
+  <li>GEDCOM vòng khứ hồi: xuất → nạp vào cơ sở dữ liệu trắng → số nhân khẩu và số cạnh cha–con khớp <b>100%</b>. Tên đa lớp (húy/tự/hiệu/thụy/pháp danh) không mất — vào tag tương ứng hoặc <code>NOTE</code> có nhãn, <b>không im lặng vứt bỏ</b>.</li>
+  <li>Nạp một file GEDCOM do phần mềm khác xuất (Gramps hoặc Family Tree Maker) <b>không làm sập tiến trình</b>; mọi dòng không hiểu được đi vào báo cáo bỏ qua và <b>đếm được</b>.</li>
+  <li>Migration <code>V8</code>+ chạy trên <b>bản sao dữ liệu thật của đợt B</b>, thời gian chạy ghi thành số, và script lùi thủ công đã thử một lần.</li>
+  <li>Sàn tiếp cận: <b>0 vi phạm mới</b> trên mọi màn mới của đợt C. Bộ kiểm hồi quy tiếp cận vẫn xanh.</li>
+  <li><code>mvn test</code> cộng <code>ModularityTests</code> cộng toàn bộ kiểm frontend xanh.</li>
+</ol>
+
+<h3>Cổng D — kho đã có hàng · hạn T24 (22–28/02/2027)</h3>
+<ol>
+  <li>Ba context <code>heritage</code>/<code>fund</code>/<code>reporting</code> mỗi context có ít nhất một aggregate, một port, một adapter, một application service. <code>find</code> không còn thư mục nào <b>chỉ chứa</b> <code>package-info.java</code>.</li>
+  <li><code>ModularityTests</code> xanh: <b>không context nào gọi thẳng repository của context khác</b>. Đây là ràng buộc bắt buộc ở mục 5 bản chốt, không phải khuyến nghị.</li>
+  <li><b>0 byte media trong Postgres:</b> truy vấn mọi cột <code>bytea</code> và mọi cột <code>text</code> lớn hơn 1MB trả 0 dòng. Ảnh nằm ở MinIO, bảng chỉ giữ khoá.</li>
+  <li><b>Kho có hàng, không chỉ có kệ:</b> ≥30 mục di sản thật · ≥1 từ đường có ảnh và mô tả · ≥20 mộ phần có toạ độ GPS thật (khác 0,0 và nằm trong lãnh thổ Việt Nam) · ≥8 bài bản tin · ≥10 mục bảng vàng. <b>Đây là tiêu chí quan trọng nhất của cổng D và nó không đo bằng test — nó đo bằng đếm.</b></li>
+  <li>Mở một mộ phần trên điện thoại → nút chỉ đường mở được ứng dụng bản đồ tới đúng toạ độ thật.</li>
+  <li>Sổ quỹ: tổng thu trừ tổng chi bằng số dư ghi nhận, <b>sai lệch 0đ</b>. Mọi khoản có ảnh biên nhận lưu ở MinIO. <b>Không</b> có cổng thanh toán trực tuyến — đã cắt ở bản chốt.</li>
+  <li>Báo cáo dân số học <b>không có</b> chỉ số tỉ lệ có con trai hay tỉ lệ tuyệt tự — grep trên mã báo cáo ra 0 kết quả. Đã cắt vì đi ngược FR-1.8.</li>
+  <li>Bảng vàng ghi <b>có</b> đóng góp, <b>không</b> xếp hạng theo số tiền — kiểm bằng mã và bằng mắt trên màn hình thật.</li>
+  <li>Mọi màn sao hạn và văn khấn có dẫn nguồn và ghi rõ dị bản, đúng ranh giới “trình bày, không phán”.</li>
+  <li>Di chúc nằm đúng chỗ Hội đồng đã quyết ở câu hỏi Q-3. <b>Chưa có quyết định thì cổng D không đóng</b> — không được đoán hộ.</li>
+</ol>
+
+<h3>Cổng bàn giao — hạn T28 (22–28/03/2027)</h3>
+<ol>
+  <li>Kiểm tải trên cây <b>≥20.000 nhân khẩu</b> (sinh thêm bằng generator, <b>không</b> nhân bản dữ liệu thật có định danh): p95 LCA dưới 500ms, p95 render nhánh dưới 2000ms, ở 50 phiên đồng thời.</li>
+  <li>Mùa giỗ giả lập: sinh <b>5.000 <code>reminder_job</code></b> trong một đêm; hàng đợi rút hết dưới 30 phút; <code>notify.dlq</code> rỗng; <b>0 tin gửi trùng</b> — đếm trên <code>notification_log</code>.</li>
+  <li>Quan trắc chạy: dashboard đọc được tỉ lệ lỗi, độ trễ p95, độ sâu hàng đợi, số job giỗ trong đêm. Hiện <code>pom.xml</code> không có dependency nào — đây là dựng từ 0.</li>
+  <li>Cảnh báo <b>thật</b>: bơm một tin hỏng vào hàng đợi → có người nhận được cảnh báo. Đã thử, có bằng chứng.</li>
+  <li>Rà soát PDPD có <b>văn bản</b>: bản đồ dữ liệu cá nhân theo từng trường, cơ sở pháp lý từng trường, danh sách bên thứ ba (Zalo, Keycloak, MinIO), quy trình đáp ứng yêu cầu xoá đo được dưới 30 ngày.</li>
+  <li>Ẩn danh hoá chạy thật trên một hồ sơ thật theo yêu cầu: mọi trường Tier-3 rỗng, <b>node cây còn nguyên</b>, cạnh cha–con còn nguyên. SQL khẳng định cả ba.</li>
+  <li>Sao lưu tự động hằng ngày cộng <b>một lần phục hồi thật có bấm giờ</b>; RTO và RPO ghi thành con số, không ghi thành tính từ.</li>
+  <li>Đào tạo: ít nhất một buổi cho mỗi chi, có danh sách ký. <b>Kiểm bằng cách khắc nghiệt:</b> một người chưa từng chạm vào repo dựng lại hệ thống từ máy trắng chỉ bằng <code>README.md</code>, và làm được.</li>
+  <li><b>Bàn giao khoá:</b> VAPID, secret Zalo OA, Keycloak admin, MinIO root chuyển cho chủ đầu tư <b>và đổi lại</b>. Sau ngày bàn giao, đội dự án không giữ khoá nào còn dùng được.</li>
+</ol>
+
+<h2>7. Sổ rủi ro</h2>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>#</th><th>Rủi ro</th><th>Xác suất</th><th>Ảnh hưởng</th><th>Dấu hiệu nhận ra sớm</th><th>Giảm nhẹ</th><th>Chủ sở hữu</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="so">R-1</td>
+      <td><b>Bốn kho rỗng không có nội dung.</b> Đợt D ra thư viện di sản, từ đường, mộ phần, bản tin — bốn màn hình đẹp và trống.</td>
+      <td><span class="xau">Cao</span></td>
+      <td><span class="xau">Cao</span><br>đợt nặng nhất về mã thành vô nghĩa</td>
+      <td>Tới <b>T10</b> mà chưa có 10 mục di sản và 3 bài bản thảo. Dấu hiệu sớm hơn nữa: T03 chưa cử được người viết.</td>
+      <td>Cử người từ T01–T03 (P-3), tách <b>bốn vai riêng</b>. Đặt chỉ tiêu giữa kỳ ở T10 và T18. Đặt đỉnh thu thập vào Tết T18–T21 khi con cháu về đông. Đưa “kho có hàng” thành tiêu chí ra cổng D — <b>không có nội dung thì không đóng đợt</b>.</td>
+      <td>Hội đồng Tộc biểu</td>
+    </tr>
+    <tr>
+      <td class="so">R-2</td>
+      <td><b>Zalo OA chậm duyệt.</b> Adapter viết xong nhưng không gửi được tin nào, cổng A không đóng.</td>
+      <td><span class="canh">Trung bình</span></td>
+      <td><span class="xau">Cao</span><br>đẩy lùi <b>toàn bộ</b> lịch phía sau</td>
+      <td>Tới <b>T04</b> mà chưa có mã hồ sơ. Hoặc mẫu ZNS bị trả lại lần thứ hai.</td>
+      <td>Nộp trong tuần này (P-1). Nộp <b>ba</b> mẫu tin cùng lúc, không nộp lần lượt. Nếu tới T08 vẫn chưa duyệt: <b>đóng cổng A có điều kiện</b> — nghiệm thu 4/5 việc, treo riêng mục Zalo thành một mục theo dõi, cho đợt B khởi động. Nhắc giỗ tạm chạy trên in-app và Web Push (đã hoạt động), và <b>nói rõ với dòng họ đó là tạm</b>.</td>
+      <td>Chủ đầu tư · PM theo dõi</td>
+    </tr>
+    <tr>
+      <td class="so">R-3</td>
+      <td><b>Chi thiếu người nhập liệu.</b> Nằm thẳng trên đường găng.</td>
+      <td><span class="xau">Cao</span></td>
+      <td><span class="xau">Cao</span><br>chặn cổng B → chặn C, D, E</td>
+      <td>Tới <b>T02</b> chưa đủ 4 tên. Hoặc trong T08–T13, một chi có số dòng nhập <b>không tăng trong hai tuần liên tiếp</b> — đo bằng SQL, không đo bằng lời báo cáo.</td>
+      <td>Cử cả người <b>dự phòng</b>, không chỉ người chính. Đo tiến độ từng chi hằng tuần bằng SQL và công khai bảng cho cả bốn chi cùng thấy. Nếu một chi đứng im hai tuần: chuyển sang phương án <b>chụp ảnh sổ, nhập liệu tập trung</b> — tốn tiền nhưng cứu được lịch. <b>Đừng nén thời gian nhập liệu, hãy đổi người nhập.</b></td>
+      <td>Hội đồng Tộc biểu · Trưởng chi</td>
+    </tr>
+    <tr>
+      <td class="so">R-4</td>
+      <td><b>Sổ Hán-Nôm chưa phiên âm.</b> Chi có sổ chữ Hán không nhập được, kéo cả cổng B.</td>
+      <td><span class="xau">Cao</span></td>
+      <td><span class="canh">Trung bình</span><br>chỉ chặn một chi, nếu tách đúng</td>
+      <td>Chi ấy chưa nhập được dòng nào tới T10 trong khi ba chi kia đã quá nửa.</td>
+      <td><b>Tách làm hai việc và đừng bao giờ gộp lại:</b> chụp ảnh (một buổi, ai cũng làm được, giá trị vĩnh viễn) và phiên âm (người biết chữ Hán, thời gian không đoán được). Cổng B chỉ yêu cầu <b>ảnh đã chụp và đã tải lên</b>; phiên âm chảy tiếp vào đợt C và D. Chi này <b>không được phép chặn ba chi kia</b> — đã ghi ở bản chốt mục 4.</td>
+      <td>Trưởng chi liên quan</td>
+    </tr>
+    <tr>
+      <td class="so">R-5</td>
+      <td><b>Nhập sai dữ liệu, phát hiện muộn.</b> Sai thế thứ hoặc sai cha–con, phát hiện sau khi đã nhập 1.500 người.</td>
+      <td><span class="canh">Trung bình</span></td>
+      <td><span class="xau">Rất cao</span><br>rủi ro <b>khó đảo ngược nhất</b> của cả dự án</td>
+      <td>Hai chi báo cùng một cụ ở hai đời khác nhau. Hoặc số nhân khẩu lệch quá 5% so với sổ giấy. Hoặc bộ gộp trùng đề xuất quá nhiều cặp.</td>
+      <td>Ba lớp chắn: (a) <b>khu vực chờ bắt buộc</b> — 0 dòng ghi thẳng vào <code>person</code>; (b) <b>đối soát với sổ giấy có biên bản ký ngay khi hết mỗi chi</b>, không đợi hết cả bốn; (c) <b>xoá mềm cộng audit đầy đủ</b> đã có sẵn, nên mọi sửa sai đều lần ngược được. Thêm: gộp trùng <b>đề xuất chứ không tự gộp</b> — một lần gộp nhầm hai người thật là một lần gãy cây.</td>
+      <td>Trưởng chi · Backend</td>
+    </tr>
+    <tr>
+      <td class="so">R-6</td>
+      <td><b>Ba câu hỏi Hội đồng chưa trả lời.</b> Chặn A, B và D ở ba chỗ khác nhau.</td>
+      <td><span class="xau">Cao</span><br><span class="wf-phu">đã treo từ trước, chưa ai gỡ</span></td>
+      <td><span class="canh">Trung bình</span><br>nhưng leo thang nhanh theo thời gian</td>
+      <td>Câu hỏi đã treo hết một hạn ở mục 8 mà chưa có biên bản.</td>
+      <td>Mỗi câu có <b>hạn chót</b> và <b>phương án mặc định nếu im lặng</b> — xem mục 8. Nguyên tắc: phương án mặc định luôn là phương án <b>đảo ngược được rẻ nhất</b>, không phải phương án hay nhất. Đưa cả ba vào <b>một</b> buổi họp Hội đồng, đừng hỏi rải rác.</td>
+      <td>PM đưa lên · Hội đồng quyết</td>
+    </tr>
+    <tr>
+      <td class="so">R-7</td>
+      <td><b>Web Push mã hoá tự cài.</b> <code>P256</code>, <code>WebPushCipher</code>, <code>VapidSigner</code> viết tay, không thư viện. Lỗi loại này chỉ lộ trên thiết bị thật.</td>
+      <td><span class="canh">Trung bình</span></td>
+      <td><span class="canh">Trung bình</span><br>kênh dự phòng của Zalo mất tác dụng</td>
+      <td>Push tới Android được nhưng iOS im lặng, hoặc ngược lại. Hoặc push tới được nhưng nội dung rỗng.</td>
+      <td>Tiêu chí ra cổng A yêu cầu <b>hai thiết bị thật</b>, có ảnh chụp — không chấp nhận test đơn vị. Nếu thất bại: thay bằng thư viện web-push chuẩn, ước 1 người-tuần, đã tính là chi phí có thể phải trả.</td>
+      <td>Backend</td>
+    </tr>
+    <tr>
+      <td class="so">R-8</td>
+      <td><b>Tết Đinh Mùi rơi giữa đợt D</b> (khoảng 06/02/2027, tuần T21).</td>
+      <td><span class="xau">Chắc chắn</span></td>
+      <td><span class="canh">Trung bình</span><br>mất khoảng 1,5 tuần công</td>
+      <td>Không cần dấu hiệu — nó có trên lịch.</td>
+      <td>Đã trừ 1,5 tuần khỏi đợt D trong bảng mục 4. <b>Không đặt cutover, migration <code>V8</code> hay bất kỳ việc rủi ro nào vào T20–T23.</b> Đổi lại, cố ý dùng Tết làm <b>đỉnh thu thập nội dung</b>: đó là dịp duy nhất con cháu xa quê về đông, các cụ có mặt để đối chiếu thế thứ, và người ta sẵn lòng đi tảo mộ.</td>
+      <td>PM</td>
+    </tr>
+    <tr>
+      <td class="so">R-9</td>
+      <td><b>Ước lượng đợt D dựa trên loại suy, không dựa trên đo.</b> Ba context hiện 5 file rỗng mỗi context; con số 22 người-tuần suy ra từ kích thước <code>events</code> và <code>membership</code>.</td>
+      <td><span class="canh">Trung bình</span></td>
+      <td><span class="canh">Trung bình</span><br>biên hợp lý là ±40%</td>
+      <td>Hết tuần thứ ba của đợt D mà <code>heritage</code> chưa có aggregate nào chạy được đầu-cuối.</td>
+      <td>Làm <b>một lát cắt dọc</b> trước: một loại di sản duy nhất, đủ bốn lớp, có ảnh lên MinIO, có màn hình. Đo lát cắt ấy rồi mới ngoại suy phần còn lại. Báo lại ước lượng cho <code>po</code> sau lát cắt — <b>không nén để khớp lịch cũ</b>.</td>
+      <td>PM · Backend</td>
+    </tr>
+    <tr>
+      <td class="so">R-10</td>
+      <td><b>Nền media chưa có.</b> Không SDK S3/MinIO nào trong <code>backend/pom.xml</code>, dù MinIO đã chạy trong docker-compose.</td>
+      <td><span class="canh">Trung bình</span></td>
+      <td><span class="canh">Trung bình</span><br>trang chủ đợt C không có ảnh, hoặc ai đó nhét ảnh vào DB</td>
+      <td>Đợt C bắt đầu mà chưa quyết kéo C-1 lên.</td>
+      <td>Kéo C-1 lên đầu đợt C (đề nghị ở cuối mục 5, cần <code>po</code> duyệt). Ràng buộc “media không bao giờ nằm trong DB” đưa vào tiêu chí ra cổng D dưới dạng truy vấn SQL, để nó không thể bị vi phạm âm thầm.</td>
+      <td>PM đề xuất · <code>po</code> quyết</td>
+    </tr>
+    <tr>
+      <td class="so">R-11</td>
+      <td><b>Quan trắc dựng từ 0 trong đợt E.</b> Không dependency, không service — 4 tuần đợt E phải chứa cả dựng lẫn đo.</td>
+      <td><span class="canh">Trung bình</span></td>
+      <td><span class="canh">Trung bình</span><br>kiểm tải chạy mà không biết nghẽn ở đâu</td>
+      <td>Vào đợt E mà chưa có một dashboard nào.</td>
+      <td>Dựng E-1 <b>trong đợt D</b>, không đợi đợt E — quan trắc là công cụ để làm đợt D, không phải sản phẩm của đợt E. Chi phí không đổi, chỉ đổi chỗ đứng trong lịch.</td>
+      <td>Backend</td>
+    </tr>
+    <tr>
+      <td class="so">R-12</td>
+      <td><b>Máy dev không có JDK 21.</b> <code>java -version</code> ra 1.8.0_202, <code>JAVA_HOME</code> trỏ JDK 8.</td>
+      <td><span class="xau">Đang xảy ra</span></td>
+      <td><span class="canh">Trung bình</span><br>mọi báo cáo “test xanh” không tự kiểm chứng được</td>
+      <td>Đã xảy ra. Đo trực tiếp khi viết tài liệu này.</td>
+      <td>Cài Temurin/Zulu 21, trỏ lại <code>JAVA_HOME</code>, <b>và dựng CI chạy <code>mvn test</code> trên mỗi lần đẩy mã</b>. Chừng nào chưa có CI, mọi con số test là lời kể lại chứ không phải bằng chứng.</td>
+      <td>Đội phần mềm</td>
+    </tr>
+    <tr>
+      <td class="so">R-13</td>
+      <td><b>Bốn tài liệu con 01–04 chưa tồn tại lúc lập lịch này.</b> Chúng có thể phát hiện thêm việc.</td>
+      <td><span class="xau">Cao</span></td>
+      <td><span class="canh">Trung bình</span></td>
+      <td>Tài liệu con ra và có mục không nằm trong bảng mục 5.</td>
+      <td>Khi bốn tài liệu con hoàn tất: <b>đối chiếu từng mục với bảng phụ thuộc</b>, và nếu có việc mới thì <b>sửa ước lượng, không nén lịch</b>. Chênh lệch báo lên <code>po</code>, không tự hấp thụ.</td>
+      <td>PM</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>8. Ba câu hỏi đang chặn — mỗi câu chặn gì, hạn khi nào</h2>
+
+<p>
+  Ba câu này đã treo từ trước tài liệu này (<code>plan/00-tong-the.html</code> chân trang và
+  <code>design/README.md</code>). Không đợt nào giải hộ được, và <b>không lập trình viên nào được
+  phép tự quyết</b> — hai câu đầu là chuyện văn hoá dòng họ và pháp lý, không phải chuyện kỹ thuật.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Câu hỏi</th><th>Chặn việc gì, cụ thể</th><th>Hạn chót</th><th>Vì sao hạn ở đúng chỗ đó</th><th>Phương án mặc định nếu im lặng</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Q-1 · Màu huy hiệu Dâu/Rể</b><br><span class="wf-phu">Hai sắc lạnh duy nhất trên phả đồ toàn sắc đất; hai mã màu duy nhất viết ngoài <code>tokens.ts</code> — <code>frontend/src/lib/tree/badges.ts</code>, hai dòng <code>DAU</code> và <code>RE</code>.</span></td>
+      <td>Bốn test frontend đang đỏ có chủ ý → chặn tiêu chí ra cổng A số 10 (“0 test đỏ”). Chặn cả bản in phả đồ và mọi tài liệu thiết kế in ra cho Hội đồng.</td>
+      <td><b>Hết T04</b><br>05–11/10/2026</td>
+      <td>Phải có trước buổi nghiệm thu cổng A ở T06, chừa một tuần để sửa và chạy lại bộ kiểm.</td>
+      <td>Chuyển hai mã màu vào <code>tokens.ts</code>, đổi sang hai sắc đất phân biệt nhau bằng <b>kiểu viền</b> chứ không bằng nhiệt độ màu, và thu hẹp phép kiểm cho khớp. Chi phí đảo ngược: <b>khoảng một ngày công</b> nếu Hội đồng quyết khác sau đó.</td>
+    </tr>
+    <tr>
+      <td><b>Q-2 · Quyền xoá dữ liệu của dâu/rể sau ly hôn</b><br><span class="wf-phu">BA v2 §10 chọn ẩn danh hoá thay vì xoá để giữ cây khỏi gãy — lập luận ấy yếu hẳn ở ca dâu/rể, vì xoá họ không làm gãy đường huyết thống nào.</span></td>
+      <td>Chặn B-4 (hồ sơ người sống và văn bản đồng ý) và trực tiếp chặn <b>P-4 — việc nhập liệu thật</b>, vì người nhập cần biết được phép thu những trường nào của dâu/rể. Chặn tiếp E-3 (rà soát PDPD).</td>
+      <td class="xau"><b>Hết T06</b><br>19–25/10/2026</td>
+      <td><b>Phải có trước khi mở đường ống nhập liệu ở T08.</b> Sau khi đã nhập 1.500 người thật, đổi luật xoá không còn là sửa mã — nó là đi sửa dữ liệu thật của người thật, và có thể là đi xin lại sự đồng ý.</td>
+      <td>Nhập dâu/rể ở mức <b>Tier-1 tối thiểu</b> (tên, đời, quan hệ hôn phối), <b>không thu Tier-3</b> cho tới khi có quyết định. Chi phí: trì hoãn được, và dữ liệu chưa thu thì sau vẫn thu được — còn dữ liệu đã thu sai cơ sở pháp lý thì không rút lại được.</td>
+    </tr>
+    <tr>
+      <td><b>Q-3 · Di chúc có tách khỏi thư viện di sản không</b><br><span class="wf-phu">Khác văn bia ở hai điểm: có thể còn hiệu lực pháp lý, và nêu tên người đang sống.</span></td>
+      <td><b>Hai hạn khác nhau.</b> (a) Chặn <b>bản mô tả việc giao cho người thu thập nội dung</b> — người đi chụp ảnh cần biết có thu di chúc hay không. (b) Chặn schema <code>V8</code> và D-1.</td>
+      <td><b>(a) hết T05</b><br>12–18/10/2026<br><br><b>(b) hết T12</b><br>30/11–06/12/2026</td>
+      <td>(a) sớm vì người đi thu thập <b>đi lại tốn công</b>: không biết có thu di chúc hay không thì họ chụp thiếu hoặc chụp thừa, và cả hai đều dẫn tới một chuyến đi thứ hai. (b) muộn hơn vì schema chỉ cần trước khi viết <code>V8</code>.</td>
+      <td>Cho người thu thập <b>chụp nhưng chưa tải lên</b>: giữ ảnh ở máy cá nhân, không đưa vào hệ thống. Giữ được công đi lại mà không tạo ra nghĩa vụ pháp lý nào. Nếu tới T12 vẫn im lặng thì <b>cổng D không đóng</b> — đã ghi thành tiêu chí ra số 10.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Cách hỏi, không chỉ hỏi gì</p>
+  <p>
+    Ba câu này <b>đưa vào cùng một buổi họp Hội đồng, kèm phương án mặc định viết sẵn</b>. Lý do:
+    hỏi rải rác thì mỗi câu lại chờ một lần họp; và hỏi một câu mở (“Hội đồng thấy thế nào?”) với
+    một hội đồng bận việc thì kết quả thường là “để bàn thêm”. Đưa sẵn phương án mặc định biến câu
+    hỏi thành <b>một lựa chọn có hoặc không</b>, và nói rõ điều gì xảy ra nếu không ai chọn.
+  </p>
+</div>
+
+<h2>9. Điểm dừng an toàn</h2>
+
+<p>
+  Đây là mục thực tế nhất trong tài liệu. Một dự án kéo dài bảy tháng thì khả năng phải dừng giữa
+  chừng — vì tiền, vì người, vì đổi ưu tiên — <b>không phải khả năng nhỏ</b>. Câu hỏi là: dừng ở đâu
+  thì dòng họ còn giữ được thứ dùng được, và dừng ở đâu thì mất trắng.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4><span class="chip must">Dừng sau A</span> · T06</h4>
+    <p><b>Có gì:</b> một MVP đầy đủ tính năng — cây phả đồ, tra danh xưng, hồ sơ đa lớp, nhắc giỗ ba
+    kênh, đính chính chạy thật, khách xem được tổ tiên.</p>
+    <p><b>Không có gì:</b> <b>dữ liệu.</b> Hệ thống chạy trên dữ liệu giả 1.500 nhân khẩu sinh bằng
+    generator. Không một người thật nào của dòng họ có mặt trong đó.</p>
+    <p class="day"><span class="xau">Không phải điểm dừng an toàn.</span> Đây là phần mềm nghiệm thu
+    được nhưng không ai dùng. Dừng ở đây thì cái còn lại là một bản demo rất tốt và một hoá đơn.</p>
+  </div>
+
+  <div class="the">
+    <h4><span class="chip xong">Dừng sau B</span> · T16</h4>
+    <p><b>Có gì:</b> dòng họ thật, dữ liệu thật của bốn chi đã đối soát với sổ giấy, thành viên thật
+    đăng nhập thật, nhắc giỗ tới điện thoại thật, đính chính sửa được dữ liệu thật, khách xem được
+    tổ tiên, và sao lưu đã diễn tập phục hồi một lần.</p>
+    <p><b>Không có gì:</b> di sản, quỹ họ, báo cáo, GEDCOM, bản tin.</p>
+    <p class="day"><span class="tot"><b>Điểm dừng an toàn đầu tiên và thật sự.</b></span>
+    Nó đã là một cổng thông tin dòng họ hoạt động được. <b>Đề nghị lấy cổng B — không phải cổng A —
+    làm mốc “giai đoạn 1 xong” trong hợp đồng.</b></p>
+  </div>
+
+  <div class="the">
+    <h4><span class="chip xong">Dừng sau C</span> · T18</h4>
+    <p><b>Thêm:</b> trang chủ có bản tin và vinh danh, lịch việc họ đồng bộ được vào điện thoại, nhắc
+    sinh nhật, và GEDCOM để dữ liệu <b>mang đi được</b> nếu sau này dòng họ đổi hệ thống.</p>
+    <p><b>Không có:</b> đợt D và đợt E.</p>
+    <p class="day"><span class="tot"><b>Điểm dừng tốt nhất nếu ngân sách có hạn.</b></span>
+    Chênh với cổng B chỉ hai tuần lịch nhưng đổi được thứ giữ người dùng quay lại — và GEDCOM là
+    bảo hiểm chống khoá nhà cung cấp. Đây là chỗ tỉ lệ giá trị trên chi phí cao nhất của cả lộ trình.</p>
+  </div>
+
+  <div class="the">
+    <h4><span class="chip must">Dừng sau D, bỏ E</span> · T24</h4>
+    <p><b>Thêm:</b> di sản, từ đường, mộ phần GPS, quỹ họ, báo cáo, góc ảnh cũ.</p>
+    <p><b>Không có:</b> kiểm tải, quan trắc, rà soát PDPD, sao lưu tự động, đào tạo, bàn giao khoá.</p>
+    <p class="day"><span class="xau"><b>Điểm dừng tệ nhất trong cả bảng.</b></span> Đây là lúc hệ
+    thống chứa <b>nhiều dữ liệu cá nhân nhất</b> — ảnh, toạ độ mộ, sổ quỹ, danh bạ — và được
+    <b>kiểm chứng ít nhất</b>. Không quan trắc thì hỏng mà không ai biết; không rà soát PDPD thì
+    phơi ra rủi ro pháp lý theo Nghị định 13/2023; không bàn giao khoá thì đội dự án vẫn giữ chìa
+    khoá dữ liệu của dòng họ sau khi đã rời đi. <b>Nếu ngân sách chỉ đủ tới đây, hãy dừng ở C thay
+    vì ở D.</b></p>
+  </div>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Quy tắc rút ra, viết cho người cầm ngân sách</p>
+  <p>
+    <b>Không bao giờ dừng ngay sau một đợt vừa thêm dữ liệu cá nhân mà chưa qua đợt kiểm chứng.</b>
+    Cụ thể: dừng sau B được (cổng B đã có diễn tập phục hồi trong tiêu chí ra), dừng sau C được,
+    dừng sau D thì không. Nếu buộc phải dừng sau D, hãy cắt đợt E xuống <b>bốn mục tối thiểu</b> và
+    làm bằng được: sao lưu tự động · một lần phục hồi có bấm giờ · rà soát PDPD có văn bản · bàn
+    giao và đổi khoá. Bốn mục đó ước <b>1,5 người-tuần</b>, và chúng là ranh giới giữa “bàn giao” và
+    “bỏ lại”.
+  </p>
+</div>
+
+<h2>10. Chỗ lịch trình này có thể sai</h2>
+
+<p>
+  Một lịch trình chỉ toàn đường thẳng là lịch trình chưa nghĩ xong. Đây là những chỗ tôi biết mình
+  đang đoán.
+</p>
+
+<ul>
+  <li>
+    <b>Con số “3–6 tuần” cho Zalo OA không đo từ đâu cả.</b> Nó là diễn giải của chữ “vài tuần” ở
+    <code>plan/00-tong-the.html</code> mục 4. Cả lịch treo trên nó: duyệt trong 2 tuần thì cổng A về
+    sớm 3 tuần; duyệt trong 10 tuần thì mọi thứ lùi 4 tuần. <b>Đây là con số cần thay bằng sự thật
+    sớm nhất trong cả tài liệu</b> — và cách thay là nộp hồ sơ tuần này rồi ghi lại ngày.
+  </li>
+  <li>
+    <b>Ước lượng đợt D là loại suy, không phải đo.</b> Ba context hiện có 5 file rỗng mỗi context.
+    Con số 22 người-tuần suy từ kích thước <code>events</code> (57 file) và <code>membership</code>
+    (64 file) — hai context có hình dạng khác hẳn <code>heritage</code>, vốn nặng về media và nhẹ về
+    quy tắc nghiệp vụ. Biên hợp lý là <b>±40%</b>. Cách thu hẹp: làm một lát cắt dọc trước rồi ngoại
+    suy (R-9).
+  </li>
+  <li>
+    <b>Nhịp làm việc lấy từ Giai đoạn 1, mà Giai đoạn 1 làm trên nền trắng theo một TDD viết sẵn.</b>
+    Đợt B và đợt D làm trên <b>dữ liệu thật và người thật</b>: mỗi lần chạm vào dữ liệu thật đều
+    chậm hơn, vì sai là sai thật. Nhịp cũ có thể không giữ, và tôi không có cách nào biết trước
+    chậm bao nhiêu.
+  </li>
+  <li>
+    <b>Bảng ước lượng giả định 4 người-tuần lập trình mỗi tuần, liên tục 28 tuần.</b> Không ốm,
+    không việc đột xuất, không ai nghỉ. Đó là giả định sai và tôi để nguyên trong bảng cho minh
+    bạch. <b>Đệm 15% (khoảng 11 người-tuần, khoảng 3 tuần lịch) chưa cộng vào.</b> Nếu ngày bàn giao
+    là cam kết với bên ngoài, hãy cam kết <b>giữa tháng 4/2027</b> chứ đừng cam kết 28/03.
+  </li>
+  <li>
+    <b>Bốn tài liệu con 01–04 chưa tồn tại lúc lập lịch này</b> — kiểm bằng <code>ls</code>, cả bốn
+    thư mục rỗng. Nếu chúng phát hiện việc không có trong bảng mục 5, cách xử lý đúng là
+    <b>sửa ước lượng và báo lên <code>po</code></b>, không phải nén lịch cho khớp con số đã in.
+  </li>
+  <li>
+    <b>Tôi không chạy được <code>mvn test</code></b> trên máy này (JDK 8). Mọi con số về test trong
+    tài liệu này là số <b>đọc lại</b> từ <code>plan/00-tong-the.html</code>, hoặc số <b>file và chú
+    thích</b> tôi tự đếm. Hai loại số ấy khác nhau và tôi đã đánh dấu chỗ nào là loại nào ở mục 1.
+  </li>
+  <li>
+    <b>Điều tôi không lập lịch được: nhiệt tình của dòng họ.</b> Bốn chi cùng hào hứng thì T08–T13
+    thừa thời gian. Một chi nguội đi giữa chừng — vì Trưởng chi bận việc nhà, vì có bất đồng trong
+    họ, vì đơn giản là quên — thì <b>không con số nào trong tài liệu này cứu được</b>. Đó là lý do
+    mục 3 xếp việc cử người lên trước mọi dòng mã, và mục 7 đề nghị công khai bảng tiến độ từng chi:
+    không phải để thúc ép, mà để một chi đứng im <b>bị nhìn thấy trong hai tuần chứ không phải trong
+    hai tháng</b>.
+  </li>
+</ul>
+
+<footer class="chan-trang">
+  <p>
+    <b>Ba việc khởi động trong tuần này, xếp theo mức thiệt hại nếu chậm:</b>
+    ① cử người phụ trách nhập liệu cho từng chi — hạn T02, nằm thẳng trên đường găng ·
+    ② nộp hồ sơ Zalo OA và ba mẫu tin ZNS — hạn nộp T04, duyệt xong T06 ·
+    ③ cử bốn vai viết và thu thập nội dung — hạn T03.
+    Cả ba đều <b>không cần chờ dòng mã nào</b>. Việc thứ tư, thuộc đội phần mềm và cũng làm được
+    ngay: <b>cài JDK 21 và dựng CI</b> — chừng nào chưa có, mọi con số test chỉ là lời kể lại.
+  </p>
+  <p>
+    Thứ tự ưu tiên khi mâu thuẫn: <b>BA v2 → design/00-dinh-huong.html → plan/00-tong-the.html →
+    tài liệu này</b>. Tài liệu này <b>không</b> thay đổi phạm vi và <b>không</b> sắp lại thứ tự năm
+    đợt A–E; hai đề nghị chuyển hạng mục sớm hơn — nền media lên đợt C, quan trắc lên đợt D — nêu ở
+    mục 5 và <b>chờ <code>po</code> quyết</b>.
+  </p>
+  <p>
+    Kế hoạch 05 — Lịch trình, phụ thuộc &amp; rủi ro · Cổng Thông Tin Dòng Họ © 2026.
+    Ngày lập: 10/09/2026. Tuần T01 bắt đầu 14/09/2026.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

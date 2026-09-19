@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 03 · Trang 03 — Rủi ro, ước lượng, lộ trình</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 03 · Giai đoạn 3 · Trang 03</p>
+  <h1>Rủi ro, ước lượng<br>và những gì nên cắt thêm</h1>
+  <p class="tom-tat">
+    Rủi ro lớn nhất của Giai đoạn 3 <strong>không nằm trong phần mềm</strong>. Trang này đặt nó lên
+    đầu, rồi mới tới ước lượng công sức (<strong>là ước lượng, không phải số đo</strong>), danh sách
+    đề xuất cắt thêm, và các câu hỏi còn treo.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <a href="index.html">↩ 00 · Tổng quan</a>
+  <span>·</span>
+  <a href="01-heritage.html">01 · heritage</a>
+  <span>·</span>
+  <a href="02-fund-reporting.html">02 · fund · reporting · bản tin</a>
+  <span>·</span>
+  <b>03 · Rủi ro, ước lượng, lộ trình</b>
+</nav>
+
+<h2>1. Rủi ro số một: bốn cái kho rỗng</h2>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ba context này xây kho. Chúng không tự sinh ra hàng để xếp vào kho.</p>
+  <p>
+    Thư viện di sản, từ đường, mộ phần và bản tin <b>không tự sinh nội dung</b>. Phần mềm không chụp
+    được ảnh văn bia, không phiên âm được chữ Hán, không đo được toạ độ mộ, không viết được bài. Chưa
+    chốt được <b>ai chụp ảnh, ai phiên âm, ai đo toạ độ, ai viết bài</b> thì kết quả của cả Giai đoạn
+    3 là <b>bốn màn hình đẹp và trống</b>.
+  </p>
+  <p>
+    <b>Đây là điều kiện tiên quyết, không phải việc chạy song song.</b> Không phải một rủi ro cần theo
+    dõi — là một <b>cổng vào</b> phải mở trước khi khối mã tương ứng bắt đầu.
+  </p>
+</div>
+
+<h3>Cổng vào, phát biểu thành điều kiện kiểm được</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Khối</th><th>Không bắt đầu viết mã cho tới khi…</th><th>Vì sao ngưỡng đặt ở đó</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>H2 · thư viện di sản</b></td>
+      <td><b>Có tên người phiên âm</b> (một người, có thật, đã đồng ý) <b>và ≥ 10 tư liệu đã được chụp</b> ở chất lượng phóng sâu đọc được.</td>
+      <td>Mười tư liệu là đủ để trình đọc có gì hiển thị ở buổi nghiệm thu, và đủ để biết ảnh chụp có dùng được không <em>trước khi</em> viết công cụ phiên âm cho người ta.</td>
+    </tr>
+    <tr>
+      <td><b>H3 · từ đường</b></td>
+      <td><b>Có ảnh mặt bằng ban thờ</b> chụp thẳng, đủ nét để đặt điểm neo, <b>và danh sách bài vị</b> do một người trong họ đọc ra.</td>
+      <td>Không có ảnh nền thì công cụ điểm neo không có gì để neo lên.</td>
+    </tr>
+    <tr>
+      <td><b>H4 · mộ phần</b></td>
+      <td><b>Có tên người đo toạ độ</b> <b>và ≥ 20 ngôi mộ đã có toạ độ + ảnh mộ chí</b> của ít nhất một khu.</td>
+      <td>Dưới 20 ngôi thì không thử được sơ đồ hàng/lô, không thử được luồng xác nhận bằng mắt, và không biết sai số GPS thực tế ở nghĩa trang đó là bao nhiêu.</td>
+    </tr>
+    <tr>
+      <td><b>Bản tin</b> (đợt C)</td>
+      <td><b>Có tên người viết</b> và cam kết nhịp đăng tối thiểu.</td>
+      <td>Một trang bản tin có bài mới nhất từ hai năm trước làm cả sản phẩm trông bị bỏ hoang — tệ hơn là không có trang bản tin.</td>
+    </tr>
+    <tr>
+      <td class="tot"><b><code>fund</code></b></td>
+      <td><b>Không có cổng vào.</b></td>
+      <td>Đây là context duy nhất <b>tự sinh nội dung</b>: thủ quỹ ghi sổ vì đó là việc họ vốn đã làm. Chỉ cần một người là thủ quỹ và một quyết định của Hội đồng về vai duyệt chi. Đó là lý do nó đứng thứ hai trong thứ tự dựng.</td>
+    </tr>
+    <tr>
+      <td class="canh"><b><code>reporting</code></b></td>
+      <td><b>Đợt B đã nhập được phần lớn dòng họ</b>, và nơi ở đã có mã tỉnh/quốc gia.</td>
+      <td>Báo cáo dân số học trên 15% dòng họ là một báo cáo sai, và nó sai theo kiểu <b>trông như đúng</b>.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Chi phí nội dung, ước lượng riêng và không thay thế được bằng mã</h3>
+
+<p>
+  Con số dưới đây là <b>ước lượng</b>, không phải số đo — Giai đoạn 3 chưa chạy nên chưa có số đo nào.
+  Đơn vị là <b>buổi-người</b> (nửa ngày), vì đây là việc người trong họ làm ngoài giờ, không phải việc
+  toàn thời gian.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Việc nội dung</th><th>Ước lượng</th><th>Ai làm được</th></tr></thead>
+  <tbody>
+    <tr><td>Chụp ảnh tư liệu (bia, hoành phi, câu đối, sắc phong, sổ giấy)</td><td>~1 buổi cho 8–15 tư liệu nếu thời tiết thuận</td><td>Người trẻ trong họ, có điện thoại tốt. Cần một trang hướng dẫn chụp ngắn trong luồng tải lên.</td></tr>
+    <tr><td><b>Phiên âm + dịch nghĩa</b></td><td><b>~1–3 buổi cho <em>một</em> tư liệu</b> tuỳ độ mòn của chữ</td><td>Một hai cụ, hoặc người được thuê. <b>Đây là nút thắt cổ chai của cả giai đoạn.</b></td></tr>
+    <tr><td>Đo toạ độ + chụp mộ chí</td><td>~1 buổi cho 15–25 ngôi trong cùng một khu</td><td>Người đi được thực địa. Gộp vào chuyến chạp mả thì gần như miễn phí.</td></tr>
+    <tr><td>Đặt điểm neo lên sơ đồ (khu mộ, ban thờ)</td><td>~1 buổi cho một khu / một ban thờ</td><td>Trưởng chi hoặc người trông nom. Làm ở nhà, không cần ra thực địa.</td></tr>
+    <tr><td>Ghi sổ quỹ kỳ đang chạy</td><td>Vài giờ nếu chép từ sổ giấy sẵn có</td><td>Thủ quỹ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Điều đáng chú ý trong bảng này: <b>phiên âm chậm hơn chụp ảnh khoảng một bậc</b>. Nghĩa là thư viện
+  di sản sẽ <em>luôn</em> ở trạng thái “nhiều ảnh, ít chữ” trong nhiều tháng đầu. Thiết kế phải chấp
+  nhận điều đó là bình thường và hiện nó ra (số tư liệu chưa phiên âm), chứ không coi là lỗi cần giấu.
+</p>
+
+<h2>2. Ước lượng công sức phần mềm</h2>
+
+<div class="khoi">
+  <p class="nhan">Cách các con số này được suy ra — đọc trước khi dùng</p>
+  <p>
+    Đây là <b>ước lượng</b>, suy ra bằng cách <b>so sánh với các context đã dựng xong và đo được</b>:
+    <code>events</code> 57 file, <code>membership</code> 64 file, <code>kinship</code> 60 file,
+    <code>notification</code> 69 file. Chúng là thước đo tốt vì cùng đội, cùng kiến trúc, cùng mức
+    test.
+  </p>
+  <p>
+    <b>Không con số nào dưới đây là cam kết.</b> Chúng dùng để so độ lớn tương đối giữa các khối và để
+    thấy tổng nằm ở bậc nào — không dùng để hứa ngày.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Khối</th><th>Backend</th><th>Frontend</th><th>Tổng (ngày-người)</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td><b>W8 · nền media</b></td><td>6–9</td><td>3–5</td><td><b>9–14</b></td><td>Nhỏ nhưng chặn tất cả. Phần đắt là EXIF, hai nghĩa của xoá, và job dọn rác.</td></tr>
+    <tr><td><b><code>fund</code></b></td><td>10–14</td><td>8–12</td><td><b>18–26</b></td><td>Mã không khó; cái đắt là <b>không được sai</b>. Cộng thời gian phản biện thiết kế bất biến.</td></tr>
+    <tr><td><b><code>reporting</code></b></td><td>5–8</td><td>5–8</td><td><b>10–16</b></td><td>Rẻ nhất. <b>Chưa gồm</b> việc thêm mã tỉnh/quốc gia — việc đó tính vào đợt B.</td></tr>
+    <tr><td><b>H1 · nền heritage</b></td><td>8–12</td><td>12–18</td><td><b>20–30</b></td><td>Trình đọc ba chế độ trên điện thoại + công cụ điểm neo. Frontend nặng hơn backend.</td></tr>
+    <tr><td><b>H2 · FR-3.1 di sản</b></td><td>5–8</td><td>6–9</td><td><b>11–17</b></td><td>Dùng lại H1. Gồm luồng tải lên, hướng dẫn chụp, trạng thái đối chiếu, dị bản.</td></tr>
+    <tr><td><b>H3 · FR-3.3 từ đường</b></td><td>5–7</td><td>6–9</td><td><b>11–16</b></td><td>Rẻ vì dùng lại H1 hai lần và dùng lại <code>event</code> đã có.</td></tr>
+    <tr><td><b>H4 · FR-3.2 mộ phần</b></td><td>8–12</td><td>12–18</td><td><b>20–30</b></td><td><b>Đã trừ gói ngoại tuyến đầy đủ</b> (xem mục 3). Còn gói đó thì cộng thêm 12–20.</td></tr>
+    <tr><td><b>Xuyên suốt</b></td><td colspan="2">test riêng tư, nhật ký, rà migration, song ngữ VI–EN, tiếp cận, tài liệu</td><td><b>10–15</b></td><td>Kinh nghiệm từ Giai đoạn 1: phần này luôn bị ước thiếu.</td></tr>
+    <tr><td><b>Tổng</b></td><td></td><td></td><td class="canh"><b>≈ 109–164</b></td><td>≈ 5,5–8 tháng cho một người; ≈ 3–4 tháng cho hai người làm song song được (W8 xong rồi thì <code>fund</code> và <code>heritage</code> tách được).</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Không nằm trong bảng và phải cộng riêng:</b> <code>newsletter</code> (FR-2.4) — thuộc
+  <b>đợt C</b>, ước lượng ở tài liệu 04. Văn khấn điền mẫu nếu được giữ: ước lượng thêm 6–10.
+</p>
+
+<h2>3. Đề xuất cắt thêm</h2>
+
+<p>
+  <a href="../00-tong-the.html">Bản chốt phạm vi mục 3</a> đã cắt tám mục. Năm đề xuất dưới đây là
+  <b>cắt thêm</b>, đều cần Hội đồng và chủ đầu tư quyết. Mỗi mục ghi rõ <b>cắt sai thì mất gì</b>.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Đề xuất cắt</th><th>Thay bằng</th><th>Lý do</th><th>Cắt sai thì mất gì</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>1 · Nội dung di chúc</b><br><span class="chip must">nên cắt</span></td>
+      <td>Chỉ ghi siêu dữ liệu: có bản di chúc của ai, lập năm nào, ai đang giữ. Bản scan để ngoài hệ thống.</td>
+      <td>Di chúc có thể còn hiệu lực pháp lý, nói về tài sản, nêu tên người đang sống. Lưu nội dung là nhận về rủi ro pháp lý mà phần mềm không giải được, đổi lấy một tiện ích ít người cần.</td>
+      <td>Ai muốn đọc di chúc trên hệ thống thì không đọc được — <b>nhưng đó chính là điều đang muốn</b>. Chi tiết ở <a href="01-heritage.html">trang 01 mục 5</a>.</td>
+    </tr>
+    <tr>
+      <td><b>2 · Gói ngoại tuyến đầy đủ cho luồng tìm mộ</b><br><span class="chip should">nên cắt bản 1</span></td>
+      <td>Phiếu đi tảo mộ in được / xuất PDF, cộng màn hình la bàn + khoảng cách chạy được khi trang đã mở sẵn. Đo lại sau mùa chạp mả đầu tiên.</td>
+      <td><b>Presigned URL và cache ngoại tuyến chống nhau</b>: URL hết hạn thì cache vô dụng, nên phải cache byte ảnh, quản dung lượng, và xử lý ảnh bị thay ở máy chủ. Đó là một luồng đồng bộ hoàn chỉnh, không phải một thiết lập.</td>
+      <td>Ai đóng ứng dụng rồi mở lại giữa nghĩa trang thì mất. Đổi lại tiết kiệm 12–20 ngày-người, và <b>tờ giấy in không bao giờ hết pin</b> — với người dùng 50–70 tuổi có thể đây là bản tốt hơn.</td>
+    </tr>
+    <tr>
+      <td><b>3 · Sao hạn cơ bản</b><br><span class="chip should">nên cắt</span></td>
+      <td>Chỉ giữ văn khấn điền mẫu. Sao hạn bỏ khỏi Giai đoạn 3.</td>
+      <td>Luật “luôn nêu dị bản” đòi ít nhất hai nguồn có tên sách và người chịu trách nhiệm cho mỗi cách tính. Đó là việc nội dung, và <b>dự án chưa chỉ được người làm</b>. FR-3.4 là COULD.</td>
+      <td>Mất một tiện ích tra cứu người dùng thích. Vẫn tra được ở nơi khác. Bù lại tránh được màn hình duy nhất trong sản phẩm có nguy cơ bị đọc như lời thầy bói.</td>
+    </tr>
+    <tr>
+      <td><b>4 · Quỹ con theo chi</b><br><span class="chip should">nên cắt</span></td>
+      <td>Một quỹ, nhiều kỳ.</td>
+      <td>Quỹ con kéo theo chuyển khoản nội bộ, hợp nhất báo cáo, và câu hỏi quỹ chi này công khai tới đâu với chi kia — ba bài toán không ai yêu cầu.</td>
+      <td>Chi đang có quỹ riêng vẫn giữ sổ giấy. Thêm sau chỉ tốn một cột <code>branch_id</code>, <b>không phải làm lại mô hình</b>.</td>
+    </tr>
+    <tr>
+      <td><b>5 · Nhãn nguồn theo từng trường hồ sơ</b> (KD-18)<br><span class="chip could">hoãn</span></td>
+      <td>Giai đoạn 3 chỉ ghi nguồn ở mức <b>bản ghi</b> (tư liệu này chép từ bia nào), không ở mức từng trường của <code>person</code>.</td>
+      <td>Nhãn nguồn theo trường chạm vào schema <code>person</code> và mọi màn hình hồ sơ — đó là việc của <code>genealogy</code>, không phải của <code>heritage</code>. Kéo nó vào đây là phình phạm vi qua ranh giới context.</td>
+      <td>Mất một hàng rào chống bịa. Nhưng nó chỉ thật sự cần khi có nhập GEDCOM và tầng AI — cả hai đều ở sau Giai đoạn 3.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Ba thứ <span class="tot">không</span> nên cắt dù trông như tính năng phụ</p>
+  <ul>
+    <li><b>Tải toàn bộ sổ quỹ ra bảng tính.</b> Rẻ, và là thứ khiến người nghi ngờ tự kiểm được mà
+      không cần tin ai. Cắt nó là rút ruột chính mục đích của FR-4.2.</li>
+    <li><b>Bước xác nhận đúng ngôi mộ bằng ảnh mộ chí.</b> Thêm một chạm, nhưng thắp hương nhầm mộ là
+      chuyện nặng nề chứ không phải một lỗi giao diện.</li>
+    <li><b>Ô “chưa gắn hồ sơ” trên sơ đồ bài vị và mộ chưa xác định vị trí.</b> Trông như dữ liệu
+      thiếu, thực ra là <b>danh sách việc cần làm</b> của Hội đồng. Ẩn đi là giấu việc.</li>
+  </ul>
+</div>
+
+<h2>4. Sổ rủi ro kỹ thuật</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Rủi ro</th><th>Mức</th><th>Dấu hiệu sớm</th><th>Cách giảm</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Sổ bất biến đâm vào quyền xoá dữ liệu (Nghị định 13/2023)</b></td>
+      <td class="xau">Cao</td>
+      <td>Ai đó vẽ bảng <code>fund_entry</code> có cột <code>donor_name</code>.</td>
+      <td>Danh tính người đóng góp <b>nằm ở bảng riêng</b> <code>fund_donor_link</code>. Quyết ngay ở migration đầu tiên — sửa sau là sửa dữ liệu bất biến. Xem <a href="02-fund-reporting.html">trang 02 mục 1.1</a>.</td>
+    </tr>
+    <tr>
+      <td><b>Presigned URL vs ngoại tuyến</b></td>
+      <td class="xau">Cao</td>
+      <td>Ai đó nói “cache lại URL là xong”.</td>
+      <td>Cắt gói ngoại tuyến đầy đủ khỏi bản 1 (mục 3 đề xuất 2). Nếu giữ thì phải cache byte, có hạn mức, có làm mới.</td>
+    </tr>
+    <tr>
+      <td><b>Số migration đụng nhau với đợt A/B/C</b></td>
+      <td class="canh">Trung bình</td>
+      <td>Hai nhánh cùng có <code>V8__</code>.</td>
+      <td>Không ghim số trong tài liệu kế hoạch. Migration nhận số trống kế tiếp <b>lúc trộn vào nhánh chính</b>, và CI có bước kiểm trùng số.</td>
+    </tr>
+    <tr>
+      <td><b>Migration của <code>fund</code> sửa bảng của <code>membership</code></b></td>
+      <td class="canh">Trung bình</td>
+      <td><code>ck_role_code</code> bị gỡ và tạo lại ở một file thuộc context khác.</td>
+      <td>Chấp nhận (Flyway sở hữu toàn bộ schema) nhưng bắt buộc ghi bình luận nói rõ ai đổi, vì sao, và thêm test khẳng định năm vai cũ vẫn còn sau migration.</td>
+    </tr>
+    <tr>
+      <td><b>Ba bản luật riêng tư song song lệch nhau</b></td>
+      <td class="canh">Trung bình</td>
+      <td>Một context sửa quy tắc, hai context kia không.</td>
+      <td>Mỗi context một test tích hợp “khách không thấy gì”. Ghi vào sổ nợ để Giai đoạn 4 gộp. <b>Không</b> cố gộp sớm bằng cách phá ranh giới module.</td>
+    </tr>
+    <tr>
+      <td><b>Điểm neo lệch lặng lẽ sau khi đổi ảnh nền</b></td>
+      <td class="canh">Trung bình</td>
+      <td>Toạ độ lưu bằng pixel.</td>
+      <td>Toạ độ tỉ lệ <code>0..1</code>; đổi ảnh nền bật <code>needs_review</code>; có test.</td>
+    </tr>
+    <tr>
+      <td><b>Dung lượng media không có phương án sao lưu</b></td>
+      <td class="canh">Trung bình</td>
+      <td>Volume MinIO phình mà chưa ai bàn về sao lưu.</td>
+      <td>Sinh biến thể thu nhỏ ngay lúc xác nhận tải lên. Đặt hạn mức mỗi tư liệu. <b>Sao lưu là việc Giai đoạn 4, nhưng nợ bắt đầu từ đây</b> — ghi vào sổ ngay.</td>
+    </tr>
+    <tr>
+      <td><b><code>reporting</code> đọc thẳng bảng của <code>genealogy</code></b></td>
+      <td>Thấp</td>
+      <td><code>genealogy</code> đổi tên cột, báo cáo vỡ.</td>
+      <td>Nợ có chủ ý, cùng loại với <code>EventSubjectJdbcAdapter</code>. Giảm bằng test tích hợp chạy SQL thật — đổi cột thì test đỏ ngay, không đợi tới lúc chạy thật.</td>
+    </tr>
+    <tr>
+      <td><b>Chữ Hán-Nôm không hiện được trên máy cũ</b></td>
+      <td>Thấp</td>
+      <td>Ô vuông rỗng trong bản mẫu.</td>
+      <td>Lớp <code>HAN_NOM</code> là tuỳ chọn; rơi về ảnh gốc + phiên âm. Không đặt chữ Hán vào chỗ bắt buộc phải đọc được.</td>
+    </tr>
+    <tr>
+      <td><b>Trùng tên “sổ vàng công đức” và “bảng vàng vinh danh”</b></td>
+      <td>Thấp</td>
+      <td>Một lớp tên <code>GoldenBook</code>.</td>
+      <td><code>fund.DonationLedger</code> và <code>newsletter.HonourRoll</code>. Ghi vào quy ước đặt tên.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Tiêu chí ra Giai đoạn 3</h2>
+
+<p>
+  Giai đoạn 3 được gọi là xong khi <b>toàn bộ</b> các dòng sau đúng. “Test xanh” một mình không phải
+  tiêu chí ra — bài học từ Giai đoạn 1, nơi 1.827 test xanh mà tiêu chí ra vẫn chưa đạt vì thiếu
+  provider Zalo.
+</p>
+
+<ul>
+  <li><code>ModularityTests</code> xanh với ba (hoặc bốn, nếu thêm <code>media</code>) context mới; ArchUnit xanh.</li>
+  <li>Toàn bộ tiêu chí <b>H-1 → H-15</b>, <b>F-1 → F-11</b>, <b>R-1 → R-9</b> ở trang 01 và 02 đều có test và đều xanh.</li>
+  <li><b>Có nội dung thật bên trong:</b> ≥ 10 tư liệu di sản có bản dịch nghĩa · ≥ 20 ngôi mộ có toạ
+    độ và ảnh mộ chí · một từ đường có sơ đồ bài vị gắn được ít nhất một nửa số bài vị · <b>một kỳ quỹ
+    đã được chốt bằng dữ liệu thật</b>.</li>
+  <li>Một mùa <b>chạp mả</b> hoặc một kỳ <b>tế lễ</b> đã chạy qua hệ thống thật, có phân công tảo mộ và
+    có người bấm “đã thăm”.</li>
+  <li>Báo cáo dân số học khớp với số người thật trong phả, và <b>hàng “chưa xác định” hiện ra</b> chứ
+    không bị bỏ khỏi tổng.</li>
+  <li>Không có endpoint nào trả toạ độ mộ hoặc số tiền cho khách chưa đăng nhập.</li>
+  <li>Playwright xanh trên cả desktop và Pixel 5 cho mọi màn hình mới; sàn tiếp cận đạt.</li>
+</ul>
+
+<h2>6. Câu hỏi còn treo</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Câu hỏi</th><th>Ai quyết</th><th>Chặn cái gì</th></tr></thead>
+  <tbody>
+    <tr><td><b>Bốn cái tên</b> — ai chụp ảnh, ai phiên âm, ai đo toạ độ, ai viết bài</td><td>Hội đồng Tộc biểu</td><td><b>Chặn toàn bộ <code>heritage</code></b> và bản tin. Không đợt nào giải hộ được.</td></tr>
+    <tr><td><b>Di chúc</b>: lưu nội dung hay chỉ siêu dữ liệu</td><td>Hội đồng + người có chuyên môn pháp lý</td><td>Chặn migration <code>restricted_document</code>. Đã có trong ba câu hỏi treo của bản chốt phạm vi.</td></tr>
+    <tr><td><b>Ngưỡng che nhóm nhỏ</b> trong báo cáo (đề xuất 5)</td><td>Hội đồng Tộc biểu</td><td>Không chặn mã (là cấu hình), nhưng chặn nghiệm thu báo cáo.</td></tr>
+    <tr><td><b>Tách vai thủ quỹ khỏi vai duyệt chi?</b></td><td>Hội đồng Tộc biểu</td><td>Chặn migration nới <code>ck_role_code</code>. Dù trả lời thế nào, hệ thống <b>vẫn</b> đi hai bước và hiện cảnh báo khi hai vai là một.</td></tr>
+    <tr><td><b>Chính sách vinh danh trẻ vị thành niên</b></td><td>Hội đồng Tộc biểu</td><td>Chặn bảng vàng (đợt C), không chặn Giai đoạn 3.</td></tr>
+    <tr><td><b>Có cắt sao hạn cơ bản không?</b></td><td>Hội đồng + chủ đầu tư</td><td>Chặn quyết định phạm vi FR-3.4.</td></tr>
+    <tr><td><b>Thêm bounded context <code>media</code>?</b> (lệch TDD §2)</td><td>Đội kiến trúc</td><td><b>Chặn W8, tức là chặn tất cả.</b> Cần quyết sớm nhất trong bảng này.</td></tr>
+    <tr><td><b>Mã tỉnh / mã quốc gia đưa vào đợt B?</b></td><td>Đội dự án + chủ đầu tư</td><td>Chặn bản đồ phân bố của FR-4.3. Quyết muộn thì cả dòng họ phải nhập lại nơi ở.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Trang 03 của Kế hoạch 03. Trước: <a href="02-fund-reporting.html">02 · fund, reporting, bản tin</a> ·
+    quay lại <a href="index.html">00 · Tổng quan</a> · lên
+    <a href="../00-tong-the.html">bản chốt phạm vi</a>.
+  </p>
+  <p>
+    Mọi con số công sức trong trang này là <b>ước lượng</b>, suy ra bằng cách so với các context đã đo
+    được (<code>events</code> 57 file · <code>membership</code> 64 · <code>kinship</code> 60 ·
+    <code>notification</code> 69). Chúng dùng để so độ lớn tương đối, <b>không dùng để hứa ngày</b>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

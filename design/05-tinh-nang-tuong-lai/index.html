@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tính năng giai đoạn 3–4 và tương lai — Tổng quan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Hệ thống Quản lý Gia phả &amp; Cổng thông tin Dòng họ · Tài liệu 05 · Tổng quan</p>
+  <h1>Tính năng giai đoạn 3–4 và tương lai</h1>
+  <p class="tom-tat">
+    Bốn tài liệu thiết kế còn lại mô tả phần sản phẩm <strong>đã có hoặc sắp có</strong>. Tài liệu này
+    mô tả phần <strong>chưa ai chạm vào</strong>: di sản, mộ phần, từ đường, tiện ích tâm linh, quỹ họ,
+    báo cáo, bản tin, nhập liệu hàng loạt, liên kết thông gia, và tầng AI. Mục đích không phải là chốt
+    bản vẽ cuối — mà là để khi tới lượt làm, đội ngũ <em>không bắt đầu từ trang trắng</em> và không phải
+    phát hiện lại những cái bẫy đã nhìn thấy từ bây giờ.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <span><b>Bộ tài liệu 05:</b></span>
+  <a href="index.html">00 · Tổng quan &amp; đề xuất cắt</a>
+  <span>·</span>
+  <a href="01-di-san-mo-phan.html">01 · Di sản, mộ phần, từ đường, văn khấn</a>
+  <span>·</span>
+  <a href="02-quy-ho-bao-cao-ban-tin.html">02 · Quỹ họ, báo cáo, bản tin</a>
+  <span>·</span>
+  <a href="03-nhap-lieu-va-tang-ai.html">03 · Nhập liệu hàng loạt, thông gia, tầng AI</a>
+  <span>·</span>
+  <a href="../00-dinh-huong.html">↩ Định hướng thiết kế</a>
+</nav>
+
+<h2>1. Tài liệu này bàn gì</h2>
+
+<p>
+  Phạm vi là <b>chín yêu cầu chức năng</b> chưa được thiết kế, cộng phần bàn giao của giai đoạn 4 và
+  tầng AI. Ba trong số đó (FR-1.7, FR-1.9, FR-2.4) thuộc giai đoạn 2 theo lộ trình BA v2 §11 nhưng
+  tới nay vẫn chưa có thiết kế trải nghiệm, nên gộp vào đây.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Mã</th><th>Tên</th><th>Ưu tiên BA</th><th>Giai đoạn</th><th>Thiết kế ở</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>FR-1.7</b></td><td>GEDCOM nhập/xuất; nhập từ ảnh scan gia phả giấy</td><td><span class="chip should">SHOULD</span></td><td><span class="chip gd2">GĐ 2</span></td><td><a href="03-nhap-lieu-va-tang-ai.html">Tài liệu 03</a></td></tr>
+    <tr><td><b>FR-1.9</b></td><td>Liên kết thông gia sang gia phả họ khác</td><td><span class="chip could">COULD</span></td><td><span class="chip gd2">GĐ 2</span></td><td><a href="03-nhap-lieu-va-tang-ai.html">Tài liệu 03</a></td></tr>
+    <tr><td><b>FR-2.4</b></td><td>Bản tin dòng họ &amp; bảng vàng vinh danh</td><td><span class="chip should">SHOULD</span></td><td><span class="chip gd3">GĐ 3</span></td><td><a href="02-quy-ho-bao-cao-ban-tin.html">Tài liệu 02</a></td></tr>
+    <tr><td><b>FR-3.1</b></td><td>Thư viện di sản: văn bia, hương ước, gia huấn, câu đối, di chúc</td><td><span class="chip should">SHOULD</span></td><td><span class="chip gd3">GĐ 3</span></td><td><a href="01-di-san-mo-phan.html">Tài liệu 01</a></td></tr>
+    <tr><td><b>FR-3.2</b></td><td>Mộ phần: GPS, sơ đồ khu mộ, ảnh mộ chí, cải táng, lịch tảo mộ</td><td><span class="chip should">SHOULD</span></td><td><span class="chip gd3">GĐ 3</span></td><td><a href="01-di-san-mo-phan.html">Tài liệu 01</a></td></tr>
+    <tr><td><b>FR-3.3</b></td><td>Từ đường: hồ sơ di tích, hoành phi câu đối, sơ đồ bài vị, lịch tế lễ</td><td><span class="chip should">SHOULD</span></td><td><span class="chip gd3">GĐ 3</span></td><td><a href="01-di-san-mo-phan.html">Tài liệu 01</a></td></tr>
+    <tr><td><b>FR-3.4</b></td><td>Văn khấn tự điền; tra sao hạn, Tam Tai, Kim Lâu, Hoang Ốc</td><td><span class="chip could">COULD</span></td><td><span class="chip gd3">GĐ 3</span></td><td><a href="01-di-san-mo-phan.html">Tài liệu 01</a></td></tr>
+    <tr><td><b>FR-4.2</b></td><td>Quỹ họ &amp; sổ vàng công đức</td><td><span class="chip should">SHOULD</span></td><td><span class="chip gd3">GĐ 3</span></td><td><a href="02-quy-ho-bao-cao-ban-tin.html">Tài liệu 02</a></td></tr>
+    <tr><td><b>FR-4.3</b></td><td>Báo cáo dân số học &amp; bản đồ phân bố</td><td><span class="chip should">SHOULD</span></td><td><span class="chip gd3">GĐ 3</span></td><td><a href="02-quy-ho-bao-cao-ban-tin.html">Tài liệu 02</a></td></tr>
+    <tr><td>—</td><td>Giai đoạn 4 — phần trải nghiệm của việc <em>bàn giao</em></td><td>—</td><td><span class="chip gd4">GĐ 4</span></td><td>Mục 6 trang này</td></tr>
+    <tr><td><b>AI</b></td><td>Hỏi đáp danh xưng · OCR Hán-Nôm · sinh văn khấn · phát hiện trùng lặp</td><td>—</td><td><span class="chip gd4">Sau GĐ 4</span></td><td><a href="03-nhap-lieu-va-tang-ai.html">Tài liệu 03</a></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>2. Bốn bối cảnh mới, chưa từng xuất hiện ở giai đoạn 1–2</h2>
+
+<p>
+  Giai đoạn 1 và 2 diễn ra ở một bối cảnh duy nhất: <b>một người ngồi yên, có mạng, nhìn dữ liệu về
+  người</b>. Phần tương lai kéo sản phẩm ra khỏi bối cảnh đó theo bốn hướng, và mỗi hướng phá vỡ một
+  giả định mà giao diện hiện tại đang dựa vào.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Bối cảnh mới</th><th>Giả định bị phá</th><th>Hệ quả thiết kế</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Đọc tư liệu Hán-Nôm</b><br><span class="chip gd3">FR-3.1 · 3.3</span></td>
+      <td>Nội dung là chữ quốc ngữ, ai cũng đọc được</td>
+      <td>Nội dung phải có <b>nhiều lớp</b> (ảnh gốc / phiên âm / dịch nghĩa) và phải nói rõ <b>ai dịch</b>. Bản dịch là ý kiến của người, không phải sự thật của máy.</td>
+    </tr>
+    <tr>
+      <td><b>Đứng ngoài nghĩa trang</b><br><span class="chip gd3">FR-3.2</span></td>
+      <td>Có mạng, màn hình nhìn rõ, người dùng rảnh hai tay</td>
+      <td>Ngoại tuyến và tương phản cao là <b>mặc định</b> của luồng này, không phải chế độ dự phòng. Đây là bối cảnh khắc nghiệt nhất của cả sản phẩm.</td>
+    </tr>
+    <tr>
+      <td><b>Bàn chuyện tiền</b><br><span class="chip gd3">FR-4.2</span></td>
+      <td>Dữ liệu sai thì sửa; có xoá mềm và lịch sử phiên bản là đủ</td>
+      <td>Sổ quỹ <b>không được có nút Sửa hay Xoá</b>. Sai thì ghi bút toán đảo. Một dòng thay đổi lặng lẽ trong sổ quỹ đủ để phá niềm tin cả dòng họ.</td>
+    </tr>
+    <tr>
+      <td><b>Nhận dữ liệu từ nơi khác</b><br><span class="chip gd2">FR-1.7 · 1.9</span> <span class="chip gd4">AI</span></td>
+      <td>Mọi dữ liệu trong phả đều do một người trong họ tự tay khai</td>
+      <td>Phải phân biệt được <b>nguồn</b> của từng mẩu dữ liệu, và phải <b>gỡ được cả lô</b> nếu nguồn đó hoá ra sai.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>3. Sáu quy tắc bổ sung</h2>
+
+<p>
+  Bảy nguyên tắc trong <a href="../00-dinh-huong.html">tài liệu 00</a> giữ nguyên hiệu lực và không
+  được nới. Sáu quy tắc dưới đây <b>chỉ áp cho phần tương lai</b>, vì chúng trả lời những câu hỏi mà
+  giai đoạn 1–2 chưa gặp.
+</p>
+
+<h3>1 · Mỗi mẩu dữ liệu phải nói được nó từ đâu ra</h3>
+<p>
+  Từ giai đoạn 3 trở đi, một hồ sơ có thể trộn dữ liệu do con cháu khai, dữ liệu chép từ văn bia,
+  dữ liệu nhập từ file GEDCOM của họ khác, và về sau là dữ liệu do máy đề xuất. Người đọc phải
+  <b>nhìn thấy sự khác nhau đó ngay trên màn hình</b>, không phải bằng cách mở lịch sử thay đổi.
+  Nhãn nguồn gắn <b>theo từng trường</b>, không theo cả hồ sơ.
+</p>
+
+<h3>2 · Sổ quỹ chỉ ghi thêm, không sửa, không xoá</h3>
+<p>
+  Phần còn lại của sản phẩm dùng xoá mềm và lịch sử phiên bản. Sổ quỹ thì không: nó là sổ kế toán,
+  và sổ kế toán sửa được là sổ không ai tin. Ghi sai thì ghi một bút toán đảo cộng một bút toán
+  đúng, <b>cả ba dòng đều hiện</b>. Chi tiết ở <a href="02-quy-ho-bao-cao-ban-tin.html">tài liệu 02</a>.
+</p>
+
+<h3>3 · Dữ liệu vào hàng loạt luôn qua vùng chờ, và luôn gỡ được cả lô</h3>
+<p>
+  Không có đường nào cho phép một file nhập thẳng vào phả chính. Mọi lần nhập tạo một <b>lô</b> có
+  mã riêng, nằm trong vùng chờ, được duyệt theo cụm, và <b>gỡ được toàn bộ bằng một thao tác</b>.
+  Thiếu nút gỡ lô, một file xấu là đủ để không ai dám nhập lần thứ hai.
+</p>
+
+<h3>4 · Nội dung tín ngưỡng: trình bày có nguồn, có dị bản, không phán</h3>
+<p>
+  Sao hạn, Tam Tai, Kim Lâu là <b>tri thức có nhiều dị bản theo sách và theo vùng</b>. Hệ thống được
+  phép <em>tra cứu và trình bày</em> kèm tên nguồn; không được <em>khẳng định vận mệnh</em> thay người
+  dùng, không đùa cợt, và không gợi ý mua bán lễ vật — thương mại vật phẩm thờ cúng đã bị BA v2 §2
+  loại khỏi phạm vi. Nếu chỉ hiện đúng một kết quả, hệ thống đang khẳng định thay người dùng.
+</p>
+
+<h3>5 · Thống kê phải che nhóm nhỏ</h3>
+<p>
+  Báo cáo dân số học là nơi quyền riêng tư rò rỉ mà không ai để ý: “Chi Ba có 1 người đang ở Nhật”
+  là một câu chỉ đích danh một người còn sống, dù không ghi tên ai. Mọi ô thống kê dưới ngưỡng phải
+  gộp lại. <b>Ngưỡng cụ thể là đề xuất, cần Hội đồng Tộc biểu chốt</b> — tài liệu 02 đề xuất 5.
+</p>
+
+<h3>6 · Ngoài trời và ngoại tuyến là bối cảnh hạng nhất</h3>
+<p>
+  Luồng tìm mộ không phải là “bản web thu nhỏ dùng tạm khi mất mạng”. Nó là một luồng thiết kế riêng
+  cho việc <b>đi bộ trong nghĩa trang dưới nắng</b>, và phải hoạt động đầy đủ khi máy không có sóng.
+  Điều này kéo theo một ngoại lệ có chủ ý với chế độ tối — xem
+  <a href="01-di-san-mo-phan.html">tài liệu 01</a>.
+</p>
+
+<h2>4. Bản đồ màn hình cần vẽ</h2>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Màn hình</th><th>Phục vụ ai trước hết</th><th>Khung dây</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Trình đọc tư liệu song song (ảnh gốc ↔ phiên âm ↔ dịch nghĩa)</td><td>Con cháu đọc; người phiên âm soạn</td><td><a href="01-di-san-mo-phan.html#kd-1">KD-1</a>, <a href="01-di-san-mo-phan.html#kd-2">KD-2</a></td></tr>
+    <tr><td>Dẫn đường tới mộ (ngoài trời, ngoại tuyến)</td><td>Người đi tảo mộ, 50–70 tuổi</td><td><a href="01-di-san-mo-phan.html#kd-3">KD-3</a></td></tr>
+    <tr><td>Sơ đồ khu mộ &amp; hồ sơ ngôi mộ</td><td>Trưởng chi quản lý khu mộ</td><td><a href="01-di-san-mo-phan.html#kd-4">KD-4</a></td></tr>
+    <tr><td>Từ đường: sơ đồ bài vị chạm được</td><td>Người lớn tuổi — lối vào phả đồ tự nhiên nhất</td><td><a href="01-di-san-mo-phan.html#kd-5">KD-5</a></td></tr>
+    <tr><td>Văn khấn: điền mẫu + chế độ đọc trước ban thờ</td><td>Người chủ lễ, đứng, cầm máy một tay</td><td><a href="01-di-san-mo-phan.html#kd-6">KD-6</a></td></tr>
+    <tr><td>Tra sao hạn có dị bản và dẫn nguồn</td><td>Thành viên tò mò; Hội đồng kiểm soát nội dung</td><td><a href="01-di-san-mo-phan.html#kd-7">KD-7</a></td></tr>
+    <tr><td>Quỹ họ: cân đối, sổ thu–chi, sổ công đức</td><td>Cả dòng họ — màn hình bị soi kỹ nhất</td><td><a href="02-quy-ho-bao-cao-ban-tin.html#kd-8">KD-8</a></td></tr>
+    <tr><td>Ghi bút toán &amp; bút toán điều chỉnh</td><td>Thủ quỹ (tách khỏi người duyệt chi)</td><td><a href="02-quy-ho-bao-cao-ban-tin.html#kd-9">KD-9</a></td></tr>
+    <tr><td>Báo cáo dân số học có che nhóm nhỏ</td><td>Hội đồng Tộc biểu</td><td><a href="02-quy-ho-bao-cao-ban-tin.html#kd-10">KD-10</a></td></tr>
+    <tr><td>Bản tin &amp; bảng vàng vinh danh</td><td>Con cháu xa quê</td><td><a href="02-quy-ho-bao-cao-ban-tin.html#kd-11">KD-11</a></td></tr>
+    <tr><td>Nhập GEDCOM: bốn bước và màn đối soát trùng</td><td>Người nhập liệu + Hội đồng duyệt</td><td><a href="03-nhap-lieu-va-tang-ai.html#kd-12">KD-12</a>, <a href="03-nhap-lieu-va-tang-ai.html#kd-13">KD-13</a></td></tr>
+    <tr><td>Chép tay có ảnh scan làm nền</td><td>Người số hoá gia phả giấy</td><td><a href="03-nhap-lieu-va-tang-ai.html#kd-14">KD-14</a></td></tr>
+    <tr><td>Liên kết thông gia: lời mời và ranh giới hiển thị</td><td>Hai Hội đồng của hai dòng họ</td><td><a href="03-nhap-lieu-va-tang-ai.html#kd-15">KD-15</a></td></tr>
+    <tr><td>Hỏi đáp danh xưng có dẫn đường quan hệ</td><td>Thành viên trẻ</td><td><a href="03-nhap-lieu-va-tang-ai.html#kd-16">KD-16</a></td></tr>
+    <tr><td>Đối soát OCR Hán-Nôm theo độ tin cậy</td><td>Người phiên âm</td><td><a href="03-nhap-lieu-va-tang-ai.html#kd-17">KD-17</a></td></tr>
+    <tr><td>Nhãn nguồn trên từng trường hồ sơ</td><td>Mọi người đọc phả — hàng rào chống bịa</td><td><a href="03-nhap-lieu-va-tang-ai.html#kd-18">KD-18</a></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Đề xuất cắt và hoãn</h2>
+
+<p>
+  Một lộ trình chỉ có thêm mà không có bớt là lộ trình chưa nghĩ xong. Chín đề xuất dưới đây đều là
+  <b>đề xuất</b>, cần Hội đồng Tộc biểu và chủ đầu tư quyết. Lý do đi kèm, và chỗ nào cắt sai thì mất
+  gì cũng ghi rõ.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Thứ đề xuất bỏ / hoãn</th><th>Thay bằng</th><th>Lý do</th><th>Nếu cắt sai thì mất gì</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Thanh toán trực tuyến trong quỹ họ</b><br><span class="chip must">Cắt khỏi GĐ 3</span></td>
+      <td>Chỉ <em>ghi nhận</em> khoản đã nhận ngoài đời (tiền mặt / chuyển khoản cá nhân) kèm ảnh biên nhận</td>
+      <td>Nhận tiền trực tuyến kéo theo đối soát cổng, hoàn tiền, tranh chấp, và có thể đòi hỏi tư cách pháp nhân mà dòng họ chưa chắc có. Đây là rủi ro pháp lý, không phải rủi ro kỹ thuật.</td>
+      <td>Người xa quê phải nhờ người nhà chuyển hộ. Bất tiện, nhưng đây là cách các dòng họ vẫn đang làm.</td>
+    </tr>
+    <tr>
+      <td><b>Xếp hạng đóng góp theo số tiền</b><br><span class="chip must">Bỏ hẳn</span></td>
+      <td>Sổ công đức xếp theo <em>thời gian</em>; bảng vàng ghi <em>có đóng góp</em>, không ghi thứ hạng</td>
+      <td>Bảng xếp hạng tiền trong dòng họ tạo so đo giữa các chi, giữa người khá giả và người khó khăn. Nó làm hỏng chính thứ mà quỹ họ nhắm tới.</td>
+      <td>Mất một động lực đóng góp. Đổi lại tránh được nguồn mâu thuẫn lớn nhất.</td>
+    </tr>
+    <tr>
+      <td><b>Sinh văn khấn bằng LLM</b><br><span class="chip must">Cắt khỏi tầng AI</span></td>
+      <td>Điền thông tin vào mẫu do Hội đồng duyệt sẵn — một bộ điền chỗ trống, không cần AI</td>
+      <td>Văn khấn sai hoặc lạc điệu là chuyện xúc phạm, không phải chuyện lỗi phần mềm. Và phần lớn nhu cầu chỉ là thay tên gia chủ, địa chỉ, ngày âm vào một mẫu cố định.</td>
+      <td>Không mất gì đáng kể. Đây là chỗ AI dễ bị dùng thừa nhất trong cả dự án.</td>
+    </tr>
+    <tr>
+      <td><b>FR-1.9 liên kết thông gia dữ liệu thật</b><br><span class="chip should">Hoãn sau GĐ 4</span></td>
+      <td>Ghi “thông gia với họ X, quê Y” dạng văn bản, kèm đường dẫn ngoài nếu họ đó có trang riêng</td>
+      <td>Liên kết thật đòi hỏi <em>hai</em> dòng họ cùng dùng hệ thống — điều kiện gần như không tồn tại ở giai đoạn đầu. Nó cũng mở ra bài toán quyền: dữ liệu người sống bên này hiện tới đâu bên kia.</td>
+      <td>Mất khả năng duyệt sang phả họ khác. BA đã xếp FR-1.9 là COULD, nên đây là cắt đúng ưu tiên.</td>
+    </tr>
+    <tr>
+      <td><b>Chỉ đường bằng bản đồ đường phố trong nghĩa trang</b><br><span class="chip must">Cắt</span></td>
+      <td>La bàn + khoảng cách còn lại + sơ đồ hàng/lô + ảnh mộ chí để xác nhận tại chỗ</td>
+      <td>Bản đồ thương mại không có lối đi trong nghĩa trang, và sai số GPS dưới tán cây lớn hơn khoảng cách giữa hai ngôi mộ. Bản đồ ở đây tạo cảm giác chính xác giả.</td>
+      <td>Không mất gì — thứ bị cắt vốn không hoạt động.</td>
+    </tr>
+    <tr>
+      <td><b>Công cụ dựng sơ đồ khu mộ / sơ đồ bài vị bằng hình khối</b><br><span class="chip should">Cắt</span></td>
+      <td>Tải ảnh hoặc bản vẽ có sẵn lên rồi <em>đặt điểm neo</em> lên đó</td>
+      <td>Mỗi nghĩa trang và mỗi từ đường một kiểu; không có mô hình chung để dựng. Công cụ vẽ sẽ tốn nhiều tháng và vẫn không khớp thực địa.</td>
+      <td>Sơ đồ trông kém chỉn chu hơn. Nhưng ảnh thật của khu mộ lại <em>dễ đối chiếu tại chỗ hơn</em> một sơ đồ vẽ đẹp.</td>
+    </tr>
+    <tr>
+      <td><b>Báo cáo tỉ lệ tuyệt tự / tỉ lệ có con trai</b><br><span class="chip must">Bỏ khỏi báo cáo mặc định</span></td>
+      <td>Không có. Nếu Hội đồng cần, để trong báo cáo riêng có kiểm soát truy cập</td>
+      <td>Những con số này dễ bị dùng để gây áp lực sinh con trai, đi thẳng ngược lại FR-1.8 — ghi nhận con gái ngang bằng, quyết định đã chốt của BA v2 §12.</td>
+      <td>Hội đồng mất một góc nhìn về nguy cơ đứt dòng. Cần bàn kỹ trước khi bỏ hẳn.</td>
+    </tr>
+    <tr>
+      <td><b>OCR Hán-Nôm tự động ở giai đoạn 2</b><br><span class="chip must">Không hứa</span></td>
+      <td>Giai đoạn 2 là <em>chép tay có ảnh làm nền</em>. OCR nằm ở tầng AI, sau GĐ 4.</td>
+      <td>Chữ trên văn bia mòn, và <b>kỵ húy làm biến dạng nét chữ có chủ ý</b> — máy đọc sai là bình thường. Hứa sớm thì tới lúc làm sẽ phải nuốt lời.</td>
+      <td>Không mất gì; chỉ mất một kỳ vọng lẽ ra không nên tạo.</td>
+    </tr>
+    <tr>
+      <td><b>Sao hạn nâng cao: Kim Lâu, Hoang Ốc</b><br><span class="chip could">Hoãn</span></td>
+      <td>Giai đoạn 3 chỉ làm văn khấn điền mẫu + tra sao hạn/Tam Tai có dẫn nguồn và dị bản</td>
+      <td>FR-3.4 là COULD. Càng nhiều phép tính bói toán thì càng nhiều dị bản phải nêu, và càng khó giữ ranh giới “trình bày, không phán”.</td>
+      <td>Mất một tiện ích phụ. Người dùng vẫn tra được ở nơi khác.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Một đề xuất nữa, không nằm trong bảng vì nó không phải là cắt tính năng</p>
+  <p>
+    FR-3.1 gộp <b>di chúc</b> chung nhóm với văn bia, hương ước, gia huấn, câu đối. Đây là một lỗi
+    phân loại có hậu quả pháp lý: văn bia là di sản công khai của người đã khuất, còn <b>di chúc là
+    tài liệu có thể còn hiệu lực và liên quan trực tiếp tới tài sản của người đang sống</b>. Đề xuất:
+    tách di chúc thành một nhóm riêng, <b>mặc định chỉ Hội đồng Tộc biểu xem được</b>, không nằm trong
+    thư viện công khai, và không bao giờ hiện cho khách. Chi tiết ở
+    <a href="01-di-san-mo-phan.html">tài liệu 01</a>.
+  </p>
+</div>
+
+<h2>6. Giai đoạn 4 có phần trải nghiệm riêng, dễ bị bỏ quên</h2>
+
+<p>
+  Giai đoạn 4 trong BA v2 §11 là “load test, quan sát hệ thống, tinh chỉnh bảo mật/PDPD, đào tạo &amp;
+  bàn giao”. Ba trong bốn việc đó là việc kỹ thuật. Việc thứ tư — <b>bàn giao</b> — là việc thiết kế,
+  và nếu bỏ qua thì sản phẩm chết sau khi đội làm rời đi.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Người kế nhiệm</h4>
+    <p>
+      Tộc trưởng và Trưởng chi thay đổi theo nhiệm kỳ và theo tuổi tác. Cần một luồng
+      <b>chuyển giao quyền quản trị</b> rõ ràng, có xác nhận hai bên, và không bao giờ để dòng họ rơi
+      vào tình trạng không còn ai giữ tài khoản quản trị.
+    </p>
+    <p class="day">Rủi ro này thực tế hơn phần lớn rủi ro kỹ thuật: một cụ Tộc trưởng qua đời cùng mật khẩu là kịch bản phải chuẩn bị trước, không phải sau.</p>
+  </div>
+  <div class="the">
+    <h4>Bản in được</h4>
+    <p>
+      Nhiều dòng họ vẫn muốn một cuốn phả in ra. Cần bản xuất PDF <b>đọc được trên giấy</b>: phả đồ
+      chia trang, hồ sơ xếp theo chi, và ở chân trang ghi rõ phần nào chưa được xác nhận.
+    </p>
+    <p class="day">Bản in cũng là phương án dự phòng nếu hệ thống ngừng hoạt động — điều nên nói thẳng với Hội đồng thay vì để họ tự lo.</p>
+  </div>
+  <div class="the">
+    <h4>Xuất toàn bộ dữ liệu</h4>
+    <p>
+      Dòng họ phải lấy được <b>toàn bộ</b> dữ liệu của mình ra ở định dạng đọc được, bất cứ lúc nào,
+      không cần xin ai. GEDCOM là chưa đủ vì nó làm mất tên húy/tự/hiệu/thụy, ngày âm, chi/ngành,
+      đích tôn và kế tự.
+    </p>
+    <p class="day">Vừa là quyền của chủ thể dữ liệu theo Nghị định 13/2023, vừa là điều làm Hội đồng yên tâm giao dữ liệu tổ tiên cho một hệ thống.</p>
+  </div>
+</div>
+
+<h2>7. Rủi ro chung của cả phần tương lai</h2>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Vì sao nó đặc biệt với dự án này</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="xau"><b>Thư viện rỗng</b></td>
+      <td>Giai đoạn 3 làm ra bốn kho nội dung (di sản, mộ phần, từ đường, bản tin) nhưng <b>không tự sinh ra nội dung</b>. Nếu không có người số hoá và người phiên âm, sản phẩm sẽ có bốn màn hình trống.</td>
+      <td>Trước khi viết dòng mã nào của giai đoạn 3, chốt với Hội đồng <b>ai làm việc số hoá</b> và trong bao lâu. Đây là điều kiện tiên quyết, không phải việc chạy song song.</td>
+    </tr>
+    <tr>
+      <td class="xau"><b>Tiền làm hỏng quan hệ</b></td>
+      <td>Quỹ họ là nơi dễ mất lòng nhất. Một phần mềm minh bạch nửa vời còn tệ hơn cuốn sổ giấy, vì nó tạo vẻ ngoài chính xác cho những con số chưa được đối chiếu.</td>
+      <td>Tách vai thủ quỹ khỏi vai duyệt chi; sổ chỉ ghi thêm; khoản chi thiếu chứng từ phải hiện rõ chứ không giấu. Xem <a href="02-quy-ho-bao-cao-ban-tin.html">tài liệu 02</a>.</td>
+    </tr>
+    <tr>
+      <td class="xau"><b>Máy bịa, con cháu đọc như phả</b></td>
+      <td>Trong một cuốn gia phả, một câu bịa được ghi lại như sự thật là thiệt hại <b>không sửa được</b> — vài đời sau không còn ai biết câu đó từ đâu ra.</td>
+      <td>Máy không bao giờ ghi thẳng vào phả; nhãn nguồn theo từng trường; hai kho tách biệt ở tầng dữ liệu. Xem <a href="03-nhap-lieu-va-tang-ai.html">tài liệu 03</a>.</td>
+    </tr>
+    <tr>
+      <td class="canh"><b>Rò rỉ qua thống kê</b></td>
+      <td>Báo cáo dân số học và bảng vàng vinh danh đều làm lộ thông tin người sống mà không ai coi đó là “dữ liệu cá nhân”.</td>
+      <td>Ngưỡng che nhóm nhỏ; vinh danh phải opt-in; vinh danh trẻ vị thành niên phải có đồng ý của phụ huynh và không hiện với khách.</td>
+    </tr>
+    <tr>
+      <td class="canh"><b>Toạ độ mộ bị lạm dụng</b></td>
+      <td>Toạ độ chính xác của mộ phần công khai với mọi người là dữ liệu có thể bị dùng để phá hoại hoặc trộm cắp; với mộ người mới mất thì thân nhân có thể không muốn công khai.</td>
+      <td>Khách chỉ thấy tên nghĩa trang cấp xã/huyện; toạ độ chính xác chỉ cho thành viên đã đăng nhập; có công tắc ẩn toạ độ theo từng ngôi mộ.</td>
+    </tr>
+    <tr>
+      <td class="canh"><b>Nội dung tín ngưỡng bị lệch</b></td>
+      <td>Mẫu văn khấn thiếu hoặc sai chỗ là chuyện xúc phạm với người lớn tuổi, và không sửa được bằng một bản vá.</td>
+      <td>Mọi mẫu văn khấn phải có nguồn và phải được Hội đồng duyệt trước khi hiện. Không cho người dùng tự đăng mẫu công khai.</td>
+    </tr>
+    <tr>
+      <td class="canh"><b>Bốn kho nội dung, bốn trình đọc khác nhau</b></td>
+      <td>Văn bia (FR-3.1), câu đối trong từ đường (FR-3.3), mộ chí (FR-3.2) và bản tin (FR-2.4) đều là “ảnh kèm chữ”. Rất dễ thành bốn giao diện khác nhau vì bốn người khác nhau làm.</td>
+      <td>Một trình đọc tư liệu dùng chung (KD-1), một công cụ đặt điểm neo lên ảnh dùng chung, một kho media dùng chung. Quyết định này phải chốt <b>trước</b> khi bắt đầu giai đoạn 3.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>8. Câu hỏi còn treo</h2>
+
+<ol>
+  <li><b>Ai số hoá?</b> Việc chụp văn bia, phiên âm Hán-Nôm, đo toạ độ mộ là việc thủ công tốn nhiều công. Chưa rõ dòng họ tự làm, thuê ngoài, hay đội dự án làm.</li>
+  <li><b>Quỹ họ có tư cách pháp nhân không?</b> Câu trả lời quyết định việc có được nhận tiền trực tuyến hay không, và ai chịu trách nhiệm khi có tranh chấp.</li>
+  <li><b>Ngưỡng che nhóm nhỏ là bao nhiêu?</b> Đề xuất 5. Ngưỡng cao thì báo cáo gần như trống với dòng họ nhỏ; ngưỡng thấp thì lộ người.</li>
+  <li><b>Nguồn nào cho sao hạn và văn khấn?</b> Cần Hội đồng chỉ định sách/nguồn cụ thể được coi là chuẩn của dòng họ này, kèm các dị bản chấp nhận nêu.</li>
+  <li><b>Vinh danh trẻ em có được phép không?</b> Khuyến học thường vinh danh học sinh giỏi — tức trẻ vị thành niên, đối tượng BA v2 §10 yêu cầu ẩn tối đa. Cần chốt trước khi làm bảng vàng.</li>
+  <li><b>Mộ thất lạc ghi thế nào?</b> Nhiều mộ tổ đã mất dấu. Cần Hội đồng chốt cách ghi “vị trí phỏng đoán” sao cho đời sau không đọc nhầm thành vị trí đã xác định.</li>
+</ol>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 05 · Tổng quan. Thứ tự ưu tiên khi mâu thuẫn:
+    <b>BA v2 → <a href="../00-dinh-huong.html">định hướng thiết kế</a> → tài liệu này</b>.
+    Mọi con số trong bộ tài liệu này là <b>đề xuất</b> trừ khi ghi rõ nguồn — không có số nào lấy từ
+    đo đạc thực tế, vì giai đoạn 3 chưa chạy.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

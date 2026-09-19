@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 04 — Frontend còn lại · Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 04 · Frontend còn lại</p>
+  <h1>Frontend còn lại</h1>
+  <p class="tom-tat">
+    Tài liệu con của <strong><a href="../00-tong-the.html">kế hoạch 00 — bản chốt phạm vi</a></strong>.
+    Chỗ nào tài liệu này mâu thuẫn với 00 thì <strong>00 thắng</strong>; chỗ nào mâu thuẫn với
+    <strong><a href="../../design/00-dinh-huong.html">design/00 — định hướng thiết kế</a></strong> thì
+    định hướng thắng. Phạm vi: <strong>nợ tiếp cận</strong>, <strong>các màn còn là đề xuất</strong>,
+    và <strong>ba việc kỹ thuật nền</strong> chưa xong. Mọi con số đo từ mã đều kèm đường dẫn tệp;
+    mọi con số ước lượng đều ghi rõ là ước lượng.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <span>Đọc kèm:</span>
+  <a href="../00-tong-the.html">00 · Bản chốt phạm vi</a> ·
+  <a href="../../design/00-dinh-huong.html">design/00 · Định hướng</a> ·
+  <a href="../../design/README.md">design/README · 15 lỗi</a> ·
+  <a href="../../design/03-kien-truc-thong-tin/03-kien-truc-thong-tin.html">design/03 · Kiến trúc thông tin</a> ·
+  <a href="../../design/05-tinh-nang-tuong-lai/index.html">design/05 · Tính năng tương lai</a>
+</nav>
+
+<h2>0. Cách đọc các con số trong tài liệu này</h2>
+
+<p>
+  Ba loại số, không trộn lẫn, và mỗi lần xuất hiện đều nhận diện được:
+</p>
+
+<ul>
+  <li><b>Đo từ mã nguồn</b> — luôn kèm đường dẫn tệp, có khi kèm số dòng. Kiểm lại được bằng một
+  lệnh <code>grep</code>.</li>
+  <li><b>Chép từ kế hoạch 00</b> — ví dụ 679 test đơn vị, 61 E2E, 33 màn bản mẫu. Tài liệu này
+  không đếm lại; nếu 00 sai thì cả hai cùng sai và sửa ở 00.</li>
+  <li><b>Ước lượng công sức</b> — luôn ghi bằng <b>ngày-người</b> và luôn có chữ “ước lượng”.
+  Chưa có số liệu vận tốc thật của đội, nên đây là <b>phán đoán kỹ thuật</b>, không phải cam kết.
+  Chúng dùng để <i>xếp thứ tự</i>, không dùng để ký hợp đồng.</li>
+</ul>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Một sai lệch số học phải chốt trước khi đọc tiếp</p>
+  <p>
+    Kế hoạch 00 §1 ghi bản mẫu có <b>33 màn hình, 19 đã dựng, 14 đề xuất</b>. Trong kho
+    <b>không có tệp nào liệt kê đủ 33 màn ấy</b> — <code>design/05</code> có bảng 18 khung dây
+    (KD-1…KD-18), <code>design/03</code> có bảng 26 khu vực lá, không bảng nào ra 33.
+  </p>
+  <p>
+    Khi liệt kê rời từng màn theo đúng cách phát biểu phạm vi (bốn màn đợt B + <b>năm</b> màn nhập
+    liệu + ba màn đợt C + năm màn đợt D) thì ra <b>17</b>, không phải 14. Tài liệu này
+    <b>liệt kê đủ 17</b> và ở §6 đề nghị gộp/cắt ba mục để về lại 14. Cách đếm ấy là
+    <b>đề xuất</b>, cần BA xác nhận — một ma trận truy vết mà hai tài liệu đếm ra hai số là ma
+    trận không dùng được.
+  </p>
+</div>
+
+<h2>1. Hiện trạng frontend, đo được</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Số đo</th><th>Nguồn</th></tr></thead>
+  <tbody>
+    <tr><td>Trang (route) đã dựng</td><td class="so">12</td><td><code>find frontend/src/app -name page.tsx</code></td></tr>
+    <tr><td>Nhóm thành phần</td><td class="so">14</td><td><code>frontend/src/components/</code></td></tr>
+    <tr><td>Khoá dịch mỗi ngôn ngữ</td><td class="so">521 / 521</td><td><code>frontend/messages/vi.json</code> · <code>en.json</code></td></tr>
+    <tr><td>Test đơn vị · E2E</td><td class="so">679 · 61</td><td>chép từ kế hoạch 00 §1</td></tr>
+    <tr><td>Chỗ đặt cỡ chữ dưới 16px, <b>ngoài</b> canvas phả đồ</td><td class="so">146 chỗ / 55 tệp</td><td><code>grep -rE 'text-\[(1[0-5]|[0-9])(\.[0-9])?px\]' src/</code></td></tr>
+    <tr><td>Chỗ dùng <code>colorTokens.*</code> (bảng màu <b>sáng đóng băng</b>) trong <code>components/</code> + <code>app/</code></td><td class="so">28 chỗ / 11 tệp</td><td><code>grep -rhoE 'colorTokens\.[a-zA-Z]+' src/components src/app</code></td></tr>
+    <tr><td>Ô <code>&lt;Select&gt;</code> / <code>&lt;DatePicker&gt;</code> của Ant Design</td><td class="so">13</td><td><code>grep -rn '&lt;Select\|&lt;DatePicker' src/</code></td></tr>
+    <tr><td>Phần tử <code>&lt;main&gt;</code> trong toàn bộ mã nguồn</td><td class="so">0</td><td><code>grep -rn '&lt;main' src/ --include=*.tsx</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Một con số cần đọc kỹ</p>
+  <p>
+    <b>146 chỗ đặt cỡ chữ dưới 16px, trên 55 tệp.</b> <code>design/README</code> ghi lỗi này là
+    “hồ sơ nhân khẩu: 39/61 đoạn chữ dưới 16px”. Đó là <b>một màn hình</b>. Phép quét toàn kho cho
+    thấy đây <b>không phải lỗi của một màn</b> mà là <b>thói quen viết mã của cả sản phẩm</b>:
+    <code>text-[13px]</code> xuất hiện 45 lần, <code>text-[12px]</code> 38 lần. Ước lượng công sức
+    ở §2 tính theo con số 146, không theo con số 39.
+  </p>
+</div>
+
+<h2>2. Nhóm A — Nợ tiếp cận</h2>
+
+<p>
+  Sáu lỗi trong mục “Chưa sửa” của <code>design/README.md</code>, cộng <b>hai lỗi nữa</b> phép khảo
+  sát này tìm thêm. Tất cả đều <b>chặn nghiệm thu Giai đoạn 1</b> theo kế hoạch 00 §2 đợt A.
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ràng buộc trùm lên cả nhóm A</p>
+  <p>
+    <b>Không nới test để làm xanh.</b> Ba hằng số sau trong
+    <code>frontend/e2e/accessibility.spec.ts</code> là <b>sàn</b>, không phải tham số điều chỉnh
+    được: <code>TOUCH_FLOOR_PX = 44</code>, <code>BODY_FONT_FLOOR_PX = 16</code>,
+    <code>ABSOLUTE_FONT_FLOOR_PX = 12</code>. Cũng không được mở rộng danh sách loại trừ trong
+    <code>collectControls()</code>, và không được thêm tệp nào vào <code>PALETTE_FILES</code> của
+    <code>tests/unit/a11y/no-hardcoded-colors.test.ts</code>.
+  </p>
+  <p>
+    <b>Tiêu chí nghiệm thu của chính ràng buộc này</b> (việc A8 bên dưới): thêm một ca kiểm đọc
+    chính ba hằng số ấy và khẳng định giá trị; và mọi thay đổi chạm vào
+    <code>e2e/accessibility.spec.ts</code> phải được <code>code-reviewer</code> duyệt riêng. Bộ kiểm
+    đã có sẵn phần “chống xanh giả” (<code>accessibility.spec.ts</code> dòng 1098 trở đi) — giữ
+    nguyên và thêm ca mới theo đúng khuôn đó.
+  </p>
+</div>
+
+<h3>A1 · Thanh đầu trang: liên kết 20px và bốn biểu tượng câm</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Bốn liên kết điều hướng trong <code>NAV_ITEMS</code>
+      (<code>src/components/layout/header.tsx</code>) là thẻ <code>&lt;Link&gt;</code> trần, không có
+      chiều cao tối thiểu ⇒ cao đúng bằng dòng chữ. Bốn điều khiển chỉ có biểu tượng, nhãn nằm
+      trong <code>Tooltip</code> + <code>aria-label</code>: <b>Cài đặt</b> (<code>header.tsx</code>,
+      <code>SettingOutlined</code>), <b>Yêu cầu đính chính</b>
+      (<code>src/components/correction/correction-queue-link.tsx</code>,
+      <code>FileSyncOutlined</code>), <b>chuông thông báo</b>
+      (<code>src/components/notifications/notification-bell.tsx</code>), <b>nút tài khoản</b>
+      (<code>src/components/layout/auth-menu.tsx</code>).
+      <br><br>
+      Đây là <b>hai lỗi chồng nhau</b>: vùng chạm dưới sàn, <i>và</i> vi phạm nguyên tắc 3 của
+      định hướng 00 (“biểu tượng luôn đi kèm chữ”). <code>Tooltip</code> không tồn tại trên màn
+      hình cảm ứng; <code>aria-label</code> chỉ phục vụ trình đọc màn hình. Sửa vùng chạm mà giữ
+      biểu tượng câm là sửa nửa lỗi.
+    </td></tr>
+    <tr><th>Cái giá phải trả</th><td>
+      Thêm nhãn chữ làm thanh đầu trang chật hơn. Cái giá này <b>có thật, không phải giả định</b>:
+      <code>header.tsx</code> đã mang hai chú thích dài về việc thanh đầu trang tràn ở 393px và
+      từng cao 169px. Cách trả giá đề xuất (theo <code>design/03</code> §2.1): trên điện thoại,
+      bốn điều khiển này <b>rời khỏi thanh đầu trang</b>, xuống thanh tab dưới và trang
+      <code>/muc-luc</code>, nơi có chỗ cho nhãn chữ.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span> — thuần giao diện.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Trang <code>/muc-luc</code> là <b>một màn hình mới không nằm trong danh sách 14 màn đề xuất</b>.
+      Nếu Hội đồng không duyệt nó thì cách trả giá ở trên không còn, và phải chọn: hoặc thanh đầu
+      trang cao hơn, hoặc bỏ bớt một điều khiển. Cần quyết trước khi bắt tay.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>C-3.1 · desktop · mọi điều khiển trên trang chủ đạt vùng chạm 44×44px</code> và bản
+      điện thoại của nó xanh trên cả 6 màn trong <code>MAIN_SCREENS</code>. Thêm một ca mới:
+      mỗi điều khiển trong thanh đầu trang có <b>nội dung chữ nhìn thấy được</b>
+      (<code>textContent.trim().length &gt; 0</code> sau khi loại phần tử <code>aria-hidden</code>),
+      không chấp nhận <code>aria-label</code> làm bằng chứng.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">2 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A2 · Lịch giỗ — 73/76 điều khiển dưới sàn</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      <code>src/components/events/event-year-calendar.tsx</code>. Nút mỗi sự kiện là
+      <code>&lt;button&gt;</code> với <code>p-0</code> và <code>text-[12px]</code> (dòng 90) ⇒ cao
+      bằng đúng một dòng chữ 12px. Cả tệp 134 dòng chứa <b>7 khai báo cỡ chữ dưới 16px</b>, thấp
+      nhất là <code>text-[11px]</code> (dòng 76, 94) và <code>text-[11.5px]</code> (dòng 113).
+      <br><br>
+      Đây là màn hình <b>đông điều khiển nhất trên một khung nhìn</b> của cả sản phẩm — mười hai ô
+      tháng, mỗi ô một danh sách. Vì vậy nó là màn <b>duy nhất</b> mà “cho vùng chạm to lên” đụng
+      thẳng vào bố cục: 76 điều khiển × 44px không nằm vừa lưới
+      <code>grid-cols-2 sm:grid-cols-3 lg:grid-cols-4</code> hiện tại.
+    </td></tr>
+    <tr><th>Hướng sửa đề xuất</th><td>
+      <b>Không giãn lưới, đổi cách xếp.</b> Mỗi ô tháng chỉ hiện <b>tối đa ba sự kiện</b> ở dạng
+      hàng cao 44px, phần còn lại gom vào một hàng “còn N lễ nữa” (đã có sẵn khoá dịch
+      <code>events.moreInMonth</code>) mở ra danh sách đầy đủ. Đây đúng lời cảnh báo cuối
+      <code>design/00</code>: dễ dùng không đến từ việc bớt đi, mà từ việc <b>sắp đúng thứ tự</b>.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span> cho phần vùng chạm.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Gom bớt sự kiện làm mất cái nhìn “cả năm trong một màn” — thứ Hội đồng dùng để soạn lịch
+      việc họ. Giảm thiểu: giữ <b>chấm mật độ</b> (không phải điều khiển) cho các lễ bị gom, để mắt
+      vẫn thấy tháng nào dày.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>C-3.1 · … lịch giỗ …</code> xanh trên cả desktop lẫn Pixel 5 —
+      hôm nay đây là ca đỏ nặng nhất (73/76). <code>C-1.2</code> (không đoạn chữ nào dưới 12px
+      ngoài canvas) xanh.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">2 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A3 · Sàn cỡ chữ — 146 chỗ, 55 tệp, không phải 39 đoạn của một màn</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Đỉnh điểm là thẻ <code>"Tên chính"</code>:
+      <code>src/components/person/person-name-layers.tsx:39</code> đặt
+      <code>!text-[10px]</code>. Nhưng cần sửa <b>theo hệ thống</b>, không sửa từng chỗ:
+      <br><br>
+      <b>Bước 1 — phân loại.</b> Không phải 146 chỗ đều là thân bài. Định hướng 00 §2.2 đặt sàn
+      <b>16px cho thân bài</b> và <b>17–18px cho nội dung chính</b>; bộ kiểm đặt thêm sàn tuyệt đối
+      <b>12px</b> cho mọi chữ ngoài canvas. Chia làm ba loại: thân bài (lên 16px), nhãn phụ trợ
+      (lên 14px, và phải chứng minh được nó <i>là</i> nhãn chứ không phải nội dung), chữ trong
+      canvas phả đồ (được miễn — chỉ 5/151 chỗ nằm ở đây).
+      <br><br>
+      <b>Bước 2 — thay bằng thang, không thay bằng số rời.</b> Thêm một thang cỡ chữ vào
+      <code>tailwind.config</code> và cấm <code>text-[Npx]</code> tuỳ tiện. 45 lần
+      <code>text-[13px]</code> rải khắp kho là bằng chứng rằng giá trị rời không giữ được kỷ luật.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span>.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      <b>Đây là việc rủi ro bố cục cao nhất trong nhóm A.</b> Nâng 146 chỗ chữ làm mọi thẻ cao
+      lên; các màn dày dữ liệu (hồ sơ nhân khẩu, thẻ duyệt đính chính, hộp thông báo) sẽ tràn hoặc
+      xuống dòng theo cách chưa ai thấy. Bắt buộc phải <b>chụp ảnh đối chiếu</b> trước/sau trên cả
+      hai khung nhìn, và giao <code>qa-tester</code> soi bằng mắt — máy chỉ kiểm được “đủ to”, không
+      kiểm được “vẫn đọc được”.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>C-1.1 · chữ trên {màn} đạt sàn 16px</code> xanh trên cả 6 màn;
+      <code>C-1.2</code> xanh; <code>C-1.1 · widget Ant Design không rơi về mặc định 14px</code>
+      xanh. Thêm một ca <b>đơn vị</b> quét mã nguồn: không tệp nào ngoài
+      <code>src/components/tree/</code> và <code>src/lib/tree/</code> được chứa
+      <code>text-[Npx]</code> với N &lt; 14 — đây là hàng rào chống tái phát, cùng khuôn với
+      <code>tests/unit/a11y/no-hardcoded-colors.test.ts</code>.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">4 ngày-người (ước lượng) — 55 tệp, phần lớn thời gian là dò bố cục vỡ, không phải sửa lớp CSS</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A4 · Vòng tiêu điểm không tồn tại trên widget Ant Design</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Quy tắc vòng tiêu điểm trong <code>src/app/globals.css</code> loại trừ
+      <code>:not([class*="ant-"])</code> trên <b>cả 11 bộ chọn</b>, kèm chú thích nói vòng mặc định
+      của Ant Design “đã tạm chấp nhận được”. Đo ra là <b>1,00:1</b> — tức là <b>không có dấu hiệu
+      nào</b>. Có <b>13</b> ô <code>&lt;Select&gt;</code>/<code>&lt;DatePicker&gt;</code> trong kho, nằm
+      ở đúng những chỗ đắt nhất: biểu mẫu sửa người
+      (<code>person-form.tsx:332</code>, <code>date-dual-field.tsx:77</code>,
+      <code>name-layers-field.tsx:99</code>, <code>relationship-link-field.tsx:85,119</code>),
+      hộp thoại xin đính chính (<code>correction-request-dialog.tsx:258,350</code>), bộ lọc tìm
+      kiếm và bộ lọc lịch.
+    </td></tr>
+    <tr><th>Hướng sửa</th><td>
+      Bỏ loại trừ, nhưng <b>không chồng vòng</b>: nhắm vào phần tử <i>bọc ngoài</i> mà Ant Design
+      dựng (<code>.ant-select-focused .ant-select-selector</code>,
+      <code>.ant-picker-focused</code>) và <b>tắt</b> <code>box-shadow</code> mặc định của nó trước
+      khi đặt vòng hai lớp của sản phẩm. Đây là lý do việc này không phải là xoá một chuỗi
+      <code>:not(...)</code> — chú thích trong <code>globals.css</code> nói đúng rằng antd dùng
+      <code>box-shadow</code> cho nhiều việc khác; nó chỉ sai ở kết luận “tạm chấp nhận được”.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span>.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Tắt <code>box-shadow</code> của antd có thể xoá luôn <b>viền trạng thái lỗi</b> của ô nhập —
+      mà biểu mẫu người là chỗ dùng nó nhiều nhất. Phải kiểm cả trạng thái <code>status="error"</code>,
+      không chỉ trạng thái tiêu điểm.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>C-4.3 · đi bằng Tab qua {màn}: mọi điểm dừng đều thấy được vòng tiêu điểm</code> xanh
+      trên cả 3 màn trong <code>CORE_SCREENS</code>, <b>và</b> mở rộng
+      <code>CORE_SCREENS</code> tạm thời để phủ <code>/persons/p-001/edit</code> — màn nhiều
+      <code>&lt;Select&gt;</code> nhất, hôm nay không nằm trong danh sách quét. Ca chống xanh giả
+      dòng 1159 (“bắt được vòng tiêu điểm hổ phách 2,95:1”) và dòng 1187
+      (“bắt được <code>outline: none</code> không có gì thay thế”) giữ nguyên, phải vẫn xanh.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">1,5 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A5 · Không có liên kết “bỏ qua, tới nội dung chính” — và không có nội dung chính để tới</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      <code>design/README</code> ghi lỗi là “thiếu liên kết bỏ qua”. Khảo sát cho thấy lỗi
+      <b>sâu hơn một tầng</b>: <code>grep -rn '&lt;main' src/ --include=*.tsx</code> trả về
+      <b>0 kết quả</b>. Không có mốc nào để bỏ qua <i>tới</i>. Phải làm cả hai:
+      <br>1. <code>src/components/layout/app-shell.tsx</code> bọc <code>Layout.Content</code> bằng
+      <code>&lt;main id="noi-dung-chinh" tabIndex={-1}&gt;</code>.
+      <br>2. Liên kết bỏ qua là <b>điểm dừng Tab đầu tiên</b>, ẩn cho tới khi nhận tiêu điểm rồi
+      hiện thành một điều khiển 44px thật, có nhãn chữ song ngữ.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span>.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Thấp về kỹ thuật. Rủi ro thật là <b>làm nửa vời</b>: một liên kết bỏ qua trỏ tới phần tử
+      không nhận được tiêu điểm (thiếu <code>tabIndex={-1}</code>) trông như hoạt động và không
+      hoạt động — trình duyệt cuộn tới nhưng tiêu điểm bàn phím vẫn ở đầu trang.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>C-4.5 · điểm dừng Tab đầu tiên là liên kết bỏ qua tới nội dung chính</code>
+      (<code>accessibility.spec.ts:669</code>) xanh. Bổ sung một khẳng định: sau khi kích hoạt liên
+      kết, <code>document.activeElement</code> <b>là</b> phần tử <code>&lt;main&gt;</code>, không chỉ
+      là “trang đã cuộn”.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">1 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A6 · Huy hiệu đếm thông báo — 2,07:1 ở chế độ tối</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Chữ trắng trên hổ phách. Xuất hiện ở ba chỗ: <code>notification-bell.tsx</code>,
+      <code>correction-queue-link.tsx</code> (<code>&lt;Badge count=…&gt;</code>),
+      <code>mobile-nav.tsx</code>. Vì là <b>chữ</b> chứ không phải mảng tô, nó thuộc đúng ca mà
+      <code>tokens.ts</code> đã tách sẵn: <code>accent</code> dành cho mảng tô,
+      <code>accentText</code> dành cho chữ.
+      <br><br>
+      Nhưng ở đây <b>hổ phách là nền</b>, không phải chữ — nên lời giải không phải đổi sang
+      <code>accentText</code> mà là đổi <b>màu chữ trên nền hổ phách</b>: dùng
+      <code>textMain</code> thay cho trắng. Ở chế độ tối hổ phách là <code>#e9a83f</code>, mực là
+      <code>#efe8df</code> — cặp đó vẫn hụt; nên ở chế độ tối chữ phải là màu <b>tối</b>
+      (<code>bgPage</code>). Đây chính là loại việc mà bảng màu hai chế độ sinh ra để giải.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span>.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Nhỏ, nhưng đụng vào <code>tokens.ts</code> — tệp <b>duy nhất</b> được phép viết hex. Mọi thay
+      đổi ở đó phải đi kèm cập nhật cả hai khối biến trong <code>globals.css</code>
+      (<code>.dark</code> và <code>@media (prefers-color-scheme: dark)</code>), nếu không
+      <code>tests/unit/styles/css-vars.test.ts</code> sẽ bắt lệch.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>tests/unit/a11y/token-contrast.test.ts</code> có thêm cặp “chữ huy hiệu đếm / nền hổ
+      phách” ở <b>cả hai bảng màu</b>, ngưỡng ≥4,5:1. Ca E2E
+      <code>chữ trên {màn} vẫn đạt tương phản ở chế độ tối</code>
+      (<code>accessibility.spec.ts:909</code>) xanh.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">0,5 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A7 · Lỗi tìm thêm: nhãn thanh tab dưới 10,5px — dưới cả sàn tuyệt đối</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      <code>src/components/layout/mobile-nav.tsx:69</code> đặt <code>text-[10.5px]</code>. Sàn thân
+      bài là 16px, sàn tuyệt đối của bộ kiểm là 12px — <b>10,5px trượt cả hai</b>. Đây là thanh
+      điều hướng chính của <b>người dùng di động, tức phần đông của cổng này</b>. Và khi nhãn không
+      đọc được thì biểu tượng lại quay về đứng một mình: vòng ngược đúng nguyên tắc 3.
+      <br><br>
+      <code>design/03</code> §2.2 đã tính chỗ: 393px chia năm được 78,6px mỗi tab; nhãn dài nhất
+      (“Thông báo”) vừa ở <b>12,5px</b>. Đó là đề xuất, không phải số đo.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span>.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Ở 12,5px <b>không còn dư chỗ cho tab thứ sáu</b> — nên mọi khu vực mới của đợt C và D
+      <b>không được</b> thêm vào thanh tab. Đây là lý do trang <code>/muc-luc</code> (xem A1) phải
+      tồn tại; hai việc này phải quyết cùng nhau.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>C-1.2</code> xanh ở khung nhìn Pixel 5 (thanh tab chỉ hiện dưới <code>md:</code>, nên
+      phép quét desktop <b>không bao giờ thấy nó</b> — bổ sung một ca đo ở khung nhìn điện thoại là
+      bắt buộc, nếu không việc này xanh giả).
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">0,5 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A8 · Lỗi tìm thêm: bộ kiểm màu có một lỗ đủ lớn để lọt cả chế độ tối</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      <code>tests/unit/a11y/no-hardcoded-colors.test.ts</code> quét <b>chuỗi hex</b>. Nó bắt được
+      <code>"#a3336b"</code>. Nó <b>không bắt được</b> <code>colorTokens.warningBg</code> — dù hai
+      thứ này <i>giống hệt nhau về hậu quả</i>: <code>colorTokens</code> là bảng màu
+      <b>sáng</b>, giá trị đóng băng lúc dựng, <code>prefers-color-scheme</code> không với tới.
+      Chỉ <code>colorVars</code> mới đảo theo chế độ.
+      <br><br>
+      Đo được: <b>28 chỗ</b> dùng <code>colorTokens.*</code> trong <code>components/</code> +
+      <code>app/</code>. Chi tiết ở §4 mục C-nền 1 — liệt kê ở đó vì đó là <i>việc sửa</i>; ở đây
+      chỉ nói phần <i>bịt lỗ kiểm</i>.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span>.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Ca kiểm mới sẽ <b>đỏ ngay lập tức ở 28 chỗ</b>. Đó là đúng — nhưng phải làm cùng lúc với việc
+      sửa (C-nền 1), không được nhập kho một ca đỏ rồi để đó.
+      Hai chỗ dùng <b>hợp lệ</b> và phải nằm trong danh sách trắng có ghi lý do:
+      <code>src/app/[locale]/layout.tsx</code> (siêu dữ liệu <code>themeColor</code> của HTML
+      <b>không nhận</b> <code>var(--…)</code>) và <code>tokens.ts</code> chính nó.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      Ca đơn vị mới: không tệp nào trong <code>src/components/</code> nhập
+      <code>colorTokens</code> hoặc <code>darkColorTokens</code>. Kèm ca kiểm ngược (bắt được một
+      lần nhập giả, không bắt nhầm <code>colorVars</code>) — cùng khuôn “chống xanh giả” đã có.
+      Cộng thêm ca canh ba hằng số sàn nói ở đầu §2.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">1 ngày-người (ước lượng), chưa kể phần sửa ở C-nền 1</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Tổng nhóm A</p>
+  <p>
+    <b>≈ 12,5 ngày-người (ước lượng)</b>. Không việc nào phụ thuộc backend ⇒ <b>nhóm A chạy song
+    song được với toàn bộ đợt A của kế hoạch 00</b> (Zalo provider, endpoint công khai) và
+    <b>không nằm trên đường găng</b>. Nhưng nó <b>chặn tiêu chí ra Giai đoạn 1</b>, nên không hoãn
+    được sang sau.
+  </p>
+</div>
+
+<h2>3. Nhóm B — Mười bốn (thật ra mười bảy) màn đề xuất</h2>
+
+<p>
+  Xếp theo <b>đợt của bản chốt phạm vi</b>, không theo độ khó. Cột “chặn” nói rõ màn nào
+  <b>không thể bắt đầu</b> vì backend chưa có API — chi tiết từng khoảng trống ở §5.
+</p>
+
+<h3>3.1 · Đợt B — đưa dòng họ vào</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Màn</th><th>Đường dẫn đề xuất</th><th>Chặn?</th><th>Ước lượng</th></tr></thead>
+  <tbody>
+    <tr><td>B1</td><td><b>Hồ sơ người sống</b> — nghề nghiệp, nơi ở, liên hệ (phần <i>đọc</i>)</td><td><code>/persons/{id}</code> mở rộng · <code>/toi</code></td><td><span class="canh">một phần</span></td><td class="so">3</td></tr>
+    <tr><td>B2</td><td><b>Điều khiển riêng tư từng mục</b> trên hồ sơ người sống</td><td><code>/toi/rieng-tu</code></td><td><span class="xau">chặn cứng</span></td><td class="so">4</td></tr>
+    <tr><td>B3</td><td><b>Danh bạ dòng họ</b></td><td><code>/danh-ba</code></td><td><span class="xau">chặn</span></td><td class="so">4</td></tr>
+    <tr><td>B4</td><td><b>Thiếp mời Zalo</b> (trang đích mở từ tin nhắn, chưa đăng nhập)</td><td><code>/thiep/{token}</code></td><td><span class="xau">chặn</span></td><td class="so">3</td></tr>
+    <tr><td>B5</td><td><b>Đăng ký bằng Zalo</b></td><td>trong <code>AuthMenu</code> sẵn có</td><td><span class="xau">chặn</span></td><td class="so">1,5</td></tr>
+    <tr><td>B6</td><td>Nhập liệu · <b>mẫu Excel</b> (tải mẫu + hướng dẫn cột)</td><td><code>/nhap-lieu/mau</code></td><td><span class="xau">chặn</span></td><td class="so">2</td></tr>
+    <tr><td>B7</td><td>Nhập liệu · <b>tải lên</b></td><td><code>/nhap-lieu/tai-len</code></td><td><span class="xau">chặn</span></td><td class="so">3</td></tr>
+    <tr><td>B8</td><td>Nhập liệu · <b>đối soát vùng chờ</b> (duyệt theo cụm, gỡ cả lô)</td><td><code>/nhap-lieu/{loId}</code></td><td><span class="xau">chặn</span></td><td class="so">3</td></tr>
+    <tr><td>B9</td><td>Nhập liệu · <b>đối chiếu trùng</b></td><td><code>/nhap-lieu/{loId}/trung</code></td><td><span class="xau">chặn</span></td><td class="so">2</td></tr>
+    <tr><td>B10</td><td>Nhập liệu · <b>tiến độ theo chi</b></td><td><code>/nhap-lieu/tien-do</code></td><td><span class="xau">chặn</span></td><td class="so">2</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>B1–B2 · Hồ sơ người sống và quyền riêng tư từng mục</h4>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đây là chỗ chặn nặng nhất của cả tài liệu</p>
+  <p>
+    Phạm vi yêu cầu “hồ sơ người sống <b>có điều khiển riêng tư từng mục</b>”. Backend
+    <b>không có khái niệm ấy</b>. <code>backend/src/main/java/vn/giapha/genealogy/domain/PrivacyLevel.java</code>
+    là một enum <b>bốn giá trị áp cho CẢ NGƯỜI</b>: <code>DEFAULT</code>,
+    <code>BRANCH_OPT_IN</code>, <code>CLAN_OPT_IN</code>, <code>RESTRICTED</code>. Nó nới hoặc siết
+    <i>toàn bộ Tầng 3 một lượt</i>.
+  </p>
+  <p>
+    Nghĩa là hôm nay <b>không thể</b> cho phép “cho cả họ xem nghề nghiệp, chỉ cho chi mình xem số
+    điện thoại” — hai thứ ấy đi chung một công tắc. Giao diện <b>không được phép</b> vẽ ra ba
+    công tắc rồi ánh xạ ngược về một enum: làm thế là <b>nói dối người dùng về quyền riêng tư của
+    chính họ</b>, và đó là loại lỗi tệ nhất trong sản phẩm này.
+  </p>
+  <p>
+    <b>Việc phải làm ở backend trước:</b> mô hình đồng thuận theo <i>nhóm trường</i>
+    (đề xuất tối thiểu ba nhóm: nghề nghiệp/nơi ở · liên hệ · ảnh), migration <code>V8</code>, và
+    <code>PrivacyTierService</code> đọc theo nhóm. Cho tới lúc đó <b>B2 không bắt đầu được</b>.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi B1</th><td>
+      Mục <b>Nơi ở &amp; nghề nghiệp</b> và <b>Liên hệ</b> trên hồ sơ, dựng trên các trường đã có
+      trong hợp đồng: <code>occupation</code>, <code>currentPlaceProvince</code> (Tầng 2),
+      <code>currentPlaceFull</code>, <code>contact{phone,email,zaloId}</code> (Tầng 3) —
+      <code>frontend/src/types/api.ts</code>. Cộng một tuyến <code>/toi</code> đưa thẳng người đăng
+      nhập tới hồ sơ của chính họ (<code>MeView.personId</code> đã có).
+      <br><br>
+      <b>Quy tắc bất di:</b> render đúng thứ backend trả về. <b>Không</b> chỗ trống, <b>không</b>
+      dòng “bị ẩn”, <b>không</b> ổ khoá — <code>design/README</code> ghi rõ thông báo riêng tư chỉ
+      được phụ thuộc <code>(còn sống, tầng)</code>, <b>không bao giờ</b> phụ thuộc bản ghi. Thành
+      phần <code>src/components/privacy/privacy-tier-notice.tsx</code> đã làm đúng — dùng lại,
+      đừng viết mới.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <b>B1:</b> chỉ chặn <i>một phần</i> — các trường đã có. Nhưng mục Quan hệ trên hồ sơ người
+      sống vẫn vướng: <code>RelationshipDto</code>
+      (<code>src/types/api.ts:175</code>) chỉ mang <code>fromPersonId</code>/<code>toPersonId</code>,
+      <b>không mang tên, đời, chi</b> của người kia ⇒ phải gọi thêm một lượt <code>/tree</code> chỉ
+      để hiển thị được một cái tên. Xem §5 mục 2.
+      <br><b>B2:</b> chặn cứng như khối trên.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Rủi ro lớn nhất <b>không phải kỹ thuật</b>: đây là màn hình đầu tiên nơi người trong họ
+      <b>tự khai dữ liệu về mình</b>. Kế hoạch 00 §5 chốt “không bao giờ nhập hộ người còn sống”.
+      Giao diện phải làm điều đó <b>bất khả thi</b>, không chỉ khuyên: người khác chỉ được
+      <b>gửi yêu cầu đính chính</b>, và ô nhập liên hệ chỉ mở khi <code>meta.isSelf</code>.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      Test thành phần (khuôn <code>tests/component/person-profile-privacy.test.tsx</code>): với
+      cùng một hồ sơ trả về ở bốn tầng <code>PUBLIC/T1/T2/T3</code>, DOM sinh ra
+      <b>không chứa chuỗi nào</b> gợi ý tồn tại dữ liệu bị ẩn.
+      E2E <code>guest-privacy.spec.ts</code> mở rộng: khách vào <code>/toi</code> và
+      <code>/persons/{người sống}</code> <b>không</b> nhận được 200 kèm tên.
+      So sánh <code>tier === "T3"</code> chứ <b>không</b> <code>atLeast("T3")</code> — bẫy đã biết,
+      ghi ở <code>CLAUDE.md</code>.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">B1: 3 · B2: 4 ngày-người (ước lượng, sau khi backend xong)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>B3 · Danh bạ dòng họ</h4>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Danh sách người còn sống trong phạm vi người xem, lọc theo chi/ngành và tỉnh, có lối gọi
+      thẳng / nhắn Zalo. Đây <b>không phải</b> màn tìm kiếm: <code>/search</code> phục vụ tra cứu
+      phả (người đã khuất là chính), danh bạ phục vụ <b>liên lạc</b> (người sống là toàn bộ).
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="xau">Chặn.</span> Không có endpoint danh bạ. <code>/api/v1/persons/search</code>
+      trả <code>PersonSummaryDto</code> — <b>Tầng 1 hoặc thấp hơn</b>, không có liên hệ theo định
+      nghĩa. Cần một endpoint riêng trả danh sách <b>đã lọc theo đồng thuận</b>, phân trang, và
+      <b>không bao giờ</b> trả người mà người gọi không được xem — lọc ở client là rò rỉ.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Danh bạ là <b>bề mặt rò rỉ riêng tư nguy hiểm nhất</b> của sản phẩm: nó gom đúng thứ Nghị
+      định 13/2023 bảo vệ vào một trang, xuất được, chụp màn hình được. Bắt buộc: không xuất tệp,
+      không sao chép hàng loạt, và <b>ghi nhật ký truy cập</b> (<code>audit</code> đã có).
+      Danh bạ cũng vô nghĩa nếu chưa xong B2 — trước khi có đồng thuận từng mục, nó chỉ hiện được
+      những người đã bật <code>CLAN_OPT_IN</code> cho <i>toàn bộ</i> Tầng 3.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      E2E: đăng nhập bằng bốn vai (<code>guest/member/branch_head/council</code>, đã có
+      <code>signInAs</code> trong <code>e2e/fixtures.ts</code>), khẳng định tập id trả về khớp
+      đúng tập mong đợi cho từng vai. Khách nhận <b>0 người</b>.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">4 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>B4–B5 · Thiếp mời Zalo và đăng ký bằng Zalo</h4>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      <b>B4</b> là một trang đích công khai mở từ tin nhắn Zalo: tên dòng họ, người mời, việc được
+      mời, và <b>một nút duy nhất</b>. Nó là màn hình <b>đầu tiên</b> phần lớn người trong họ nhìn
+      thấy — với nhiều cụ, nó là <i>toàn bộ ấn tượng</i> về sản phẩm.
+      <br><b>B5</b> <b>không phải một màn riêng</b>: Zalo là một Identity Provider của Keycloak.
+      Việc frontend là thêm một nút vào luồng đăng nhập đã nối thật, cộng xử lý ca “tài khoản Zalo
+      chưa ghép với người nào trong phả” (<code>MeView.linkedToTree === false</code> — trạng thái
+      đã có trong hợp đồng, hiện <b>chưa có màn nào xử lý</b>).
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="xau">Chặn kép.</span>
+      (a) <code>backend/src/main/java/vn/giapha/notification/infrastructure/</code> chỉ có
+      <code>inapp</code>, <code>jdbc</code>, <code>messaging</code>, <code>webpush</code> —
+      <b>không có provider Zalo nào</b>.
+      (b) <b>Không controller nào ánh xạ <code>/api/v1/public/**</code></b>; chuỗi ấy chỉ xuất hiện
+      trong <code>config/SecurityConfig.java</code>. Trang thiếp mời mở khi <b>chưa đăng nhập</b>,
+      nên không có endpoint công khai thì nó không có gì để hiển thị.
+      <br>Cộng thủ tục ngoài mã: kế hoạch 00 §4 cảnh báo tài khoản Zalo OA và mẫu ZNS phải được
+      <b>duyệt</b>, mất vài tuần.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Thiếp mời chứa <b>token trong URL</b>. Token phải hết hạn, dùng một lần, và trang thiếp
+      <b>không được</b> tiết lộ gì về người sống trước khi đăng nhập — kể cả tên người được mời.
+      Đây là chỗ dễ vô tình biến lời mời thành một rò rỉ danh sách thành viên.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      E2E ở ngữ cảnh <b>chưa đăng nhập</b>: mở <code>/thiep/{token}</code> — không có người sống
+      nào trong DOM; token hết hạn cho ra trang lỗi <b>có nhãn chữ</b>, không phải màn trắng.
+      Bộ <code>e2e/real-auth/</code> có thêm ca “đăng nhập Zalo → <code>linkedToTree=false</code> →
+      hạ cánh ở màn ghép, không phải hồ sơ trống”.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">B4: 3 · B5: 1,5 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>B6–B10 · Năm màn nhập liệu</h4>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Một đường ống, năm bề mặt: <b>lấy mẫu</b> → <b>tải lên</b> → <b>đối soát trong vùng chờ</b>
+      → <b>đối chiếu trùng</b> → <b>tiến độ theo chi</b>. Ràng buộc bất di, chép từ
+      <code>design/05</code> §3 quy tắc 3: <b>không có đường nào cho phép một tệp đi thẳng vào phả
+      chính</b>; mọi lần nhập tạo một <b>lô có mã riêng</b>, duyệt theo cụm, và <b>gỡ được toàn bộ
+      bằng một thao tác</b>.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="xau">Chặn toàn bộ.</span> Không có context nhập liệu, không có bảng vùng chờ,
+      không có endpoint tải tệp. Đây là phạm vi của <b>kế hoạch 02</b>; tài liệu này chỉ nhận phần
+      giao diện và <b>phải chờ hợp đồng API từ 02</b>.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Kế hoạch 00 §4 nói thẳng: <b>rủi ro ở đây không nằm ở mã</b> — chi nào chưa có người phụ
+      trách thì đứng im. Hệ quả cho giao diện: màn <b>tiến độ theo chi</b> (B10) không được biến
+      thành bảng xếp hạng giữa các chi. Nó hiển thị <b>còn thiếu gì</b>, không hiển thị
+      <b>ai chậm</b> — cùng lý do bản chốt phạm vi đã cắt xếp hạng đóng góp theo số tiền.
+      <br>Rủi ro thứ hai: người nhập liệu là Trưởng chi 55–70 tuổi, làm 6–10 buổi. Màn đối soát
+      <b>phải giữ được tiến độ giữa các buổi</b>, và phải chịu được việc đóng trình duyệt giữa
+      chừng — khuôn có sẵn ở <code>src/hooks/use-form-draft.ts</code>.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      E2E một mạch: tải một tệp mẫu có <b>chủ ý sai</b> (thiếu cột, ngày âm sai, hai người trùng
+      tên) → vùng chờ báo đúng ba loại lỗi → gỡ lô → khẳng định <b>số nhân khẩu trong phả trở về
+      đúng con số trước khi nhập</b>. Ca “gỡ lô” là ca quan trọng nhất: thiếu nó, một tệp xấu là đủ
+      để không ai dám nhập lần thứ hai.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">12 ngày-người cho cả năm màn (ước lượng), sau khi có hợp đồng API</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3.2 · Đợt C — nợ Giai đoạn 2</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Màn</th><th>Đường dẫn đề xuất</th><th>Chặn?</th><th>Ước lượng</th></tr></thead>
+  <tbody>
+    <tr><td>C1</td><td><b>Trang chủ mới</b> — bản tin văn hoá · vinh danh · sự kiện làng xã</td><td><code>/</code> dựng lại · <code>/ban-tin</code> · <code>/bang-vang</code></td><td><span class="canh">một phần</span></td><td class="so">5</td></tr>
+    <tr><td>C2</td><td><b>Lịch việc họ</b> + đồng bộ lịch điện thoại</td><td><code>/events</code> mở rộng · <code>/su-kien/{id}</code></td><td><span class="canh">một phần</span></td><td class="so">5</td></tr>
+    <tr><td>C3</td><td><b>Sinh nhật &amp; lời chúc</b></td><td><code>/sinh-nhat</code></td><td><span class="xau">chặn</span></td><td class="so">4</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>C1 · Trang chủ mới</h4>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Hôm nay trang chủ chỉ có <code>src/components/home/home-hero.tsx</code> — một lời chào.
+      Trang chủ mới gánh ba dòng nội dung: bản tin văn hoá, bảng vàng vinh danh, sự kiện làng xã.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="canh">Một phần.</span> Bản tin và bảng vàng thuộc FR-2.4, chưa có context nào —
+      <code>reporting</code> chỉ có 5 tệp <code>package-info.java</code>. Sự kiện làng xã có thể
+      dựng trên <code>/api/v1/events</code> đã có, <b>nhưng</b> xem C2: mã loại sự kiện bị gộp.
+      Trang chủ cho <b>khách</b> lại vướng khoảng trống <code>/api/v1/public/**</code> (§5 mục 3).
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      <code>design/03</code> gọi bản tin &amp; bảng vàng là “khu vực dễ chết vì vô hình nhất”:
+      không ai chủ động mở “Bảng vàng”. Điều kiện tiên quyết, không phải tuỳ chọn: bản tin mới
+      <b>sinh một thông báo</b>, và tên trong bảng vàng <b>hiện thành huy hiệu ngay trên hồ sơ
+      người đó</b>. Không làm hai việc này thì <b>đừng xây</b> — xây rồi bỏ hoang còn tệ hơn.
+      <br>Rủi ro thứ hai, từ kế hoạch 00 §4: nội dung <b>không tự sinh ra</b>. Chưa chốt được ai
+      viết bài thì đây là một màn hình đẹp và trống.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      E2E: trang chủ ở trạng thái <b>không có nội dung nào</b> vẫn phải là một trang dùng được
+      (không khối rỗng, không vòng quay vĩnh viễn). Khách và thành viên nhận hai trang chủ khác
+      nhau, và trang chủ của khách <b>không chứa người còn sống nào</b>.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">5 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>C2 · Lịch việc họ và đồng bộ lịch điện thoại</h4>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Khoảng trống backend chưa ai ghi lại — tìm ra khi khảo sát cho tài liệu này</p>
+  <p>
+    <code>backend/src/main/java/vn/giapha/events/api/rest/EventTypeApiMapper.java</code> ánh xạ
+    <b>mã cơ sở dữ liệu → mã hợp đồng</b>, và phép ánh xạ ấy <b>mất thông tin</b>:
+  </p>
+  <ul>
+    <li><code>KHANH_THANH</code>, <code>HOP_HO</code>, <code>CUOI_HOI</code>, <code>KHAC</code>
+      <b>đều ra <code>"KHAC"</code></b> (dòng 55). Nghĩa là <b>một buổi họp họ không phân biệt được
+      với một đám cưới</b> qua API. Màn “lịch việc họ” — vốn tồn tại để hiển thị đúng
+      <i>họp họ</i> — hôm nay <b>không dựng được đúng</b>.</li>
+    <li><code>SINH_NHAT</code> → <code>"MUNG_THO"</code> (dòng 54). Sinh nhật và mừng thọ
+      <b>chung một mã</b> ⇒ màn C3 không tách được hai thứ có nghi thức hoàn toàn khác nhau.</li>
+    <li><code>TIEU_TUONG</code> và <code>DAI_TUONG</code> <b>có trong hợp đồng và có trong
+      <code>frontend/messages/vi.json</code></b>, nhưng <b>không có giá trị tương ứng trong
+      <code>ck_event_type</code></b>: mapper ghi log rồi bỏ qua (dòng 87–89). Frontend hôm nay
+      <b>đang hiện hai bộ lọc không bao giờ khớp dòng nào</b>.</li>
+  </ul>
+  <p>
+    Việc này không lộ ra ở 61 ca E2E vì chúng chạy trên MSW, và bộ giả lập
+    (<code>frontend/src/mocks/data.ts</code>) chỉ dùng <code>GIO_TO</code> và <code>GIO_CHI</code>.
+    <b>Bộ giả lập đang giả lập một API dễ hơn API thật.</b>
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      Mở rộng <code>/events</code> sang việc họ (không chỉ giỗ), cộng <b>trang riêng cho một lễ</b>
+      <code>/su-kien/{id}</code> — <code>design/03</code> chỉ ra rằng thiếu nó thì
+      <b>không chia sẻ được một cái giỗ qua Zalo</b>, trong khi đó là hành vi trung tâm của sản phẩm.
+      Cộng <b>xuất <code>.ics</code></b> để thêm vào lịch điện thoại.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="canh">Một phần.</span> Ba khoảng trống ở khối trên phải sửa ở
+      <code>EventTypeApiMapper</code> + có thể một giá trị mới trong <code>ck_event_type</code>
+      (⇒ migration <code>V8</code>).
+      <br><b>Lối thoát cho <code>.ics</code>:</b> tệp <code>.ics</code> <b>sinh được ở client</b> từ
+      <code>nextOccurrenceSolar</code> mà <code>EventDto</code> đã trả. Đây là <b>ngoại lệ có chủ
+      ý</b> so với nguyên tắc “không tính lịch ở client”: ngày đã do backend tính bằng Hồ Ngọc Đức,
+      client chỉ <b>đóng gói</b> chứ không quy đổi. Phải ghi rõ điều đó trong mã, nếu không lần sửa
+      sau sẽ có người thêm phép tính âm–dương vào đó.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Lễ theo <b>lịch âm lặp hằng năm</b>. Một tệp <code>.ics</code> chứa quy tắc lặp
+      (<code>RRULE</code>) theo dương lịch sẽ <b>sai ngay từ năm thứ hai</b>. Bắt buộc: xuất
+      <b>các lần xảy ra rời rạc</b> do backend tính, tối đa vài năm, kèm nhắc gia hạn — không bao
+      giờ dùng <code>RRULE</code>.
+      <br>Ràng buộc phạm vi: kế hoạch 00 §3 đã <b>cắt</b> ghi chú việc cá nhân và lên kế hoạch.
+      Màn này <b>chỉ</b> đồng bộ việc họ ra lịch sẵn có của máy; không có ghi chú, không có nhắc
+      việc riêng, không có chat.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      Test đơn vị: tệp <code>.ics</code> sinh ra <b>không chứa chuỗi <code>RRULE</code></b>, và mọi
+      <code>DTSTART</code> trùng đúng <code>nextOccurrenceSolar</code> backend trả về (không lệch
+      một ngày do múi giờ — GMT+7 là bẫy cổ điển ở đây).
+      Test đơn vị: mọi giá trị trong <code>messages/vi.json → events.eventType</code>
+      <b>đều nhận được ít nhất một sự kiện</b> từ bộ giả lập — ca này bắt được đúng lỗi
+      <code>TIEU_TUONG</code>/<code>DAI_TUONG</code> nói trên.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">5 ngày-người (ước lượng), chưa kể phần sửa backend</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>C3 · Sinh nhật &amp; lời chúc</h4>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>Danh sách sinh nhật sắp tới trong chi, và một lối gửi lời chúc.</td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="xau">Chặn, ba tầng.</span>
+      (a) Sinh nhật cần <b>ngày sinh của người còn sống</b> — Tầng 2 trở lên, tức là phụ thuộc
+      thẳng vào B2 (đồng thuận từng mục). Chưa có B2 thì màn này hoặc trống, hoặc rò rỉ.
+      (b) <code>SINH_NHAT</code> và <code>MUNG_THO</code> gộp mã (xem C2).
+      (c) “Lời chúc” cần một kênh gửi. Kế hoạch 00 §3 đã <b>cắt chat trong ứng dụng</b> ⇒ kênh là
+      <b>Zalo</b>, mà provider Zalo chưa có.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Đây là màn <b>dễ vi phạm Nghị định 13/2023 nhất</b> trong đợt C: một danh sách sinh nhật là
+      một danh sách ngày sinh người sống, sắp theo thứ tự. Mặc định phải là <b>chỉ hiện người đã
+      bật</b>, và mặc định của trẻ vị thành niên là <b>không bao giờ hiện</b>
+      (<code>RESTRICTED</code> đã là mặc định của họ ở backend).
+      <br>Rủi ro thứ hai, mềm hơn nhưng thật: mừng thọ có nghi thức, sinh nhật thì không. Gộp hai
+      thứ vào một danh sách phẳng là <b>sai văn hoá</b>, không chỉ sai dữ liệu.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      E2E: người dưới 18 tuổi trong bộ giả lập <b>không xuất hiện</b> ở bất kỳ vai nào kể cả
+      <code>COUNCIL</code>. Thành viên chưa bật đồng thuận <b>không xuất hiện</b>.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">4 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3.3 · Đợt D — Giai đoạn 3</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Màn</th><th>Đường dẫn đề xuất</th><th>Chặn?</th><th>Ước lượng</th></tr></thead>
+  <tbody>
+    <tr><td>D1</td><td><b>Di sản</b> — thư viện + trình đọc song song (ảnh gốc ↔ phiên âm ↔ dịch nghĩa)</td><td><code>/di-san</code> · <code>/di-san/{id}</code></td><td><span class="xau">chặn cứng</span></td><td class="so">8</td></tr>
+    <tr><td>D2</td><td><b>Mộ phần</b> — sơ đồ khu mộ, hồ sơ ngôi mộ, dẫn đường ngoài trời/ngoại tuyến</td><td><code>/mo-phan</code> · <code>/mo-phan/{id}</code></td><td><span class="xau">chặn cứng</span></td><td class="so">9</td></tr>
+    <tr><td>D3</td><td><b>Quỹ họ</b> — cân đối, sổ thu–chi, sổ công đức</td><td><code>/quy-ho</code></td><td><span class="xau">chặn cứng</span></td><td class="so">6</td></tr>
+    <tr><td>D4</td><td><b>Báo cáo</b> dân số học có che nhóm nhỏ</td><td><code>/bao-cao</code></td><td><span class="xau">chặn cứng</span></td><td class="so">5</td></tr>
+    <tr><td>D5</td><td><b>Góc ảnh cũ</b></td><td><code>/di-san?loai=anh-cu</code></td><td><span class="xau">chặn cứng</span></td><td class="so">3</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="xau">Chặn cứng, không có ngoại lệ.</span> Ba context
+      <code>heritage</code> / <code>fund</code> / <code>reporting</code> tổng cộng
+      <b>15 tệp, toàn bộ là <code>package-info.java</code></b>
+      (<code>find backend/src/main/java/vn/giapha/{heritage,fund,reporting} -type f</code>).
+      Không có domain, không có endpoint, không có migration. Đây là phạm vi của
+      <b>kế hoạch 03</b>.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Kế hoạch 00 §4 gọi đúng tên: <b>đợt D xây bốn cái kho rỗng</b>. Thư viện di sản, từ đường,
+      mộ phần, bản tin <b>không tự sinh nội dung</b>. Chưa chốt ai chụp ảnh, ai phiên âm, ai đo toạ
+      độ, ai viết bài thì kết quả là bốn màn hình đẹp và trống. <b>Đây là điều kiện tiên quyết,
+      không phải việc chạy song song.</b>
+      <br><br>
+      Ba rủi ro riêng của giao diện, chép từ <code>design/05</code>:
+      <br>· <b>D2 phá vỡ mọi giả định của giao diện hiện tại</b> — ngoài trời, nắng, mất sóng, hai
+      tay bận. Đây là bối cảnh khắc nghiệt nhất của cả sản phẩm và <b>ngoại tuyến là mặc định</b>,
+      không phải chế độ dự phòng. Nó cũng kéo theo một <b>ngoại lệ có chủ ý với chế độ tối</b>.
+      <br>· <b>D3 không được có nút Sửa hay Xoá.</b> Sổ quỹ chỉ ghi thêm; sai thì ghi bút toán đảo,
+      cả ba dòng đều hiện. Phần còn lại của sản phẩm dùng xoá mềm — sổ quỹ thì không.
+      <br>· <b>D4 là nơi quyền riêng tư rò rỉ mà không ai để ý.</b> “Chi Ba có 1 người đang ở Nhật”
+      chỉ đích danh một người còn sống dù không ghi tên. Mọi ô dưới ngưỡng phải gộp;
+      <code>design/05</code> đề xuất ngưỡng 5, <b>cần Hội đồng chốt</b>.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      D2: ca E2E chạy với <code>context.setOffline(true)</code> — luồng tìm mộ vẫn dùng được đầy đủ.
+      D3: ca kiểm khẳng định DOM của sổ quỹ <b>không chứa</b> điều khiển nào có nhãn Sửa/Xoá, ở
+      <b>mọi vai</b> kể cả <code>ADMIN</code>.
+      D4: ca kiểm với dữ liệu dựng sẵn có một ô đếm = 1 — khẳng định giao diện <b>hiện ô gộp</b>,
+      không hiện số 1.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">31 ngày-người cho cả năm màn (ước lượng), toàn bộ nằm sau kế hoạch 03</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Nhóm C — Ba việc kỹ thuật nền</h2>
+
+<h3>C-nền 1 · Chế độ tối chưa xong hẳn</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ba màu trên phả đồ vĩnh viễn ở chế độ sáng — và không phép kiểm nào thấy</p>
+  <p>
+    <code>src/lib/tree/to-flow-elements.ts</code> dòng 53, 63, 65 khai màu đường vẽ dạng
+    <code>var(--tree-line-descent, …)</code> với giá trị dự phòng lấy từ <code>colorTokens</code>.
+    Chú thích dòng 47 nói rõ ý định: “chỉ cần khai lại ba biến <code>--tree-line-*</code> trong
+    khối <code>.dark</code> là toàn bộ đảo theo”.
+  </p>
+  <p>
+    <b>Ba biến ấy chưa từng được khai ở đâu.</b>
+    <code>grep -rn 'tree-line-' src/</code> trả về đúng bốn dòng, cả bốn nằm trong chính tệp đó —
+    không dòng nào trong <code>globals.css</code>. Nghĩa là giá trị dự phòng <b>luôn</b> thắng, kể
+    cả ở chế độ tối: <b>đường xuống con, thanh hôn phối và đường kế tự đang vẽ bằng màu chế độ
+    sáng trên nền tối</b>.
+  </p>
+  <p>
+    Và <code>tests/unit/a11y/no-hardcoded-colors.test.ts</code> <b>không thể</b> bắt được, vì mã
+    này không viết hex — nó gọi tên token. Đây là lỗ kiểm mô tả ở A8.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Phạm vi</th><td>
+      <b>28 chỗ</b> dùng <code>colorTokens.*</code> trong <code>components/</code> + <code>app/</code>.
+      Ba loại, xử lý khác nhau:
+      <br>· <b>Sai thẳng, phải đổi sang <code>colorVars</code>:</b>
+      <code>privacy/privacy-tier-notice.tsx:63,64,65,71</code> ·
+      <code>search/search-result-card.tsx:60,88</code> ·
+      <code>tree/tree-legend.tsx:86,87</code> ·
+      <code>tree/tree-canvas-inner.tsx:142,167</code> · và các chỗ còn lại ở
+      <code>correction/review-request-card.tsx</code>,
+      <code>person-form/{form-field,death-confirm-dialog,taboo-conflict-dialog,unsaved-changes-dialog}.tsx</code>,
+      <code>settings/notification-settings-screen.tsx</code>.
+      <br>· <b>Thiếu khai biến, phải bổ sung:</b> ba biến <code>--tree-line-*</code> trong
+      <code>globals.css</code>, ở <b>cả ba khối</b> (<code>:root</code>, <code>.dark</code>,
+      <code>@media</code>).
+      <br>· <b>Hợp lệ, vào danh sách trắng có ghi lý do:</b>
+      <code>src/app/[locale]/layout.tsx</code> — <code>themeColor</code> là siêu dữ liệu HTML,
+      không nhận <code>var(--…)</code>.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td><span class="tot">Không</span>.</td></tr>
+    <tr><th>Rủi ro</th><td>
+      Bẫy đã ghi trong <code>globals.css</code>: <b>Tailwind v3 loại bỏ mọi quy tắc có bộ chọn theo
+      lớp khỏi <code>@layer base</code></b>, không cảnh báo. Khai <code>--tree-line-*</code> nhầm
+      chỗ sẽ hỏng <b>đúng một</b> trong ba trạng thái (chọn tay “Tối”), trong khi “theo hệ thống”
+      vẫn chạy — chỗ dễ bỏ sót nhất khi thử tay. Đã có
+      <code>tests/unit/styles/tailwind-build.test.ts</code> canh; phải mở rộng nó cho ba biến mới.
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      Ca A8 (cấm nhập <code>colorTokens</code> trong <code>components/</code>) xanh.
+      <code>mọi biến màu tồn tại ở CẢ HAI chế độ</code> (<code>accessibility.spec.ts:855</code>)
+      xanh và <b>bao gồm cả ba biến mới</b>. <code>chữ trên {màn} vẫn đạt tương phản ở chế độ
+      tối</code> mở rộng từ <code>CORE_SCREENS</code> lên <code>MAIN_SCREENS</code> —
+      <code>/search</code> và <code>/events</code> hôm nay <b>không được quét ở chế độ tối</b>, mà
+      đó chính là hai màn có <code>colorTokens</code> đóng băng.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">3 ngày-người (ước lượng)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>C-nền 2 · Hai mã màu huy hiệu Dâu / Rể</h3>
+
+<p>
+  <code>src/lib/tree/badges.ts:19-20</code>: <code>DAU</code> mang <code>#a3336b</code>,
+  <code>RE</code> mang <code>#2f6fa8</code>. Hai mã màu <b>duy nhất</b> viết ngoài
+  <code>tokens.ts</code>, và hai sắc <b>lạnh</b> duy nhất trên một phả đồ toàn sắc đất.
+</p>
+
+<div class="khoi">
+  <p class="nhan">Đây không phải lỗi kỹ thuật để lập trình viên tự vá</p>
+  <p>
+    Người không thuộc huyết thống hiện lên thành hai đốm lạ — <b>đúng khung “trong họ / người
+    ngoài” mà <a href="../../design/00-dinh-huong.html">design/00 §1b</a> cấm, nhưng nói bằng
+    màu</b>. Câu hỏi là về <b>nghĩa</b>, không về CSS, và nó đang chờ <b>Hội đồng Tộc biểu</b>
+    (kế hoạch 00, chân trang; <code>design/README</code> câu hỏi 1).
+  </p>
+  <p>
+    Ca kiểm phụ trong <code>tests/unit/a11y/no-hardcoded-colors.test.ts</code> đã dựng sẵn để
+    <b>chặn việc lặng lẽ thêm hai mã này vào danh sách trắng</b>. Giữ nguyên nó.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th></th><th>Kịch bản 1 — Hội đồng bỏ sắc riêng</th><th>Kịch bản 2 — Hội đồng giữ sắc riêng</th></tr></thead>
+  <tbody>
+    <tr>
+      <th>Việc phải làm</th>
+      <td>
+        <code>DAU</code>/<code>RE</code> dùng token sẵn có (đề xuất <code>secondary</code>, cùng
+        họ với <code>CON_NUOI</code>). Phân biệt chuyển sang <b>chữ + hình dạng viền</b>: nhãn
+        “Dâu”/“Rể” đã có sẵn trong <code>BADGE_META</code>, thêm nét viền đứt để phân biệt khi bỏ
+        hết màu.
+      </td>
+      <td>
+        Hai sắc <b>vào <code>tokens.ts</code></b> kèm <b>biến thể chế độ tối</b> trong
+        <code>darkColorTokens</code>, ba biến trong <code>globals.css</code> ở cả ba khối, và
+        chấm tương phản như mọi cặp khác.
+      </td>
+    </tr>
+    <tr>
+      <th>Cái giá</th>
+      <td>
+        Dâu/Rể và Con nuôi <b>không phân biệt được bằng liếc mắt</b> trên một phả đồ đông. Với
+        người đọc phả để tìm ranh giới huyết thống, đó là mất mát thật.
+      </td>
+      <td>
+        Bảng màu sản phẩm tăng thêm hai cặp phải bảo trì. Và <b>không giải quyết</b> chuyện khung
+        “trong họ / người ngoài” — chỉ làm nó hợp lệ về kỹ thuật.
+      </td>
+    </tr>
+    <tr>
+      <th>Ràng buộc chung cho cả hai</th>
+      <td colspan="2">
+        Huy hiệu <b>không bao giờ chỉ dựa vào màu</b> — bộ kiểm <code>C-8.1</code>
+        (<code>accessibility.spec.ts:1011</code>) đã khẳng định nguyên tắc này cho cặp
+        sống/đã khuất; mở rộng cho Dâu/Rể. Và <b>hai huy hiệu phải được đối xử giống hệt nhau</b>:
+        một sắc ấm cho Dâu, một sắc lạnh cho Rể là tự dựng lại đúng thứ đang bị chất vấn.
+      </td>
+    </tr>
+    <tr><th>Ước lượng</th><td class="so">0,5–1 ngày-người</td><td class="so">1 ngày-người</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Việc frontend làm được ngay, không cần chờ Hội đồng:</b> dựng <b>một trang so sánh hai kịch
+  bản</b> — cùng một nhánh phả đồ, vẽ hai lần, ở cả chế độ sáng lẫn tối, in ra giấy được. Hội đồng
+  <b>không quyết được bằng cách đọc mã hex</b>. <span class="so">Ước lượng 0,5 ngày-người.</span>
+</p>
+
+<h3>C-nền 3 · Toả tròn và Ma trận đời chưa dựng lại theo đơn vị gia đình</h3>
+
+<div class="cuon">
+<table>
+  <tbody>
+    <tr><th>Hiện trạng đo được</th><td>
+      <code>src/components/tree/tree-canvas-inner.tsx</code> dòng 76–88:
+      <code>if (viewMode !== "hierarchical") return null;</code> — <b>chỉ</b> chế độ Phân cấp dựng
+      theo đơn vị gia đình. Toả tròn và Ma trận đời vẫn chạy lối cũ
+      (<code>layout-radial.ts</code>, <code>layout-matrix.ts</code>, cạnh người–người qua
+      <code>toFlowEdges</code>). Chú thích trong mã nói đúng lý do: hai chế độ ấy
+      <b>không có khái niệm “cặp vợ chồng đứng cạnh nhau”</b> nên không dùng được thanh hôn phối.
+      <br><br>
+      Cộng một khuyết tật thứ hai, độc lập: <code>viewMode</code> là
+      <code>useState</code> thuần (<code>tree-canvas.tsx:35</code>), <b>không nằm trên URL</b> ⇒
+      <b>không chia sẻ được một chế độ xem qua Zalo</b>. <code>design/03</code> ghi FR-1.4 là
+      “một phần” đúng vì lý do này và đề xuất <code>?view=doc|toa|matran</code>.
+    </td></tr>
+    <tr><th>Đánh giá</th><td>
+      Ba việc, ba mức đáng làm rất khác nhau:
+      <br><br>
+      <b>1. Thêm <code>?view=</code> — làm ngay, rẻ nhất và giá trị cao nhất.</b> Nửa ngày. Nó biến
+      hai chế độ đang có từ “thứ chỉ mình tôi thấy” thành “thứ gửi được cho cả họ”. Không phụ thuộc
+      quyết định nào bên dưới.
+      <br><br>
+      <b>2. Toả tròn — giữ, không dựng lại theo đơn vị gia đình.</b> Đây là chế độ <b>duy nhất</b>
+      cho cả dòng họ vào một khung hình và <b>in ra khổ lớn được</b> — thứ Hội đồng thật sự muốn.
+      Nhưng nó <b>không thể</b> mang thanh hôn phối: nan quạt không có chỗ cho hai người đứng cạnh
+      nhau. Hệ quả phải nói thẳng: <b>trên toả tròn, dâu/rể gần như vô hình</b> — đúng nhóm mà
+      <code>design/00</code> §1b bảo vệ. Cách trả giá: toả tròn là <b>chế độ nhìn tổng thể</b>,
+      không phải chế độ đọc quan hệ, và giao diện phải nói điều đó bằng chữ chứ không để người dùng
+      tự phát hiện.
+      <br><br>
+      <b>3. Ma trận đời — đề nghị CẮT.</b> Ba lý do:
+      <br>· Thông tin nó cung cấp — “ai thuộc đời thứ mấy” — <b>đã có ở nơi khác</b>: bộ lọc
+      <code>generation</code> trong <code>src/components/search/search-filters.tsx:48</code>, dạng
+      danh sách, đọc được, tìm được, và <b>đạt sàn tiếp cận dễ hơn nhiều</b> so với một lưới.
+      <br>· Nó là chế độ có <b>lý do yếu nhất để tự gọi là “phả đồ”</b>: một bảng xếp theo đời
+      không thể hiện quan hệ, mà quan hệ mới là thứ người ta mở phả đồ để xem.
+      <br>· Dựng lại nó theo đơn vị gia đình đòi <b>phát minh khái niệm “ô cặp vợ chồng”</b> mà một
+      ma trận không có chỗ chứa — công sức lớn cho một chế độ ít người dùng.
+      <br>Cái giá nếu cắt sai: <b>BA v2 FR-1.4 ghi ba chế độ xem</b>. Cắt một chế độ là
+      <b>đổi phạm vi đã chốt</b> ⇒ <b>phải do BA và Hội đồng quyết</b>, không phải quyết định kỹ
+      thuật. Tài liệu này <b>nêu, không tự quyết</b>.
+    </td></tr>
+    <tr><th>Phụ thuộc backend</th><td>
+      <span class="tot">Không</span> cho cả ba việc — bố cục thuần client trên dữ liệu
+      <code>/tree</code> đã có.
+    </td></tr>
+    <tr><th>Rủi ro</th><td>
+      Nếu Hội đồng <b>giữ cả ba chế độ và đòi đồng nhất</b>, chi phí là <b>+8 ngày cho toả tròn</b>
+      và <b>+6 ngày cho ma trận</b> (ước lượng) — cộng lại xấp xỉ <b>toàn bộ nhóm A</b>. Đó là phép
+      so sánh nên đặt trước mặt người quyết: <i>ba chế độ xem đồng nhất, hay sáu lỗi tiếp cận đóng
+      lại?</i>
+    </td></tr>
+    <tr><th>Nghiệm thu (máy kiểm)</th><td>
+      <code>?view=</code>: E2E khẳng định mở URL có <code>?view=toa</code> cho ra canvas ở đúng chế
+      độ đó, và đổi chế độ <b>ghi vào URL</b> mà <b>không mất</b> <code>?rootId=</code> — cùng lỗi
+      “đổi ngôn ngữ làm rơi hết tham số” đã sửa một lần rồi.
+      <br>Nếu giữ toả tròn: <code>e2e/tree-legibility.spec.ts</code> mở rộng — ở chế độ toả tròn,
+      mọi thẻ vẫn đạt sàn chữ và mọi nút bung nhánh vẫn đạt 44px <b>ở mức phóng mặc định</b>
+      (<code>C-3.5</code>). Đây là ca dễ đỏ nhất: toả tròn mở ra ở mức phóng thấp hơn phân cấp.
+    </td></tr>
+    <tr><th>Ước lượng</th><td class="so">Việc 1: 0,5 · Việc 2 (giữ + ghi rõ giới hạn): 1 · Việc 3 nếu dựng lại: +6 (đề nghị không làm)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Frontend đang chặn ở đâu vì backend chưa sẵn sàng</h2>
+
+<p>
+  Bảng này là <b>phần quan trọng nhất của tài liệu để lập lịch</b>. Mỗi dòng là một chỗ giao diện
+  <b>không thể</b> đi tiếp, kèm bằng chứng đo từ mã.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Khoảng trống</th><th>Bằng chứng</th><th>Chặn màn nào</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><b>Không có mô hình riêng tư theo từng mục.</b> <code>PrivacyLevel</code> là enum 4 giá trị áp cho <b>cả người</b>, nới/siết toàn bộ Tầng 3 một lượt.</td>
+      <td><code>backend/src/main/java/vn/giapha/genealogy/domain/PrivacyLevel.java</code></td>
+      <td>B2 (chặn cứng) · B3 · C3</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><b><code>RelationshipDto</code> chỉ mang id</b>, không tên/đời/chi của người kia ⇒ không dựng được danh sách quan hệ đọc được nếu không gọi thêm một lượt <code>/tree</code>.</td>
+      <td><code>frontend/src/types/api.ts:175-186</code></td>
+      <td>B1 · B3 · mọi màn có mục Quan hệ</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><b>Không controller nào ánh xạ <code>/api/v1/public/**</code></b>, dù BA v2 §10 nói người đã khuất công khai kể cả với khách.</td>
+      <td>chuỗi chỉ xuất hiện ở <code>backend/src/main/java/vn/giapha/config/SecurityConfig.java</code></td>
+      <td>B4 · C1 (trang chủ cho khách)</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><b>Không có provider Zalo.</b> <code>notification/infrastructure/</code> chỉ có <code>inapp</code>, <code>jdbc</code>, <code>messaging</code>, <code>webpush</code>.</td>
+      <td><code>ls backend/src/main/java/vn/giapha/notification/infrastructure/</code></td>
+      <td>B4 · B5 · C3</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><b>Mã loại sự kiện bị gộp mất thông tin:</b> <code>KHANH_THANH|HOP_HO|CUOI_HOI|KHAC → "KHAC"</code>; <code>SINH_NHAT → "MUNG_THO"</code>; <code>TIEU_TUONG</code>/<code>DAI_TUONG</code> có trong hợp đồng nhưng không có giá trị CSDL.</td>
+      <td><code>backend/src/main/java/vn/giapha/events/api/rest/EventTypeApiMapper.java:48-91</code></td>
+      <td>C2 · C3 · bộ lọc lịch <b>đang hỏng ngay hôm nay</b></td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><b><code>ChangeRequestApprovedEvent</code> không có người nhận nào.</b> Trưởng chi bấm Duyệt, hệ thống ghi <code>APPROVED</code>, dữ liệu vẫn sai.</td>
+      <td>phát ở <code>membership/application/ChangeRequestService.java:137</code>; <code>grep</code> toàn <code>src/main</code> không tìm thấy listener nào</td>
+      <td>toàn bộ luồng đính chính — <b>đang có giao diện, nhưng giao diện đang nói dối</b></td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><b>Không có endpoint danh bạ</b> và <b>không có xuất <code>.ics</code></b>.</td>
+      <td>danh sách <code>@RequestMapping</code> toàn backend: 13 nhóm, không nhóm nào là danh bạ/lịch xuất</td>
+      <td>B3 · C2 (có lối thoát sinh <code>.ics</code> ở client — xem C2)</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><b>Ba context Giai đoạn 3 rỗng.</b> <code>heritage</code>/<code>fund</code>/<code>reporting</code> = 15 tệp, toàn bộ <code>package-info.java</code>.</td>
+      <td><code>find backend/src/main/java/vn/giapha/{heritage,fund,reporting} -type f</code></td>
+      <td>D1 · D2 · D3 · D4 · D5 — <b>toàn bộ đợt D</b></td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><b>Không có endpoint “thuỷ tổ của dòng họ”.</b> Gốc phả đồ đang lấy từ biến môi trường, rơi về id giả lập.</td>
+      <td>chú thích trong <code>frontend/src/app/[locale]/tree/page.tsx</code></td>
+      <td>phả đồ trên dữ liệu thật · C1 (trang chủ dẫn vào phả đồ)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Một khoảng trống ở chính bộ giả lập, không ở backend</p>
+  <p>
+    61 ca E2E chạy trên MSW. Bộ giả lập <code>frontend/src/mocks/data.ts</code> chỉ dùng
+    <b>hai</b> mã sự kiện (<code>GIO_TO</code>, <code>GIO_CHI</code>) trong khi hợp đồng có chín.
+    Nghĩa là <b>bộ giả lập đang giả lập một API dễ hơn API thật</b>, và mọi lời khẳng định “xanh”
+    về màn lịch chỉ đúng với API dễ đó.
+  </p>
+  <p>
+    <b>Đề nghị đưa vào nhóm A:</b> bộ giả lập phải phủ <b>mọi</b> giá trị enum trong hợp đồng, và
+    có một ca kiểm đơn vị khẳng định điều đó. <span class="so">Ước lượng 1 ngày-người.</span>
+    Không làm thì mỗi màn mới của đợt B–D lại tích thêm một lớp xanh giả.
+  </p>
+</div>
+
+<h2>6. Đề nghị cắt, gộp, hoãn</h2>
+
+<p>
+  Một kế hoạch chỉ có thêm mà không có bớt là kế hoạch chưa nghĩ xong. Sáu đề nghị dưới đây đều là
+  <b>đề nghị</b>; ba cái đầu cũng chính là cách 17 màn về lại con số 14 của bản chốt phạm vi.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Đề nghị</th><th>Thay bằng</th><th>Lý do</th><th>Cắt sai thì mất gì</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Gộp B6 (mẫu Excel) vào B7 (tải lên)</b></td>
+      <td>Một khối “Tải mẫu &amp; xem hướng dẫn cột” ngay trên màn tải lên</td>
+      <td>Tải một tệp mẫu <b>không phải một màn hình</b>. Tách ra thành trang riêng là thêm một bước cho người 60 tuổi đang làm việc khó.</td>
+      <td>Không mất gì. Hướng dẫn cột vẫn cần chỗ đủ rộng — nếu dài quá thì tách <i>hướng dẫn</i>, đừng tách <i>nút tải</i>.</td>
+    </tr>
+    <tr>
+      <td><b>B5 (đăng ký bằng Zalo) không tính là màn</b></td>
+      <td>Một nút trong <code>AuthMenu</code> đã có + một màn <b>ghép tài khoản với người trong phả</b></td>
+      <td>Zalo là một Identity Provider của Keycloak. Cái <i>thật sự</i> thiếu là màn xử lý <code>linkedToTree === false</code> — trạng thái đã có trong hợp đồng và <b>chưa màn nào xử lý</b>.</td>
+      <td>Không mất gì, và <b>được</b> một màn quan trọng hơn: người đăng nhập lần đầu mà chưa ghép vào phả hiện đang rơi vào hư không.</td>
+    </tr>
+    <tr>
+      <td><b>Gộp D5 (góc ảnh cũ) vào D1 (di sản)</b></td>
+      <td>Một bộ lọc loại tư liệu trong thư viện di sản</td>
+      <td>Ảnh cũ là <b>một loại tư liệu</b>, không phải một khu vực. Tách ra là dựng hai thư viện phải bảo trì song song, cùng nền media, cùng quyền, cùng luồng duyệt.</td>
+      <td>Ảnh cũ mất một lối vào riêng — bù bằng một thẻ “Ảnh xưa” trên trang chủ khi có ảnh mới.</td>
+    </tr>
+    <tr>
+      <td><b>Cắt chế độ Ma trận đời</b></td>
+      <td>Bộ lọc <code>generation</code> đã có ở <code>/search</code></td>
+      <td>Xem §4 C-nền 3. Thông tin đã có ở nơi khác, dạng dễ tiếp cận hơn.</td>
+      <td><b>Đổi phạm vi FR-1.4 đã chốt trong BA v2</b> — phải do BA và Hội đồng quyết, không phải quyết định kỹ thuật.</td>
+    </tr>
+    <tr>
+      <td><b>Hoãn B3 (danh bạ) tới sau B2</b></td>
+      <td>Không có</td>
+      <td>Trước khi có đồng thuận từng mục, danh bạ chỉ hiện được những người đã mở <b>toàn bộ</b> Tầng 3 cho cả họ. Một danh bạ ba người là một danh bạ không ai mở lần thứ hai.</td>
+      <td>Chậm một tính năng dễ thấy. Đổi lại không phải làm hai lần.</td>
+    </tr>
+    <tr>
+      <td><b>Không làm ghi chú việc cá nhân, không làm chat</b></td>
+      <td>Zalo · đồng bộ việc họ ra lịch điện thoại sẵn có</td>
+      <td>Đã <b>cắt ở kế hoạch 00 §3</b>. Nhắc lại ở đây vì màn C2 (“lịch việc họ”) là chỗ cám dỗ nhất để lén thêm vào.</td>
+      <td>Không mất gì — cả họ đã ở Zalo, và đua với Google Calendar là thua chắc.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7. Ước lượng tổng và thứ tự đề xuất</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Nhóm</th><th>Ngày-người (ước lượng)</th><th>Chặn bởi backend?</th><th>Bắt đầu được khi nào</th></tr></thead>
+  <tbody>
+    <tr><td><b>A</b> · Nợ tiếp cận (A1–A8 + phủ enum bộ giả lập)</td><td class="so">≈ 13,5</td><td><span class="tot">Không</span></td><td><b>Ngay hôm nay</b></td></tr>
+    <tr><td><b>C-nền</b> · Chế độ tối · Dâu/Rể · <code>?view=</code></td><td class="so">≈ 5</td><td><span class="tot">Không</span> (Dâu/Rể chờ <b>Hội đồng</b>, không chờ backend)</td><td><b>Ngay hôm nay</b>, trừ phần chọn màu</td></tr>
+    <tr><td><b>B</b> · Đợt B, 10 mục (9 sau khi gộp)</td><td class="so">≈ 27,5</td><td><span class="xau">Gần như toàn bộ</span></td><td>Sau kế hoạch 02 + mô hình đồng thuận từng mục</td></tr>
+    <tr><td><b>C</b> · Đợt C, 3 màn</td><td class="so">≈ 14</td><td><span class="canh">Một phần</span></td><td>Sau khi sửa <code>EventTypeApiMapper</code> và có endpoint công khai</td></tr>
+    <tr><td><b>D</b> · Đợt D, 5 màn (4 sau khi gộp)</td><td class="so">≈ 31</td><td><span class="xau">Toàn bộ</span></td><td>Sau kế hoạch 03</td></tr>
+    <tr><td><b>Tổng frontend còn lại</b></td><td class="so"><b>≈ 91</b></td><td></td><td></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Kết luận về thứ tự</p>
+  <p>
+    <b>≈ 18,5 ngày-người đầu tiên (nhóm A + C-nền) không phụ thuộc backend gì cả.</b> Đó là toàn bộ
+    nợ tiếp cận, chế độ tối, và <code>?view=</code>. Chúng <b>chặn tiêu chí ra Giai đoạn 1</b> nhưng
+    <b>không nằm trên đường găng</b> của bất kỳ đợt nào — nghĩa là chúng nên chạy
+    <b>ngay và song song</b> với việc backend dựng provider Zalo và endpoint công khai.
+  </p>
+  <p>
+    <b>≈ 72,5 ngày-người còn lại đều nằm sau một quyết định hoặc một API chưa có.</b> Không việc nào
+    trong đó nên khởi động trước khi hợp đồng API tương ứng được chốt — dựng giao diện trên một
+    hợp đồng tưởng tượng là cách chắc chắn nhất để làm hai lần.
+  </p>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Thứ tự ưu tiên khi mâu thuẫn:
+    <b>BA v2 → design/00-dinh-huong.html → plan/00-tong-the.html → tài liệu này</b>.
+  </p>
+  <p>
+    <b>Ba câu hỏi tài liệu này không tự trả lời được:</b>
+    (1) <b>màu huy hiệu Dâu/Rể</b> — hai kịch bản đã dựng sẵn ở §4, cả hai đều rẻ, nhưng lựa chọn
+    là của Hội đồng Tộc biểu;
+    (2) <b>có cắt chế độ Ma trận đời không</b> — đây là đổi phạm vi FR-1.4 đã chốt trong BA v2;
+    (3) <b>mô hình đồng thuận riêng tư theo nhóm trường</b> — chia làm mấy nhóm là câu hỏi cho BA
+    và Hội đồng, và <b>toàn bộ đợt B đứng chờ nó</b>.
+  </p>
+  <p>
+    Một điều tài liệu này <b>không</b> làm: nới bất kỳ ngưỡng nào trong
+    <code>frontend/e2e/accessibility.spec.ts</code> hay <code>frontend/tests/unit/a11y/</code>.
+    Sàn 16px, 44×44px và “biểu tượng luôn kèm chữ” là <b>ràng buộc</b>, và một bộ kiểm được nới để
+    xanh là một bộ kiểm chưa từng chạy.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

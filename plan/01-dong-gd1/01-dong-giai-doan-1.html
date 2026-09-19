@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 01 — Đóng Giai đoạn 1 · Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 01 · Đợt A</p>
+  <h1>Đóng Giai đoạn 1</h1>
+  <p class="tom-tat">
+    Năm việc <strong>chặn nghiệm thu</strong>. Giai đoạn 1 hiện <strong>chưa đạt tiêu chí ra</strong>
+    dù toàn suite test xanh — vì bộ tiêu chí đo <em>mã có chạy không</em>, còn ba trong năm việc
+    dưới đây là <em>mã chưa từng được viết</em>. Tài liệu này chốt phạm vi, phụ thuộc, rủi ro và
+    <strong>tiêu chí nghiệm thu kiểm được bằng máy</strong> cho từng việc.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <span>Ràng buộc chung:</span> <a href="../00-tong-the.html">00 · Bản chốt phạm vi</a>
+  <span>·</span> <span>Tài liệu này thua 00 ở mọi chỗ mâu thuẫn.</span>
+</nav>
+
+<h2>0. Đọc tài liệu này thế nào</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Quy ước</th><th>Nghĩa</th></tr></thead>
+  <tbody>
+    <tr><td><b>Số đếm được</b></td><td>Kèm đường dẫn tệp và số dòng. Đếm bằng <code>grep</code>/<code>find</code> trên cây mã ngày 10/09/2026. Ai nghi thì chạy lại lệnh ghi kèm.</td></tr>
+    <tr><td><b>Ước lượng</b></td><td>Luôn ghi chữ <i>ước lượng</i> và cho dải thấp–cao. Đơn vị: <b>ngày-người</b> (1 ngày-người = 1 lập trình viên quen dự án, 1 ngày làm việc). Không phải cam kết lịch.</td></tr>
+    <tr><td><b>Chưa tra</b></td><td>Ô có chữ <i>chưa tra</i> là chỗ tài liệu <b>từ chối bịa</b>. Phải điền bằng nguồn thật trước khi dùng để quyết.</td></tr>
+    <tr><td><b>Nghiệm thu</b></td><td>Mỗi việc kết bằng danh sách <b>lệnh chạy được</b> và <b>khẳng định máy chấm</b>. Câu "hoạt động tốt" không được tính là tiêu chí.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>1. Mâu thuẫn tài liệu phải giải trước khi làm việc A</h2>
+
+<p>
+  Ba tài liệu nói ba điều khác nhau về Zalo. Không giải trước thì đợt A không có căn cứ để tồn tại.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Tài liệu</th><th>Nói gì về Zalo ở Giai đoạn 1</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>BA v2.0 §11</b></td>
+      <td>Giai đoạn 1 = <i>"nhắc giỗ qua Zalo (kênh MVP)"</i>. §12 chốt <i>"Zalo trước (MVP); SMS &amp; Web Push ở Giai đoạn 2"</i>, kèm <b>giả định</b>: <i>"Zalo OA/ZNS &amp; cổng SMS có sẵn hợp đồng &amp; hạn mức gửi"</i>.</td>
+    </tr>
+    <tr>
+      <td><b><code>.claude/plan-giai-doan-1.html</code> §0, §1.3</b></td>
+      <td>Đảo ngược: <i>"Zalo OA/ZNS &amp; SMS — dời GĐ2, <b>chưa có hợp đồng</b>"</i>; kênh MVP đổi thành <b>in-app + Web Push</b>. §11 để lại câu hỏi treo: <i>"Khi nào khởi động thủ tục Zalo OA/ZNS?"</i></td>
+    </tr>
+    <tr>
+      <td><b><code>plan/00-tong-the.html</code> §1</b></td>
+      <td>Kiểm kê lại và kết luận <b>tiêu chí ra Giai đoạn 1 chưa đạt</b> vì thiếu provider Zalo; xếp nó là việc đầu tiên của đợt A.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Cách giải, và lý do</p>
+  <p>
+    <b>Giả định của BA v2 §12 là sai ở thời điểm này</b> — không có hợp đồng OA nào. Kế hoạch Giai
+    đoạn 1 đã đúng khi dời Zalo: <i>không ai lập trình được một hợp đồng chưa ký</i>. Nhưng nó sai
+    ở chỗ để câu hỏi "khi nào khởi động thủ tục" nằm ở mục <i>Việc còn treo</i> suốt bốn sprint,
+    nên đến hôm nay <b>vẫn chưa ai bắt đầu</b>.
+  </p>
+  <p>
+    Vì vậy đợt A <b>không</b> lập luận rằng "code Zalo là điều kiện ra Giai đoạn 1". Nó lập luận
+    rằng <b>thủ tục Zalo là đường găng dài nhất của toàn dự án</b> và phải khởi động ngay ngày
+    đầu, còn phần mã chỉ được viết khi đã có sandbox để kiểm chứng. Hai việc ấy tách rời, xem §2.
+  </p>
+</div>
+
+<h3>1b. Mười tiêu chí ra Giai đoạn 1 — mở lại ba chỗ</h3>
+
+<p>
+  Danh sách gốc ở <code>.claude/plan-giai-doan-1.html</code> §8. Tài liệu này <b>không nghiệm thu
+  lại</b> bảy tiêu chí còn lại — nó chỉ mở lại ba chỗ có bằng chứng ngược nằm ngay trong mã.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Tiêu chí (rút gọn)</th><th>Đánh giá của tài liệu này</th></tr></thead>
+  <tbody>
+    <tr><td>1–6</td><td>Dựng từ máy trắng · seed 1.500 nhân khẩu · cây &lt;2s, LCA &lt;500ms · danh xưng 6 nhóm ca biên · lịch âm xanh toàn fixture · nhắc giỗ sinh job + DLQ</td><td>Ngoài phạm vi tài liệu này. Nhận theo báo cáo của 00 §1.</td></tr>
+    <tr><td><b>7</b></td><td>Web Push đẩy được tới <b>một thiết bị thật</b>; subscription bị thu hồi thì bị dọn khỏi DB</td><td><span class="xau">Chưa đạt.</span> <b>0 tệp test</b> trong <code>backend/src/test</code> chạm tới <code>WebPushAdapter</code>, <code>VapidSigner</code>, <code>WebPushCipher</code> hay <code>P256</code> — chỉ có <code>WebPushPropertiesTest</code>. Xem §5. → <b>việc D</b></td></tr>
+    <tr><td>8</td><td>Người từ chối quyền push vẫn nhận đủ thông báo khi mở app</td><td>Kiến trúc đã đúng (hai queue tách rời), nhưng chưa có test khẳng định cặp <i>từ chối push → vẫn có dòng inbox</i>. Gộp vào <b>việc D</b>.</td></tr>
+    <tr><td><b>9</b></td><td>Khách đăng xuất <b>không truy cập được</b> bất kỳ dữ liệu người còn sống nào</td><td><span class="canh">Đạt theo nghĩa tiêu cực, và đó là vấn đề.</span> Khách không truy cập được <i>gì cả</i>: <code>SecurityConfig</code> kết bằng <code>anyRequest().authenticated()</code> và <b>không controller nào</b> ánh xạ vào <code>/api/v1/public/**</code>. Bộ tiêu chí §8 chỉ viết một nửa của BA v2 §10; nửa kia — <i>người đã khuất công khai kể cả với khách</i> — không có tiêu chí nào bảo vệ. → <b>việc C</b></td></tr>
+    <tr><td>10</td><td>Xoá mềm không gãy cây; audit ghi đủ before/after</td><td>Ngoài phạm vi tài liệu này.</td></tr>
+    <tr><td><b>—</b></td><td><i>Không có tiêu chí nào</i> cho luồng đính chính</td><td><span class="xau">Lỗ hổng của chính bộ tiêu chí.</span> FR-4.1 nằm ở <i>Out of scope</i> Giai đoạn 1, nhưng giao diện duyệt <b>đã được dựng và đã ship</b> (<code>frontend/src/components/correction/</code>). Một luồng nửa vời tệ hơn không có luồng. → <b>việc B</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>2. Việc A — Provider Zalo OA / ZNS</h2>
+
+<p>
+  <b>Phạm vi:</b> đưa kênh <code>ZALO</code> từ một hằng số trong enum thành một đường gửi chạy
+  thật, có hạn mức, có chi phí, có đường lui. Việc này gồm <b>hai đường ray tách rời</b>, và đó là
+  điểm quan trọng nhất của cả mục.
+</p>
+
+<figure>
+<svg viewBox="0 0 980 250" role="img" aria-label="Hai đường ray của việc A: tuyến giấy tờ và tuyến mã nguồn">
+  <rect class="wf-khung" x="1" y="1" width="978" height="248" rx="4"/>
+
+  <text class="wf-chu" x="20" y="34" font-weight="600">Tuyến 1 — GIẤY TỜ (0 ngày-người của lập trình viên, nhưng dài nhất về lịch)</text>
+  <rect class="wf-o" x="20" y="46" width="150" height="46" rx="3"/>
+  <text class="wf-chu" x="32" y="66">Chọn pháp nhân</text>
+  <text class="wf-phu" x="32" y="82">đứng tên OA</text>
+  <path class="wf-net" d="M170 69 H196" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="196" y="46" width="150" height="46" rx="3"/>
+  <text class="wf-chu" x="208" y="66">Đăng ký &amp; xác</text>
+  <text class="wf-chu" x="208" y="82">minh Zalo OA</text>
+  <path class="wf-net" d="M346 69 H372" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="372" y="46" width="150" height="46" rx="3"/>
+  <text class="wf-chu" x="384" y="66">Soạn + gửi duyệt</text>
+  <text class="wf-chu" x="384" y="82">mẫu tin ZNS</text>
+  <path class="wf-net" d="M522 69 H548" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="548" y="46" width="150" height="46" rx="3"/>
+  <text class="wf-chu" x="560" y="66">Sandbox +</text>
+  <text class="wf-chu" x="560" y="82">hạn mức thử</text>
+  <path class="wf-net" d="M698 69 H724" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="724" y="46" width="234" height="46" rx="3"/>
+  <text class="wf-chu" x="736" y="66">Nạp quỹ gửi tin + ký điều khoản</text>
+  <text class="wf-phu" x="736" y="82">→ mở khoá bước kiểm chứng thật</text>
+
+  <line class="wf-net" x1="20" y1="112" x2="958" y2="112" stroke-dasharray="4 4"/>
+
+  <text class="wf-chu" x="20" y="140" font-weight="600">Tuyến 2 — MÃ NGUỒN (làm được ngay, không chờ giấy tờ, trừ bước cuối)</text>
+  <rect class="wf-o" x="20" y="152" width="176" height="46" rx="3"/>
+  <text class="wf-chu" x="32" y="172">V8: bảng đồng ý</text>
+  <text class="wf-phu" x="32" y="188">nhận ZNS + trạng thái OA</text>
+  <path class="wf-net" d="M196 175 H222" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="222" y="152" width="176" height="46" rx="3"/>
+  <text class="wf-chu" x="234" y="172">Cổng tra SĐT</text>
+  <text class="wf-phu" x="234" y="188">chỉ adapter đọc được</text>
+  <path class="wf-net" d="M398 175 H424" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="424" y="152" width="176" height="46" rx="3"/>
+  <text class="wf-chu" x="436" y="172">ZaloZnsAdapter</text>
+  <text class="wf-phu" x="436" y="188">+ bảng mã lỗi → outcome</text>
+  <path class="wf-net" d="M600 175 H626" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="626" y="152" width="176" height="46" rx="3"/>
+  <text class="wf-chu" x="638" y="172">Queue notify.zalo</text>
+  <text class="wf-phu" x="638" y="188">+ DLQ dùng chung</text>
+  <path class="wf-net" d="M802 175 H828" marker-end="url(#mA)"/>
+  <rect class="wf-o" x="828" y="152" width="130" height="46" rx="3" stroke-dasharray="4 3"/>
+  <text class="wf-chu" x="840" y="172">Gửi 1 tin thật</text>
+  <text class="wf-phu" x="840" y="188">chờ tuyến 1</text>
+
+  <text class="wf-phu" x="20" y="228">Chỉ ô nét đứt phụ thuộc tuyến 1. Bốn ô còn lại của tuyến 2 làm được từ ngày đầu, kiểm bằng máy chủ HTTP giả.</text>
+  <defs>
+    <marker id="mA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+<figcaption>
+  <strong>Sai lầm cần tránh:</strong> chờ giấy tờ xong mới viết mã, hoặc viết mã xong mới đi làm
+  giấy tờ. Cả hai đều biến một việc song song thành một việc nối tiếp và cộng thêm nhiều tuần vào
+  lịch. Ô nét đứt là <b>điểm hẹn duy nhất</b> giữa hai tuyến.
+</figcaption>
+</figure>
+
+<h3>A.1 · Tuyến giấy tờ — và rủi ro mà bản chốt phạm vi chưa nêu</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Rủi ro chặn, phát hiện khi khảo sát — cần Hội đồng quyết, không phải kỹ thuật</p>
+  <p>
+    <code>plan/00-tong-the.html</code> §3 đã ghi: <i>"dòng họ thường <b>không có tư cách pháp
+    nhân</b> để nhận tiền qua cổng thanh toán"</i> — nêu trong ngữ cảnh quỹ họ. <b>Cùng vấn đề đó
+    chặn luôn việc đăng ký Zalo OA.</b> Một Official Account đủ tư cách gửi ZNS thường phải gắn với
+    một chủ thể được xác minh (doanh nghiệp / hộ kinh doanh / tổ chức), và <b>một dòng họ không
+    phải chủ thể như vậy</b>.
+  </p>
+  <p>
+    Nghĩa là câu hỏi đầu tiên của đợt A không phải "viết adapter thế nào" mà là
+    <b>"ai đứng tên OA, và ai chịu trách nhiệm pháp lý cho những tin nhắn gửi đi"</b>. Nếu là
+    doanh nghiệp của một thành viên thì tin nhắc giỗ của dòng họ được gửi dưới danh nghĩa một công
+    ty — đó là quyết định về <i>hình ảnh dòng họ</i>, không phải quyết định kỹ thuật.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bước</th><th>Ai làm</th><th>Đầu ra kiểm được</th><th>Lịch (ước lượng)</th></tr></thead>
+  <tbody>
+    <tr><td>Chốt pháp nhân đứng tên OA</td><td>Hội đồng Tộc biểu + chủ đầu tư</td><td>Biên bản có tên chủ thể và người ký</td><td>1–3 tuần (phụ thuộc lịch họp Hội đồng)</td></tr>
+    <tr><td>Đăng ký &amp; xác minh OA</td><td>Người được uỷ quyền</td><td>OA ở trạng thái đã xác minh, có mã OA</td><td>Chưa tra — lấy từ tài liệu Zalo tại thời điểm nộp</td></tr>
+    <tr><td>Soạn mẫu tin ZNS cho giỗ (D-7 / D-3 / D-1)</td><td>Kỹ thuật soạn, Hội đồng duyệt <b>lời văn</b></td><td>Bản mẫu có tham số, đã được Hội đồng duyệt trước khi nộp</td><td>2–4 ngày-người soạn; lời văn dễ phải sửa nhiều vòng</td></tr>
+    <tr><td>Nộp mẫu tin xin duyệt</td><td>Zalo xét</td><td>Mẫu ở trạng thái đã duyệt, có mã mẫu</td><td>Chưa tra. <b>Giả định lập kế hoạch: vài tuần, có thể bị trả về sửa nhiều lần.</b></td></tr>
+    <tr><td>Sandbox + gửi thử</td><td>Kỹ thuật</td><td>1 tin thử tới 1 số nội bộ, có mã tin trả về</td><td>1 ngày-người sau khi có mẫu duyệt</td></tr>
+    <tr><td>Nạp quỹ gửi tin</td><td>Chủ đầu tư</td><td>Số dư &gt; 0, có hạn mức ngày</td><td>Chưa tra đơn giá — xem A.5</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Lời văn mẫu tin là việc của Hội đồng, không của lập trình viên.</b> Một tin nhắc giỗ sai danh
+  xưng hoặc sai lối xưng hô gửi tới vài trăm người trong họ là lỗi mất mặt, không phải bug. Và
+  mẫu ZNS đã duyệt thì <b>sửa lại phải xin duyệt lại</b> — nên vòng duyệt nội bộ phải xong
+  <i>trước</i> khi nộp, không phải sau.
+</p>
+
+<h3>A.2 · Ba thứ mã nguồn hiện không có (đếm được)</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Thiếu</th><th>Bằng chứng</th><th>Hệ quả</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Không có provider Zalo</b></td>
+      <td><code>backend/src/main/java/vn/giapha/notification/infrastructure/</code> có đúng bốn thư mục: <code>inapp</code>, <code>jdbc</code>, <code>messaging</code>, <code>webpush</code>.</td>
+      <td><code>NotificationDeliveryService</code> đã xử lý ca này êm: kênh không có adapter → ghi <code>SKIPPED</code>, không retry, không DLQ (<code>NotificationDeliveryService.java:79-86</code>). Tức là hệ thống <b>im lặng bỏ tin</b> — đúng thiết kế, nhưng nghĩa là bật <code>ZALO</code> mà quên adapter sẽ không có tiếng động nào.</td>
+    </tr>
+    <tr>
+      <td><b>Không có nơi truy vấn được số điện thoại</b></td>
+      <td>Số điện thoại nằm trong JSONB: <code>person.attributes → 'contact' → 'phone'</code> (<code>genealogy/infrastructure/jpa/PersonMapper.java:125-130</code>). Bảng <code>app_user</code> chỉ có <code>email</code>, <b>không có cột điện thoại</b> (<code>V5__membership_audit.sql:22-35</code>).</td>
+      <td>ZNS gửi theo số điện thoại. Không có cột nào để <code>WHERE</code> lên, và dữ liệu ấy là <b>Tầng 3</b> theo Nghị định 13/2023 (javadoc <code>ContactInfo</code> nói rõ).</td>
+    </tr>
+    <tr>
+      <td><b>Không có bản ghi đồng ý / trạng thái quan tâm OA</b></td>
+      <td>Toàn cây <code>backend/src/main</code> có <b>10</b> lần nhắc <code>zaloId</code>, tất cả đều là một trường tự do trong <code>ContactInfo</code>. Không có cột đồng ý, không có định danh người dùng Zalo, không có trạng thái "chưa quan tâm OA".</td>
+      <td>Gửi ZNS cho người chưa đồng ý là rủi ro pháp lý (Nghị định 13/2023) trước khi là rủi ro kỹ thuật.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A.3 · Quyết định thiết kế: số điện thoại KHÔNG đi vào tin</h3>
+
+<div class="khoi chot">
+  <p class="nhan">Chốt</p>
+  <p>
+    <b>Không thêm số điện thoại vào <code>Recipient</code> và không thêm vào
+    <code>NotificationEnvelope</code>.</b> <code>Recipient</code> hiện là
+    <code>(personId, appUserId, locale)</code>; <code>NotificationEnvelope</code> là <b>JSON nằm
+    trên RabbitMQ</b>, đi qua queue, qua DLQ, và bị in ra log khi tin chết
+    (<code>NotificationConsumer.onDeadLetter</code> ghi <code>ERROR</code> kèm tiêu đề). Nhét số
+    điện thoại vào đó là rải dữ liệu Tầng 3 ra khắp hạ tầng vận hành.
+  </p>
+  <p>
+    Thay vào đó: <code>ZaloZnsAdapter</code> <b>tự tra số ngay lúc gửi</b>, qua một cổng riêng —
+    đúng cách <code>WebPushAdapter</code> tự tra <code>push_subscription</code> qua
+    <code>PushSubscriptionRepository</code> (<code>WebPushAdapter.java:104</code>).
+    <b>Cái giá:</b> một truy vấn cơ sở dữ liệu thêm cho mỗi tin ZNS. Với vài nghìn tin một mùa giỗ,
+    đây là cái giá rẻ.
+  </p>
+</div>
+
+<h4>Migration V8 — chỉ đồng ý, không nhân bản số điện thoại</h4>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bảng / cột</th><th>Vì sao</th></tr></thead>
+  <tbody>
+    <tr><td><code>notification_consent(person_id, channel, opted_in, consent_at, revoked_at, source)</code></td><td>Bằng chứng đồng ý theo <b>từng kênh</b>, có dấu thời gian và nguồn (tự bật trong ứng dụng / Trưởng chi ghi hộ / nhập liệu ban đầu). Đây là thứ phải trình ra khi có khiếu nại.</td></tr>
+    <tr><td><code>zalo_oa_follow_state(person_id, state, checked_at)</code></td><td>Ba trạng thái: chưa rõ · đã quan tâm OA · đã chặn. Không đoán lại mỗi lần gửi.</td></tr>
+    <tr><td><b>KHÔNG</b> có cột <code>phone</code> ở đây</td><td>Nhân bản số điện thoại ra bảng thứ hai nghĩa là <b>ẩn danh hoá theo yêu cầu hợp pháp phải nhớ xoá hai chỗ</b> — và một ngày nào đó sẽ quên chỗ thứ hai. Nguồn duy nhất vẫn là <code>person.attributes.contact.phone</code>.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Ràng buộc bắt buộc từ 00 §5: migration mới <b>đánh số tiếp <code>V8</code></b>, không sửa
+  <code>V1</code>–<code>V7</code>. <code>ck_notification_log_channel</code> đã liệt kê sẵn
+  <code>'ZALO'</code> (<code>V4__events.sql:134-136</code>) nên <b>không phải sửa ràng buộc nào</b> —
+  đúng như lời hứa của W5.
+</p>
+
+<h3>A.4 · Adapter — hình dạng và hợp đồng</h3>
+
+<ul>
+  <li><code>ZaloZnsAdapter implements NotificationProvider</code>, <code>channel() == Channel.ZALO</code>.
+    Không sửa <code>NotificationDeliveryService</code>, không sửa schema, không sửa tầng API — đúng
+    lời hứa ghi trong javadoc của <code>NotificationProvider</code>.</li>
+  <li><b>Không được ném ngoại lệ</b> cho lỗi gửi thông thường. Trả <code>DeliveryResult</code>, để
+    tầng trên quyết retry. Đây là hợp đồng đã viết, và nó là lý do <code>DeliveryOutcome</code> tách
+    <code>RETRYABLE</code> khỏi <code>PERMANENT</code>.</li>
+  <li><b>Chưa cấu hình thì tự tắt</b>: thiếu token OA → trả <code>SKIPPED</code>, không làm hỏng
+    khởi động. Theo đúng mẫu <code>WebPushProperties.isConfigured()</code>.</li>
+</ul>
+
+<h4>Bảng ánh xạ mã lỗi → outcome (khung; giá trị phải điền từ tài liệu Zalo)</h4>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Tình huống</th><th>Outcome</th><th>Vì sao</th></tr></thead>
+  <tbody>
+    <tr><td>Gateway nhận, trả mã tin</td><td><code>SENT</code></td><td>Ghi <code>providerMessageId</code> để đối soát khi có khiếu nại.</td></tr>
+    <tr><td>Lỗi mạng, 5xx, quá tải, vượt hạn mức <b>tạm thời</b></td><td><code>RETRYABLE</code></td><td>Ném <code>NotificationRetryException</code> → Spring AMQP retry 5 lượt rồi sang <code>notify.dlq</code>.</td></tr>
+    <tr><td>Mẫu tin sai / chưa duyệt · tham số thiếu · OA bị khoá</td><td><code>PERMANENT</code></td><td>Retry không sửa được cấu hình. Phải ghi <code>ERROR</code> để có người nhìn.</td></tr>
+    <tr><td>Số không dùng Zalo · người nhận chặn OA · <b>chưa có bản ghi đồng ý</b></td><td><code>SKIPPED</code></td><td><b>Không phải lỗi.</b> Đây là trạng thái bình thường của một phần dòng họ, và nó không được làm nhiễu số liệu "gửi thất bại".</td></tr>
+    <tr><td>Hết quỹ gửi tin</td><td><code>RETRYABLE</code> <b>+ cảnh báo</b></td><td>Về kỹ thuật là tạm thời, nhưng retry không tự nạp tiền. Cần một cảnh báo riêng, nếu không cả mùa giỗ sẽ lặng lẽ rơi vào DLQ.</td></tr>
+    <tr><td colspan="3"><i>Mã lỗi thật của ZNS: <b>chưa tra</b>. Phải điền cột "mã" vào bảng này từ tài liệu Zalo trước khi viết adapter — đoán mã lỗi rồi ánh xạ sai là cách chắc chắn nhất để hoặc mất tin, hoặc đốt hạn ngạch.</i></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Khác biệt lớn nhất so với Web Push — chỗ dễ sai nhất của cả việc A</p>
+  <p>
+    Khoá VAPID của Web Push là <b>tĩnh</b>: sinh một lần, nạp bằng biến môi trường, không bao giờ
+    đổi. Truy cập ZNS thì dùng <b>access token có hạn</b> và phải làm mới bằng refresh token — mà
+    refresh token của Zalo <b>xoay vòng sau mỗi lần làm mới</b>.
+  </p>
+  <p>
+    Nghĩa là <b>không thể</b> áp dụng mẫu "chỉ đọc từ biến môi trường" như <code>WebPushProperties</code>:
+    một biến môi trường không tự ghi lại được giá trị mới. Phải có chỗ lưu có ghi (bảng riêng hoặc
+    Redis), và phải xử lý ca <b>hai tiến trình cùng làm mới token</b> — mất giá trị mới của nhau là
+    mất luôn quyền gửi cho tới khi có người vào cấp lại bằng tay.
+    <b>Cơ chế token hiện hành phải xác minh lại từ tài liệu Zalo trước khi chốt thiết kế.</b>
+  </p>
+</div>
+
+<h3>A.5 · Hạn mức và chi phí</h3>
+
+<p>
+  <b>Đơn giá mỗi tin ZNS: chưa tra.</b> Nhưng khối lượng thì tính được từ đặc tả dữ liệu, và
+  <b>khối lượng mới là thứ quyết định</b>:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Thừa số</th><th>Giá trị</th><th>Nguồn</th></tr></thead>
+  <tbody>
+    <tr><td>Nhân khẩu</td><td class="so">~1.500</td><td>Đặc tả dữ liệu giả, <code>.claude/plan-giai-doan-1.html</code> §10</td></tr>
+    <tr><td>Tỉ lệ đã khuất → số giỗ/năm</td><td class="so">60% → ~900</td><td>Cùng nguồn</td></tr>
+    <tr><td>Mốc nhắc mỗi giỗ</td><td class="so">3 (D-7, D-3, D-1)</td><td>FR-2.2, BA v2</td></tr>
+    <tr><td>Người nhận mỗi giỗ</td><td class="so">30</td><td><b>Giả định thuần</b> — phải thay bằng số thành viên thật của từng chi</td></tr>
+    <tr><td><b>Tin/năm</b></td><td class="so"><b>~81.000</b></td><td>Tích của bốn dòng trên. <b>Là ước lượng, không phải số đo.</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Quyết định tốn tiền nhất của hệ thống không nằm ở tầng kỹ thuật</p>
+  <p>
+    Nếu ZNS tính tiền từng tin thì <b>"3 mốc × cả chi"</b> là dòng chi lớn nhất của sản phẩm, và nó
+    đang được chốt trong một câu của BA chứ không trong một cuộc bàn ngân sách.
+  </p>
+  <p>
+    <b>Đề xuất:</b> chỉ <b>D-1</b> đi ZNS; D-7 và D-3 đi in-app + Web Push. Cắt được khoảng hai
+    phần ba lượng tin trả tiền. <b>Cái giá, nói thẳng:</b> con cháu xa quê cần báo trước <i>xa
+    hơn</i> để thu xếp về — cắt D-7 khỏi kênh mạnh nhất là cắt đúng nhóm người mà FR-2.2 sinh ra để
+    phục vụ (US-3 của BA v2 nói thẳng: <i>"con cháu xa quê… nhận nhắc giỗ trước 3 ngày qua Zalo"</i>).
+    Đây là đánh đổi tiền ↔ mục đích, và <b>Hội đồng phải là người chọn</b>, không phải lập trình viên.
+  </p>
+</div>
+
+<h3>A.6 · Đường lui khi Zalo hỏng — và một hiểu nhầm cần gỡ</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">"Lui về in-app" không phải một hành vi chạy được như người ta tưởng</p>
+  <p>
+    <code>NotificationDispatchService</code> đã đẩy <b>một tin cho mỗi người nhận, mỗi kênh</b>
+    (<code>NotificationDispatchService.java:69-73</code>). In-app <b>không phải đường lui</b> — nó
+    đã được gửi <i>song song</i> ngay từ đầu, trước khi biết Zalo có hỏng hay không. Không có gì để
+    "lui về": tin in-app đã nằm trong hộp thư rồi.
+  </p>
+  <p>
+    Vậy điều gì <i>thật sự</i> cần làm khi Zalo hỏng? Ba thứ, và chỉ ba thứ:
+  </p>
+  <ol>
+    <li><b>Zalo hỏng không được kéo theo kênh khác.</b> Đã có sẵn: queue riêng cho mỗi kênh, đúng lý
+      do đã viết trong javadoc <code>NotificationConsumer</code>. Chỉ cần thêm <code>notify.zalo</code>
+      với <code>concurrency</code> thấp (đề xuất <code>1-2</code>) vì hạn ngạch gateway, chứ không
+      phải vì CPU. Routing key <code>notify.zalo</code> đã có sẵn trong <code>Channel</code>.</li>
+    <li><b>Lỗi vĩnh viễn thì dừng.</b> Đã có sẵn trong <code>NotificationDeliveryService</code>.</li>
+    <li><b>Có người biết.</b> Đây là thứ <b>chưa có</b>: một chỉ số tỉ lệ
+      <code>FAILED + DEAD_LETTER</code> trên kênh <code>ZALO</code>, và một ngưỡng cảnh báo. Không
+      có nó thì "tin không bao giờ mất" chỉ đúng về mặt dữ liệu — dòng <code>DEAD_LETTER</code> nằm
+      im trong bảng, và cái giỗ vẫn trôi qua không ai được nhắc.</li>
+  </ol>
+</div>
+
+<p>
+  Đường lui <b>thật sự có ý nghĩa</b> với người dùng là một kênh đẩy thứ hai tới điện thoại khi Zalo
+  không tới được — và kênh đó là <b>Web Push</b>. Đó là lý do <b>việc D phải làm trước việc A</b>,
+  xem §7.
+</p>
+
+<p>
+  Một thay đổi nhỏ nhưng bắt buộc: <code>NotificationDispatchService.java:39</code> hiện khai cứng
+  <code>REMINDER_CHANNELS = List.of(INAPP, WEBPUSH)</code>. Nó phải thành cấu hình để bật/tắt ZALO
+  mà không phải triển khai lại. <b>Cái giá:</b> cấu hình sai thì hệ thống im lặng không gửi kênh nào
+  — nên phải kèm một phép kiểm lúc khởi động khẳng định danh sách không rỗng và mọi kênh trong đó
+  đều có adapter.
+</p>
+
+<h3>A.7 · Tiêu chí nghiệm thu — máy chấm</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Khẳng định</th><th>Chạy bằng</th></tr></thead>
+  <tbody>
+    <tr><td>Mỗi nhánh của bảng A.4 có ≥1 ca kiểm: mã gateway → đúng <code>DeliveryOutcome</code>. Máy chủ HTTP giả (<code>com.sun.net.httpserver.HttpServer</code>) — không thêm phụ thuộc, vì adapter dùng <code>java.net.http.HttpClient</code> như <code>WebPushAdapter</code>.</td><td><code>./mvnw -Dtest=ZaloZnsAdapterTest test</code></td></tr>
+    <tr><td>Hai provider cùng khai <code>Channel.ZALO</code> → ứng dụng <b>chết lúc khởi động</b>, không chạy tiếp.</td><td>Bất biến đã có ở <code>NotificationDeliveryService.java:56-60</code>; thêm ca kiểm.</td></tr>
+    <tr><td>Tin routing key <code>notify.zalo</code> vào đúng queue <code>notify.zalo</code>; provider trả <code>RETRYABLE</code> 5 lượt → đúng <b>1</b> dòng <code>DEAD_LETTER</code> trong <code>notification_log</code>.</td><td>IT Testcontainers (Rabbit + Postgres)</td></tr>
+    <tr><td>Cùng <code>(reminder_job_id, person_id, ZALO)</code> phát hai lần → đúng <b>1</b> dòng <code>notification_log</code>. (Chỉ mục <code>ux_notification_log_idempotency</code>, <code>V4__events.sql:145-146</code>.)</td><td>IT Testcontainers</td></tr>
+    <tr><td>Người <b>chưa có bản ghi đồng ý</b> → outcome <code>SKIPPED</code>, và <code>notification_inbox</code> <b>vẫn</b> có 1 dòng cho người đó.</td><td>IT Testcontainers</td></tr>
+    <tr><td><b>Chống rò rỉ Tầng 3:</b> serialize <code>NotificationEnvelope</code> ra JSON và khẳng định chuỗi <b>không chứa</b> khoá <code>phone</code>, <code>zaloId</code>, <code>email</code>. Ca kiểm này tự bảo vệ về sau khi ai đó thêm trường.</td><td><code>./mvnw -Dtest=NotificationEnvelopeTest test</code></td></tr>
+    <tr><td>Danh sách kênh rỗng, hoặc chứa kênh không có adapter → ứng dụng không khởi động.</td><td>Test tầng ngữ cảnh Spring</td></tr>
+    <tr><td><code>./mvnw test</code> không giảm số test đang xanh; <code>ModularityTests</code> vẫn xanh.</td><td><code>./mvnw test</code></td></tr>
+    <tr><td><b>Người chấm, không phải máy:</b> 1 tin ZNS thật tới 1 số thật, có <code>provider_message_id</code> khác NULL trong <code>notification_log</code>. Chụp màn hình điện thoại nhận tin.</td><td>Chỉ làm được sau khi tuyến giấy tờ xong.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>A.8 · Ước lượng và chỗ có thể sai</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Ngày-người (ước lượng)</th></tr></thead>
+  <tbody>
+    <tr><td>V8 (đồng ý + trạng thái OA) + cổng tra SĐT chỉ adapter đọc được</td><td class="so">3–4</td></tr>
+    <tr><td><code>ZaloZnsAdapter</code> + quản lý token xoay vòng + bảng mã lỗi</td><td class="so">4–6</td></tr>
+    <tr><td>Topology <code>notify.zalo</code> + đưa danh sách kênh thành cấu hình</td><td class="so">1–2</td></tr>
+    <tr><td>Chỉ số + cảnh báo tỉ lệ hỏng của kênh</td><td class="so">1–2</td></tr>
+    <tr><td>Test (đơn vị + IT) theo A.7</td><td class="so">3–4</td></tr>
+    <tr><td>Runbook vận hành: cấp lại token, nạp quỹ, xử lý DLQ</td><td class="so">1</td></tr>
+    <tr><td><b>Cộng</b></td><td class="so"><b>13–19</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Chỗ ước lượng dễ trượt nhất</h4>
+    <p>Quản lý token xoay vòng. Nó trông như nửa ngày và thường thành ba ngày, vì ca đua giữa hai
+    tiến trình cùng làm mới chỉ lộ ra khi chạy nhiều instance — đúng lúc lên môi trường thật.</p>
+    <p class="day">Giảm rủi ro: làm mới token ở <b>một chỗ duy nhất</b> có khoá, không để mỗi lần
+    gửi tự lo.</p>
+  </div>
+  <div class="the">
+    <h4>Chỗ kế hoạch có thể sai hẳn</h4>
+    <p>Nếu Zalo yêu cầu một loại chủ thể mà dòng họ không thể có, <b>toàn bộ việc A không thực hiện
+    được</b> và phải đổi kênh (SMS qua nhà mạng cũng cần pháp nhân; email thì không).</p>
+    <p class="day">Vì thế bước "chốt pháp nhân" phải xong <b>trước</b> khi tiêu một ngày-người nào
+    cho tuyến mã.</p>
+  </div>
+  <div class="the">
+    <h4>Cái giá ít ai nói</h4>
+    <p>Thêm một kênh là thêm một đường có thể hỏng, một hạn ngạch phải theo dõi, một hoá đơn phải
+    trả, và một bề mặt để người trong họ phàn nàn <i>"sao tôi không nhận được"</i>.</p>
+    <p class="day">Vận hành sau bàn giao nặng hơn hẳn phần code — đó là chi phí thường xuyên, không
+    phải chi phí một lần.</p>
+  </div>
+</div>
+
+<h2>3. Việc B — Bộ áp dụng yêu cầu đính chính</h2>
+
+<h3>B.1 · Cái đang hỏng, đo được</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Nặng hơn báo cáo ban đầu</p>
+  <p>
+    Không chỉ <code>ChangeRequestApprovedEvent</code> không có người nhận. Đếm trên toàn cây
+    <code>backend/src/main</code>: <b>0 chú thích <code>@EventListener</code> và 0
+    <code>@TransactionalEventListener</code></b> — hai chuỗi ấy chỉ xuất hiện trong <i>javadoc</i>
+    ở đúng hai tệp (<code>genealogy/application/DomainEventPublisher.java:17</code> và
+    <code>membership/domain/event/ChangeRequestApprovedEvent.java:19</code>).
+  </p>
+  <p>
+    Nghĩa là <b>cơ chế domain event của cả hệ thống chưa có một người tiêu thụ nào</b>. Nó là một
+    đường ray đã lát nhưng chưa có tàu chạy. Việc B là chuyến tàu đầu tiên — nên nó cũng là chỗ
+    kiểm chứng rằng cơ chế ấy hoạt động thật.
+  </p>
+</div>
+
+<p>Hậu quả đúng như 00 và <code>design/README.md</code> mô tả: Trưởng chi bấm Duyệt → trạng thái
+<code>APPROVED</code> được ghi, dòng audit <code>APPROVE</code> được ghi
+(<code>ChangeRequestService.java:130-133</code>), <b>gia phả không đổi một chữ</b>.</p>
+
+<h3>B.2 · Quy ước khoá trong <code>payload</code> — chốt</h3>
+
+<p>
+  Câu hỏi "quy ước khoá là gì" <b>đã có câu trả lời nằm trong mã frontend</b>, chỉ là chưa ai chốt
+  nó thành hợp đồng:
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Quy ước đã tồn tại — <code>frontend/src/components/correction/correctable-fields.ts:20-24</code></p>
+  <p>
+    <i>"<code>payload</code> gửi lên là <code>{ "&lt;khoá&gt;": &lt;giá trị&gt; }</code> với khoá đúng
+    bằng tên trường của <code>UpdatePersonRequest</code>. Đó là quy ước duy nhất khiến bước ghép
+    W2×W6 sau này áp dụng được đề nghị mà không phải dịch khoá."</i>
+  </p>
+  <p>
+    Danh sách hiện có đúng <b>sáu</b> khoá (<code>correctable-fields.ts:33-39</code>):
+    <code>death</code> · <code>birth</code> · <code>nativePlace</code> · <code>occupation</code> ·
+    <code>currentPlaceProvince</code> · <code>gender</code>. Còn backend thì mô tả
+    <code>payload</code> là <i>"dạng tự do theo <code>type</code>"</i>
+    (javadoc <code>SubmitChangeRequestCommand</code>) và <b>không kiểm gì cả</b>.
+  </p>
+</div>
+
+<p><b>Chốt ba điều:</b></p>
+
+<ol>
+  <li>
+    <b>Hợp đồng đóng, kiểm ngay lúc gửi — không kiểm lúc duyệt.</b> <code>POST
+    /api/v1/change-requests</code> từ chối payload có khoá lạ với <code>400 VALIDATION_FAILED</code>.
+    Lý do: một payload sai chỉ lộ ra <i>sau khi Trưởng chi đã bấm Duyệt</i> là kịch bản tệ nhất —
+    người có thẩm quyền đã ra quyết định, rồi máy mới nói quyết định ấy không thực hiện được.
+  </li>
+  <li>
+    <b>Xoá một trường = gửi <code>null</code>.</b> Không thêm danh sách <code>clearFields</code>
+    song song. <code>ChangeRequest.payload()</code> đã cố ý không dùng <code>Map.copyOf</code> đúng
+    vì lý do này (ghi chú tại <code>ChangeRequest.java:96-98</code>). Hai cách diễn đạt cùng một ý
+    định là nguồn lệch.
+  </li>
+  <li>
+    <b>Khoá kỹ thuật mang tiền tố <code>_</code></b>, tách hẳn khỏi khoá dữ liệu — xem khối cảnh
+    báo dưới đây.
+  </li>
+</ol>
+
+<div class="cuon">
+<table>
+  <thead><tr><th><code>requestType</code></th><th>Khoá cho phép</th><th>Dịch sang</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td><code>UPDATE_PERSON</code></td><td>6 khoá của <code>correctable-fields.ts</code> + <code>_baseVersion</code></td><td><code>UpdatePersonCommand</code></td><td>Đường chính. Chiếm gần hết lưu lượng thật.</td></tr>
+    <tr><td><code>OTHER</code></td><td><b>không khoá nào</b> — chỉ <code>reason</code></td><td><b>Không áp dụng tự động</b></td><td>Duyệt <code>OTHER</code> chỉ nghĩa là "đã ghi nhận, sẽ sửa tay". Phải nói rõ điều đó ở giao diện, nếu không nó tái tạo đúng cái ảo giác đang có.</td></tr>
+    <tr><td><code>CREATE_PERSON</code>, <code>ADD_RELATIONSHIP</code>, <code>REMOVE_RELATIONSHIP</code>, <code>ADD_NAME</code>, <code>MOVE_BRANCH</code>, <code>SOFT_DELETE_PERSON</code></td><td><b>Hoãn</b> — chưa có giao diện gửi</td><td>—</td><td>Enum đã có 8 loại (<code>ChangeRequestType</code>), giao diện chỉ sinh 2. Viết bộ áp dụng cho 6 loại chưa ai gửi được là viết mã không có người dùng và không có ca kiểm thật.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Phát hiện chặn: đề nghị không mang phiên bản, mà việc ghi thì bắt buộc phải có</p>
+  <p>
+    <code>UpdatePersonCommand.expectedVersion</code> là <b>bắt buộc</b> — lấy từ <code>ETag</code>
+    của lần <code>GET</code> trước, lệch thì trả <code>409 OPTIMISTIC_LOCK_CONFLICT</code>
+    (javadoc <code>UpdatePersonCommand</code>). Nhưng <code>SubmitChangeRequestDto</code>,
+    <code>SubmitChangeRequestCommand</code>, <code>ChangeRequest</code> và
+    <code>ChangeRequestView</code> <b>đều không có trường phiên bản nào</b>.
+  </p>
+  <p>
+    Một đề nghị có thể nằm chờ duyệt hàng tuần. Không có phiên bản gốc thì bộ áp dụng chỉ còn hai
+    lựa chọn, và <b>cả hai đều sai</b>: ghi đè mù (mất cập nhật của người khác trong khoảng chờ),
+    hoặc bỏ khoá lạc quan (phá bất biến của cả context <code>genealogy</code>).
+  </p>
+  <p>
+    <b>Chốt:</b> <code>_baseVersion</code> là khoá <b>bắt buộc</b> của
+    <code>UPDATE_PERSON</code>, ghi tại thời điểm gửi. Frontend đã có sẵn giá trị này — nó đọc hồ sơ
+    bằng <code>apiFetchWithMeta</code> để lấy <code>ETag</code>
+    (<code>frontend/src/lib/api/persons.ts:32</code>).
+  </p>
+</div>
+
+<h3>B.3 · Ranh giới context — kiến trúc đã tự trả lời</h3>
+
+<p>
+  Ràng buộc 00 §5: <code>membership</code> <b>không</b> được với tay vào repository của
+  <code>genealogy</code>. Khảo sát cho thấy Spring Modulith <b>đã cưỡng chế điều đó</b>, và đồng
+  thời chỉ ra chỗ duy nhất đặt được người nhận:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Sự kiện đo được</th><th>Hệ quả</th></tr></thead>
+  <tbody>
+    <tr><td><code>membership/domain/event/package-info.java:9</code> khai <code>@NamedInterface("events")</code></td><td>Context khác <b>được phép</b> phụ thuộc vào các lớp sự kiện của <code>membership</code>. Đây là lối giao tiếp hợp lệ, chính javadoc gói ấy gọi là <i>"một trong hai lối giao tiếp hợp lệ"</i>.</td></tr>
+    <tr><td><code>genealogy/application/package-info.java</code> <b>không</b> có <code>@NamedInterface</code></td><td><code>genealogy.application</code> là gói <b>nội bộ</b>. <code>membership</code> gọi thẳng <code>UpdatePersonService</code> sẽ làm <code>ModularityTests</code> đỏ. Một module thứ ba cũng không gọi được.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Chốt vị trí</p>
+  <p>
+    Người nhận là một lớp mới trong <b><code>vn.giapha.genealogy.application</code></b> — ví dụ
+    <code>ApprovedCorrectionApplier</code> — mang <code>@EventListener</code> <b>thường</b> (không
+    phải <code>AFTER_COMMIT</code>), nghe
+    <code>membership.domain.event.ChangeRequestApprovedEvent</code>.
+  </p>
+  <p>
+    Chiều phụ thuộc là <code>genealogy → membership.events</code>. Hợp lệ, và là chiều <b>duy
+    nhất</b> khả thi. <b>Rủi ro phải canh:</b> nếu sau này <code>membership</code> phụ thuộc ngược
+    lại vào một named interface của <code>genealogy</code> thì thành <b>chu trình</b> và
+    <code>ModularityTests</code> đỏ ngay. Hiện <code>membership</code> đọc bảng <code>branch</code>
+    bằng SQL thuần (<code>membership/infrastructure/branch/BranchLookupJdbcAdapter</code>) nên ở cấp
+    Java chưa có phụ thuộc nào — <b>giữ nguyên như vậy</b> cho tới khi việc B xong.
+  </p>
+</div>
+
+<h3>B.4 · Áp dụng thất bại thì trạng thái yêu cầu về đâu</h3>
+
+<p>Ba phương án. Chỉ một sống sót.</p>
+
+<figure>
+<svg viewBox="0 0 980 210" role="img" aria-label="Ranh giới transaction của luồng duyệt và áp dụng">
+  <rect class="wf-khung" x="1" y="1" width="978" height="208" rx="4"/>
+  <text class="wf-chu" x="20" y="30" font-weight="600">MỘT transaction — mọi thứ trong khung này cùng sống hoặc cùng chết</text>
+
+  <rect class="wf-o" x="20" y="44" width="912" height="104" rx="4" stroke-dasharray="6 4"/>
+
+  <rect class="wf-o" x="40" y="66" width="150" height="60" rx="3"/>
+  <text class="wf-chu" x="52" y="90">Kiểm quyền</text>
+  <text class="wf-phu" x="52" y="108">vai × phạm vi ltree</text>
+  <path class="wf-net" d="M190 96 H216" marker-end="url(#mB)"/>
+
+  <rect class="wf-o" x="216" y="66" width="150" height="60" rx="3"/>
+  <text class="wf-chu" x="228" y="90">Ghi APPROVED</text>
+  <text class="wf-phu" x="228" y="108">+ audit APPROVE</text>
+  <path class="wf-net" d="M366 96 H392" marker-end="url(#mB)"/>
+
+  <rect class="wf-o" x="392" y="66" width="176" height="60" rx="3"/>
+  <text class="wf-chu" x="404" y="90">Phát sự kiện</text>
+  <text class="wf-phu" x="404" y="108">@EventListener đồng bộ</text>
+  <path class="wf-net" d="M568 96 H594" marker-end="url(#mB)"/>
+
+  <rect class="wf-o" x="594" y="66" width="176" height="60" rx="3"/>
+  <text class="wf-chu" x="606" y="90">Áp dụng vào cây</text>
+  <text class="wf-phu" x="606" y="108">UpdatePersonService</text>
+  <path class="wf-net" d="M770 96 H796" marker-end="url(#mB)"/>
+
+  <rect class="wf-o" x="796" y="66" width="116" height="60" rx="3"/>
+  <text class="wf-chu" x="808" y="90">audit UPDATE</text>
+  <text class="wf-phu" x="808" y="108">trên person</text>
+
+  <text class="wf-nhan" x="20" y="176" font-family="Be Vietnam Pro, system-ui, sans-serif" font-size="13" font-weight="600">Bước 4 ném → rollback cả bốn bước trước → yêu cầu VẪN PENDING, KHÔNG có dòng audit APPROVE, API trả 409/422.</text>
+  <text class="wf-phu" x="20" y="196">Không bao giờ tồn tại trạng thái "đã duyệt nhưng chưa áp dụng". Đó chính là bệnh đang có.</text>
+  <defs>
+    <marker id="mB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+<figcaption>
+  Thiết kế này <strong>không phải phát minh mới</strong> — javadoc của
+  <code>ChangeRequestApprovedEvent</code> đã chọn đúng nó: <i>"nếu việc áp dụng thất bại thì trạng
+  thái APPROVED phải rollback theo"</i>. Việc B chỉ là <strong>thực hiện lời hứa đã viết</strong>.
+</figcaption>
+</figure>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phương án</th><th>Phán</th><th>Vì sao</th></tr></thead>
+  <tbody>
+    <tr><td><b>Cùng transaction, lỗi thì rollback hết</b></td><td class="tot">Chốt</td><td>Không bao giờ tồn tại "đã duyệt mà cây không đổi". Đúng javadoc đã cam kết. Không phải sửa <code>ck_change_request_status</code>.</td></tr>
+    <tr><td>Trạng thái mới <code>APPROVED_PENDING_APPLY</code> + retry nền</td><td class="xau">Bác</td><td>Thêm một trạng thái là thêm một chỗ dữ liệu mắc kẹt, cộng một <code>V8</code> sửa ràng buộc CHECK, cộng một màn hình để ai đó đi dọn. Và javadoc <code>ChangeRequestStatus</code> đã chốt <i>"trạng thái cuối là cuối"</i>.</td></tr>
+    <tr><td>Duyệt xong, áp dụng bất đồng bộ</td><td class="xau">Bác</td><td>Chính là bệnh đang có, chỉ trễ hơn vài giây. Khoảng trễ ấy đủ để người duyệt đóng máy và tin rằng việc đã xong.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><b>Bốn ca lỗi và cách xử, vì "rollback hết" chưa đủ để biết nói gì với người dùng:</b></p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Ca</th><th>Mã trả về</th><th>Người duyệt làm gì tiếp</th></tr></thead>
+  <tbody>
+    <tr><td><b>Kỵ húy</b> — tên mới trùng tên huý bậc trên</td><td><code>409 TABOO_NAME_CONFLICT</code> kèm danh sách va chạm</td><td>Duyệt lại kèm cờ <code>confirmTabooOverride</code>. <b>Không</b> bắt người gửi gửi lại — họ không có thẩm quyền quyết định ghi đè, Trưởng chi mới có. (Hiện <code>ReviewChangeRequestDto</code> không có cờ này → phải thêm.)</td></tr>
+    <tr><td><b><code>_baseVersion</code> lệch</b> — hồ sơ đã đổi từ lúc gửi</td><td><code>409 CHANGE_REQUEST_STALE</code></td><td>Đề nghị đã lạc hậu, không phải sai. Giao diện mở lại bảng so sánh với giá trị <i>hiện tại</i>; người duyệt chọn từ chối kèm lý do, hoặc yêu cầu gửi lại. <b>Cái giá: thêm một lượt tương tác.</b></td></tr>
+    <tr><td><b>Sai phạm vi</b> — chi của hồ sơ đã bị chuyển ra ngoài quyền người duyệt</td><td><code>403 BRANCH_SCOPE_VIOLATION</code></td><td>Đẩy lên Hội đồng. <code>GenealogyAccessGuard.requireWriteAccess</code> đã có sẵn phép kiểm này.</td></tr>
+    <tr><td><b>Payload không dịch được</b> sang command</td><td><code>422</code></td><td><b>Không được xảy ra</b> nếu B.2 làm đúng — payload đã bị chặn từ lúc gửi. Nếu vẫn xảy ra thì là lỗi của ta, phải ghi <code>ERROR</code>.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>B.5 · Người duyệt không thấy giá trị "trước" — phải giải trong cùng đợt</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Không thể tách ra đợt sau</p>
+  <p>
+    Hôm nay duyệt mù chỉ tạo một dòng trạng thái vô hại. <b>Sau việc B, duyệt mù là ghi đè mù.</b>
+    <code>ChangeRequestView</code> (<code>membership/application/ChangeRequestView.java:17-21</code>)
+    mang <code>payload</code> nhưng <b>không mang ảnh chụp giá trị cũ</b>, nên giao diện phải gọi
+    riêng hồ sơ — và lời gọi ấy bị lọc theo tầng riêng tư <i>của chính người duyệt</i>.
+  </p>
+  <p>
+    <b>Chốt, và nó rơi ra tự nhiên từ chính luật riêng tư:</b> <b>không ai được ghi đè thứ mình
+    không được phép xem.</b> Nếu người duyệt không đủ tầng để thấy giá trị hiện tại của trường đang
+    sửa, thì <code>review(approve=true)</code> trả <code>403</code> và đề nghị phải đẩy lên
+    Admin / Hội đồng.
+  </p>
+  <p>
+    <b>Cái giá, có thật:</b> một Trưởng chi có thể bị chặn không duyệt được đề nghị sửa số điện
+    thoại (Tầng 3) của một người còn sống trong chi mình — và sẽ thấy điều đó vô lý. Cần một thông
+    điệp giải thích rõ, chứ không phải một mã lỗi trần.
+  </p>
+</div>
+
+<h3>B.6 · Audit</h3>
+
+<ul>
+  <li><b>Hai dòng, không phải một.</b> Dòng <code>APPROVE</code> trên <code>change_request</code>
+    (đã có) và dòng <code>UPDATE</code> trên <code>person</code> do <code>genealogy</code> tự ghi
+    qua <code>AuditPort</code> (đã có). Việc B <b>không</b> viết đường audit mới.</li>
+  <li><b>Nối hai dòng lại.</b> Ghi <code>changeRequestId</code> vào phần mô tả của dòng audit trên
+    <code>person</code>. Không có nó thì câu hỏi <i>"chỗ sửa này đến từ đề nghị nào"</i> chỉ trả lời
+    được bằng cách so dấu thời gian — tức là không trả lời được.</li>
+  <li><b>Actor là người duyệt</b>, không phải người gửi. Người gửi đề nghị; người duyệt chịu trách
+    nhiệm. Nhưng <code>requestedBy</code> phải có mặt trong nội dung dòng audit.</li>
+  <li><b>Không ghi giá trị Tầng 3 vào audit.</b> Javadoc <code>ContactInfo</code> đã cấm tường minh.
+    Với trường Tầng 3, dòng audit ghi <i>tên trường đã đổi</i>, không ghi giá trị.</li>
+</ul>
+
+<h3>B.7 · Tiêu chí nghiệm thu — máy chấm</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Khẳng định</th><th>Loại</th></tr></thead>
+  <tbody>
+    <tr><td>Duyệt một <code>UPDATE_PERSON</code> hợp lệ → trường tương ứng của <code>person</code> <b>đổi thật</b> trong cùng một lần gọi API; <code>person.version</code> tăng đúng 1.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Bộ áp dụng ném (giả lập kỵ húy) → sau lời gọi: <code>change_request.status = 'PENDING'</code>, <b>0</b> dòng <code>audit_log</code> có <code>action='APPROVE'</code> cho id đó, và <code>person</code> không đổi. <b>Đây là ca kiểm quan trọng nhất của việc B.</b></td><td>IT Testcontainers</td></tr>
+    <tr><td>Gửi payload có khoá lạ → <code>POST /change-requests</code> trả <code>400</code>; <b>0</b> dòng được ghi vào <code>change_request</code>.</td><td>Test tầng web</td></tr>
+    <tr><td><code>UPDATE_PERSON</code> thiếu <code>_baseVersion</code> → <code>400</code> lúc gửi.</td><td>Test tầng web</td></tr>
+    <tr><td>Sửa hồ sơ giữa lúc gửi và lúc duyệt → duyệt trả <code>409 CHANGE_REQUEST_STALE</code>, yêu cầu vẫn <code>PENDING</code>.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Người duyệt không đủ tầng thấy trường Tầng 3 → <code>403</code>, và phản hồi <b>không chứa</b> giá trị hiện tại của trường đó.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Duyệt <code>OTHER</code> → trạng thái thành <code>APPROVED</code> nhưng <code>person.version</code> <b>không đổi</b> (khẳng định tường minh rằng đây là hành vi cố ý).</td><td>IT Testcontainers</td></tr>
+    <tr><td><code>ModularityTests</code> xanh — không có chu trình <code>genealogy ↔ membership</code>.</td><td><code>./mvnw -Dtest=ModularityTests test</code></td></tr>
+    <tr><td>Dòng audit trên <code>person</code> chứa <code>changeRequestId</code>; dòng audit của trường Tầng 3 <b>không chứa</b> giá trị.</td><td>IT Testcontainers</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>B.8 · Ước lượng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Ngày-người (ước lượng)</th></tr></thead>
+  <tbody>
+    <tr><td>Hợp đồng payload đóng + kiểm lúc gửi + <code>_baseVersion</code> (backend + frontend)</td><td class="so">3–4</td></tr>
+    <tr><td><code>ApprovedCorrectionApplier</code> + dịch payload → <code>UpdatePersonCommand</code></td><td class="so">3–4</td></tr>
+    <tr><td>Bốn ca lỗi + mã RFC 7807 + cờ <code>confirmTabooOverride</code> ở đường duyệt</td><td class="so">2–3</td></tr>
+    <tr><td>Chặn "duyệt thứ mình không được xem" + thông điệp giải thích</td><td class="so">1–2</td></tr>
+    <tr><td>Nối audit + không rò Tầng 3</td><td class="so">1</td></tr>
+    <tr><td>Test theo B.7</td><td class="so">3–4</td></tr>
+    <tr><td><b>Cộng</b></td><td class="so"><b>13–18</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Việc C — Endpoint công khai cho khách</h2>
+
+<h3>C.1 · Bề mặt, hẹp có chủ ý</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Endpoint</th><th>Trả</th><th>Trần</th></tr></thead>
+  <tbody>
+    <tr><td><code>GET /api/v1/public/persons/{id}</code></td><td>Hồ sơ người <b>đã khuất</b>, chưa xoá mềm, chưa ẩn danh hoá</td><td>Người còn sống → <code>404</code>, không bao giờ <code>403</code></td></tr>
+    <tr><td><code>GET /api/v1/public/tree</code></td><td>Phả đồ từ một gốc, chỉ node đã khuất</td><td><code>depth</code> trần <b>thấp hơn</b> bản đăng nhập</td></tr>
+    <tr><td><code>GET /api/v1/public/search</code></td><td>Tìm theo tên, chỉ người đã khuất</td><td>Trần số kết quả; <b>cấm phân trang sâu</b> — xem C.3</td></tr>
+    <tr><td><code>GET /api/v1/public/branches</code></td><td>Danh mục chi/ngành, <b>không kèm người</b></td><td>—</td></tr>
+    <tr><td colspan="3"><b>Cố ý KHÔNG mở:</b> <code>/public/kinship</code> (tra danh xưng kéo theo suy luận quan hệ, và một quan hệ có thể lộ sự tồn tại của người còn sống ở giữa đường) · <code>/public/events</code> (giỗ gắn với chi có người sống) · mọi endpoint <b>liệt kê toàn bộ</b> nhân khẩu.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>C.2 · Không viết bộ lọc thứ hai</h3>
+
+<div class="khoi chot">
+  <p class="nhan">Điều sống còn của việc C</p>
+  <p>
+    Cơ chế khách <b>đã có và đã được test</b>: <code>PrivacyTierService.caller()</code> trả
+    <code>CallerContext.guest()</code> khi <code>CurrentUserProvider.current()</code> rỗng
+    (<code>genealogy/application/PrivacyTierService.java:63-66</code>). Bộ controller công khai
+    <b>không được</b> có nhánh lọc riêng — nó gọi đúng các service đang phục vụ người đăng nhập.
+    <b>Một bộ lọc thứ hai là một bộ lọc sẽ lệch</b>, và nó sẽ lệch ở phía nguy hiểm.
+  </p>
+</div>
+
+<p><b>Ba cái bẫy phải nhắc trước khi ai đó viết dòng đầu tiên:</b></p>
+
+<ul>
+  <li>
+    <b>Bẫy đã ghi trong <code>CLAUDE.md</code>:</b> <code>VisibleTier.atLeast()</code> trả
+    <code>true</code> với mọi so sánh khi tầng là <code>PUBLIC</code> — mà người đã khuất
+    <i>luôn</i> là <code>PUBLIC</code>. Hỏi "có được xem Tầng 3 không" phải so <b>bằng</b>
+    (<code>tier == T3</code>).
+  </li>
+  <li>
+    <b>Bẫy mới, phát hiện khi khảo sát:</b> <code>tierFor()</code> trả
+    <code>VisibleTier.T1</code> cho <b>khách nhìn người còn sống</b>
+    (<code>PrivacyTierService.java:107-109</code>) chứ không ném. Nó chỉ an toàn vì
+    <code>canSee()</code> đã chặn trước ở mọi lối vào hiện có. Nghĩa là
+    <b>"gọi <code>canSee</code> trước" là một bất biến bảo mật không được kiểu dữ liệu bảo vệ</b> —
+    và việc C đang mở đúng một loạt lối vào mới. Một controller công khai quên bước đó sẽ lộ Tầng 1
+    của người còn sống cho khách, im lặng, không có log nào.
+  </li>
+  <li>
+    <b>Không cache kết quả đã lọc</b> — javadoc <code>PrivacyTierService</code> cấm tường minh.
+    Cám dỗ ở đây rất lớn vì bề mặt công khai là bề mặt đáng cache nhất. Chỉ được cache <b>khung
+    xương cây</b> (danh sách id), đúng như <code>TreeProjectionService</code> đang làm.
+  </li>
+</ul>
+
+<h3>C.3 · Chống lạm dụng — đây là bề mặt không cần đăng nhập</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Biện pháp</th><th>Đặt ở đâu</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Giới hạn tần suất theo IP</td><td><b>Reverse proxy trước, không phải ứng dụng</b></td><td>Trong <code>backend/pom.xml</code> <b>không có thư viện rate-limit nào</b>. Chặn ở proxy rẻ hơn: một request bị chặn ở đó không tiêu một connection Postgres nào. Ứng dụng chỉ giữ hạn mức <i>thứ hai</i> cho endpoint đắt (<code>/public/tree</code>), dựa trên Redis đã có sẵn (<code>pom.xml:102</code>).</td></tr>
+    <tr><td>Trần <code>depth</code> và trần <code>size</code></td><td>Controller</td><td>Trần cứng ở máy chủ, không tin tham số client.</td></tr>
+    <tr><td><b>Cấm phân trang sâu</b> ở <code>/public/search</code></td><td>Controller</td><td>Đây là biện pháp <b>chống quét toàn bộ phả</b> hiệu quả nhất và rẻ nhất: cho tìm thì được, cho lật hết trang thì không. Kẻ quét phải đoán từ khoá thay vì đếm từ 0.</td></tr>
+    <tr><td>Id không đoán được</td><td>Đã có sẵn</td><td><code>person.id UUID DEFAULT gen_random_uuid()</code> (<code>V2__core.sql:98</code>). <b>Ghi lại ở đây để không ai đổi sang khoá tuần tự</b> — đổi là biến việc quét cả phả thành một vòng lặp.</td></tr>
+    <tr><td><code>Cache-Control</code> công khai + <code>ETag</code></td><td>Controller</td><td>Người đã khuất là dữ liệu không đổi. Cache ở tầng biên gánh gần hết tải quét.</td></tr>
+    <tr><td><b>Không</b> ghi <code>audit_log</code> mỗi lượt xem công khai</td><td>—</td><td>Khách xem người đã khuất không phải truy cập nhạy cảm; ghi từng lượt sẽ làm phình <code>audit_log</code> và biến chính bảng audit thành đích tấn công. Đếm ở tầng chỉ số.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Cái giá phải nói với Hội đồng bằng văn bản, không phải nói lướt</p>
+  <p>
+    Mở bề mặt công khai làm lộ <b>cấu trúc dòng họ</b> ra internet: số chi, số đời, tên các cụ, ai
+    là con ai. Đó <i>chính là mục đích</i> của nửa "cổng thông tin" — nhưng có dòng họ không muốn,
+    và một khi đã lên mạng thì máy tìm kiếm giữ bản sao kể cả sau khi gỡ.
+  </p>
+  <p>
+    <b>Đề xuất:</b> một công tắc cấu hình ở cấp dòng họ, <b>mặc định TẮT</b>, chỉ bật sau khi có
+    biên bản Hội đồng. Bật mặc định là thay Hội đồng ra quyết định.
+  </p>
+</div>
+
+<h3>C.4 · Phần frontend</h3>
+
+<p>
+  <code>API_BASE_URL</code> nằm ở một chỗ (<code>frontend/src/lib/api/http.ts:44-45</code>) nhưng
+  đường dẫn <code>/api/v1/...</code> <b>viết tay ở từng nơi gọi</b> — có mặt ở
+  <code>src/lib/api/persons.ts</code>, <code>tree.ts</code>, <code>kinship.ts</code>,
+  <code>events.ts</code>, <code>notifications.ts</code>, <code>change-requests.ts</code>. Việc chọn
+  tiền tố <code>/api/v1</code> hay <code>/api/v1/public</code> theo trạng thái đăng nhập phải đặt
+  <b>ở đúng một chỗ trong <code>http.ts</code></b>. <b>Cái giá:</b> mọi nơi gọi phải đi qua nó, tức
+  là sửa rải ở sáu tệp một lượt.
+</p>
+
+<h3>C.5 · Tiêu chí nghiệm thu — máy chấm</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Khẳng định</th><th>Loại</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ca kiểm tự phủ endpoint tương lai:</b> quét <code>RequestMappingHandlerMapping</code> lấy <b>mọi</b> ánh xạ dưới <code>/api/v1/public/**</code>; với mỗi cái, gọi <b>không token</b> bằng id của một người <b>còn sống</b> → <code>404</code>, và thân phản hồi <b>không chứa</b> id đó. Endpoint công khai thêm về sau tự động bị chấm.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Cùng bộ endpoint, gọi với <code>POST</code>/<code>PATCH</code>/<code>DELETE</code> không token → <code>401</code> (SecurityConfig chỉ mở <code>HttpMethod.GET</code>).</td><td>Test tầng web</td></tr>
+    <tr><td>Khách gọi <code>/public/persons/{id}</code> của một cụ đã khuất → <code>200</code> và có tên, đời, quan hệ lõi.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Khách gọi <code>/public/tree</code> → <b>0</b> node có <code>alive = true</code> trong toàn payload, ở mọi độ sâu.</td><td>IT Testcontainers</td></tr>
+    <tr><td><code>/public/search</code> với trang vượt trần → <code>400</code>, không phải trang rỗng.</td><td>Test tầng web</td></tr>
+    <tr><td><b>8 ca kiểm sẵn có</b> ở <code>frontend/e2e/guest-privacy.spec.ts</code> chạy lại <b>với backend thật</b>, không phải MSW.</td><td><code>npx playwright test e2e/guest-privacy.spec.ts</code></td></tr>
+    <tr><td>Công tắc công khai TẮT → mọi <code>/public/**</code> trả <code>404</code>.</td><td>Test tầng web</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>C.6 · Ước lượng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Ngày-người (ước lượng)</th></tr></thead>
+  <tbody>
+    <tr><td>Bốn controller công khai, dùng lại service sẵn có</td><td class="so">2–3</td></tr>
+    <tr><td>Trần + cấm phân trang sâu + <code>ETag</code>/<code>Cache-Control</code> + công tắc cấu hình</td><td class="so">2</td></tr>
+    <tr><td>Giới hạn tần suất (proxy + lớp thứ hai bằng Redis)</td><td class="so">1–2</td></tr>
+    <tr><td>Frontend: chọn tiền tố theo trạng thái đăng nhập, sửa 6 tệp gọi API</td><td class="so">1–2</td></tr>
+    <tr><td>Test theo C.5, gồm ca quét ánh xạ</td><td class="so">3–4</td></tr>
+    <tr><td><b>Cộng</b></td><td class="so"><b>9–13</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Việc D — Web Push tới thiết bị thật</h2>
+
+<h3>D.1 · Cái chưa có, đếm được</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Thiếu</th><th>Bằng chứng</th><th>Vì sao quan trọng</th></tr></thead>
+  <tbody>
+    <tr><td><b>0 test cho toàn tầng gửi</b></td><td><code>grep -rl "WebPushAdapter\|VapidSigner\|WebPushCipher\|P256" backend/src/test</code> → <b>không kết quả nào</b>. Trong <code>backend/src/test/.../notification/infrastructure/webpush/</code> chỉ có <code>WebPushPropertiesTest.java</code>.</td><td>Bốn lớp — ký JWT VAPID, mã hoá RFC 8291, đường cong P-256, và toàn bộ ánh xạ mã HTTP → outcome — <b>chưa từng được chạy bởi một ca kiểm nào</b>. Con số "test xanh" của toàn dự án nói đúng về mọi thứ khác, và nói <b>không gì cả</b> về tiêu chí ra số 7.</td></tr>
+    <tr><td><b>Không có handler <code>pushsubscriptionchange</code></b></td><td>Chuỗi ấy xuất hiện <b>0 lần</b> trong <code>frontend/worker/</code>, <code>frontend/src/</code>, <code>frontend/public/</code>.</td><td>Trình duyệt <b>xoay endpoint</b> của subscription theo định kỳ hoặc sau khi đẩy thất bại. Không bắt sự kiện ấy thì thiết bị im lặng ngừng nhận, còn cơ sở dữ liệu giữ một dòng chết cho tới khi push service trả 410 — có thể là nhiều tháng.</td></tr>
+    <tr><td><b>Lệch hợp đồng payload</b></td><td>Backend gửi <code>title/body/url/tag/eventId</code> (<code>WebPushAdapter.java:203-213</code>); service worker khai <code>notificationId</code> (<code>frontend/worker/index.ts:23</code>).</td><td>Trường ấy <b>không bao giờ tới</b>, nên bấm vào thông báo không đánh dấu đã đọc được. Lỗi nhỏ, nhưng nó chứng minh hai bên chưa từng nói chuyện với nhau bằng dữ liệu thật.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Điểm cần công bằng:</b> phần <i>dọn subscription bị thu hồi</i> mà tiêu chí ra số 7 đòi thì
+  <b>mã đã có</b> — <code>WebPushAdapter.interpret()</code> gọi
+  <code>subscriptions.deleteByEndpoint()</code> khi gặp 404/410
+  (<code>WebPushAdapter.java:176-181</code>). Việc D không phải viết lại nó, mà là
+  <b>chứng minh nó chạy</b>.
+</p>
+
+<h3>D.2 · Việc phải làm</h3>
+
+<ol>
+  <li><b>Sinh cặp khoá VAPID riêng cho từng môi trường</b> (dev / staging / prod), nạp bằng
+    <code>GIAPHA_WEBPUSH_PUBLIC_KEY</code> / <code>GIAPHA_WEBPUSH_PRIVATE_KEY</code>. Thiết kế đã
+    đúng và <b>không cần sửa</b>: <code>WebPushProperties</code> cố ý không có giá trị mặc định và
+    không xuất hiện trong <code>application.yml</code>. <b>Không commit khoá. Không đặt khoá vào bất
+    kỳ tệp nào trong repo.</b> Dùng chung một cặp khoá giữa các môi trường nghĩa là bản dev đẩy được
+    thông báo tới điện thoại thật của người trong họ.</li>
+  <li><b>Test tầng mã hoá bằng vector chuẩn.</b> RFC 8291 có vector kiểm thử công bố. Không dùng nó
+    thì "gửi được" chỉ chứng minh với đúng một trình duyệt trong đúng một buổi chiều.</li>
+  <li><b>Test ánh xạ mã HTTP → outcome bằng máy chủ HTTP giả</b>: 201 · 410 · 429 · 401 · lỗi mạng.</li>
+  <li><b><code>pushsubscriptionchange</code></b>: service worker tự đăng ký lại và POST endpoint mới
+    kèm <b>endpoint cũ</b>, để backend xoá dòng cũ thay vì để lại rác.</li>
+  <li><b>Dọn định kỳ</b> bản ghi lâu không dùng / thất bại liên tiếp. <b>Cái giá:</b> ngưỡng chặt sẽ
+    xoá nhầm thiết bị của người đi vắng dài ngày — đề xuất ngưỡng rộng (khoảng 180 ngày, là
+    <i>ước lượng</i>, cần đo lại sau khi có người dùng thật) và ghi log mỗi lần xoá.</li>
+  <li><b>Sửa lệch hợp đồng payload</b> ở một trong hai đầu, kèm test hợp đồng để nó không lệch lại.</li>
+  <li><b>iOS</b>: chỉ chạy khi PWA đã cài vào màn hình chính. Giao diện hướng dẫn đã có
+    (<code>frontend/src/components/notifications/ios-install-guide.tsx</code>); nghiệm thu phải gồm
+    <b>một iPhone thật</b>, vì đây là nhóm kiều bào đông và là nhóm dễ rơi nhất.</li>
+</ol>
+
+<h3>D.3 · Tiêu chí nghiệm thu — máy chấm</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Khẳng định</th><th>Loại</th></tr></thead>
+  <tbody>
+    <tr><td>Vector kiểm thử RFC 8291 → <code>WebPushCipher</code> sinh đúng bản mã mong đợi.</td><td>Test đơn vị</td></tr>
+    <tr><td>Stub trả <b>201</b> → outcome <code>SENT</code>, <code>push_subscription.last_used_at</code> đổi.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Stub trả <b>410</b> → dòng <b>biến mất</b> khỏi <code>push_subscription</code>, outcome <code>SKIPPED</code>, <b>không</b> ném (không vào DLQ). <i>Đây chính là nửa sau của tiêu chí ra số 7.</i></td><td>IT Testcontainers</td></tr>
+    <tr><td>Stub trả <b>429</b> → <code>RETRYABLE</code>, dòng <b>còn nguyên</b>, số lần thất bại tăng.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Stub trả <b>401</b> → không retry, log mức <code>ERROR</code>.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Một người có 3 thiết bị, 2 thiết bị trả 410 và 1 trả 201 → kết quả tổng hợp là <code>SENT</code>, và đúng 2 dòng bị xoá.</td><td>IT Testcontainers</td></tr>
+    <tr><td>Người <b>từ chối</b> quyền push → vẫn có đúng 1 dòng trong <code>notification_inbox</code>. <i>Tiêu chí ra số 8.</i></td><td>IT Testcontainers</td></tr>
+    <tr><td><b>Người chấm:</b> bảng ba dòng — Android Chrome · máy tính để bàn · iPhone đã cài PWA — mỗi dòng một ảnh chụp màn hình thông báo, kèm <code>notification_log.status = 'SENT'</code> tương ứng.</td><td>Thủ công, có bằng chứng lưu lại</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>D.4 · Ước lượng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Ngày-người (ước lượng)</th></tr></thead>
+  <tbody>
+    <tr><td>Sinh khoá + runbook nạp biến môi trường ba môi trường</td><td class="so">0,5–1</td></tr>
+    <tr><td>Test đơn vị tầng mã hoá + vector RFC 8291</td><td class="so">1,5–2</td></tr>
+    <tr><td>IT ánh xạ mã HTTP (5 ca) bằng stub</td><td class="so">1,5–2</td></tr>
+    <tr><td><code>pushsubscriptionchange</code> (worker + backend nhận endpoint cũ)</td><td class="so">1,5–2</td></tr>
+    <tr><td>Dọn định kỳ + sửa lệch hợp đồng payload</td><td class="so">1</td></tr>
+    <tr><td>Nghiệm thu ba thiết bị thật, gồm iPhone</td><td class="so">1</td></tr>
+    <tr><td><b>Cộng</b></td><td class="so"><b>7–9</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>6. Việc E — Sáu lỗi tiếp cận còn lại</h2>
+
+<p>
+  Nguồn: <code>design/README.md</code>, mục <i>"Chưa sửa — phát hiện mới"</i>. Bộ kiểm hồi quy
+  <b>đã tồn tại</b> và đã viết sẵn ca kiểm cho từng lỗi — nghĩa là tiêu chí nghiệm thu của việc E
+  không phải soạn mới, chỉ phải làm cho xanh.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Lỗi</th><th>Vị trí đo được</th><th>Cách sửa &amp; cái giá</th><th>Phép kiểm sẵn có</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Liên kết thanh đầu trang cao 20px</b> (sàn 44px)</td>
+      <td><code>frontend/src/components/layout/header.tsx:62</code> — <code>&lt;Link&gt;</code> chỉ có màu chữ, <b>không có</b> chiều cao tối thiểu hay đệm nào.</td>
+      <td>Cho mỗi liên kết <code>inline-flex</code> + chiều cao tối thiểu 44px + đệm ngang. <b>Cái giá:</b> cụm điều hướng nở ngang; chú thích trong chính tệp ấy đã cảnh báo rằng ở 393px mỗi pixel khoảng cách bị nhân lên năm lần — nên phải đo lại chiều cao thanh đầu trang trên Pixel 5 sau khi sửa.</td>
+      <td><code>e2e/accessibility.spec.ts</code> C-3.1</td>
+    </tr>
+    <tr>
+      <td><b>Lịch giỗ: 73/76 điều khiển dưới sàn</b>, nút ngày 156×18px</td>
+      <td><code>frontend/src/components/events/event-year-calendar.tsx:90</code> — nút ngày là <code>p-0 text-[12px]</code>, không khai chiều cao.</td>
+      <td><span class="canh">Không phải việc CSS.</span> Nới mỗi hàng lên 44px trên lưới 12 tháng làm màn hình dài ra gấp nhiều lần trên điện thoại. Phải <b>đổi bố cục</b>: chỉ mở một tháng, hoặc chuyển sang danh sách theo tháng. <b>Đây là hạng mục ước lượng dễ trượt nhất của việc E.</b></td>
+      <td>C-3.1 (điện thoại)</td>
+    </tr>
+    <tr>
+      <td><b>Hồ sơ: 39/61 đoạn chữ dưới 16px</b>; thẻ <code>"Tên chính"</code> chỉ 10px</td>
+      <td>Đếm toàn cây: <b>123</b> lần dùng lớp <code>text-[10px]</code>…<code>text-[15px]</code> trong <code>frontend/src/**/*.tsx</code>. Thấp nhất: <code>person/person-name-layers.tsx:39</code> — <code>!text-[10px]</code>. Tập trung ở <code>correction/</code> (19 lần), <code>person/</code>, <code>kinship/</code>, <code>notifications/</code>.</td>
+      <td>Nâng sàn lên 16px và <b>đổi cách nhấn phụ</b>: dùng màu, độ đậm, khoảng cách thay cho cỡ chữ. <b>Cái giá:</b> mọi thẻ dày lên; vài bố cục hai cột sẽ phải xuống một cột trên điện thoại. <b>Đây không phải "một lỗi"</b> mà là khoảng 40 tệp.</td>
+      <td>C-1.1, C-1.2</td>
+    </tr>
+    <tr>
+      <td><b><code>&lt;Select&gt;</code> không có dấu hiệu tiêu điểm nào thấy được</b> (1,00:1)</td>
+      <td><code>frontend/src/app/globals.css:141-151</code> — quy tắc vòng tiêu điểm loại trừ mọi widget AntD bằng <code>:not([class*="ant-"])</code>, trên cả 10 bộ chọn.</td>
+      <td>Bỏ loại trừ, rồi xử lý riêng nhóm widget mà AntD đặt tiêu điểm lên ô ẩn (nhắm <code>.ant-select-focused .ant-select-selector</code>). <b>Thuận lợi:</b> bộ kiểm đã biết leo lên tổ tiên để chấm đúng phần tử mang vòng (hàm <code>readFocusIndicator</code> trong <code>accessibility.spec.ts</code>), nên nó sẽ chấm đúng chỗ. <b>Cái giá:</b> phải rà lại mọi widget AntD đang dùng, không chỉ <code>Select</code>.</td>
+      <td>C-4.3</td>
+    </tr>
+    <tr>
+      <td><b>Thiếu liên kết "bỏ qua, tới nội dung chính"</b></td>
+      <td>Ca kiểm đã viết sẵn: <code>e2e/accessibility.spec.ts:669</code> — <i>"điểm dừng Tab đầu tiên là liên kết bỏ qua tới nội dung chính"</i>, khớp <code>/bỏ qua|skip|#main|#noi-dung/i</code>.</td>
+      <td>Thêm vào <code>src/app/[locale]/layout.tsx</code>, trỏ tới <code>#main</code>, hiện khi nhận tiêu điểm. <b>Rẻ nhất trong sáu.</b> Nhớ chuỗi cho <b>cả hai</b> ngôn ngữ.</td>
+      <td>C-4.5</td>
+    </tr>
+    <tr>
+      <td><b>Huy hiệu đếm thông báo</b>: 2,07:1 chế độ tối · 3,19:1 chế độ sáng</td>
+      <td><code>design/README.md</code> §"Chưa sửa"</td>
+      <td><span class="canh">Không tự quyết được.</span> Nó chạm đúng bảng màu đang có <b>bất đồng chưa chốt</b> (design README, "Còn đỏ có chủ ý" §2: sửa bảng màu là phá quyết định vật liệu đã chốt ở BA v2). Hai lựa chọn trình lên: (a) đổi nền huy hiệu sang cặp đạt ≥4,5:1 ở cả hai chế độ, giữ hổ phách cho chỗ trang trí; (b) giữ màu, đổi huy hiệu thành chữ + viền. <b>Phải chốt trước khi code.</b></td>
+      <td><code>frontend/tests/unit/a11y/token-contrast.test.ts</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đừng ước lượng theo "sáu lỗi"</p>
+  <p>
+    Bộ kiểm chạy trên <b>6 màn hình</b> (<code>accessibility.spec.ts:52-58</code>: trang chủ · phả
+    đồ · hồ sơ · tìm kiếm · tra danh xưng · lịch giỗ) × <b>2 thiết bị</b> (desktop-chromium,
+    Pixel 5), và nó chấm <b>mọi</b> phần tử có chữ, <b>mọi</b> điểm dừng Tab. Sửa một chỗ rất dễ làm
+    đỏ chỗ khác — nâng cỡ chữ làm vỡ bố cục, làm chồng phần tử, làm một nút tụt xuống dưới sàn chạm.
+  </p>
+  <p>
+    Đơn vị ước lượng đúng là <b>"6 màn × 2 thiết bị, lặp cho tới khi xanh"</b>, không phải "6 lỗi".
+  </p>
+</div>
+
+<h3>E.1 · Tiêu chí nghiệm thu</h3>
+
+<ul>
+  <li><code>npx playwright test e2e/accessibility.spec.ts</code> — <b>xanh trên cả
+    desktop-chromium và Pixel 5</b>, không skip, không <code>test.fixme</code>.</li>
+  <li><code>npm run test:unit -- tests/unit/a11y</code> — xanh (4 tệp:
+    <code>contrast-formula</code>, <code>no-hardcoded-colors</code>,
+    <code>tailwind-token-coverage</code>, <code>token-contrast</code>).</li>
+  <li><code>npm run typecheck</code> và <code>npm run lint</code> — cả hai xanh.</li>
+  <li><b>Không nới lỏng phép kiểm để làm nó xanh.</b> Nếu một ca kiểm phải đổi thì đổi ấy cần lý do
+    viết ra và người thứ hai duyệt — hạ ngưỡng để lấy màu xanh là tự bác bỏ cả bộ kiểm.</li>
+  <li>Đo lại NFR-1 sau khi sửa, trên bản dựng thật (<code>next build &amp;&amp; next start</code>),
+    vì việc E đụng vào bố cục của cả sáu màn. Ngân sách 2000 ms.</li>
+</ul>
+
+<h3>E.2 · Ước lượng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Ngày-người (ước lượng)</th></tr></thead>
+  <tbody>
+    <tr><td>Liên kết "bỏ qua tới nội dung chính" (2 ngôn ngữ)</td><td class="so">0,5</td></tr>
+    <tr><td>Vùng chạm thanh đầu trang + đo lại chiều cao trên Pixel 5</td><td class="so">1</td></tr>
+    <tr><td>Lịch giỗ — <b>đổi bố cục</b>, không phải chỉnh CSS</td><td class="so">2–4</td></tr>
+    <tr><td>Nâng sàn cỡ chữ trên khoảng 40 tệp + sửa bố cục vỡ theo</td><td class="so">2–3</td></tr>
+    <tr><td>Vòng tiêu điểm cho widget AntD (rà toàn bộ, không chỉ <code>Select</code>)</td><td class="so">1,5–2</td></tr>
+    <tr><td>Huy hiệu đếm thông báo (sau khi có quyết định màu)</td><td class="so">0,5</td></tr>
+    <tr><td>Lặp cho tới khi bộ kiểm xanh trên cả hai thiết bị</td><td class="so">1,5–2</td></tr>
+    <tr><td><b>Cộng</b></td><td class="so"><b>9–13</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7. Thứ tự và tổng ước lượng</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Việc</th><th>Ngày-người (ước lượng)</th><th>Người</th><th>Phụ thuộc</th></tr></thead>
+  <tbody>
+    <tr><td><span class="chip must">A0</span> Tuyến giấy tờ Zalo</td><td class="so">0 <i>(dev)</i></td><td>Hội đồng + chủ đầu tư</td><td><b>Không phụ thuộc gì.</b> Khởi động ngày đầu.</td></tr>
+    <tr><td><span class="chip must">D</span> Web Push thiết bị thật</td><td class="so">7–9</td><td>Backend + 1 buổi frontend</td><td>Không</td></tr>
+    <tr><td><span class="chip must">C</span> Endpoint công khai</td><td class="so">9–13</td><td>Backend + frontend</td><td>Không (nhưng cần công tắc do Hội đồng bật)</td></tr>
+    <tr><td><span class="chip must">B</span> Bộ áp dụng đính chính</td><td class="so">13–18</td><td>Backend + frontend</td><td>Không về mã; cần quyết về ca "duyệt thứ mình không xem được"</td></tr>
+    <tr><td><span class="chip must">A</span> Mã Zalo ZNS</td><td class="so">13–19</td><td>Backend</td><td><b>Bước kiểm chứng cuối chờ A0</b></td></tr>
+    <tr><td><span class="chip should">E</span> Sáu lỗi tiếp cận</td><td class="so">9–13</td><td>Frontend</td><td>Cần quyết màu huy hiệu (mục 6, dòng cuối)</td></tr>
+    <tr><td><b>Cộng</b></td><td class="so"><b>51–72</b></td><td colspan="2">Một người ≈ 11–15 tuần. Hai người (1 backend + 1 frontend) ≈ 6–8 tuần, <b>nếu</b> tuyến giấy tờ không dài hơn thế.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Thứ tự khuyến nghị, và lý do từng bước</h3>
+
+<ol>
+  <li>
+    <b>A0 — tuyến giấy tờ Zalo, khởi động ngay ngày đầu tiên.</b> Tốn <b>0 ngày-người của lập trình
+    viên</b> nhưng là đường dài nhất về lịch, và nó có thể <b>hỏng hoàn toàn</b> ở bước "ai đứng tên
+    OA". Biết sớm thì còn đổi được kênh; biết muộn thì mất cả đợt.
+  </li>
+  <li>
+    <b>D — Web Push.</b> Rẻ nhất, và nó <b>chứng minh đường ống bất đồng bộ còn sống</b> trước khi
+    cắm thêm một kênh nữa vào. Nếu chưa từng có một tin nào tới thiết bị thật thì khi Zalo hỏng sẽ
+    không ai phân biệt được lỗi ở adapter Zalo hay ở đường ống. Ngoài ra D chính là <b>đường lui
+    thật sự</b> khi Zalo không tới được (§A.6) — làm đường lui sau kênh chính là thứ tự ngược.
+  </li>
+  <li>
+    <b>C — endpoint công khai.</b> Bề mặt <b>chỉ đọc</b>, rủi ro ghi bằng không, và nó mở lại nửa
+    "cổng thông tin" đang đóng. Đặt trước B vì B sửa dữ liệu, còn C thì không — hỏng C thì sửa được
+    bằng một lần tắt công tắc, hỏng B thì đã ghi sai vào gia phả.
+  </li>
+  <li>
+    <b>B — bộ áp dụng đính chính.</b> Việc nguy hiểm nhất: nó là thứ duy nhất trong năm việc
+    <b>ghi vào cây</b>. Làm sau khi ba việc trên đã ổn định để lúc có sự cố không phải đoán nguyên
+    nhân giữa bốn thay đổi cùng lúc. Cũng vì nó là chuyến tàu đầu tiên trên đường ray domain event
+    (§B.1) — nên nó cần đầu óc tỉnh táo nhất, không phải cuối đợt kiệt sức.
+  </li>
+  <li>
+    <b>A — mã Zalo.</b> Viết khi A0 đã cho sandbox và mẫu tin đã duyệt. Viết sớm hơn thì <b>không có
+    gì để kiểm chứng</b> ngoài máy chủ giả, mà máy chủ giả thì trả đúng thứ ta tưởng gateway sẽ trả
+    — nó xác nhận giả định của ta chứ không xác nhận thực tế.
+  </li>
+  <li>
+    <b>E — sáu lỗi tiếp cận, chạy song song suốt đợt</b> bởi người frontend. Nó gần như không tranh
+    chấp tệp với bốn việc kia (E đụng <code>components/</code> và <code>globals.css</code>; C đụng
+    <code>lib/api/</code>; B đụng <code>components/correction/</code> — <b>đây là chỗ va chạm duy
+    nhất</b>, nên xếp E làm <code>correction/</code> <i>trước</i> khi B chạm vào).
+  </li>
+</ol>
+
+<div class="khoi chot">
+  <p class="nhan">Nếu chỉ có một người và phải cắt</p>
+  <p>
+    Thứ tự cắt: giữ <b>D</b> và <b>E</b> (rẻ, đóng đúng hai tiêu chí ra), giữ <b>B</b> (vì giao diện
+    duyệt đã ship và đang nói dối người dùng), hoãn <b>C</b> (cổng thông tin đóng thì khó chịu chứ
+    không sai), hoãn <b>A</b> phần mã — nhưng <b>không bao giờ hoãn A0</b>, vì nó không tốn ngày-người
+    nào.
+  </p>
+</div>
+
+<h2>8. Định nghĩa "xong" của đợt A</h2>
+
+<p>Đợt A xong khi <b>toàn bộ</b> danh sách dưới đây đúng. Không mục nào được đánh dấu bằng lời hứa.</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Máy chấm</h4>
+    <p><code>./mvnw test</code> xanh, số test <b>không giảm</b> so với mốc 00 §1.</p>
+    <p><code>./mvnw -Dtest=ModularityTests test</code> xanh.</p>
+    <p><code>npx playwright test</code> xanh trên desktop-chromium <b>và</b> Pixel 5, gồm
+    <code>accessibility.spec.ts</code> và <code>guest-privacy.spec.ts</code>.</p>
+    <p><code>npm run typecheck</code> · <code>npm run lint</code> xanh.</p>
+    <p class="day">Mỗi tiêu chí trong §A.7, §B.7, §C.5, §D.3 có một ca kiểm mang tên tương ứng.</p>
+  </div>
+  <div class="the">
+    <h4>Người chấm, có bằng chứng lưu lại</h4>
+    <p>Một tin Web Push tới <b>ba loại thiết bị</b> thật, gồm một iPhone đã cài PWA.</p>
+    <p>Một tin ZNS thật tới một số thật, có mã tin trong <code>notification_log</code>.</p>
+    <p>Một yêu cầu đính chính đi trọn vòng: gửi → duyệt → <b>gia phả đổi</b> → hai dòng audit nối
+    được với nhau.</p>
+    <p class="day">Ảnh chụp màn hình và truy vấn SQL kèm theo, không phải lời kể.</p>
+  </div>
+  <div class="the">
+    <h4>Hội đồng chấm</h4>
+    <p>Biên bản chốt <b>pháp nhân đứng tên OA</b>.</p>
+    <p>Biên bản đồng ý <b>công khai người đã khuất ra internet</b>, và bật công tắc.</p>
+    <p>Duyệt <b>lời văn</b> mẫu tin ZNS trước khi nộp xin duyệt.</p>
+    <p>Chốt <b>D-1 hay cả ba mốc</b> đi ZNS — quyết định ngân sách, xem §A.5.</p>
+    <p class="day">Bốn việc này <b>không có đường vòng kỹ thuật</b>.</p>
+  </div>
+</div>
+
+<h2>9. Sổ rủi ro của đợt A</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Rủi ro</th><th>Dấu hiệu sớm</th><th>Làm gì</th></tr></thead>
+  <tbody>
+    <tr><td><b>Dòng họ không đủ tư cách đăng ký OA</b></td><td>Hồ sơ bị trả về ở bước xác minh</td><td>Kịch bản B: một thành viên có pháp nhân đứng tên, kèm thoả thuận bằng văn bản. Kịch bản C: bỏ Zalo, dựa vào Web Push + in-app, sửa lại BA v2 §11. <b>Phải biết trong 3 tuần đầu.</b></td></tr>
+    <tr><td><b>Mẫu tin ZNS bị trả về nhiều vòng</b></td><td>Vòng duyệt thứ hai bị từ chối</td><td>Nộp <b>một</b> mẫu tối giản trước để thông đường, mẫu đẹp nộp sau. Đừng nộp ba mẫu cùng lúc rồi cả ba cùng kẹt.</td></tr>
+    <tr><td><b>Chi phí ZNS vượt dự tính</b></td><td>Ước lượng §A.5 nhân với đơn giá thật cho ra số ngoài khả năng</td><td>Cắt về D-1. Nếu vẫn vượt: chỉ gửi ZNS cho giỗ cấp dòng họ và giỗ tổ chi; giỗ thường đi in-app + Web Push.</td></tr>
+    <tr><td><b>Việc B làm hỏng dữ liệu thật</b></td><td>—</td><td>Bật bộ áp dụng theo <b>cờ cấu hình</b>, chạy trên dữ liệu demo trước; và vì mọi thứ nằm trong một transaction, ca lỗi <b>không để lại dấu vết</b> (đó là lý do chọn phương án 1, §B.4).</td></tr>
+    <tr><td><b>Việc C rò một người còn sống</b></td><td>Ca kiểm quét ánh xạ đỏ</td><td>Ca kiểm ở §C.5 tự phủ endpoint thêm về sau. Cộng công tắc tắt được ngay lập tức mà không cần triển khai lại.</td></tr>
+    <tr><td><b>Việc E kéo dài quá ước lượng</b></td><td>Sửa lịch giỗ sang ngày thứ ba mà chưa xanh</td><td>Tách màn lịch giỗ thành hạng mục riêng và thương lượng lịch cho nó, đừng để nó kéo năm lỗi kia theo.</td></tr>
+    <tr><td><b>Không ai nhìn DLQ</b></td><td>Không có ai cả — đó chính là rủi ro</td><td>Chỉ số + ngưỡng cảnh báo là <b>một phần của việc A</b>, không phải việc "sau này làm". Một cái giỗ trôi qua không ai được nhắc là hỏng đúng mục đích của cả tính năng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Thứ tự ưu tiên khi mâu thuẫn: <b>BA v2 → design/00-dinh-huong.html → plan/00-tong-the.html →
+    tài liệu này</b>. Chỗ nào tài liệu này trái với 00 thì 00 thắng.
+  </p>
+  <p>
+    <b>Bốn câu hỏi tài liệu này không tự trả lời được</b>, xếp theo mức chặn: (1) ai đứng tên Zalo
+    OA · (2) có công khai người đã khuất ra internet không · (3) ZNS gửi cả ba mốc hay chỉ D-1 ·
+    (4) màu huy hiệu đếm thông báo, vì nó chạm bảng màu đang có bất đồng chưa chốt.
+  </p>
+  <p>
+    Mọi số đếm trong tài liệu này lấy từ cây mã ngày <b>10/09/2026</b>, kèm đường dẫn để chạy lại.
+    Mọi con số có chữ <i>ước lượng</i> là phán đoán, không phải đo.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

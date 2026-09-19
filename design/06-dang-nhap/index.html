@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đăng nhập &amp; nhận lời mời — Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<nav class="dieu-huong">
+  <a href="../00-dinh-huong.html">00 · Định hướng</a> ·
+  <a href="../02-he-thong-thiet-ke/index.html">02 · Hệ thống thiết kế</a> ·
+  <a href="../03-kien-truc-thong-tin/03-kien-truc-thong-tin.html">03 · Kiến trúc thông tin</a> ·
+  <a href="../04-luong-trai-nghiem/04-luong-trai-nghiem.html">04 · Luồng trải nghiệm</a> ·
+  <b>06 · Đăng nhập</b>
+</nav>
+
+<header class="dau">
+  <p class="nhan-tren">Hệ thống Quản lý Gia phả &amp; Cổng thông tin Dòng họ · Tài liệu 06</p>
+  <h1>Đăng nhập &amp; nhận lời mời</h1>
+  <p class="tom-tat">
+    Tài liệu <strong>đề xuất thiết kế</strong>, chưa phải lệnh thi công. Nó trả lời ba câu hỏi của
+    chủ dự án, đưa <strong>ba phương án</strong> cho màn đăng nhập kèm đánh đổi của từng phương án,
+    và thiết kế các màn phụ: nhận lời mời, quên mật khẩu, năm trạng thái lỗi, lối vào chế độ khách.
+    <strong>Kết luận quan trọng nhất nằm ở mục 1</strong> — hôm nay sản phẩm <em>không có</em> màn
+    đăng nhập nào cả, nên đây không phải việc sửa một màn hình mà là việc quyết định có nên sở hữu
+    nó hay không.
+  </p>
+</header>
+
+<h2>0. Cách đọc, phạm vi, quy ước</h2>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phạm vi</h4>
+    <p>
+      Sáu màn: đăng nhập · nhận lời mời · người lạ mò vào · quên mật khẩu · năm trạng thái lỗi ·
+      lối vào chế độ khách. Cộng bản điện thoại cho từng màn.
+    </p>
+    <p class="day">Ngoài phạm vi: luồng nhập môn ba câu hỏi <em>sau khi</em> đăng nhập — đã có ở <a href="../03-kien-truc-thong-tin/03-kien-truc-thong-tin.html">03 §5 và §6.4</a>. Tài liệu này <b>bàn giao</b> sang đó, không vẽ lại.</p>
+  </div>
+  <div class="the">
+    <h4>Quy ước đo</h4>
+    <p>
+      1 đơn vị SVG = 1 pixel thật. Khung điện thoại 390, khung máy tính 1280 (theo README của thư
+      mục <code>design/</code>). Mọi vùng chạm trong khung dây ≥ 44×44.
+    </p>
+    <p class="day">Mọi số px ở đây là <b>đề xuất vẽ ra</b>, không phải số đo từ trình duyệt — khác tài liệu 02 vốn đo trên sản phẩm đang chạy. Xem mục 12.</p>
+  </div>
+  <div class="the">
+    <h4>Nguồn số liệu</h4>
+    <p>
+      Số nào nói về hiện trạng đều dẫn tệp: <code>infra/keycloak/realm-giapha.json</code>,
+      <code>frontend/src/lib/auth/*</code>, <code>backend/.../membership/*</code>.
+    </p>
+    <p class="day">Số nào không dẫn tệp là <b>đề xuất</b>, và được ghi rõ là đề xuất.</p>
+  </div>
+</div>
+
+<h2>1. Hiện trạng: màn đăng nhập này không tồn tại</h2>
+
+<p>
+  Đề bài nói “thiết kế lại màn đăng nhập”. Việc đầu tiên phải nói thẳng: <b>không có màn nào để
+  thiết kế lại.</b> Trong <code>frontend/src/app/[locale]/</code> có hai mươi tuyến — phả đồ, hồ
+  sơ, tìm kiếm, lịch giỗ, nhập liệu, cài đặt — và <b>không có tuyến đăng nhập</b>. Toàn bộ việc
+  “đăng nhập” nằm trong bốn dòng của <code>src/lib/auth/auth-context.tsx</code>.
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Điều đang thực sự xảy ra khi bấm “Đăng nhập”</p>
+  <p>
+    <code>login()</code> gọi <code>keycloak.login({ redirectUri: window.location.href })</code>.
+    Trình duyệt <b>rời khỏi sản phẩm</b>, sang <code>http://localhost:8081</code> — trang đăng nhập
+    <b>mặc định của Keycloak</b>. Trong <code>realm-giapha.json</code> không có khoá
+    <code>loginTheme</code>, nghĩa là giao diện ấy là giao diện gốc của Keycloak, không phải của
+    dòng họ.
+  </p>
+  <p>
+    Hệ quả: <b>bảy nguyên tắc của tài liệu 00 không có hiệu lực trên màn hình đầu tiên mà người
+    trong họ nhìn thấy.</b> Cỡ chữ, vùng chạm 44px, biểu tượng kèm chữ, “nói tiếng của dòng họ”,
+    song ngữ không đối xứng — không điều nào trong số đó được kiểm soát ở trang ấy. Cụ bảy mươi
+    tuổi mở ứng dụng gia phả họ mình và nhìn thấy một hộp đăng nhập không tên, không một dấu hiệu
+    nào nói rằng đây là họ Nguyễn.
+  </p>
+</div>
+
+<h3>1.1 · Bảy nguyên tắc, đối chiếu với thứ đang chạy</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Nguyên tắc (00 §2)</th><th>Hiện trạng</th><th>Bằng chứng</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 · Không có “chế độ người già”</td>
+      <td class="tot">Không vi phạm</td>
+      <td>Không có công tắc nào. Nhưng cũng vì không có màn nào.</td>
+    </tr>
+    <tr>
+      <td>2 · Sàn 16px / 44×44px</td>
+      <td class="xau">Không kiểm soát được</td>
+      <td>Trang đăng nhập do Keycloak dựng; <code>loginTheme</code> không được khai trong <code>realm-giapha.json</code>.</td>
+    </tr>
+    <tr>
+      <td>3 · Biểu tượng luôn kèm chữ</td>
+      <td class="xau">Vi phạm, kiểm được</td>
+      <td><code>auth-menu.tsx</code>: nhãn nút bọc trong <code>className="hidden sm:inline"</code>. Dưới 640px — tức là <b>trên mọi điện thoại</b> — nút đăng nhập chỉ còn cái biểu tượng mũi tên vào cửa, <b>không chữ</b>.</td>
+    </tr>
+    <tr>
+      <td>4 · Không thao tác khó thu hồi trong im lặng</td>
+      <td class="canh">Chưa tới lượt</td>
+      <td>Chưa có thao tác nào trên màn này. Nhưng “đặt lại mật khẩu” và “nhận một node trong phả” <b>đều</b> khó thu hồi — xem mục 5 và 6.</td>
+    </tr>
+    <tr>
+      <td>5 · Nói tiếng của dòng họ</td>
+      <td class="xau">Vi phạm</td>
+      <td>Trang Keycloak nói “Username or email”, “Sign in”. Không có chữ <em>dòng họ</em>, <em>chi</em>, <em>phả</em> nào.</td>
+    </tr>
+    <tr>
+      <td>6 · Song ngữ không đối xứng</td>
+      <td class="canh">Một nửa</td>
+      <td><code>internationalizationEnabled: true</code>, <code>supportedLocales: ["vi","en"]</code>, <code>defaultLocale: "vi"</code> — có. Nhưng bản dịch là bản dịch <em>của Keycloak</em>, không phải bản tiếng Việt do dòng họ viết, và nó không biết giữ nguyên thuật ngữ dòng họ như 00 §2.6 đòi.</td>
+    </tr>
+    <tr>
+      <td>7 · Quyền riêng tư nhìn thấy được</td>
+      <td class="xau">Vi phạm</td>
+      <td>Màn đăng nhập không nói một chữ nào về việc khách xem được gì. Khách không hề biết mình có thể vào xem người đã khuất mà không cần tài khoản.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>1.2 · Năm thứ đang hỏng hoặc đang thiếu, có dẫn nguồn</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Việc</th><th>Nguồn</th><th>Vì sao đắt</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="so">1</td>
+      <td><b>“Quên mật khẩu” hiện ra nhưng thư không bao giờ gửi.</b></td>
+      <td><code>realm-giapha.json</code>: <code>resetPasswordAllowed: true</code>, và <b>không có khoá <code>smtpServer</code></b>.</td>
+      <td>Keycloak in liên kết “Forgot Password?” lên trang đăng nhập vì cờ kia bật. Người dùng bấm, nhập email, nhận màn “đã gửi”, rồi ngồi đợi một lá thư không tồn tại. <b>Tệ hơn là không có liên kết ấy</b> — nó tiêu mất một lượt cầu cứu.</td>
+    </tr>
+    <tr>
+      <td class="so">2</td>
+      <td><b>Không có đường đăng ký nào, kể cả cho người được mời.</b></td>
+      <td><code>registrationAllowed: false</code>. Không có tuyến <code>moi/</code> hay <code>dang-ky/</code> trong <code>src/app/[locale]/</code>.</td>
+      <td>Tài khoản chỉ ra đời nếu ai đó vào bảng quản trị Keycloak tạo tay. Ba tài khoản đang có (<code>admin.giapha</code>, <code>truongchi</code>, <code>thanhvien</code>) là tài khoản seed. Không có cách nào đưa người thứ tư vào.</td>
+    </tr>
+    <tr>
+      <td class="so">3</td>
+      <td><b><code>ACCOUNT_NOT_PROVISIONED</code> không có chỗ nào để hiện.</b></td>
+      <td><code>MembershipProblemCodes.java:31</code>; ném ở <code>AppUserProvisioningService.requireCurrentUser()</code>. Vùng <code>auth</code> trong <code>messages/vi.json</code> có <b>bảy khoá, không khoá nào là lỗi</b>.</td>
+      <td>Người đăng nhập thành công nhưng chưa được nối với nhân khẩu nào sẽ nhận lỗi này từ <em>bất kỳ</em> lời gọi API nào. Không màn nào đón nó.</td>
+    </tr>
+    <tr>
+      <td class="so">4</td>
+      <td><b>Trưởng chi không có quyền nối tài khoản với nhân khẩu.</b></td>
+      <td><code>AppUserProvisioningService.linkToPerson()</code> gọi <code>guard.requireClanWide(...)</code> — tức chỉ <code>COUNCIL</code> và <code>ADMIN</code>.</td>
+      <td>Mọi thiết kế “trưởng chi mời người của chi mình” <b>chưa chạy được</b> hôm nay. Hoặc sửa backend, hoặc mọi lời mời phải qua Hội đồng. Đây là ràng buộc nghiệp vụ, không phải chi tiết kỹ thuật — xem mục 5.6.</td>
+    </tr>
+    <tr>
+      <td class="so">5</td>
+      <td><b>Chế độ khách hứa nhiều hơn backend trả.</b></td>
+      <td><code>design/README.md</code> đã ghi: <code>SecurityConfig</code> dành sẵn <code>/api/v1/public/**</code> nhưng <b>không controller nào ánh xạ vào đó</b>.</td>
+      <td>Mọi lời mời “xem phần công khai” ở mục 8 là lời hứa <b>chưa có hàng</b>. Thiết kế vẫn nên vẽ, nhưng phải gắn nhãn phụ thuộc.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Phiên hết hạn nhanh hơn tốc độ người ta đọc</p>
+  <p>
+    <code>ssoSessionIdleTimeout: 1800</code> — <b>ba mươi phút không thao tác là mất phiên</b>
+    (<code>accessTokenLifespan: 900</code>, <code>ssoSessionMaxLifespan: 36000</code>). Với người
+    đọc nhanh thì không sao. Với cụ ngồi đọc một trang tiểu sử, phóng chữ to, đeo kính vào rồi lấy
+    cuốn phả giấy ra đối chiếu, ba mươi phút là khoảng thời gian bình thường của <em>một</em> hồ sơ.
+    Cụ quay lại, bấm, và sản phẩm đá cụ ra giữa chừng.
+  </p>
+  <p>
+    <b>Đề xuất</b> nâng <code>ssoSessionIdleTimeout</code> lên 8 giờ cho vai <code>MEMBER</code>.
+    <b>Cái giá:</b> một máy tính bảng để quên ở nhà từ đường vẫn còn phiên suốt buổi chiều. Với vai
+    <code>COUNCIL</code>/<code>ADMIN</code> thì <b>giữ nguyên 30 phút</b> — họ đọc được Tầng 3 và
+    duyệt được đính chính, nên cái giá đổi chiều. Xem trạng thái lỗi số 5 ở mục 7.
+  </p>
+</div>
+
+<h2>2. Ba câu hỏi chủ dự án đặt ra</h2>
+
+<h3>2.1 · Người dùng đăng nhập bằng gì?</h3>
+
+<p>
+  Câu hỏi thật ở đây không phải “email hay số điện thoại”, mà: <b>thứ gì mà một cụ bảy mươi hai
+  tuổi đọc được cho con cháu nghe qua điện thoại, và gõ lại được sau sáu tháng không dùng?</b>
+  Email thua ở cả hai vế — nhiều cụ không có, và cụ nào có thì thường là hộp thư do đứa cháu lập
+  hộ, mật khẩu đứa cháu giữ, tên hộp thư kiểu <code>nguyenvanban1952@gmail.com</code> mà chính cụ
+  không nhớ là 1952 hay 1953.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Phương án</th><th>Keycloak cần gì</th><th>Được</th><th>Mất</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>A · Email + mật khẩu</b><br><span class="chip could">hiện trạng</span></td>
+      <td>Không sửa gì. <code>loginWithEmailAllowed: true</code> đã bật sẵn.</td>
+      <td>Không tốn công. “Quên mật khẩu” có đường tự phục vụ — <em>nếu</em> cấu hình SMTP.</td>
+      <td class="xau">Loại bỏ đúng nhóm người có thẩm quyền cao nhất và giữ dữ liệu quý nhất. Cụ không có email thì <b>không có tài khoản</b>, chấm hết.</td>
+    </tr>
+    <tr>
+      <td><b>B · Số điện thoại làm <code>username</code>, email là tuỳ chọn</b><br><span class="chip must">đề xuất</span></td>
+      <td>Không cần viết SPI. Ghi số đã chuẩn hoá (<code>+84…</code>) vào trường <code>username</code>; giữ <code>loginWithEmailAllowed: true</code> để ai có email vẫn dùng được.</td>
+      <td>Ai cũng có số điện thoại. Một ô nhập duy nhất nhận cả hai. <b>Không viết dòng mã Keycloak nào.</b></td>
+      <td class="canh">Ba cái giá thật, không nhỏ — xem ngay dưới bảng.</td>
+    </tr>
+    <tr>
+      <td><b>C · Số điện thoại + mã OTP, không mật khẩu</b></td>
+      <td>Authenticator SPI tự viết <em>hoặc</em> plugin trả phí, cộng một cổng SMS/ZNS có hợp đồng.</td>
+      <td>Không phải nhớ mật khẩu — đúng thứ nhóm khó nhất cần nhất.</td>
+      <td class="xau"><b>Không khả thi lúc này.</b> Cổng SMS và Zalo ZNS đều đòi <b>tư cách pháp nhân đứng tên hợp đồng</b> — đúng thứ đang chặn Zalo OA. Và mỗi tin nhắn tốn tiền, tức <em>mỗi lần đăng nhập</em> tốn tiền.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p><b>Ba cái giá của phương án B, nói rõ:</b></p>
+<ul>
+  <li>
+    <b><code>editUsernameAllowed: false</code>.</b> Lấy số điện thoại làm <code>username</code>
+    nghĩa là người dùng <b>không tự đổi được</b> khi đổi số. Hoặc bật cờ này lên (rồi chấp nhận
+    định danh đăng nhập có thể trôi), hoặc để Hội đồng đổi hộ. <b>Đề xuất giữ <code>false</code></b>:
+    đổi số là việc của Hội đồng và phải vào <code>audit_log</code>, vì đổi <code>username</code>
+    đồng nghĩa với đổi lối vào một tài khoản có thể đang đọc được Tầng 3.
+  </li>
+  <li>
+    <b>Đặt lại mật khẩu không tự phục vụ được.</b> Keycloak chỉ biết gửi thư. Không email thì không
+    có đường tự đặt lại — mọi ca rơi xuống trưởng chi. Đây là chi phí <em>lặp lại hằng năm</em>,
+    không phải chi phí một lần. Xem mục 6 và mục 12.
+  </li>
+  <li>
+    <b>Cụ không có điện thoại riêng.</b> Có thật: cụ dùng máy của con. Tài khoản không phải cái
+    máy, nên dùng chung máy vẫn được — nhưng số thì trùng, mà <code>username</code> phải duy nhất.
+    Lối thoát đề xuất: Hội đồng cấp <b>mã định danh in trên giấy</b> dạng
+    <code>giapha.giap.017</code> cho nhóm này. Xấu, nhưng thật thà hơn là giả vờ ai cũng có số riêng.
+  </li>
+</ul>
+
+<div class="khoi">
+  <p class="nhan">Cách viết nhãn ô nhập — quan trọng hơn vẻ ngoài của nó</p>
+  <p>
+    Một ô, nhãn <b>“Số điện thoại hoặc email”</b>, và ngay dưới là một dòng 16px:
+    <i>“Nếu ông/bà không có email, dùng số điện thoại.”</i> Câu này không thừa. Nó là câu duy nhất
+    trên màn hình nói với người không có email rằng <b>họ không bị bỏ ra ngoài</b> — mà đó đúng là
+    nỗi nghi ngờ khiến họ dừng lại trước khi gõ chữ đầu tiên.
+  </p>
+  <p>
+    Đừng viết <b>“Tên đăng nhập”</b>. Đó là tiếng của phần mềm (00 §2.5), và nó bắt người dùng trả
+    lời một câu hỏi họ không có dữ kiện để trả lời: “tên đăng nhập của tôi là gì?”
+  </p>
+</div>
+
+<h3>2.2 · Màn này nói gì về dòng họ?</h3>
+
+<p>
+  Hai cực đều sai. Một ô đăng nhập giữa trang trắng không nói được đây là phả của ai — người dùng
+  không có cách nào biết mình có mở đúng đường dẫn hay không, và với người lần đầu thì đó đủ là lý
+  do để đóng tab. Ngược lại, một tấm ảnh từ đường phủ kín màn hình là cách nhanh nhất để phá
+  <b>NFR-1</b> (điều hướng → thẻ người đầu tiên, ngân sách 2000 ms; sản phẩm đang ở 807 ms trên máy
+  tính và 750 ms trên Pixel 5 — dư địa có thật, nhưng một ảnh nền 400 KB trên mạng ở quê tiêu hết
+  chỗ dư ấy trong một lần tải).
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Đề xuất: một tấm biển tên, không phải một trang bìa</p>
+  <p>Ba dòng chữ, <b>không ảnh</b>, đặt trên biểu mẫu:</p>
+  <ul>
+    <li><b>Dòng 1 — tên phả</b> (D2, 26/32, serif 700): <i>“Phả họ Nguyễn — Đại Lan”</i></li>
+    <li><b>Dòng 2 — chỗ đứng trong đời thật</b> (T2, 16/24): <i>“Từ đường Đại Lan · Thanh Trì · Hà Nội”</i></li>
+    <li><b>Dòng 3 — quy mô, chỉ khi có số thật</b> (T2): <i>“14 đời · 1.500 người có tên trong phả”</i></li>
+  </ul>
+  <p>
+    Dòng 3 làm việc nặng nhất: nó nói rằng bên trong <em>có thứ gì đó</em>, và nói bằng đơn vị mà
+    người trong họ tự kiểm chứng được. <b>Nhưng hôm nay chưa lấy được số ấy</b> — cần một điểm cuối
+    công khai, mà <code>/api/v1/public/**</code> chưa có controller nào (mục 1.2 #5). Nên: giai
+    đoạn đầu để dòng 3 là <b>chữ cấu hình tĩnh, hoặc bỏ hẳn</b>. Bịa số là cách nhanh nhất để mất
+    lòng tin của đúng nhóm người biết rõ họ mình có bao nhiêu người.
+  </p>
+</div>
+
+<p>
+  <b>Cái giá:</b> ba dòng này chiếm khoảng 72 px chiều cao trên khung 390 — mục 9 chứng minh rằng
+  khoản ấy vừa vặn, <em>vừa vặn chứ không dư</em>. Thêm bất cứ thứ gì nữa (khẩu hiệu, câu đối, logo
+  tròn, ảnh từ đường) là đẩy nút “Đăng nhập” xuống dưới bàn phím ảo.
+</p>
+
+<h3>2.3 · Người chưa từng dùng ứng dụng nào tương tự thì bắt đầu từ đâu?</h3>
+
+<p>
+  Câu trả lời thành thật: <b>họ không bắt đầu ở màn đăng nhập.</b> Họ bắt đầu ở một mẩu giấy hoặc
+  một tin nhắn, do một người trong họ đưa tận tay. Mọi thiết kế coi màn đăng nhập là điểm khởi đầu
+  đều đang thiết kế cho người thứ hai trở đi.
+</p>
+
+<p>Vì vậy thiết kế phải gồm ba thứ, theo thứ tự:</p>
+
+<ol>
+  <li>
+    <b>Một vật thể ngoài màn hình.</b> Một <b>phiếu giấy khổ A6</b> do trưởng chi phát ở buổi chạp
+    họ, in: tên người nhận · đường dẫn ngắn · số điện thoại dùng để đăng nhập · mã mời sáu ký tự ·
+    <b>tên và số máy của chính trưởng chi</b>. Đây không phải tờ rơi quảng cáo; nó là <em>bước một
+    của luồng</em>, và là thứ duy nhất trong cả sản phẩm mà một cụ cất được vào ví. Hình 4 vẽ nó.
+  </li>
+  <li>
+    <b>Một lối vào không rủi ro.</b> Nút <b>“Xem phần công khai của dòng họ”</b> ngay trên màn đăng
+    nhập, cùng cỡ chữ và cùng chiều cao với nút chính, chỉ khác ở chỗ không tô nền. Người chưa hiểu
+    gì bấm vào đó là thấy ngay phả đồ các cụ đã khuất — hiểu sản phẩm này là cái gì <em>trước
+    khi</em> phải khai danh tính. Đây cũng là cách trả lời 00 §2.7 bằng giao diện chứ không bằng
+    trang chính sách.
+  </li>
+  <li>
+    <b>Một con người có tên, ở mọi ngõ cụt.</b> Mọi màn lỗi phải in <b>tên và số máy của trưởng chi
+    phụ trách</b>, không phải một hộp thư hỗ trợ. Với nhóm người này, “liên hệ quản trị viên” là một
+    ngõ cụt; “gọi bác Bốn, 09xx xxx xxx” thì không.
+  </li>
+</ol>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ba thứ dứt khoát không làm</p>
+  <p>
+    <b>Không tour hướng dẫn, không lớp phủ chỉ trỏ, không carousel giới thiệu</b> — 03 §5.3 đã cấm
+    và lý do ở đó đúng. Và <b>không video hướng dẫn nhúng vào màn đăng nhập</b>: nó nặng, nó tự
+    phát, và nó ngụ ý màn hình này khó tới mức cần video — nếu đúng thế thì lỗi nằm ở màn hình.
+  </p>
+</div>
+
+<h2>3. Quyết định phải chốt trước khi vẽ: màn này của ai?</h2>
+
+<p>
+  “Thiết kế màn đăng nhập” nghe như một trang Next.js. <b>Không nên là một trang Next.js.</b> Có ba
+  đường, và chọn sai đường thì mọi khung dây phía dưới trở thành vô nghĩa.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Đường</th><th>Cách làm</th><th>Được</th><th>Mất</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>1 · Giữ nguyên</b></td>
+      <td>Chuyển hướng sang trang Keycloak mặc định.</td>
+      <td>Không tốn công. Đúng chuẩn OAuth2/OIDC.</td>
+      <td class="xau">Chính là hiện trạng ở mục 1. Bảy nguyên tắc không có hiệu lực. <b>Loại.</b></td>
+    </tr>
+    <tr>
+      <td><b>2 · Trang đăng nhập bằng Next.js, gọi thẳng Keycloak</b></td>
+      <td>Biểu mẫu của ta, gửi mật khẩu qua <em>Direct Access Grant</em> (password grant).</td>
+      <td>Toàn quyền về giao diện. Một codebase.</td>
+      <td class="xau"><b>Mật khẩu đi qua mã JavaScript của ta.</b> OAuth 2.1 đã khuyến nghị bỏ password grant. Mất luôn mọi thứ Keycloak làm sẵn: chống dò mật khẩu, hành động bắt buộc (<code>UPDATE_PASSWORD</code>), liên kết mạng xã hội — tức là mất luôn <b>chỗ cắm Zalo sau này</b>. <b>Loại.</b></td>
+    </tr>
+    <tr>
+      <td><b>3 · Giao diện Keycloak riêng (theme) + các màn phụ bằng Next.js</b><br><span class="chip must">đề xuất</span></td>
+      <td>Một theme FreeMarker cho <em>ba</em> trang của Keycloak: đăng nhập, quên mật khẩu, đổi mật khẩu bắt buộc. Mọi thứ còn lại — lời mời, người lạ, ngõ cụt sau đăng nhập, chế độ khách — là trang Next.js.</td>
+      <td>Luồng vẫn đúng chuẩn, vẫn có chống dò mật khẩu, vẫn cắm được Zalo qua Identity Provider. Giao diện là của dòng họ.</td>
+      <td class="canh"><b>Hai nơi phải sửa và hai nơi phải dịch.</b> Bảng màu và cỡ chữ phải chép sang CSS của theme; token ở <code>tokens.ts</code> không với tới đó. Rủi ro trôi lệch là có thật và phải có phép kiểm chặn.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Ranh giới đề xuất, viết một lần cho rõ</p>
+  <p>
+    <b>Keycloak sở hữu</b> ba trang chạm vào mật khẩu: <code>login.ftl</code>,
+    <code>login-reset-password.ftl</code>, <code>login-update-password.ftl</code>.
+    <b>Next.js sở hữu</b> tất cả phần còn lại: <code>/moi/[token]</code> (nhận lời mời),
+    <code>/xin-nhan-ho</code> (người lạ), <code>/tai-khoan/chua-noi</code>
+    (<code>ACCOUNT_NOT_PROVISIONED</code>), <code>/tai-khoan/cho-duyet</code> (PENDING), và khối
+    “khách xem được gì” nằm rải trên phả đồ và tìm kiếm.
+  </p>
+  <p>
+    <b>Phép kiểm chặn trôi lệch (đề xuất):</b> một test đọc <code>tokens.ts</code> và tệp CSS của
+    theme, rồi khẳng định bốn giá trị bắt buộc trùng nhau — đỏ trầm, nền kem, cỡ chữ thân bài,
+    chiều cao nút. Không có phép kiểm này thì sau sáu tháng hai bên sẽ lệch màu, và <em>người dùng
+    sẽ nhìn thấy sự lệch ấy ở đúng giây họ cần tin tưởng nhất</em>.
+  </p>
+</div>
+
+<h2>4. Màn đăng nhập — ba phương án</h2>
+
+<h3>4.1 · Phương án A — một cột, có bảng tên <span class="chip must">đề xuất</span></h3>
+
+<figure>
+<svg viewBox="0 0 1280 720" role="img" aria-label="Khung dây phương án A trên màn hình máy tính: một cột giữa trang, bảng tên dòng họ phía trên biểu mẫu">
+  <rect x="0" y="0" width="1280" height="720" class="wf-khung"/>
+
+  <!-- thanh dau trang -->
+  <rect x="0" y="0" width="1280" height="56" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="32" y="34">Phả họ Nguyễn</text>
+  <rect x="1104" y="6" width="144" height="44" rx="4" class="wf-o"/>
+  <text class="wf-chu" style="font-size:15px" x="1176" y="34" text-anchor="middle">Tiếng Việt · English</text>
+  <text class="wf-phu" x="1104" y="70" text-anchor="middle">44 cao · có chữ, không cờ</text>
+
+  <!-- the -->
+  <rect x="420" y="80" width="440" height="608" rx="6" class="wf-o"/>
+
+  <!-- bang ten -->
+  <text class="wf-chu" style="font-size:26px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="452" y="126">Phả họ Nguyễn — Đại Lan</text>
+  <text class="wf-phu" style="font-size:16px" x="452" y="152">Từ đường Đại Lan · Thanh Trì · Hà Nội</text>
+  <line x1="452" y1="172" x2="828" y2="172" stroke="var(--vien)" stroke-width="1"/>
+
+  <!-- o 1 -->
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="452" y="200">Số điện thoại hoặc email</text>
+  <rect x="452" y="208" width="376" height="52" rx="4" class="wf-o"/>
+  <text class="wf-phu" style="font-size:16px" x="468" y="240">0912 345 678</text>
+  <text class="wf-phu" style="font-size:16px" x="452" y="284">Nếu ông/bà không có email, dùng số điện thoại.</text>
+
+  <!-- o 2 -->
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="452" y="316">Mật khẩu</text>
+  <rect x="452" y="324" width="376" height="52" rx="4" class="wf-o"/>
+  <rect x="756" y="328" width="68" height="44" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:15px" x="790" y="356" text-anchor="middle">Hiện</text>
+
+  <!-- quen mat khau -->
+  <rect x="452" y="386" width="216" height="44" rx="4" fill="none" stroke="var(--vien)" stroke-width="1" stroke-dasharray="3 3"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="460" y="414">Quên mật khẩu?</text>
+
+  <!-- nut chinh -->
+  <rect x="452" y="440" width="376" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="640" y="472" text-anchor="middle">Đăng nhập</text>
+
+  <!-- vach -->
+  <line x1="452" y1="524" x2="600" y2="524" stroke="var(--vien)" stroke-width="1"/>
+  <text class="wf-phu" x="640" y="529" text-anchor="middle">hoặc</text>
+  <line x1="680" y1="524" x2="828" y2="524" stroke="var(--vien)" stroke-width="1"/>
+
+  <!-- nut phu -->
+  <rect x="452" y="548" width="376" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="640" y="580" text-anchor="middle">Xem phần công khai của dòng họ</text>
+
+  <!-- chan the -->
+  <text class="wf-phu" style="font-size:16px" x="452" y="632">Chưa có tài khoản? Dòng họ mời từng người một.</text>
+  <rect x="452" y="642" width="200" height="44" rx="4" fill="none" stroke="var(--vien)" stroke-width="1" stroke-dasharray="3 3"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="460" y="670">Tôi có mã mời</text>
+
+  <!-- chu thich -->
+  <circle cx="392" cy="126" r="13" fill="var(--do-tram)"/>
+  <text x="392" y="131" text-anchor="middle" style="font-size:13px;font-weight:700;fill:var(--nen-the);font-family:'Be Vietnam Pro',sans-serif">1</text>
+  <circle cx="392" cy="234" r="13" fill="var(--do-tram)"/>
+  <text x="392" y="239" text-anchor="middle" style="font-size:13px;font-weight:700;fill:var(--nen-the);font-family:'Be Vietnam Pro',sans-serif">2</text>
+  <circle cx="392" cy="574" r="13" fill="var(--do-tram)"/>
+  <text x="392" y="579" text-anchor="middle" style="font-size:13px;font-weight:700;fill:var(--nen-the);font-family:'Be Vietnam Pro',sans-serif">3</text>
+  <circle cx="392" cy="664" r="13" fill="var(--do-tram)"/>
+  <text x="392" y="669" text-anchor="middle" style="font-size:13px;font-weight:700;fill:var(--nen-the);font-family:'Be Vietnam Pro',sans-serif">4</text>
+
+  <!-- cho cam Zalo -->
+  <rect x="900" y="440" width="316" height="160" rx="4" fill="none" stroke="var(--ho-phach)" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:600" x="916" y="466">CHỖ CẮM ZALO — chưa dựng</text>
+  <text class="wf-phu" x="916" y="492">Khi có OA: nút Zalo chèn vào giữa</text>
+  <text class="wf-phu" x="916" y="512">vạch “hoặc” và nút “Xem phần công khai”,</text>
+  <text class="wf-phu" x="916" y="532">cùng cỡ 52 cao, viền chứ không tô nền.</text>
+  <text class="wf-phu" x="916" y="558">Hôm nay KHÔNG vẽ nút xám “sắp có”.</text>
+  <text class="wf-phu" x="916" y="578">Thẻ tự co theo nội dung nên không hở mảng nào.</text>
+</svg>
+<figcaption>
+  <b>Hình 1. Phương án A, khung 1280×720.</b>
+  ① Bảng tên ba dòng — đủ để biết đây là phả của ai, không đủ nặng để làm chậm trang.
+  ② Một ô nhận cả số điện thoại lẫn email, kèm câu trấn an cho người không có email.
+  ③ Nút “Xem phần công khai” <b>cùng chiều cao 52px</b> với nút chính: nó là một lựa chọn thật, không
+  phải một liên kết nhỏ nép ở góc. ④ Lối vào cho người cầm mã mời.
+  <b>Cái giá:</b> thẻ cao 608px, trên màn hình laptop 13″ (768px) là vừa khít — thêm một dòng nữa là
+  phải cuộn, mà cuộn trên màn đăng nhập thì nút chính có thể nằm dưới mép màn hình.
+</figcaption>
+</figure>
+
+<h3>4.2 · Phương án B — hai cột: cổng và cửa</h3>
+
+<figure>
+<svg viewBox="0 0 1280 720" role="img" aria-label="Khung dây phương án B: cột trái giới thiệu dòng họ và những gì khách xem được, cột phải là biểu mẫu đăng nhập">
+  <rect x="0" y="0" width="1280" height="720" class="wf-khung"/>
+
+  <!-- cot trai -->
+  <rect x="0" y="0" width="640" height="720" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:32px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="64" y="140">Phả họ Nguyễn — Đại Lan</text>
+  <text class="wf-phu" style="font-size:17px" x="64" y="174">Từ đường Đại Lan · Thanh Trì · Hà Nội · 14 đời</text>
+
+  <line x1="64" y1="210" x2="576" y2="210" stroke="var(--vien-dam)" stroke-width="1"/>
+
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="64" y="248">Chưa đăng nhập vẫn xem được</text>
+  <text class="wf-chu" style="font-size:16px" x="64" y="282">· Toàn bộ người đã khuất: tên, đời, chi, ngày giỗ</text>
+  <text class="wf-chu" style="font-size:16px" x="64" y="310">· Phả đồ từ Thuỷ tổ xuống các đời đã khuất</text>
+  <text class="wf-chu" style="font-size:16px" x="64" y="338">· Lịch giỗ chung của dòng họ</text>
+
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="64" y="392">Phải đăng nhập mới xem được</text>
+  <text class="wf-chu" style="font-size:16px" x="64" y="426">· Người đang sống — theo Nghị định 13/2023,</text>
+  <text class="wf-chu" style="font-size:16px" x="64" y="452">  người sống ẩn mặc định, kể cả tên</text>
+  <text class="wf-chu" style="font-size:16px" x="64" y="478">· Tra danh xưng · Xin đính chính · Nhắc giỗ</text>
+
+  <rect x="64" y="520" width="512" height="120" rx="4" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-phu" style="font-weight:600" x="80" y="548">BA NGÀY GIỖ SẮP TỚI · công khai</text>
+  <text class="wf-chu" style="font-size:16px" x="80" y="578">Cụ Nguyễn Đức Cẩn · 12 tháng Giêng · đời 9</text>
+  <text class="wf-chu" style="font-size:16px" x="80" y="604">Cụ bà Trần Thị Nhạn · 20 tháng Giêng · đời 9</text>
+  <text class="wf-chu" style="font-size:16px" x="80" y="630">Cụ Nguyễn Đức Thảo · 03 tháng Hai · đời 10</text>
+
+  <!-- cot phai -->
+  <text class="wf-chu" style="font-size:21px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="736" y="164">Đăng nhập</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="736" y="216">Số điện thoại hoặc email</text>
+  <rect x="736" y="224" width="416" height="52" rx="4" class="wf-o"/>
+  <text class="wf-phu" style="font-size:16px" x="736" y="300">Nếu ông/bà không có email, dùng số điện thoại.</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="736" y="336">Mật khẩu</text>
+  <rect x="736" y="344" width="416" height="52" rx="4" class="wf-o"/>
+  <rect x="1080" y="348" width="68" height="44" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:15px" x="1114" y="376" text-anchor="middle">Hiện</text>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="736" y="434">Quên mật khẩu?</text>
+  <rect x="736" y="460" width="416" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="944" y="492" text-anchor="middle">Đăng nhập</text>
+  <rect x="736" y="528" width="416" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="944" y="560" text-anchor="middle">Xem phần công khai</text>
+  <text class="wf-phu" style="font-size:16px" x="736" y="614">Chưa có tài khoản? Dòng họ mời từng người một.</text>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="736" y="642">Tôi có mã mời</text>
+</svg>
+<figcaption>
+  <b>Hình 2. Phương án B, khung 1280×720.</b> Cột trái trả lời câu hỏi 2.2 và một phần câu hỏi 2.3
+  ngay tại chỗ: người lần đầu biết mình sẽ thấy gì <em>trước</em> khi quyết định có gõ số điện thoại
+  hay không. Đây cũng là chỗ nguyên tắc 00 §2.7 (“quyền riêng tư nhìn thấy được, không phải điều
+  khoản”) được thực hiện đúng nghĩa nhất trong cả sản phẩm.
+  <b>Cái giá, ba khoản:</b> (1) khối “ba ngày giỗ sắp tới” cần một điểm cuối công khai <b>chưa tồn
+  tại</b> — nếu để trống thì cột trái tụt xuống còn một danh sách gạch đầu dòng và mất quá nửa sức
+  thuyết phục; (2) trên điện thoại cột trái phải xuống dưới biểu mẫu, nên đúng nhóm người cần nó
+  nhất — người lần đầu, thường vào bằng điện thoại — lại là nhóm ít nhìn thấy nó nhất; (3) cột trái
+  hiển thị <b>tên người đã khuất cho mọi khách vãng lai, kể cả bot</b>, và 04 §(thẻ xem trước) đã
+  cảnh báo về đúng chuyện này.
+</figcaption>
+</figure>
+
+<h3>4.3 · Phương án C — không có màn đăng nhập, đăng nhập hiện ra khi cần</h3>
+
+<figure>
+<svg viewBox="0 0 1280 560" role="img" aria-label="Khung dây phương án C: cổng thông tin mở thẳng ở chế độ khách, hộp đăng nhập chỉ hiện khi chạm vào thứ cần quyền">
+  <rect x="0" y="0" width="1280" height="560" class="wf-khung"/>
+  <rect x="0" y="0" width="1280" height="56" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="32" y="34">Phả họ Nguyễn</text>
+  <rect x="1060" y="6" width="188" height="44" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600;fill:var(--do-tram)" x="1154" y="34" text-anchor="middle">Đăng nhập</text>
+
+  <!-- pha do gia lap -->
+  <text class="wf-phu" x="32" y="86">Phả đồ mở thẳng ở chế độ khách — chỉ người đã khuất</text>
+  <rect x="540" y="110" width="200" height="64" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:16px" x="640" y="140" text-anchor="middle">Thuỷ tổ Nguyễn Đức</text>
+  <text class="wf-phu" x="640" y="160" text-anchor="middle">đời 1 · đã khuất</text>
+  <path class="wf-net" d="M640 174 L640 200 M360 200 L920 200 M360 200 L360 226 M640 200 L640 226 M920 200 L920 226"/>
+  <rect x="260" y="226" width="200" height="64" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <rect x="540" y="226" width="200" height="64" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <rect x="820" y="226" width="200" height="64" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+
+  <!-- thanh ngu canh -->
+  <rect x="0" y="392" width="1280" height="168" fill="var(--do-nhat)" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="64" y="432">Ông/bà vừa chạm vào một người đang sống.</text>
+  <text class="wf-chu" style="font-size:16px" x="64" y="462">Theo Nghị định 13/2023, người đang sống chỉ hiện với thành viên trong họ đã đăng nhập.</text>
+  <rect x="64" y="486" width="240" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="184" y="518" text-anchor="middle">Đăng nhập</text>
+  <rect x="328" y="486" width="280" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="468" y="518" text-anchor="middle">Tôi chưa có tài khoản</text>
+</svg>
+<figcaption>
+  <b>Hình 3. Phương án C, khung 1280×560.</b> Không có trang đăng nhập nào là đích đến; cổng mở
+  thẳng ở chế độ khách và lời mời đăng nhập xuất hiện <em>đúng lúc chạm vào giới hạn</em>.
+  <b>Được:</b> tốt nhất cho người trẻ và cho khách vãng lai; và nó là phương án <em>gần với hiện
+  trạng nhất</em>, nên rẻ nhất.
+  <b>Mất, và mất nặng:</b> cụ được con dặn “mở trang này rồi đăng nhập” sẽ mở ra và <b>không thấy
+  chỗ nào để đăng nhập</b> ngoài một nút nhỏ ở góc trên bên phải — mà trên điện thoại, đúng cái nút
+  ấy hôm nay <b>không có chữ</b> (mục 1.1, nguyên tắc 3). Phương án C đặt toàn bộ gánh nặng lên một
+  điều khiển đang hỏng.
+</figcaption>
+</figure>
+
+<h3>4.4 · So sánh và kết luận</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Chiều</th><th>A · một cột có bảng tên</th><th>B · hai cột</th><th>C · đăng nhập theo ngữ cảnh</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>Cụ 70, được dặn “mở rồi đăng nhập”</b></td><td class="tot">Thấy ngay, một cột, không phải chọn</td><td class="tot">Thấy ngay ở cột phải</td><td class="xau">Không thấy chỗ đăng nhập</td></tr>
+    <tr><td><b>Bạn 16 / khách vãng lai</b></td><td class="canh">Phải bấm thêm một nút để vào xem</td><td class="tot">Biết ngay xem được gì</td><td class="tot">Vào thẳng nội dung</td></tr>
+    <tr><td><b>Dâu/rể lần đầu</b></td><td class="canh">Trung tính — không nói gì về họ</td><td class="canh">Trung tính</td><td class="canh">Trung tính</td></tr>
+    <tr><td><b>Điện thoại</b></td><td class="tot">Xếp thẳng một cột, không phải nghĩ lại</td><td class="xau">Cột trái tụt xuống dưới, mất tác dụng</td><td class="tot">Vốn đã là giao diện điện thoại</td></tr>
+    <tr><td><b>Phụ thuộc API chưa có</b></td><td class="tot">Không (nếu bỏ dòng “1.500 người”)</td><td class="xau">Có — khối giỗ sắp tới</td><td class="xau">Có — toàn bộ chế độ khách</td></tr>
+    <tr><td><b>Chỗ cắm Zalo</b></td><td class="tot">Rõ ràng, dưới vạch “hoặc”</td><td class="tot">Rõ ràng</td><td class="canh">Phải nhân bản ở mọi hộp thoại ngữ cảnh</td></tr>
+    <tr><td><b>Công phải làm</b></td><td>Một theme Keycloak</td><td>Một theme + một điểm cuối công khai</td><td class="tot">Gần như đã có</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Đề xuất: A làm mặc định, lấy một phần của B và một phần của C</p>
+  <ul>
+    <li><b>A là màn đăng nhập.</b> Nó là phương án duy nhất không thua ở cột “cụ 70 tuổi”, và cột ấy là cột không được phép thua.</li>
+    <li><b>Lấy khối “khách xem được gì” của B</b>, nhưng đặt nó <em>dưới</em> thẻ đăng nhập trên máy tính và <em>sau</em> nút “Xem phần công khai” trên điện thoại — thông tin vẫn có, không tranh chỗ với việc chính. Xem mục 8.</li>
+    <li><b>Giữ cơ chế ngữ cảnh của C cho đúng một ca:</b> phiên hết hạn giữa chừng. Lúc ấy người dùng <em>đã</em> ở giữa một việc; đá họ về trang đăng nhập là làm mất việc đang làm. Xem mục 7.5.</li>
+    <li><b>Bỏ hẳn ý “C thay cho A”.</b> Rẻ không phải là một lý lẽ khi cái mất là nhóm người giữ dữ liệu.</li>
+  </ul>
+</div>
+
+<h3>4.5 · Chỗ cắm Zalo — quy tắc, không phải hình vẽ</h3>
+
+<p>
+  Zalo chưa có vì hồ sơ OA cần một tư cách pháp nhân mà dòng họ chưa có. Thiết kế phải chừa chỗ mà
+  không để lộ một mảng trống. Bốn quy tắc:
+</p>
+
+<ol>
+  <li>
+    <b>Chừa thứ tự, không chừa khoảng trống.</b> Thẻ đăng nhập cao theo nội dung của nó. Khi nút
+    Zalo xuất hiện, nó chèn vào <em>giữa vạch “hoặc” và nút “Xem phần công khai”</em>, và thẻ cao
+    thêm 64px. Không có ô rỗng nào phải giữ chỗ trước, nên hôm nay màn hình vẫn cân.
+  </li>
+  <li>
+    <b>Không vẽ nút xám “sắp có”.</b> 02 §4.1 buộc mọi trạng thái vô hiệu phải nêu lý do bằng chữ —
+    mà lý do ở đây là <i>“dòng họ chưa có tư cách pháp nhân để đăng ký Zalo OA”</i>, một chi tiết
+    pháp lý nội bộ không ai cần đọc lúc đang đăng nhập. Nút không dùng được thì không vẽ.
+  </li>
+  <li>
+    <b>Zalo không bao giờ là nút đầu tiên.</b> Đặt nó trên ô mật khẩu là ngụ ý dòng họ tiến cử một
+    nền tảng bên thứ ba làm lối vào chính — trong khi hợp đồng còn chưa ký. Đúng chỗ của nó là
+    <em>sau</em> cách đăng nhập của chính dòng họ.
+  </li>
+  <li>
+    <b>Cắm bằng Identity Provider của Keycloak, không phải bằng SDK trong trang.</b> Realm hôm nay
+    có <code>identityProviders: []</code> — rỗng. Thêm một mục vào đó là cách duy nhất giữ được luồng
+    chuẩn, và cũng là lý do đường 2 ở mục 3 bị loại.
+  </li>
+</ol>
+
+<h2>5. Đăng ký, hay đúng hơn: nhận lời mời</h2>
+
+<p>
+  Đây là chỗ cần nghĩ nhiều nhất, và cũng là chỗ cái tên gọi đang đánh lừa. <b>Không có “đăng ký”
+  trong sản phẩm này.</b> Dòng họ mời người vào; người ta không tự ghi danh rồi vào xem phả nhà
+  người khác. Realm hôm nay đã đứng đúng chỗ ấy: <code>registrationAllowed: false</code>. Đó là mặc
+  định đúng và <b>đề xuất giữ nguyên vĩnh viễn</b>.
+</p>
+
+<p>
+  Nhưng đứng đúng chỗ mà không có cửa nào thì cũng không đi được. Phải thiết kế <b>ba cánh cửa</b>,
+  và ba cửa ấy dành cho ba người rất khác nhau.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Cửa</th><th>Ai gõ</th><th>Thấy gì</th><th>Kết thúc ở đâu</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>1 · Có mã mời</b></td>
+      <td>Người được trưởng chi mời, cầm phiếu giấy hoặc tin nhắn</td>
+      <td>Lời mời đích danh: ai mời, mời vào chi nào, mời với tư cách nào</td>
+      <td class="tot">Đặt mật khẩu → vào thẳng, <b>đã nối sẵn với nhân khẩu</b></td>
+    </tr>
+    <tr>
+      <td><b>2 · Không có mã nhưng là người trong họ</b></td>
+      <td>Nghe kể rồi tự tìm; con cháu ở xa</td>
+      <td>Biểu mẫu “Xin nhận họ”: họ tên, tên bố/mẹ, quê quán, số điện thoại</td>
+      <td class="canh">Một yêu cầu <b>chờ Hội đồng duyệt</b> — chưa có tài khoản</td>
+    </tr>
+    <tr>
+      <td><b>3 · Người lạ</b></td>
+      <td>Người ngoài họ, nhà nghiên cứu, người trùng họ Nguyễn</td>
+      <td>Câu trả lời thẳng: cổng này của một dòng họ cụ thể, và phần công khai mở cho ai cũng xem được</td>
+      <td class="tot">Chế độ khách — <b>không phải một bức tường</b></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.1 · Vật thể đầu tiên: phiếu mời trên giấy và tin nhắn</h3>
+
+<figure>
+<svg viewBox="0 0 1000 620" role="img" aria-label="Khung dây phiếu mời khổ A6 in trên giấy và nội dung tin nhắn gửi kèm">
+  <rect x="0" y="0" width="1000" height="620" class="wf-khung"/>
+
+  <!-- phieu giay -->
+  <rect x="40" y="40" width="420" height="540" rx="4" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="40" y="28">PHIẾU MỜI · khổ A6 · in một mặt</text>
+  <text class="wf-chu" style="font-size:21px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="72" y="96">Phả họ Nguyễn — Đại Lan</text>
+  <line x1="72" y1="114" x2="428" y2="114" stroke="var(--vien)" stroke-width="1"/>
+
+  <text class="wf-phu" style="font-weight:600" x="72" y="146">KÍNH MỜI</text>
+  <text class="wf-chu" style="font-size:20px;font-weight:600" x="72" y="176">Bà Nguyễn Thị Lan</text>
+  <text class="wf-chu" style="font-size:16px" x="72" y="202">Con dâu ông Nguyễn Văn Bốn · Chi Giáp</text>
+
+  <text class="wf-phu" style="font-weight:600" x="72" y="244">MỞ TRANG</text>
+  <text class="wf-chu" style="font-size:20px;font-weight:600;font-family:ui-monospace,monospace" x="72" y="274">giapha.ho-nguyen.vn</text>
+
+  <text class="wf-phu" style="font-weight:600" x="72" y="316">MÃ MỜI · gõ vào ô “Tôi có mã mời”</text>
+  <rect x="72" y="330" width="220" height="56" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:26px;font-weight:700;letter-spacing:0.12em;font-family:ui-monospace,monospace" x="182" y="368" text-anchor="middle">K7M-2QD</text>
+  <text class="wf-phu" x="72" y="406">Mã dùng được một lần, hết hạn sau 7 ngày.</text>
+
+  <text class="wf-phu" style="font-weight:600" x="72" y="446">ĐĂNG NHẬP BẰNG SỐ ĐIỆN THOẠI</text>
+  <text class="wf-chu" style="font-size:18px;font-family:ui-monospace,monospace" x="72" y="474">0912 345 678</text>
+
+  <line x1="72" y1="500" x2="428" y2="500" stroke="var(--vien)" stroke-width="1"/>
+  <text class="wf-phu" style="font-weight:600" x="72" y="528">CẦN GIÚP THÌ GỌI</text>
+  <text class="wf-chu" style="font-size:17px" x="72" y="556">Ông Nguyễn Văn Bốn · Trưởng chi Giáp · 0903 111 222</text>
+
+  <!-- tin nhan -->
+  <text class="wf-phu" style="font-weight:600" x="540" y="28">TIN NHẮN GỬI KÈM · SMS hoặc Zalo cá nhân</text>
+  <rect x="540" y="40" width="420" height="300" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:16px" x="564" y="82">Kính gửi bà Lan,</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="114">Họ Nguyễn — Đại Lan vừa lập trang gia phả của</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="140">dòng họ. Tôi mời bà vào xem và bổ sung cho</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="166">phần của gia đình mình.</text>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="564" y="206">giapha.ho-nguyen.vn/moi/K7M2QD</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="246">Đăng nhập bằng số 0912 345 678.</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="278">Có gì bà gọi tôi — Bốn, 0903 111 222.</text>
+  <text class="wf-phu" x="564" y="316">Người gửi là một người thật trong họ, không phải hệ thống.</text>
+
+  <rect x="540" y="372" width="420" height="208" rx="4" fill="var(--vang-nen)" stroke="var(--ho-phach)" stroke-width="1.5"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:600" x="564" y="400">VÌ SAO KHÔNG GỬI TỪ HỆ THỐNG</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="430">Một tin nhắn từ đầu số lạ, chữ viết hoa, kèm đường</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="456">dẫn — đó đúng là hình dạng của tin nhắn lừa đảo mà</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="482">người lớn tuổi được dặn là phải xoá.</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="514">Tin do trưởng chi gửi từ số máy quen thì không.</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="546">Và nó không tốn tiền cổng SMS, thứ đang không</text>
+  <text class="wf-chu" style="font-size:16px" x="564" y="572">ký được hợp đồng vì thiếu tư cách pháp nhân.</text>
+</svg>
+<figcaption>
+  <b>Hình 4. Phiếu mời giấy và tin nhắn kèm theo.</b> Cả hai đều nằm <em>ngoài</em> phần mềm, và cả
+  hai đều là bước một của luồng. Phiếu giấy cố ý in <b>cả ba thứ</b> mà người dùng sẽ bị hỏi: đường
+  dẫn, mã mời, số điện thoại đăng nhập — cộng một số máy để gọi.
+  <b>Cái giá:</b> mã in trên giấy là mã <em>nhìn thấy được</em>; ai nhặt được phiếu cũng dùng được.
+  Vì thế mã phải <b>dùng một lần, hết hạn 7 ngày</b> (đề xuất) và màn xác nhận ở hình 5 phải cho
+  người nhận cơ hội nói “không phải tôi”. <b>Và:</b> in tên người nhận lên giấy là in một mẩu dữ
+  liệu Tầng 1 của người đang sống lên một tờ giấy không có phiên đăng nhập — 04 đã nêu đúng vấn đề
+  này với bản in phả đồ.
+</figcaption>
+</figure>
+
+<h3>5.2 · Cửa 1 — người được mời</h3>
+
+<figure>
+<svg viewBox="0 0 1240 700" role="img" aria-label="Ba khung điện thoại: màn xác nhận lời mời, màn đặt mật khẩu, màn bàn giao sang nhập môn">
+  <rect x="0" y="0" width="1240" height="700" class="wf-khung"/>
+
+  <!-- KHUNG 1 -->
+  <rect x="0" y="40" width="390" height="640" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="0" y="28">1 · MỞ ĐƯỜNG DẪN /moi/K7M2QD</text>
+  <text class="wf-chu" style="font-size:15px;font-weight:600" x="24" y="76">Phả họ Nguyễn — Đại Lan</text>
+  <line x1="24" y1="92" x2="366" y2="92" stroke="var(--vien)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="24" y="132">Lời mời từ ông Nguyễn Văn Bốn</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="24" y="160">Trưởng chi Giáp</text>
+
+  <rect x="24" y="186" width="342" height="128" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-phu" style="font-weight:600" x="40" y="212">LỜI MỜI NÀY DÀNH CHO</text>
+  <text class="wf-chu" style="font-size:19px;font-weight:600" x="40" y="242">Bà Nguyễn Thị Lan</text>
+  <text class="wf-chu" style="font-size:16px" x="40" y="268">Con dâu ông Nguyễn Văn Bốn</text>
+  <text class="wf-chu" style="font-size:16px" x="40" y="294">Chi Giáp · đời 7</text>
+
+  <text class="wf-chu" style="font-size:16px" x="24" y="344">Nhận lời mời, bà sẽ:</text>
+  <text class="wf-chu" style="font-size:16px" x="24" y="374">· xem được người trong họ, cả người đang sống</text>
+  <text class="wf-chu" style="font-size:16px" x="24" y="400">· tra được danh xưng: gọi ai là gì cho đúng</text>
+  <text class="wf-chu" style="font-size:16px" x="24" y="426">· nhận nhắc ngày giỗ bên nhà chồng</text>
+  <text class="wf-chu" style="font-size:16px" x="24" y="452">· xin đính chính khi thấy chỗ ghi sai</text>
+
+  <rect x="24" y="486" width="342" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="195" y="518" text-anchor="middle">Đúng là tôi — nhận lời mời</text>
+
+  <rect x="24" y="554" width="342" height="52" rx="4" fill="none" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="195" y="586" text-anchor="middle">Không phải tôi</text>
+  <text class="wf-phu" x="24" y="628">Bấm “Không phải tôi” sẽ huỷ mã này và báo cho</text>
+  <text class="wf-phu" x="24" y="648">ông Bốn biết. Không ai vào được bằng mã ấy nữa.</text>
+
+  <!-- KHUNG 2 -->
+  <rect x="425" y="40" width="390" height="640" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="425" y="28">2 · ĐẶT MẬT KHẨU · trang của Keycloak</text>
+  <text class="wf-chu" style="font-size:15px;font-weight:600" x="449" y="76">Phả họ Nguyễn — Đại Lan</text>
+  <line x1="449" y1="92" x2="791" y2="92" stroke="var(--vien)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="449" y="132">Đặt mật khẩu cho bà Lan</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="449" y="176">Số để đăng nhập từ nay</text>
+  <rect x="449" y="186" width="342" height="52" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:17px;font-family:ui-monospace,monospace" x="465" y="218">0912 345 678</text>
+  <text class="wf-phu" x="449" y="258">Đã điền sẵn. Sai số thì gọi ông Bốn, không tự sửa được.</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="449" y="294">Mật khẩu mới</text>
+  <rect x="449" y="304" width="342" height="52" rx="4" class="wf-o"/>
+  <rect x="719" y="308" width="68" height="44" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:15px" x="753" y="336" text-anchor="middle">Hiện</text>
+  <text class="wf-phu" style="font-size:16px" x="449" y="380">Ít nhất 8 ký tự. Bà nên viết ra sổ — không ai</text>
+  <text class="wf-phu" style="font-size:16px" x="449" y="402">trong hệ thống đọc được mật khẩu này.</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="449" y="438">Gõ lại mật khẩu</text>
+  <rect x="449" y="448" width="342" height="52" rx="4" class="wf-o"/>
+
+  <rect x="449" y="524" width="342" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="620" y="556" text-anchor="middle">Lưu mật khẩu và vào phả</text>
+
+  <rect x="449" y="596" width="342" height="60" rx="4" fill="var(--vang-nen)" stroke="var(--ho-phach)" stroke-width="1.25"/>
+  <text class="wf-phu" style="font-size:15px" x="465" y="622">Không hỏi “nhớ mật khẩu?”, không bắt đặt câu hỏi</text>
+  <text class="wf-phu" style="font-size:15px" x="465" y="644">bảo mật, không hỏi quyền thông báo ở bước này.</text>
+
+  <!-- KHUNG 3 -->
+  <rect x="850" y="40" width="390" height="640" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="850" y="28">3 · BÀN GIAO SANG NHẬP MÔN (03 §6.4)</text>
+  <text class="wf-chu" style="font-size:15px;font-weight:600" x="874" y="76">Phả họ Nguyễn — Đại Lan</text>
+  <line x1="874" y1="92" x2="1216" y2="92" stroke="var(--vien)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="874" y="136">Kính chào bà Lan.</text>
+  <text class="wf-chu" style="font-size:17px" x="874" y="172">Bà đã có mặt trong phả họ Nguyễn — Đại Lan.</text>
+
+  <rect x="874" y="200" width="342" height="96" rx="4" fill="var(--xanh-nen)" stroke="var(--xanh)" stroke-width="1.25"/>
+  <text class="wf-phu" style="fill:var(--xanh);font-weight:600" x="890" y="226">KHÔNG PHẢI CHỜ DUYỆT</text>
+  <text class="wf-chu" style="font-size:16px" x="890" y="254">Ông Bốn đã chỉ đích danh bà khi gửi lời mời,</text>
+  <text class="wf-chu" style="font-size:16px" x="890" y="280">nên tài khoản đã nối sẵn với hồ sơ của bà.</text>
+
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="874" y="336">Họ nhà chồng tôi</text>
+  <rect x="874" y="352" width="342" height="64" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:17px" x="890" y="380">Ông Nguyễn Văn Bốn</text>
+  <text class="wf-phu" style="font-size:16px" x="890" y="404">Bố chồng · bà gọi là “thầy” hoặc “bố”</text>
+  <rect x="874" y="426" width="342" height="64" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:17px" x="890" y="454">Bà Trần Thị Mến</text>
+  <text class="wf-phu" style="font-size:16px" x="890" y="478">Mẹ chồng · bà gọi là “u” hoặc “mẹ”</text>
+
+  <rect x="874" y="520" width="342" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="1045" y="552" text-anchor="middle">Xem cả họ nhà chồng</text>
+  <text class="wf-phu" x="874" y="608">Hạ cánh ở “họ nhà chồng”, KHÔNG ở hồ sơ cá nhân</text>
+  <text class="wf-phu" x="874" y="628">(hồ sơ của bà gần như trống) và KHÔNG ở phả đồ</text>
+  <text class="wf-phu" x="874" y="648">(một bức tường 1.500 người lạ). Theo 03 §6.4.</text>
+</svg>
+<figcaption>
+  <b>Hình 5. Cửa 1 — ba màn, khung 390 mỗi màn.</b> Điểm quan trọng nhất nằm ở khung 3:
+  <b>lời mời mang theo sẵn việc nối tài khoản với nhân khẩu</b>, nên người được mời <em>không</em>
+  rơi vào trạng thái “chờ duyệt” — thứ mà 03 §5.1 gọi đích danh là điểm yếu nhất của phiên đầu
+  tiên. Trưởng chi đã chọn đích danh người mình mời rồi; bắt người ấy chờ duyệt lần nữa là bắt hệ
+  thống hỏi lại một câu đã có đáp án.
+  <b>Cái giá, và nó nặng:</b> việc nối node giờ đây phụ thuộc vào một mã đi qua SMS hoặc Zalo cá
+  nhân — <b>kênh kém an toàn nhất và là kênh ta không kiểm soát</b>. Mời nhầm số, hoặc người nhận
+  chuyển tiếp tin nhắn cho người khác, là trao quyền đọc Tầng 2 của cả một chi. Ba lớp chống đỡ:
+  mã dùng một lần · hết hạn 7 ngày · nút “Không phải tôi” huỷ mã và báo ngược cho người mời — đúng
+  khuôn mẫu “xác nhận và nói rõ hệ quả” của 00 §2.4.
+</figcaption>
+</figure>
+
+<h3>5.3 · Màn xác nhận lời mời tiết lộ những gì — một câu hỏi chưa ai trả lời</h3>
+
+<p>
+  Khung 1 ở hình 5 in <i>“Bà Nguyễn Thị Lan · Con dâu ông Nguyễn Văn Bốn · Chi Giáp · đời 7”</i>.
+  Đó là dữ liệu Tầng 1 của một người <b>đang sống</b>, hiện ra cho <b>bất kỳ ai cầm đường dẫn</b> —
+  kể cả người nhặt được phiếu, kể cả người được chuyển tiếp tin nhắn. Nguyên tắc 00 §2.7 và BA v2
+  §10 nói người đang sống ẩn mặc định. Vậy màn này có vi phạm không?
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Cách làm</th><th>Được</th><th>Mất</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>a · Hiện tên như hình 5</b><br><span class="chip should">đề xuất</span></td>
+      <td>Người nhận biết chắc lời mời dành cho mình. Nút “Không phải tôi” có nghĩa — không có tên thì không ai bấm nút ấy được.</td>
+      <td class="canh">Một cái tên Tầng 1 lộ ra theo đường dẫn, trong 7 ngày, cho người giữ mã.</td>
+    </tr>
+    <tr>
+      <td><b>b · Giấu tên, chỉ hiện “Chi Giáp · đời 7”</b></td>
+      <td>Không lộ tên ai.</td>
+      <td class="xau">Người nhận không xác nhận được gì. Cụ nhận tin sẽ không biết đây có phải dành cho mình không — và nghi ngờ là phản ứng đúng, nên cụ sẽ không bấm.</td>
+    </tr>
+    <tr>
+      <td><b>c · Hỏi thêm một yếu tố: bốn số cuối của điện thoại, hoặc năm sinh</b></td>
+      <td>Kín nhất.</td>
+      <td class="xau">Thêm một bước gõ trước khi người dùng nhận được bất cứ giá trị nào. Đây đúng là chỗ mất người của nhóm 70 tuổi.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Việc của Hội đồng Tộc biểu, không phải của người thiết kế</p>
+  <p>
+    Tài liệu này <b>đề xuất (a)</b> và nói rõ lập luận: người mời đã tự tay chọn số máy để gửi, nên
+    rủi ro đã được một con người trong họ gánh một phần; và (c) đánh đổi một rủi ro nhỏ lấy một tổn
+    thất chắc chắn. Nhưng đây là quyết định về dữ liệu người đang sống, nên <b>Hội đồng quyết, tài
+    liệu chỉ nêu</b> — cùng thể loại với ba câu hỏi đang chờ ở <code>design/README.md</code>.
+  </p>
+</div>
+
+<h3>5.4 · Cửa 3 — người lạ mò vào</h3>
+
+<figure>
+<svg viewBox="0 0 830 620" role="img" aria-label="Hai khung điện thoại: màn dành cho người lạ, và biểu mẫu xin nhận họ">
+  <rect x="0" y="0" width="830" height="620" class="wf-khung"/>
+
+  <rect x="0" y="40" width="390" height="560" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="0" y="28">NGƯỜI LẠ BẤM “TÔI CÓ MÃ MỜI” NHƯNG KHÔNG CÓ MÃ</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="24" y="96">Cổng này của họ Nguyễn — Đại Lan</text>
+  <text class="wf-chu" style="font-size:17px" x="24" y="136">Tài khoản do dòng họ cấp cho từng người, không</text>
+  <text class="wf-chu" style="font-size:17px" x="24" y="162">mở đăng ký tự do. Có ba lối đi từ đây:</text>
+
+  <rect x="24" y="190" width="342" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="195" y="222" text-anchor="middle">Xem phần công khai</text>
+  <text class="wf-phu" style="font-size:16px" x="24" y="266">Người đã khuất là công khai với tất cả mọi người.</text>
+
+  <rect x="24" y="294" width="342" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="195" y="326" text-anchor="middle">Tôi là người trong họ, xin nhận họ</text>
+  <text class="wf-phu" style="font-size:16px" x="24" y="370">Gửi một lời xin tới Hội đồng Tộc biểu. Chưa tạo</text>
+  <text class="wf-phu" style="font-size:16px" x="24" y="392">tài khoản nào cho tới khi Hội đồng đồng ý.</text>
+
+  <rect x="24" y="420" width="342" height="52" rx="4" fill="none" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="195" y="452" text-anchor="middle">Tôi đã có tài khoản — đăng nhập</text>
+
+  <text class="wf-phu" style="font-size:16px" x="24" y="512">Không có câu “Bạn không có quyền truy cập”.</text>
+  <text class="wf-phu" style="font-size:16px" x="24" y="534">Người lạ không làm gì sai — họ chỉ chưa thuộc</text>
+  <text class="wf-phu" style="font-size:16px" x="24" y="556">về đây. Từ chối mà không chỉ đường là một bức tường.</text>
+
+  <rect x="440" y="40" width="390" height="560" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="440" y="28">BIỂU MẪU “XIN NHẬN HỌ”</text>
+  <text class="wf-chu" style="font-size:20px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="464" y="90">Xin nhận họ Nguyễn — Đại Lan</text>
+  <text class="wf-chu" style="font-size:16px" x="464" y="122">Hội đồng Tộc biểu sẽ đọc và trả lời.</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="464" y="166">Họ và tên ông/bà</text>
+  <rect x="464" y="176" width="342" height="52" rx="4" class="wf-o"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="464" y="264">Tên cụ thân sinh (bố hoặc mẹ)</text>
+  <rect x="464" y="274" width="342" height="52" rx="4" class="wf-o"/>
+  <text class="wf-phu" style="font-size:16px" x="464" y="348">Đây là dữ kiện Hội đồng dùng để dò trong phả.</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="464" y="384">Quê quán của cụ</text>
+  <rect x="464" y="394" width="342" height="52" rx="4" class="wf-o"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="464" y="482">Số điện thoại để liên lạc lại</text>
+  <rect x="464" y="492" width="342" height="52" rx="4" class="wf-o"/>
+</svg>
+<figcaption>
+  <b>Hình 6. Cửa 3, hai màn, khung 390 mỗi màn.</b> Màn trái là chỗ dễ viết sai nhất trong cả tài
+  liệu: phản xạ mặc định là <i>“Bạn không có quyền truy cập”</i>. Câu ấy sai <b>về cả nghiệp vụ lẫn
+  sự thật</b> — người lạ <em>có</em> quyền xem phần công khai, và phần công khai là một nửa lý do
+  sản phẩm tồn tại (BA v2 §10).
+  <b>Cái giá của biểu mẫu “Xin nhận họ”:</b> nó tạo ra một hàng đợi mà <b>chưa ai nhận việc xử lý</b>
+  — không có màn quản trị nào cho nó, không có thông báo nào, và đối tượng dữ liệu của nó chưa tồn
+  tại trong backend. Nếu không có người trực, đây là một hộp thư chết, mà hộp thư chết còn tệ hơn
+  không có hộp thư: nó thu lời hứa mà không trả.
+  <b>Và một rủi ro riêng tư:</b> ô “tên cụ thân sinh” cho phép một người lạ <em>dò</em> xem một cái
+  tên có trong phả hay không, qua phản hồi khác nhau. Phản hồi vì vậy phải <b>y hệt nhau trong mọi
+  trường hợp</b>: “Đã nhận. Hội đồng sẽ liên lạc lại.”
+</figcaption>
+</figure>
+
+<h3>5.5 · Ba câu chữ then chốt, và vì sao từng câu được chọn</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ</th><th>Không viết</th><th>Viết</th><th>Lý do</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Tiêu đề màn mời</td>
+      <td class="xau">“Kích hoạt tài khoản”</td>
+      <td class="tot">“Lời mời từ ông Nguyễn Văn Bốn, Trưởng chi Giáp”</td>
+      <td>Lời mời đến từ <em>một con người</em>, không từ một hệ thống. 00 §2.5.</td>
+    </tr>
+    <tr>
+      <td>Nút chính</td>
+      <td class="xau">“Tiếp tục”</td>
+      <td class="tot">“Đúng là tôi — nhận lời mời”</td>
+      <td>“Tiếp tục” không nói người dùng đang xác nhận điều gì. Ở đây họ đang xác nhận <b>danh tính</b>, và đó là thao tác mở quyền đọc dữ liệu người khác.</td>
+    </tr>
+    <tr>
+      <td>Câu hỏi phân nhánh khi chưa rõ dâu/rể</td>
+      <td class="xau">“Bạn là thành viên trong họ hay người ngoài?”</td>
+      <td class="tot">“Ông/bà có tên trong phả họ Nguyễn, hay về làm dâu / làm rể họ Nguyễn?”</td>
+      <td>Hai vế ngang hàng, không vế nào phái sinh từ vế kia. <b>00 §1b bắt buộc.</b> Với luồng có mã mời thì câu này <em>không xuất hiện</em> — trưởng chi đã trả lời hộ khi chọn node.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.6 · Một việc backend phải quyết trước khi luồng này dựng được</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Trưởng chi hôm nay không mời được ai</p>
+  <p>
+    Toàn bộ mục 5 giả định trưởng chi phát lời mời trong phạm vi chi mình. Nhưng
+    <code>AppUserProvisioningService.linkToPerson()</code> mở đầu bằng
+    <code>guard.requireClanWide(caller, ...)</code> — <b>chỉ Hội đồng và Quản trị hệ thống</b> được
+    nối tài khoản với nhân khẩu. Chính javadoc của hàm ấy giải thích vì sao, và lý do đó đúng: nối
+    sai là trao quyền đọc Tầng 3 của người khác dưới danh nghĩa “hồ sơ của mình”.
+  </p>
+  <p>Hai đường đi, phải chọn một trước khi vẽ tiếp:</p>
+  <ul>
+    <li>
+      <b>Giữ nguyên quyền.</b> Trưởng chi <em>đề nghị</em> mời, Hội đồng bấm duyệt rồi mã mới sinh.
+      <b>Giá:</b> thêm một nhịp chờ, và Hội đồng thành nút cổ chai khi nhập cả họ một lượt —
+      1.500 người thì đây là một hàng đợi thật, không phải một chi tiết.
+    </li>
+    <li>
+      <b>Nới quyền có giới hạn phạm vi:</b> trưởng chi nối được, nhưng <em>chỉ trong
+      <code>ltree</code> của chi mình</em>, và mọi lần nối đều vào <code>audit_log</code>.
+      <b>Giá:</b> một trưởng chi bị chiếm tài khoản sẽ mở được Tầng 2 của cả chi ấy. 04 đã nêu đúng
+      mối lo này ở một chỗ khác và gọi nó là việc cần Hội đồng cân.
+    </li>
+  </ul>
+</div>
+
+<h2>6. Quên mật khẩu</h2>
+
+<p>
+  Đây là màn mà phương án đăng nhập bằng số điện thoại (mục 2.1) phải trả giá. Nói thẳng ra để
+  không ai bị bất ngờ sau này: <b>với người không có email, không có đường tự đặt lại mật khẩu.</b>
+  Keycloak chỉ biết gửi thư, mà <code>realm-giapha.json</code> hôm nay còn chưa cấu hình SMTP.
+</p>
+
+<figure>
+<svg viewBox="0 0 830 560" role="img" aria-label="Hai khung điện thoại: màn quên mật khẩu và màn kết quả trung tính">
+  <rect x="0" y="0" width="830" height="560" class="wf-khung"/>
+
+  <rect x="0" y="40" width="390" height="500" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="0" y="28">1 · NHẬP ĐỊNH DANH</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="24" y="94">Quên mật khẩu</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="24" y="142">Số điện thoại hoặc email của ông/bà</text>
+  <rect x="24" y="152" width="342" height="52" rx="4" class="wf-o"/>
+  <text class="wf-phu" style="font-size:16px" x="24" y="228">Gõ đúng thứ ông/bà vẫn dùng để đăng nhập.</text>
+  <rect x="24" y="260" width="342" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="195" y="292" text-anchor="middle">Gửi hướng dẫn đặt lại</text>
+
+  <line x1="24" y1="348" x2="366" y2="348" stroke="var(--vien)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="24" y="382">Không có email, hoặc không nhận được gì?</text>
+  <rect x="24" y="398" width="342" height="96" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-chu" style="font-size:16px" x="40" y="426">Gọi trưởng chi của ông/bà để đặt lại:</text>
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="40" y="456">Ông Nguyễn Văn Bốn · Chi Giáp</text>
+  <text class="wf-chu" style="font-size:18px;font-weight:600;fill:var(--do-tram);font-family:ui-monospace,monospace" x="40" y="482">0903 111 222</text>
+
+  <rect x="440" y="40" width="390" height="500" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="440" y="28">2 · KẾT QUẢ · GIỐNG NHAU DÙ TÀI KHOẢN CÓ HAY KHÔNG</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="464" y="94">Đã nhận yêu cầu</text>
+  <text class="wf-chu" style="font-size:17px" x="464" y="136">Nếu số hoặc email ông/bà vừa nhập có trong</text>
+  <text class="wf-chu" style="font-size:17px" x="464" y="162">hệ thống, hướng dẫn đặt lại sẽ được gửi tới đó.</text>
+  <text class="wf-chu" style="font-size:17px" x="464" y="204">Chờ khoảng 5 phút. Nhớ xem cả hộp thư rác.</text>
+
+  <rect x="464" y="240" width="342" height="128" rx="4" fill="var(--vang-nen)" stroke="var(--ho-phach)" stroke-width="1.25"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:600" x="480" y="266">NẾU KHÔNG THẤY GÌ SAU 5 PHÚT</text>
+  <text class="wf-chu" style="font-size:16px" x="480" y="294">Rất có thể tài khoản của ông/bà không gắn</text>
+  <text class="wf-chu" style="font-size:16px" x="480" y="318">email nào. Việc này bình thường.</text>
+  <text class="wf-chu" style="font-size:16px" x="480" y="346">Gọi ông Nguyễn Văn Bốn · 0903 111 222.</text>
+
+  <rect x="464" y="400" width="342" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="635" y="432" text-anchor="middle">Quay lại đăng nhập</text>
+</svg>
+<figcaption>
+  <b>Hình 7. Quên mật khẩu, khung 390 mỗi màn.</b> Màn 2 cố ý <b>trả lời y hệt nhau</b> dù tài khoản
+  có tồn tại hay không — nếu khác nhau thì bất kỳ ai cũng dò được số điện thoại nào là người trong
+  họ.
+  <b>Nhưng phải thừa nhận cái giá:</b> câu trả lời trung tính ấy là <em>chính xác kiểu mơ hồ</em> mà
+  00 §1 nói người lớn tuổi không tha thứ. Cách gỡ ở đây: <b>luôn kèm đường thứ hai có tên người
+  thật</b>. Khối màu hổ phách không phải trang trí — nó là lối ra duy nhất cho nhóm không có email,
+  và nó hoạt động bất kể tài khoản có tồn tại hay không, nên nó không làm rò rỉ thêm gì.
+</figcaption>
+</figure>
+
+<h3>6.1 · Nghi thức đặt lại ngoại tuyến — và cái giá của nó</h3>
+
+<p>Khi trưởng chi nhận điện thoại, việc diễn ra như sau (đề xuất):</p>
+<ol>
+  <li>Trưởng chi <b>nhận ra giọng</b> hoặc hỏi một dữ kiện chỉ người trong họ biết. Đây là xác thực thật, và với dòng họ nó mạnh hơn một mã OTP.</li>
+  <li>Trưởng chi bấm <b>“Cấp mật khẩu tạm”</b> trên hồ sơ người ấy. Hệ thống sinh một chuỗi sáu ký tự, hiện <b>trên màn hình trưởng chi</b> để ông đọc qua điện thoại.</li>
+  <li>Người dùng đăng nhập bằng mật khẩu tạm, và Keycloak <b>bắt buộc đổi ngay</b> ở lần đăng nhập ấy (hành động bắt buộc <code>UPDATE_PASSWORD</code>).</li>
+  <li>Hệ thống ghi vào <code>audit_log</code> và <b>gửi thông báo cho chính chủ tài khoản</b>: <i>“Mật khẩu của ông/bà vừa được ông Nguyễn Văn Bốn đặt lại lúc 14:20 ngày 3 tháng 4. Nếu không phải ông/bà yêu cầu, hãy báo cho Hội đồng.”</i></li>
+</ol>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Bước 4 không phải phần thêm cho đẹp</p>
+  <p>
+    Bỏ bước 4 đi thì <b>trưởng chi có thể mượn tài khoản của bất kỳ ai trong chi mình, bất cứ lúc
+    nào, mà người ấy không bao giờ biết</b>. Đó là mượn được cả quyền “xin đính chính nhân danh
+    người khác”. Nguyên tắc 00 §2.4 nói không thao tác khó thu hồi nào được diễn ra trong im lặng —
+    ở đây “im lặng” nghĩa là im lặng với <em>chủ tài khoản</em>, không phải với người bấm nút.
+  </p>
+</div>
+
+<h2>7. Năm trạng thái lỗi</h2>
+
+<p>
+  Đề bài nêu ba; thực tế trong mã nguồn có năm. Bảng dưới là <b>hợp đồng chữ nghĩa</b> — mỗi dòng
+  nói rõ ai gây ra, câu chữ ra sao, và người dùng còn đường nào đi tiếp.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>#</th><th>Tình huống</th><th>Ai phát ra</th><th>Người dùng còn đi được đâu</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="so">1</td><td>Sai số điện thoại hoặc mật khẩu</td><td>Keycloak, trên trang đăng nhập</td><td>Thử lại · Quên mật khẩu · Gọi trưởng chi</td></tr>
+    <tr><td class="so">2</td><td>Nhập sai quá nhiều lần, bị khoá tạm</td><td>Keycloak (<code>bruteForceProtected: true</code>, <code>failureFactor: 10</code>)</td><td>Chờ · Gọi trưởng chi</td></tr>
+    <tr><td class="so">3</td><td>Tài khoản chưa được duyệt / đang khoá (<code>PENDING</code>, <code>SUSPENDED</code>)</td><td>Backend — <code>ACCOUNT_NOT_ACTIVE</code></td><td>Xem phần công khai · Xem ai đang duyệt · Gọi</td></tr>
+    <tr><td class="so">4</td><td>Đăng nhập được nhưng chưa nối với ai trong phả</td><td>Backend — <code>ACCOUNT_NOT_PROVISIONED</code></td><td>Xem phần công khai · Gửi lời xin nhận họ · Gọi</td></tr>
+    <tr><td class="so">5</td><td>Phiên hết hạn giữa chừng</td><td>Frontend — <code>token-bridge</code> gọi <code>onSessionLost()</code></td><td>Đăng nhập lại <b>tại chỗ</b>, không mất việc đang làm</td></tr>
+  </tbody>
+</table>
+</div>
+
+<figure>
+<svg viewBox="0 0 1240 620" role="img" aria-label="Ba khung điện thoại cho ba trạng thái lỗi: sai mật khẩu, chưa được duyệt, chưa nối với nhân khẩu">
+  <rect x="0" y="0" width="1240" height="620" class="wf-khung"/>
+
+  <!-- 1 sai mat khau -->
+  <rect x="0" y="40" width="390" height="560" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="0" y="28">1 · SAI MẬT KHẨU</text>
+  <rect x="24" y="72" width="342" height="104" rx="4" fill="var(--do-loi-nen)" stroke="var(--do-loi)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-loi)" x="40" y="102">Số hoặc mật khẩu chưa đúng</text>
+  <text class="wf-chu" style="font-size:16px" x="40" y="130">Gõ lại giúp tôi. Nếu ông/bà không chắc mật</text>
+  <text class="wf-chu" style="font-size:16px" x="40" y="154">khẩu, dùng “Quên mật khẩu” bên dưới.</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="24" y="206">Số điện thoại hoặc email</text>
+  <rect x="24" y="216" width="342" height="52" rx="4" fill="var(--nen-the)" stroke="var(--do-loi)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-family:ui-monospace,monospace" x="40" y="248">0912 345 678</text>
+  <text class="wf-phu" style="font-size:16px" x="24" y="290">Giữ nguyên thứ vừa gõ — không xoá trắng ô này.</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="24" y="326">Mật khẩu</text>
+  <rect x="24" y="336" width="342" height="52" rx="4" fill="var(--nen-the)" stroke="var(--do-loi)" stroke-width="1.5"/>
+  <rect x="294" y="340" width="68" height="44" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:15px" x="328" y="368" text-anchor="middle">Hiện</text>
+
+  <rect x="24" y="412" width="342" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="195" y="444" text-anchor="middle">Đăng nhập</text>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="24" y="498">Quên mật khẩu?</text>
+
+  <rect x="24" y="516" width="342" height="66" rx="4" fill="var(--vang-nen)" stroke="var(--ho-phach)" stroke-width="1.25"/>
+  <text class="wf-phu" style="font-size:15px" x="40" y="540">Sai 10 lần liên tiếp thì tài khoản bị khoá tạm,</text>
+  <text class="wf-phu" style="font-size:15px" x="40" y="562">tối đa 15 phút. Con số lấy từ realm: failureFactor 10,</text>
+  <text class="wf-phu" style="font-size:15px" x="40" y="576">maxFailureWaitSeconds 900.</text>
+
+  <!-- 2 chua duyet -->
+  <rect x="425" y="40" width="390" height="560" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="425" y="28">3 · CHƯA ĐƯỢC DUYỆT · ACCOUNT_NOT_ACTIVE</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="449" y="98">Hồ sơ của bà đang chờ duyệt</text>
+  <text class="wf-chu" style="font-size:17px" x="449" y="138">Bà đã đăng nhập được. Hội đồng còn một bước</text>
+  <text class="wf-chu" style="font-size:17px" x="449" y="164">xác nhận trước khi mở phần của người đang sống.</text>
+
+  <rect x="449" y="192" width="342" height="104" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-phu" style="font-weight:600" x="465" y="218">AI ĐANG DUYỆT</text>
+  <text class="wf-chu" style="font-size:17px" x="465" y="248">Ông Nguyễn Văn Bốn · Trưởng chi Giáp</text>
+  <text class="wf-chu" style="font-size:16px" x="465" y="276">Đã gửi 2 ngày trước · 0903 111 222</text>
+
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="449" y="336">Trong lúc chờ, bà vẫn xem được</text>
+  <text class="wf-chu" style="font-size:16px" x="449" y="368">· toàn bộ người đã khuất trong phả</text>
+  <text class="wf-chu" style="font-size:16px" x="449" y="394">· phả đồ từ Thuỷ tổ xuống</text>
+  <text class="wf-chu" style="font-size:16px" x="449" y="420">· lịch giỗ chung của dòng họ</text>
+
+  <rect x="449" y="452" width="342" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="620" y="484" text-anchor="middle">Xem phả các cụ đã khuất</text>
+  <text class="wf-phu" style="font-size:16px" x="449" y="536">Quá 7 ngày chưa duyệt, hệ thống tự nhắc lên</text>
+  <text class="wf-phu" style="font-size:16px" x="449" y="558">Hội đồng Tộc biểu. Đề xuất, theo 03 §5.1.</text>
+
+  <!-- 3 chua noi -->
+  <rect x="850" y="40" width="390" height="560" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="850" y="28">4 · CHƯA NỐI VỚI AI · ACCOUNT_NOT_PROVISIONED</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="874" y="98">Chưa tìm thấy ông/bà trong phả</text>
+  <text class="wf-chu" style="font-size:17px" x="874" y="138">Ông/bà đã đăng nhập được, nhưng tài khoản này</text>
+  <text class="wf-chu" style="font-size:17px" x="874" y="164">chưa được nối với ai trong phả họ Nguyễn.</text>
+  <text class="wf-chu" style="font-size:17px" x="874" y="204">Vì thế chưa có hồ sơ nào để mở, và chưa tra</text>
+  <text class="wf-chu" style="font-size:17px" x="874" y="230">được danh xưng.</text>
+
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="874" y="282">Việc cần làm</text>
+  <rect x="874" y="298" width="342" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="1045" y="330" text-anchor="middle">Gửi lời xin nhận họ</text>
+  <rect x="874" y="366" width="342" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="1045" y="398" text-anchor="middle">Xem phần công khai</text>
+
+  <rect x="874" y="440" width="342" height="90" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+  <text class="wf-phu" style="font-weight:600" x="890" y="466">HOẶC GỌI NGƯỜI ĐÃ MỜI ÔNG/BÀ</text>
+  <text class="wf-chu" style="font-size:17px" x="890" y="494">Ông Nguyễn Văn Bốn · Chi Giáp</text>
+  <text class="wf-chu" style="font-size:17px;fill:var(--do-tram);font-family:ui-monospace,monospace" x="890" y="520">0903 111 222</text>
+  <text class="wf-phu" style="font-size:15px" x="874" y="560">Không in mã lỗi. Không in chữ “provisioned”.</text>
+  <text class="wf-phu" style="font-size:15px" x="874" y="582">Người dùng không làm gì sai và không sửa được nó.</text>
+</svg>
+<figcaption>
+  <b>Hình 8. Ba trạng thái lỗi, khung 390 mỗi màn.</b> Ba khác biệt đáng chú ý:
+  <b>(1)</b> màn sai mật khẩu <em>không xoá ô định danh</em> — người gõ chậm bằng một ngón tay phải
+  gõ lại từ đầu là lý do bỏ cuộc thật;
+  <b>(2)</b> màn chờ duyệt nêu <em>ai</em> đang duyệt, <em>bao lâu rồi</em>, và <em>vẫn làm được
+  gì</em> — 03 §5.1 đòi đúng ba thứ ấy, và thiếu chúng thì “Đang chờ” là một ngõ cụt;
+  <b>(3)</b> màn chưa-nối-phả không nói một chữ kỹ thuật nào.
+  <b>Cái giá:</b> cả ba màn đều in tên và số máy của một người thật. Nghĩa là giao diện cần biết
+  “trưởng chi phụ trách của tôi là ai” — <b>dữ kiện này chưa có trong hợp đồng API Giai đoạn 1</b>.
+  Không có nó thì ba màn này tụt về “liên hệ Hội đồng Tộc biểu”, và mất đúng phần có tác dụng nhất.
+</figcaption>
+</figure>
+
+<h3>7.1 · Cái bẫy định tuyến của <code>ACCOUNT_NOT_PROVISIONED</code></h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗi này không đến từ màn đăng nhập, và nó đội lốt “không tìm thấy trang”</p>
+  <p>
+    <code>AppUserProvisioningService.requireCurrentUser()</code> ném
+    <code>NotFoundException</code> — tức <b>HTTP 404</b>, không phải 401 hay 403. Người dùng đã đăng
+    nhập thành công; lỗi nổ ra ở <em>lời gọi API tiếp theo</em>, trên bất kỳ màn hình nào họ vừa mở.
+    Một bộ xử lý lỗi chung nhìn thấy 404 sẽ vẽ “Không tìm thấy” — và người dùng kết luận là trang
+    hỏng, rồi tải lại, rồi vẫn thế.
+  </p>
+  <p>
+    <b>Đề xuất:</b> lớp API bắt riêng <code>code === "ACCOUNT_NOT_PROVISIONED"</code> ở tầng
+    <code>apiFetch</code> (chỗ đã có sẵn <code>token-bridge</code>) và điều hướng <b>một lần</b> tới
+    <code>/vi/tai-khoan/chua-noi</code>. Phân nhánh theo <code>code</code>, <b>không theo mã HTTP</b>
+    — javadoc của <code>MembershipProblemCodes</code> đã dặn đúng điều này, và nói thêm rằng bốn mã
+    của W6 <em>chưa</em> có trong <code>contracts/openapi.yaml</code>. Phải bổ sung trước khi giao
+    diện dựa vào chúng.
+  </p>
+</div>
+
+<h3>7.2 · Sáu luật viết câu lỗi cho màn này</h3>
+
+<ol>
+  <li><b>Không in mã lỗi.</b> <code>ACCOUNT_NOT_PROVISIONED</code> không giúp người dùng làm được gì. Nếu cần cho hỗ trợ thì giấu sau một liên kết “Chi tiết kỹ thuật”.</li>
+  <li><b>Nói việc phải làm, không nói cái gì đã hỏng</b> — 02 §4.1 trạng thái 6.</li>
+  <li><b>Không đổ lỗi.</b> “Bạn đã nhập sai” → “Số hoặc mật khẩu chưa đúng”.</li>
+  <li><b>Không dùng màu đỏ lỗi cho luật chạy đúng.</b> Chờ duyệt và chế độ khách <b>không phải sự cố</b>; chúng dùng nền giấy hoặc hổ phách. 04 đã chốt đúng nguyên tắc này cho khối “xin đăng nhập để xem phả đồ”.</li>
+  <li><b>Mọi màn lỗi có ít nhất một nút đi tiếp được.</b> Một màn lỗi không có lối ra là một cái ngõ cụt có màu.</li>
+  <li><b>Không để câu lỗi tiết lộ dữ liệu bị ẩn.</b> Không bao giờ “Số này không có trong họ” — đó là một công cụ dò danh sách thành viên.</li>
+</ol>
+
+<h3>7.3 · Trạng thái 5: phiên hết hạn giữa chừng</h3>
+
+<p>
+  Đây là ca duy nhất <b>không</b> được đưa về màn đăng nhập. Hôm nay
+  <code>auth-context.tsx</code> xử lý bằng <code>toGuest()</code> + <code>queryClient.clear()</code>
+  — đúng về mặt an toàn dữ liệu (cache được định hình bởi vai cũ, giữ lại là rò rỉ), nhưng về mặt
+  trải nghiệm thì <b>màn hình bỗng nhiên rỗng</b> và không ai giải thích gì.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Đề xuất: hộp thoại tại chỗ, giữ nguyên trang</p>
+  <p>
+    Một hộp thoại giữa màn: <i>“Phiên đăng nhập đã hết hạn sau 30 phút không thao tác. Đăng nhập
+    lại để xem tiếp.”</i> + nút <b>“Đăng nhập lại”</b> (quay về đúng trang, đúng tham số — hành vi
+    <code>redirectUri: window.location.href</code> hiện có đã đúng) + nút <b>“Xem phần công
+    khai”</b>.
+  </p>
+  <p>
+    <b>Và nếu người dùng đang gõ dở một đơn xin đính chính:</b> sản phẩm đã có cơ chế giữ nháp ở
+    <code>sessionStorage</code> chặn ba lối (đóng tab · vuốt lùi · bấm liên kết). Ca mất phiên phải
+    <b>dùng lại đúng cơ chế ấy</b>, nếu không thì đây thành lối thứ tư làm mất dữ liệu — lối duy
+    nhất không ai chặn.
+  </p>
+</div>
+
+<h2>8. Lối vào chế độ khách</h2>
+
+<p>
+  Nguyên tắc 00 §2.7 nói quyền riêng tư phải nhìn thấy được <em>bằng giao diện</em>. Màn đăng nhập
+  là chỗ rẻ nhất và sớm nhất để làm việc đó. Quy tắc: <b>nói rõ xem được gì, đừng mời đăng nhập một
+  cách mù mờ.</b>
+</p>
+
+<figure>
+<svg viewBox="0 0 900 400" role="img" aria-label="Khối khách xem được gì, đặt dưới thẻ đăng nhập">
+  <rect x="0" y="0" width="900" height="400" class="wf-khung"/>
+  <rect x="40" y="40" width="820" height="320" rx="6" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1.25"/>
+
+  <text class="wf-chu" style="font-size:21px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="72" y="90">Chưa đăng nhập thì xem được gì?</text>
+
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--xanh)" x="72" y="136">Xem được, không cần tài khoản</text>
+  <text class="wf-chu" style="font-size:16px" x="72" y="166">· Tất cả các cụ đã khuất: tên, năm sinh–năm mất, đời, chi</text>
+  <text class="wf-chu" style="font-size:16px" x="72" y="194">· Phả đồ từ Thuỷ tổ xuống, theo đường các cụ đã khuất</text>
+  <text class="wf-chu" style="font-size:16px" x="72" y="222">· Ngày giỗ của các cụ, cả âm lẫn dương</text>
+
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="472" y="136">Phải là người trong họ mới xem được</text>
+  <text class="wf-chu" style="font-size:16px" x="472" y="166">· Người đang sống — theo Nghị định 13/2023</text>
+  <text class="wf-chu" style="font-size:16px" x="472" y="194">· Tra danh xưng cho người đang sống</text>
+  <text class="wf-chu" style="font-size:16px" x="472" y="222">· Xin đính chính · Nhận nhắc ngày giỗ</text>
+
+  <line x1="72" y1="252" x2="828" y2="252" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:16px" x="72" y="284">Đây không phải thiết lập của riêng ông/bà: người đang sống ẩn mặc định với</text>
+  <text class="wf-chu" style="font-size:16px" x="72" y="310">mọi khách, và đó là quy định của pháp luật, không phải lựa chọn của dòng họ.</text>
+
+  <rect x="72" y="326" width="260" height="0" />
+</svg>
+<figcaption>
+  <b>Hình 9. Khối “khách xem được gì”, khung 900 rộng.</b> Đặt <b>dưới</b> thẻ đăng nhập trên máy
+  tính, và <b>sau</b> nút “Xem phần công khai” trên điện thoại. Hai cột cân nhau — không cột nào là
+  lời xin lỗi cho cột kia.
+  <b>Điểm phải cẩn thận:</b> cột phải viết là <i>“phải là người trong họ mới xem được”</i>, chứ
+  <b>không</b> viết <i>“có 320 người đang sống bị ẩn”</i>. Con số ấy tự nó là một rò rỉ, và 02 §4.1
+  đã đặt thành luật: trạng thái rỗng không được lộ chuyện có dữ liệu bị giấu.
+  <b>Cái giá lớn nhất:</b> cột trái là một lời hứa mà backend <b>chưa trả được</b> —
+  <code>/api/v1/public/**</code> chưa có controller nào, nên hôm nay khách bấm “Xem phần công khai”
+  sẽ nhận 401 và một màn trống. <b>Không dựng khối này trước khi điểm cuối công khai chạy</b>, nếu
+  không nó thành lời nói dối in sẵn trên màn hình đầu tiên.
+</figcaption>
+</figure>
+
+<h2>9. Trên điện thoại — ngân sách chiều cao, không phải cảm tính</h2>
+
+<p>
+  Đa số người trong họ ở xa dùng điện thoại, và trên điện thoại màn đăng nhập có một ràng buộc mà
+  màn khác không có: <b>bàn phím ảo che mất khoảng 40% chiều cao</b>. Nút “Đăng nhập” nằm dưới bàn
+  phím là một lỗi im lặng — người dùng gõ xong mật khẩu rồi không thấy nút đâu.
+</p>
+
+<figure>
+<svg viewBox="0 0 830 700" role="img" aria-label="Khung điện thoại phương án A và cùng khung đó khi bàn phím ảo đang mở">
+  <rect x="0" y="0" width="830" height="700" class="wf-khung"/>
+
+  <!-- khung thuong -->
+  <rect x="0" y="36" width="390" height="664" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="0" y="24">390 × 664 · KHÔNG BÀN PHÍM</text>
+  <rect x="0" y="36" width="390" height="56" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="16" y="70">Phả họ Nguyễn</text>
+  <rect x="270" y="42" width="106" height="44" rx="4" class="wf-o"/>
+  <text class="wf-chu" style="font-size:15px" x="323" y="70" text-anchor="middle">VI · EN</text>
+
+  <text class="wf-chu" style="font-size:24px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="16" y="136">Phả họ Nguyễn</text>
+  <text class="wf-chu" style="font-size:24px;font-weight:700;font-family:Piazzolla,Georgia,serif" x="16" y="164">— Đại Lan</text>
+  <text class="wf-phu" style="font-size:16px" x="16" y="190">Từ đường Đại Lan · Thanh Trì · Hà Nội</text>
+  <line x1="16" y1="206" x2="374" y2="206" stroke="var(--vien)" stroke-width="1"/>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="16" y="236">Số điện thoại hoặc email</text>
+  <rect x="16" y="246" width="358" height="52" rx="4" class="wf-o"/>
+  <text class="wf-phu" style="font-size:16px" x="16" y="322">Không có email thì dùng số điện thoại.</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="16" y="356">Mật khẩu</text>
+  <rect x="16" y="366" width="358" height="52" rx="4" class="wf-o"/>
+  <rect x="302" y="370" width="68" height="44" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:15px" x="336" y="398" text-anchor="middle">Hiện</text>
+
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="16" y="450">Quên mật khẩu?</text>
+
+  <rect x="16" y="474" width="358" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="195" y="506" text-anchor="middle">Đăng nhập</text>
+
+  <line x1="16" y1="556" x2="150" y2="556" stroke="var(--vien)" stroke-width="1"/>
+  <text class="wf-phu" x="195" y="561" text-anchor="middle">hoặc</text>
+  <line x1="240" y1="556" x2="374" y2="556" stroke="var(--vien)" stroke-width="1"/>
+
+  <rect x="16" y="576" width="358" height="52" rx="4" fill="none" stroke="var(--do-tram)" stroke-width="1.5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="195" y="608" text-anchor="middle">Xem phần công khai</text>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="16" y="660">Tôi có mã mời</text>
+
+  <!-- khung ban phim -->
+  <rect x="440" y="36" width="390" height="664" rx="8" fill="var(--nen-the)" stroke="var(--vien-dam)" stroke-width="1.5"/>
+  <text class="wf-phu" style="font-weight:600" x="440" y="24">CÙNG MÀN, BÀN PHÍM MỞ · VÙNG THẤY ĐƯỢC CÒN ~374</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="456" y="86">Số điện thoại hoặc email</text>
+  <rect x="456" y="96" width="358" height="52" rx="4" class="wf-o"/>
+  <text class="wf-chu" style="font-size:17px;font-family:ui-monospace,monospace" x="472" y="128">0912 345 678</text>
+
+  <text class="wf-chu" style="font-size:16px;font-weight:500" x="456" y="182">Mật khẩu</text>
+  <rect x="456" y="192" width="358" height="52" rx="4" fill="var(--nen-the)" stroke="var(--ho-phach)" stroke-width="2.5"/>
+  <rect x="742" y="196" width="68" height="44" rx="4" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-chu" style="font-size:15px" x="776" y="224" text-anchor="middle">Hiện</text>
+
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="456" y="276">Quên mật khẩu?</text>
+  <rect x="456" y="300" width="358" height="52" rx="4" class="wf-nhan"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--nen-the)" x="635" y="332" text-anchor="middle">Đăng nhập</text>
+
+  <line x1="440" y1="376" x2="830" y2="376" stroke="var(--do-loi)" stroke-width="2" stroke-dasharray="6 4"/>
+  <text class="wf-phu" style="fill:var(--do-loi);font-weight:600" x="456" y="398">MÉP TRÊN CỦA BÀN PHÍM ẢO</text>
+
+  <rect x="440" y="410" width="390" height="290" fill="var(--nen-giay)" stroke="var(--vien-dam)" stroke-width="1"/>
+  <text class="wf-phu" x="635" y="470" text-anchor="middle">bàn phím ảo che phần này</text>
+  <text class="wf-chu" style="font-size:16px" x="456" y="520">Khoảng cách từ đáy ô mật khẩu (244) tới đáy nút</text>
+  <text class="wf-chu" style="font-size:16px" x="456" y="546">Đăng nhập (352) = 108px. Nhỏ hơn 120px, nên nút</text>
+  <text class="wf-chu" style="font-size:16px" x="456" y="572">vẫn nằm trong vùng thấy được khi bàn phím mở.</text>
+  <text class="wf-chu" style="font-size:16px" x="456" y="612">Đó là lý do “Quên mật khẩu?” nằm GIỮA ô mật khẩu</text>
+  <text class="wf-chu" style="font-size:16px" x="456" y="638">và nút, chứ không nằm dưới nút.</text>
+</svg>
+<figcaption>
+  <b>Hình 10. Bản điện thoại, khung 390×664.</b> Ràng buộc đề xuất, viết ra để kiểm được:
+  <b>đáy nút “Đăng nhập” phải cách đáy ô mật khẩu không quá 120px.</b> Bố cục ở đây đạt 108px.
+  <b>Cái giá:</b> ràng buộc này ăn hết dư địa của bảng tên — đó là lý do mục 2.2 chốt “ba dòng chữ,
+  không ảnh”, và vì sao mọi đề nghị thêm logo hay khẩu hiệu vào màn này đều phải bị từ chối kèm con
+  số chứ không kèm ý kiến.
+  <b>Chỗ tôi phải đoán:</b> 664 là ước lượng vùng hiển thị của một Pixel 5 sau khi trừ thanh trình
+  duyệt, và ~290 là ước lượng chiều cao bàn phím. <b>Chưa đo trên máy thật</b> — xem mục 12.
+</figcaption>
+</figure>
+
+<h3>9.1 · Chi tiết ô nhập trên điện thoại</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Việc</th><th>Làm gì</th><th>Vì sao</th></tr></thead>
+  <tbody>
+    <tr><td>Bàn phím khi chạm ô định danh</td><td>Bàn phím số nếu ký tự đầu là chữ số, bàn phím chữ nếu không</td><td>Một ô nhận cả hai kiểu; khoá cứng bàn phím số sẽ khoá luôn người dùng email.</td></tr>
+    <tr><td>Tự viết hoa &amp; tự sửa chính tả</td><td><b>Tắt cả hai</b> ở ô định danh</td><td>Điện thoại tự viết hoa chữ đầu email, và người dùng không nhìn thấy điều đó xảy ra.</td></tr>
+    <tr><td>Dán</td><td><b>Không chặn</b></td><td>Chặn dán là chặn trình quản lý mật khẩu, tức đẩy mọi người về mật khẩu tự nhớ, tức mật khẩu yếu hơn.</td></tr>
+    <tr><td>Tự điền</td><td>Khai đúng vai trò cho từng ô để trình duyệt điền được</td><td>Với người gõ chậm, tự điền là khác biệt giữa dùng được và bỏ cuộc.</td></tr>
+    <tr><td>Nút “Hiện” mật khẩu</td><td>68×44, <b>có chữ</b>, đổi thành “Ẩn” khi đang hiện</td><td>Con mắt gạch chéo là một câu đố (00 §2.3). Và người gõ một ngón cần nhìn thấy mình gõ gì.</td></tr>
+    <tr><td>Khi sai mật khẩu</td><td>Giữ nguyên ô định danh, chỉ xoá ô mật khẩu, con trỏ nhảy vào ô mật khẩu</td><td>Bắt gõ lại số điện thoại là hình phạt cho một lỗi mà người dùng không nhớ mình đã phạm ở ô nào.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>10. Song ngữ trên màn này</h2>
+
+<p>
+  03 §5 nói VI/EN phải đổi được <em>ngay ở bước 1</em>. Màn đăng nhập <b>là</b> bước 1, nên công tắc
+  ngôn ngữ phải có mặt ở đây — kể cả khi chưa đăng nhập, kể cả trên trang do Keycloak dựng
+  (<code>internationalizationEnabled: true</code> đã bật, <code>defaultLocale: "vi"</code>).
+</p>
+
+<ul>
+  <li><b>Viết chữ, không vẽ cờ.</b> “Tiếng Việt · English”. Cờ là quốc gia chứ không phải ngôn ngữ, và một biểu tượng đứng một mình vi phạm 00 §2.3.</li>
+  <li><b>Vùng chạm 44 cao</b>, đặt ở thanh đầu trang chứ không nhét vào chân thẻ.</li>
+  <li><b>Bản tiếng Anh giữ nguyên thuật ngữ dòng họ</b> (00 §2.6). “Lời mời từ Trưởng chi Giáp” → <i>“An invitation from the Trưởng chi (head of Chi Giáp)”</i>, không dịch thành “branch manager”.</li>
+  <li>
+    <b>Cái giá phải nói ra:</b> nếu đi theo đường 3 ở mục 3 thì <b>bản dịch nằm ở hai nơi</b> —
+    <code>messages/{vi,en}.json</code> cho các màn Next.js, và gói thông điệp của theme cho ba trang
+    Keycloak. Hai nơi nghĩa là sẽ có lúc lệch. Không có cách né; chỉ có cách kiểm.
+  </li>
+</ul>
+
+<h2>11. Danh mục kiểm — mười ba điều, kiểm được</h2>
+
+<p>Viết dưới dạng khẳng định để dùng thẳng làm điều kiện nghiệm thu.</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Điều kiện</th><th>Đo thế nào</th></tr></thead>
+  <tbody>
+    <tr><td class="so">1</td><td>Mọi chữ trên màn đăng nhập ≥ 16px; nhãn ô nhập ≥ 16px</td><td>Duyệt toàn bộ nút chữ, giống cách tài liệu 02 §2.5 đã đo</td></tr>
+    <tr><td class="so">2</td><td>Mọi vùng chạm ≥ 44×44, kể cả “Quên mật khẩu?”, “VI · EN”, “Hiện”</td><td>Đo hộp bao, không đo chữ</td></tr>
+    <tr><td class="so">3</td><td>Không điều khiển nào chỉ có biểu tượng — kể cả dưới 640px</td><td>Chính là chỗ <code>auth-menu.tsx</code> đang hỏng hôm nay</td></tr>
+    <tr><td class="so">4</td><td>Điểm dừng Tab đầu tiên là “Bỏ qua, tới nội dung chính”; thứ hai là ô định danh</td><td>Tab từ đầu trang; README đã ghi liên kết này đang thiếu trong sản phẩm</td></tr>
+    <tr><td class="so">5</td><td>Vòng tiêu điểm bàn phím thấy được trên <b>mọi</b> ô, gồm cả widget Ant Design</td><td>02 §1.8; hôm nay <code>&lt;Select&gt;</code> của AntD đo được 1,00:1</td></tr>
+    <tr><td class="so">6</td><td>Câu lỗi được đọc lên bởi trình đọc màn hình khi nó xuất hiện</td><td>Vùng thông báo động, không chỉ là chữ đỏ</td></tr>
+    <tr><td class="so">7</td><td>Câu lỗi <b>không</b> phụ thuộc vào việc tài khoản có tồn tại hay không</td><td>Thử với một số có thật và một số bịa — hai màn phải giống hệt</td></tr>
+    <tr><td class="so">8</td><td>Nút chính giữ nguyên bề rộng khi chuyển sang “Đang đăng nhập…”</td><td>02 §4.1 trạng thái 4</td></tr>
+    <tr><td class="so">9</td><td>Đáy nút chính cách đáy ô mật khẩu ≤ 120px</td><td>Đề xuất của tài liệu này; đo trên khung 390×664</td></tr>
+    <tr><td class="so">10</td><td>Toàn bộ màu khai ở <code>:root</code>; chế độ tối không có màu riêng lẻ nào</td><td>00 §3; áp dụng cho <b>cả CSS của theme Keycloak</b></td></tr>
+    <tr><td class="so">11</td><td>Bảng màu và cỡ chữ của theme Keycloak trùng <code>tokens.ts</code></td><td>Phép kiểm chặn trôi lệch ở mục 3</td></tr>
+    <tr><td class="so">12</td><td><code>prefers-reduced-motion</code> được tôn trọng — không có hiệu ứng rung khi sai mật khẩu</td><td>02 §6.2. Rung là hiệu ứng hay bị thêm vào đúng màn này nhất</td></tr>
+    <tr><td class="so">13</td><td>Màn đăng nhập tải xong trong ngân sách NFR-1 trên bản <code>next build</code></td><td>Đo trên bản dựng sản phẩm; bản dev báo 3000–4000 ms và vô nghĩa</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>12. Tự phê bình</h2>
+
+<p>
+  Mục này nói phương án đề xuất yếu ở đâu và chỗ nào tôi phải đoán. Nó không phải nghi thức khiêm
+  tốn — sáu điều dưới đây có thể làm hỏng luồng, và người duyệt cần biết trước khi gật đầu.
+</p>
+
+<h3>12.1 · Sáu chỗ yếu của chính phương án này</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Điểm yếu</th><th>Ai chịu hậu quả</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="so">1</td>
+      <td>
+        <b>Đăng nhập bằng số điện thoại đẩy toàn bộ việc đặt lại mật khẩu sang trưởng chi — mãi
+        mãi.</b> Keycloak chỉ biết gửi thư; không email thì không có đường tự phục vụ. Với 1.500
+        người, nếu mỗi năm chỉ 2% quên mật khẩu thì đó là khoảng <b>30 cuộc điện thoại mỗi năm</b>
+        cho một nhóm người làm việc không công. Con số 2% là <b>tôi ước lượng</b>, không có nguồn.
+        Nếu thật ra là 10% thì luồng này sụp bằng đúng cái cách mà không ai kịp nhận ra: các trưởng
+        chi lặng lẽ ngừng nghe máy.
+      </td>
+      <td>Trưởng chi, rồi tới người quên mật khẩu</td>
+    </tr>
+    <tr>
+      <td class="so">2</td>
+      <td>
+        <b>Nối sẵn node từ mã mời là điểm mạnh nhất <em>và</em> điểm yếu nhất của thiết kế.</b> Nó
+        xoá được trạng thái “chờ duyệt”, nhưng đổi lại nó đặt việc mở quyền đọc Tầng 2 lên một tin
+        nhắn SMS/Zalo — kênh ta không kiểm soát, và là kênh mà chuyển tiếp một tin nhắn là thao tác
+        một ngón tay. Ba lớp chống (một lần · 7 ngày · “Không phải tôi”) đều là <b>lớp phát hiện
+        sau</b>, không lớp ngăn trước.
+      </td>
+      <td>Cả một chi, nếu một mã đi nhầm</td>
+    </tr>
+    <tr>
+      <td class="so">3</td>
+      <td>
+        <b>Không có xác thực hai lớp ở bất cứ đâu trong tài liệu này.</b> <code>otpPolicyType</code>
+        chưa được khai trong realm. Tài khoản Hội đồng đọc được Tầng 3 của cả họ và duyệt được đính
+        chính — đó là tài khoản đáng để tấn công nhất, và nó đang được bảo vệ bằng một mật khẩu do
+        một người bảy mươi tuổi tự đặt. Tôi <b>cố ý</b> không thiết kế 2FA vì nó sẽ đánh chìm đúng
+        nhóm người chính. Nhưng đó là một lựa chọn <em>có nạn nhân</em>, không phải một lựa chọn
+        trung tính. Một hướng đỡ tệ hơn, chưa vẽ ở đây: chỉ bật 2FA cho vai
+        <code>COUNCIL</code>/<code>ADMIN</code>.
+      </td>
+      <td>Cả dòng họ, một lần duy nhất là đủ</td>
+    </tr>
+    <tr>
+      <td class="so">4</td>
+      <td>
+        <b>Bảng tên dòng họ trên khung 390 chỉ còn ba dòng chữ.</b> Mục 2.2 tuyên bố phải nói được
+        “đây là phả của ai”, rồi mục 9 lấy mất gần hết chỗ để nói. Trên điện thoại, cái tôi giao
+        được thực ra chỉ nhỉnh hơn một dòng tiêu đề. <b>Câu hỏi 2.2 vì thế được trả lời đầy đủ trên
+        máy tính và trả lời hụt trên điện thoại</b> — mà điện thoại mới là nơi phần lớn người dùng
+        ở.
+      </td>
+      <td>Người lần đầu, vào bằng điện thoại</td>
+    </tr>
+    <tr>
+      <td class="so">5</td>
+      <td>
+        <b>Ba màn lỗi ở hình 8 phụ thuộc vào một dữ kiện chưa tồn tại:</b> “trưởng chi phụ trách của
+        tôi là ai, số máy bao nhiêu”. Không có nó, cả ba màn tụt về “liên hệ Hội đồng Tộc biểu” —
+        tức là tụt về đúng cái ngõ cụt mà mục 2.3 nói là phải tránh. Phần <em>có tác dụng nhất</em>
+        của thiết kế này lại là phần <em>phụ thuộc nhiều nhất</em> vào thứ chưa ai hứa làm.
+      </td>
+      <td>Người đang mắc kẹt — đúng nhóm cần giúp nhất</td>
+    </tr>
+    <tr>
+      <td class="so">6</td>
+      <td>
+        <b>Đường 3 (theme Keycloak) chia sản phẩm thành hai nơi phải sửa.</b> Tôi đề xuất một phép
+        kiểm chặn trôi lệch, nhưng phép kiểm chỉ bắt được <em>bốn giá trị</em> tôi liệt kê. Mọi thứ
+        khác — khoảng cách, chiều cao dòng, cách xuống dòng của tiếng Việt, câu chữ — vẫn trôi tự
+        do. Sau một năm, trang đăng nhập gần như chắc chắn sẽ hơi khác phần còn lại, và người dùng
+        sẽ thấy sự khác ấy ở đúng giây họ cần tin tưởng nhất.
+      </td>
+      <td>Ai bảo trì, sáu tháng sau</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>12.2 · Bảy chỗ tôi phải đoán vì thiếu thông tin</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ đoán</th><th>Tôi giả định</th><th>Sai thì hỏng cái gì</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Ai phát lời mời, và có đủ người làm không</b></td>
+      <td>Trưởng chi phát lời mời trong chi mình, ở buổi chạp họ</td>
+      <td class="xau">Nếu thực tế chỉ có một hai người trong Hội đồng làm được việc này, toàn bộ mục 5 thành nút cổ chai. <b>Chưa ai xác nhận mô hình vận hành này.</b></td>
+    </tr>
+    <tr>
+      <td><b>Quyền nối tài khoản với nhân khẩu</b></td>
+      <td>Sẽ được nới cho trưởng chi trong phạm vi <code>ltree</code>, hoặc sẽ có nhịp duyệt hai bước</td>
+      <td class="xau">Hôm nay <code>requireClanWide</code> chặn. Nếu quyết định giữ nguyên thì hình 5 khung 3 (“không phải chờ duyệt”) <b>sai</b>.</td>
+    </tr>
+    <tr>
+      <td><b>Tồn tại một kênh gửi tin nhắn</b></td>
+      <td>Trưởng chi tự gửi từ máy cá nhân, không qua cổng SMS</td>
+      <td class="canh">Đây là giả định <em>tránh né</em> vấn đề chứ không giải quyết: nếu dòng họ muốn gửi hàng loạt thì lại đụng đúng bức tường tư cách pháp nhân đang chặn Zalo OA.</td>
+    </tr>
+    <tr>
+      <td><b>Chất lượng bản dịch tiếng Việt của Keycloak</b></td>
+      <td>Dùng được, chỉ cần đè lên vài chuỗi</td>
+      <td class="canh"><b>Tôi chưa mở Keycloak lần nào</b> trong phiên làm việc này (máy đang chạy sản phẩm để nghiệm thu, và tôi được dặn không khởi động server). Nếu bản dịch mỏng hơn tôi tưởng thì khối lượng việc của theme lớn hơn ước lượng.</td>
+    </tr>
+    <tr>
+      <td><b>Mọi con số px trong tài liệu</b></td>
+      <td>390×664 là vùng thấy được trên điện thoại; bàn phím cao ~290</td>
+      <td class="canh"><b>Không đo trên trình duyệt nào.</b> Khác hẳn tài liệu 02, vốn đo trên sản phẩm đang chạy. Ngân sách 120px ở mục 9 là một <em>đề xuất có lập luận</em>, không phải một kết quả đo.</td>
+    </tr>
+    <tr>
+      <td><b>“1.500 người”, “14 đời”, tên “Đại Lan”</b></td>
+      <td>Số 1.500 lấy từ văn xuôi trong <code>CLAUDE.md</code>; tên chi và địa danh là <b>ví dụ tôi bịa</b> để khung dây đọc được</td>
+      <td class="canh">Không phải dữ liệu của dòng họ thật nào. Phải thay hết trước khi dùng làm bản mẫu.</td>
+    </tr>
+    <tr>
+      <td><b>Dâu/rể có được mời như người huyết thống không</b></td>
+      <td>Có, và hình 5 vẽ đúng một người dâu làm ví dụ chính</td>
+      <td class="xau">Hội đồng còn chưa quyết <b>quyền xoá dữ liệu của dâu/rể sau ly hôn</b> — câu hỏi đang treo ở <code>design/README.md</code>. Nếu câu trả lời là “được xoá”, thì mời họ vào <em>trước khi</em> có cơ chế xoá là mời người ta vào một chỗ chưa có cửa ra.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>12.3 · Một phản biện với chính đề xuất chính</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Phương án C có thể đúng hơn tôi thừa nhận</p>
+  <p>
+    Tôi loại phương án C (không có màn đăng nhập) bằng lập luận “cụ 70 tuổi được dặn mở rồi đăng
+    nhập sẽ không thấy chỗ đăng nhập”. Nhưng lập luận ấy dựa trên một khuyết tật <b>sửa được trong
+    một buổi</b>: nút đăng nhập trên thanh đầu trang đang mất chữ dưới 640px. Sửa cái đó xong thì
+    phương án C rẻ hơn hẳn, và nó <em>không</em> phải trả cái giá “một trang nữa phải bảo trì ở một
+    codebase khác”.
+  </p>
+  <p>
+    Lý do tôi vẫn không chọn C: một nút trên thanh đầu trang, dù có chữ, vẫn là một mục tiêu nhỏ
+    trong một màn hình đầy nội dung lạ — còn một thẻ giữa trang thì không thể trượt. Nhưng
+    <b>đó là một phán đoán, không phải một phép đo.</b> Nếu chủ dự án muốn rẻ và nhanh, C + sửa nút
+    là một lựa chọn có thể bảo vệ được, và tôi sẽ không tranh cãi rằng nó sai — chỉ rằng nó rủi ro
+    hơn ở đúng nhóm người không ai muốn mất.
+  </p>
+</div>
+
+<h2>13. Việc phải quyết trước khi viết dòng mã đầu tiên</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Câu hỏi</th><th>Ai quyết</th><th>Chặn cái gì</th></tr></thead>
+  <tbody>
+    <tr><td class="so">1</td><td>Đăng nhập bằng số điện thoại hay email? (mục 2.1)</td><td>Chủ dự án + Hội đồng</td><td>Chặn mọi thứ. Quyết sau khi đã có 1.500 người trong hệ thống là quá muộn.</td></tr>
+    <tr><td class="so">2</td><td>Trang đăng nhập là theme Keycloak hay trang Next.js? (mục 3)</td><td>Kỹ thuật</td><td>Chặn mọi khung dây trong tài liệu này</td></tr>
+    <tr><td class="so">3</td><td>Trưởng chi có được nối tài khoản với nhân khẩu không? (mục 5.6)</td><td>Hội đồng + backend</td><td>Chặn luồng mời, và chặn lời hứa “không phải chờ duyệt”</td></tr>
+    <tr><td class="so">4</td><td>Màn nhận lời mời có được hiện tên người đang sống không? (mục 5.3)</td><td><b>Hội đồng Tộc biểu</b></td><td>Chặn hình 5 khung 1</td></tr>
+    <tr><td class="so">5</td><td>Cấu hình SMTP, hay bỏ hẳn “Quên mật khẩu” khỏi trang? (mục 1.2 #1)</td><td>Kỹ thuật</td><td>Hôm nay đang hỏng theo kiểu im lặng. <b>Việc này sửa được ngay, không cần chờ ai.</b></td></tr>
+    <tr><td class="so">6</td><td>Có điểm cuối công khai cho khách không? (mục 8)</td><td>Backend</td><td>Chặn khối “khách xem được gì” — và chặn cả lời hứa lớn nhất của màn đăng nhập</td></tr>
+    <tr><td class="so">7</td><td>Nâng <code>ssoSessionIdleTimeout</code> cho vai MEMBER? (mục 1.2)</td><td>Kỹ thuật + Hội đồng</td><td>Không chặn gì, nhưng để nguyên thì người đọc chậm bị đá ra giữa chừng</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 06 · <b>đề xuất</b>, chưa phải lệnh thi công. Thứ tự ưu tiên khi mâu thuẫn:
+    <b>BA v2 → <a href="../00-dinh-huong.html">tài liệu 00</a> → các tài liệu thiết kế khác</b>.
+  </p>
+  <p>
+    Không có dòng mã sản phẩm nào được viết hay sửa cho tài liệu này. Mọi số nói về hiện trạng đều
+    dẫn tệp trong kho; mọi số còn lại là đề xuất và được ghi rõ là đề xuất. Chỗ tôi phải đoán nằm
+    ở mục 12.2, tất cả, không giấu mục nào.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

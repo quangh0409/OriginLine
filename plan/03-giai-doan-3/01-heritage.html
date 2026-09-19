@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 03 · Trang 01 — Context heritage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 03 · Giai đoạn 3 · Trang 01</p>
+  <h1>Context <code>heritage</code><br>di sản · từ đường · mộ phần</h1>
+  <p class="tom-tat">
+    Ba yêu cầu <strong>FR-3.1, FR-3.2, FR-3.3</strong> gộp vào một bounded context, dựng trên
+    <strong>hai nền dùng chung</strong> đã chốt ở <a href="index.html">trang 00 mục 2</a>: một trình
+    đọc tư liệu và một công cụ đặt điểm neo lên ảnh. Hiện trạng:
+    <code>backend/src/main/java/vn/giapha/heritage/</code> có <strong>đúng 5 file</strong>, toàn bộ là
+    <code>package-info.java</code>.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <a href="index.html">↩ 00 · Tổng quan</a>
+  <span>·</span>
+  <b>01 · heritage</b>
+  <span>·</span>
+  <a href="02-fund-reporting.html">02 · fund · reporting · bản tin</a>
+  <span>·</span>
+  <a href="03-rui-ro-lo-trinh.html">03 · Rủi ro, ước lượng, lộ trình</a>
+</nav>
+
+<h2>1. Bốn khối việc, làm theo thứ tự này</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Khối</th><th>Nội dung</th><th>Vì sao ở vị trí này</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="chip must">H1</span><br><b>Nền</b></td>
+      <td>Trình đọc tư liệu (aggregate <code>HeritageItem</code> + ba lớp văn bản) và công cụ điểm neo (<code>ImageMap</code>/<code>ImageAnchor</code>)</td>
+      <td>Ba khối sau đều dùng lại. Làm sau thì phải viết lại ba lần.</td>
+    </tr>
+    <tr>
+      <td><span class="chip should">H2</span><br><b>FR-3.1</b></td>
+      <td>Thư viện di sản: văn bia, hương ước, gia huấn, câu đối</td>
+      <td>Bài kiểm tra thật đầu tiên cho H1, ở bối cảnh dễ nhất — người ngồi trong nhà, có mạng.</td>
+    </tr>
+    <tr>
+      <td><span class="chip should">H3</span><br><b>FR-3.3</b></td>
+      <td>Từ đường: hồ sơ di tích, hoành phi câu đối, sơ đồ bài vị, lịch tế lễ</td>
+      <td>Dùng lại H1 hai lần (trình đọc cho hoành phi/câu đối, điểm neo cho bài vị) và dùng lại <code>event</code> đã có. <b>Khối rẻ nhất so với giá trị.</b></td>
+    </tr>
+    <tr>
+      <td><span class="chip should">H4</span><br><b>FR-3.2</b></td>
+      <td>Mộ phần: sơ đồ khu mộ, hồ sơ ngôi mộ, cải táng, dẫn đường, lịch tảo mộ</td>
+      <td>Đắt nhất: ngoài trời, ngoại tuyến, GPS, nền sáng cưỡng bức. Đứng cuối để công cụ điểm neo đã được H3 thử ở nơi dễ.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>2. Mô hình miền</h2>
+
+<h3>2.1 Aggregate tư liệu — dùng chung cho tám loại</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Lớp domain (POJO thuần)</th><th>Vai trò</th><th>Điểm bắt buộc</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>HeritageItem</code> <i>(aggregate root)</i></td>
+      <td>Một tư liệu: văn bia, hương ước, gia huấn, câu đối, hoành phi, sắc phong, mộ chí, chữ trên bài vị</td>
+      <td><code>summaryVi</code> <b>bắt buộc không rỗng</b> — chặn ngay tại domain, không đợi CSDL. Đây là hàng rào chống “thư viện toàn ảnh, không tìm được”.</td>
+    </tr>
+    <tr>
+      <td><code>HeritageItemKind</code></td>
+      <td>Enum phân loại</td>
+      <td>Chỉ để lọc và hiển thị. <b>Cấm rẽ nhánh luật nghiệp vụ theo enum này</b>, trừ đúng một chỗ: phạm vi hiển thị.</td>
+    </tr>
+    <tr>
+      <td><code>TextLayer</code></td>
+      <td>Một lớp văn bản: <code>HAN_NOM</code> · <code>PHIEN_AM</code> · <code>DICH_NGHIA</code> · <code>CHU_GIAI</code></td>
+      <td>Có <code>variantNo</code> để chứa <b>dị bản song song</b>, có <code>authorPersonId</code>, <code>verifiedByPersonId</code>, <code>isOfficial</code>. “Ai làm bản này” là dữ liệu, không phải chú thích.</td>
+    </tr>
+    <tr>
+      <td><code>TextLine</code></td>
+      <td>Một dòng trong một lớp</td>
+      <td><code>isIllegible</code> là trạng thái hợp lệ — “chưa đọc được” phải ghi được, không đoán và không bỏ lửng (KD-1 điểm c). <code>anchorBox</code> neo <b>theo dòng</b>, không theo từng chữ.</td>
+    </tr>
+    <tr>
+      <td><code>ReviewStatus</code></td>
+      <td><code>CHUA_DOI_CHIEU</code> → <code>DA_DOI_CHIEU</code> → <code>HOI_DONG_CONG_NHAN</code></td>
+      <td>Hiển thị luôn cạnh bản dịch. Một bản chưa ai đối chiếu không được trông giống bản chính thức.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Vì sao neo theo dòng chứ không theo từng chữ</p>
+  <p>
+    Neo từng chữ cho phép chạm vào một chữ Hán và thấy đúng chữ phiên âm. Nghe hay, nhưng nó nhân công
+    phiên âm lên nhiều lần: người phiên âm phải khoanh vùng từng ký tự trên một tấm bia mòn. Với một
+    tư liệu vài trăm chữ, đó là chênh lệch giữa <em>một buổi</em> và <em>một tuần</em>.
+  </p>
+  <p>
+    <b>Người phiên âm là nút thắt cổ chai của cả Giai đoạn 3</b> — chỉ một hai cụ trong họ. Mọi thiết
+    kế làm chậm họ đều đắt hơn giá trị nó mang lại. Neo theo dòng, và để ngỏ đường nâng cấp: cấu trúc
+    <code>anchorBox</code> dạng JSONB nên sau này thêm mức chữ mà không phải đổi bảng.
+  </p>
+</div>
+
+<h3>2.2 Điểm neo trên ảnh</h3>
+
+<ul>
+  <li><code>ImageMap</code> — ảnh nền + <code>mediaAssetId</code> + <code>mapKind</code>
+    (<code>KHU_MO</code> / <code>BAN_THO</code>) + <code>capturedAt</code>.</li>
+  <li><code>ImageAnchor</code> — <code>x</code>, <code>y</code> kiểu <code>NUMERIC(6,5)</code> trong
+    khoảng <code>0..1</code>; <code>targetKind</code> (<code>GRAVE</code> / <code>TABLET</code> /
+    <code>HERITAGE_ITEM</code> / <code>NONE</code>) + <code>targetId</code>; <code>label</code>;
+    <code>isEstimated</code>; <code>needsReview</code>.</li>
+  <li><code>targetKind = NONE</code> <b>là trạng thái hợp lệ và phải hiện ra</b>: ô nét đứt “chưa gắn
+    hồ sơ” trong KD-5 chính là danh sách việc cần làm của Hội đồng. Ẩn nó đi là giấu việc.</li>
+</ul>
+
+<h3>2.3 Nơi chốn</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Lớp</th><th>Ghi chú thiết kế</th></tr></thead>
+  <tbody>
+    <tr><td><code>Cemetery</code> — nghĩa trang</td><td>Giữ <b>địa danh cấp xã/huyện/tỉnh dạng văn bản</b> (thứ khách được xem) tách khỏi toạ độ chi tiết (thứ khách không được xem). Một <code>ImageMap</code> tuỳ chọn cho sơ đồ khu.</td></tr>
+    <tr><td><code>Grave</code> — ngôi mộ</td><td><code>personId</code> <b>nullable</b> (có mộ chưa biết của ai), <code>rowLabel</code> “Hàng 4”, <code>plotLabel</code> “Lô 12”, <code>lat</code>/<code>lng</code> <code>NUMERIC(9,6)</code>, <code>gpsAccuracyM</code>, <code>locationStatus</code>, <code>isCoordHidden</code>, <code>caretakerPersonId</code>, <code>headstoneMediaId</code> + <code>headstonePhotoTakenAt</code>.</td></tr>
+    <tr><td><code>GraveHistory</code></td><td>Dòng thời gian an táng / <b>cải táng</b> / tu bổ. <b>Cải táng không phải một cột boolean</b> — nó là lịch sử, vì nó quyết định người đi tảo mộ tới đúng nghĩa trang hay không.</td></tr>
+    <tr><td><code>Hall</code> — từ đường</td><td>Hồ sơ di tích: năm dựng, xếp hạng di tích (nếu có), địa chỉ, <code>ImageMap</code> mặt bằng ban thờ.</td></tr>
+    <tr><td><code>Tablet</code> — bài vị</td><td><code>hallId</code> + <code>personId</code> nullable + <code>anchorId</code> + <code>inscriptionItemId</code> trỏ tới một <code>HeritageItem</code> chứa chữ trên bài vị.</td></tr>
+    <tr><td><code>TaoMoAssignment</code></td><td>Phân công tảo mộ: <code>eventId</code> (loại <code>TAO_MO</code>, bảng <code>event</code> đã có) + <code>graveId</code> + <code>assigneePersonId</code> + <code>visitedAt</code>.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">“Đã thăm” biến việc cập nhật thành hệ quả của việc vốn đã làm</p>
+  <p>
+    <code>TaoMoAssignment.visitedAt</code> nhìn như một cột phụ, nhưng nó là câu trả lời duy nhất cho
+    rủi ro “không ai cập nhật dữ liệu mộ phần”. Trông nom mộ là việc ngoài đời; nếu phần mềm không
+    gắn vào việc đó thì dữ liệu đứng yên từ tháng thứ hai. Gắn phân công tảo mộ vào lịch
+    <b>chạp mả</b>, và ngay tại chỗ có nút cập nhật ảnh mộ chí, thì mỗi mùa chạp mả là một vòng làm
+    tươi dữ liệu miễn phí.
+  </p>
+</div>
+
+<h2>3. Cổng (port) do domain khai báo</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Port</th><th>Hiện thực ở</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td><code>HeritageItemRepository</code></td><td><code>infrastructure/jpa/</code></td><td>Theo đúng mẫu <code>events/infrastructure/jpa/EventRepositoryAdapter.java</code>.</td></tr>
+    <tr><td><code>ImageMapRepository</code></td><td><code>infrastructure/jpa/</code></td><td></td></tr>
+    <tr><td><code>GraveRepository</code> · <code>HallRepository</code></td><td><code>infrastructure/jpa/</code></td><td></td></tr>
+    <tr><td><code>HeritageSearchPort</code></td><td><code>infrastructure/jdbc/</code></td><td>SQL gốc dùng <code>public.vi_unaccent</code> của <code>V6__search.sql</code>. <b>Không</b> viết hàm bỏ dấu thứ hai.</td></tr>
+    <tr><td><code>PersonRefPort</code></td><td><code>infrastructure/jdbc/</code></td><td>Chỉ SELECT tên hiển thị + đời + chi từ <code>person</code>/<code>person_name</code>/<code>branch</code>. <b>Sao chép chính sách của <code>EventSubjectJdbcAdapter</code>: chỉ lấy trường Tầng 1.</b></td></tr>
+    <tr><td><code>RiteCalendarPort</code></td><td><code>infrastructure/jdbc/</code></td><td>Đọc <code>event</code> loại <code>TE_LE</code>/<code>TAO_MO</code>/<code>GIO_TO</code> gắn với một <code>hallId</code>/<code>cemeteryId</code>. <b>Chỉ đọc</b> — tạo sự kiện vẫn là việc của <code>events</code>.</td></tr>
+    <tr><td><code>MediaAccessPort</code></td><td><code>infrastructure/</code></td><td>Gọi sang context <code>media</code> (W8) để lấy presigned URL. Đây là port duy nhất được phép chạm ra ngoài.</td></tr>
+    <tr><td><code>HeritageAuditPort</code></td><td><code>infrastructure/jdbc/</code></td><td>Ghi <code>audit_log</code>. Xem <a href="index.html">trang 00 mục 7</a> về lý do không gọi <code>AuditTrailService</code>.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Migration cần thêm</h2>
+
+<h3><code>Vxx__heritage_core.sql</code></h3>
+
+<ul>
+  <li><code>heritage_item</code> — <code>item_kind</code> có <code>CHECK</code> liệt kê tám loại;
+    <code>summary_vi TEXT NOT NULL</code> + <code>CHECK (btrim(summary_vi) &lt;&gt; '')</code>;
+    <code>review_status</code> có <code>CHECK</code>; <code>needs_reshoot BOOLEAN</code>;
+    <code>hall_id</code>/<code>cemetery_id</code>/<code>grave_id</code> nullable;
+    <code>attributes JSONB NOT NULL DEFAULT '{}'</code>; <code>is_deleted</code> + cột thời gian +
+    <code>version</code> + trigger <code>giapha_touch_updated_at</code>.</li>
+  <li><code>heritage_item_media</code> — <code>(item_id, media_asset_id, ordinal, media_role)</code>,
+    <code>media_role</code> ∈ <code>ANH_GOC</code>/<code>BAN_RAP</code>/<code>ANH_HIEN_TRANG</code>.</li>
+  <li><code>heritage_text_layer</code> — <code>UNIQUE (item_id, layer, variant_no)</code>; chỉ một
+    hàng được <code>is_official = TRUE</code> cho mỗi <code>(item_id, layer)</code> — làm bằng
+    <b>partial unique index</b>, không bằng trigger.</li>
+  <li><code>heritage_text_line</code> — <code>UNIQUE (layer_id, line_no)</code>;
+    <code>CHECK (is_illegible OR btrim(content) &lt;&gt; '')</code> — dòng không đọc được thì được
+    phép rỗng, dòng đọc được thì không.</li>
+  <li><code>image_map</code>, <code>image_anchor</code> —
+    <code>CHECK (x &gt;= 0 AND x &lt;= 1 AND y &gt;= 0 AND y &lt;= 1)</code>.</li>
+  <li><b>FTS:</b> cột <code>tsv</code> generated trên <code>heritage_item</code> ghép
+    <code>title || ' ' || summary_vi</code>, và một cột <code>tsv</code> trên
+    <code>heritage_text_line</code> chỉ với các lớp <code>PHIEN_AM</code>/<code>DICH_NGHIA</code>/
+    <code>CHU_GIAI</code> — <b>không index lớp <code>HAN_NOM</code></b>, vì cấu hình
+    <code>vi_unaccent</code> không hiểu chữ Hán và chỉ tạo rác trong chỉ mục.</li>
+</ul>
+
+<h3><code>Vxx__heritage_places.sql</code></h3>
+
+<ul>
+  <li><code>cemetery</code>, <code>grave</code>, <code>grave_history</code>, <code>hall</code>,
+    <code>tablet</code>, <code>tao_mo_assignment</code>.</li>
+  <li><code>grave</code>: <code>CHECK (location_status IN ('CONFIRMED','ESTIMATED','LOST'))</code> và
+    <code>CHECK (location_status &lt;&gt; 'CONFIRMED' OR (lat IS NOT NULL AND lng IS NOT NULL))</code>
+    — không cho phép “đã xác nhận” mà không có toạ độ.</li>
+  <li><code>UNIQUE (cemetery_id, row_label, plot_label)</code> ở chỗ cả ba khác NULL — hai ngôi mộ
+    không thể cùng một lô.</li>
+  <li><code>tao_mo_assignment.event_id</code> tham chiếu <code>event(id)</code> — khoá ngoại chéo
+    context, chấp nhận được, đúng như <code>change_request.person_id</code> đang làm.</li>
+</ul>
+
+<h2>5. Di chúc — thẩm định đề xuất tách khỏi thư viện di sản</h2>
+
+<div class="khoi chot">
+  <p class="nhan">Kết luận: <span class="tot">tán thành việc tách</span>, nhưng đi xa hơn một bước</p>
+  <p>
+    Lập luận của tài liệu thiết kế đúng và đủ mạnh: văn bia, hương ước, gia huấn, câu đối là di sản
+    của người đã khuất, công khai theo đúng mục đích gia phả. Di chúc thì có thể <b>còn hiệu lực pháp
+    lý</b>, nói về <b>tài sản</b>, và nêu tên <b>người đang sống</b>. Xếp chung nhóm là một lỗi phân
+    loại có hậu quả pháp lý, không phải một lựa chọn giao diện.
+  </p>
+  <p>
+    <b>Nhưng “tách nhóm + chỉ Hội đồng xem + ghi nhật ký” vẫn chưa đủ.</b> Khuyến nghị của kế hoạch
+    này: <b>Giai đoạn 3 không lưu nội dung di chúc</b>. Chỉ ghi <em>siêu dữ liệu</em>: có tồn tại một
+    bản di chúc của ai, lập năm nào, hiện ai giữ, giữ ở đâu. Bản scan nằm ngoài hệ thống.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phương án</th><th>Được gì</th><th>Mất gì / rủi ro</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>A · Khuyến nghị</b><br>Chỉ siêu dữ liệu, không lưu nội dung</td>
+      <td>Rẻ (một bảng nhỏ, không màn hình đọc riêng). <b>Rủi ro pháp lý bằng không.</b> Vẫn phục vụ đúng nhu cầu thực tế là “nhà mình có di chúc cụ để lại, ai đang giữ”.</td>
+      <td>Người muốn đọc di chúc trên hệ thống thì không đọc được. Nhưng đó chính là điều đang muốn.</td>
+    </tr>
+    <tr>
+      <td><b>B</b> Bảng riêng <code>restricted_document</code>, chỉ Hội đồng, ghi nhật ký mọi lượt xem</td>
+      <td>Đáp ứng đúng đề xuất của tài liệu thiết kế.</td>
+      <td>Phải có <b>chữ ký của người có chuyên môn pháp lý</b> trước khi làm. Thêm một đường mã riêng tư thứ tư phải bảo trì.</td>
+    </tr>
+    <tr>
+      <td class="xau"><b>C</b> Cột <code>visibility</code> trên <code>heritage_item</code></td>
+      <td>Rẻ nhất về mã.</td>
+      <td><b>Bác bỏ.</b> Một cột là <em>một mệnh đề <code>WHERE</code> bị quên</em> thì rò rỉ. Bảng riêng thì một câu <code>SELECT * FROM heritage_item</code> viết ẩu cũng không lấy được gì.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Nếu Hội đồng chọn phương án B</b>, bốn ràng buộc là bắt buộc, không phải tuỳ chọn:
+</p>
+
+<ul>
+  <li>Bảng <b>riêng</b> <code>restricted_document</code>, không phải cột trên
+    <code>heritage_item</code>.</li>
+  <li><b>Không có cột tsvector, không nằm trong bất kỳ chỉ mục FTS nào.</b> Kiểm bằng test: một cụm từ
+    chỉ xuất hiện trong di chúc phải trả về 0 kết quả ở endpoint tìm kiếm chung.</li>
+  <li>Bucket MinIO <b>riêng</b> (<code>giapha-restricted</code>), TTL presigned ngắn hơn mức chung
+    (đề xuất 60 giây).</li>
+  <li><b>Mỗi lượt xem ghi đúng một dòng <code>audit_log</code> với
+    <code>action = 'READ_SENSITIVE'</code></b> — giá trị này đã có sẵn trong
+    <code>ck_audit_log_action</code> của <code>V5</code>, không cần nới ràng buộc.</li>
+</ul>
+
+<p>
+  Đây là <b>một trong ba câu hỏi mà <a href="../00-tong-the.html">bản chốt phạm vi</a> ghi là đang chờ
+  Hội đồng Tộc biểu</b>. Kế hoạch này không giải hộ được; nó chỉ thu hẹp câu hỏi lại thành: <i>dòng họ
+  có thật sự cần đọc nội dung di chúc trên phần mềm, hay chỉ cần biết nó tồn tại và ai giữ?</i>
+</p>
+
+<h2>6. Ba chỗ đắt nhất của FR-3.2, và đề xuất cắt</h2>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Presigned URL và ngoại tuyến chống nhau — cái bẫy kỹ thuật lớn nhất của khối H4</p>
+  <p>
+    KD-3 bước A là “tải khu mộ về máy trước khi đi”. Nhưng ảnh trong hệ thống được phát bằng
+    <b>presigned URL có hạn</b> (đề xuất 5 phút, xem <a href="index.html">trang 00 mục 3</a>).
+    <b>Một URL đã hết hạn thì cache lại cũng vô dụng.</b> Muốn ngoại tuyến thật thì service worker
+    phải cache <em>byte của ảnh</em>, không phải URL — và phải làm mới cache bằng một luồng riêng, có
+    hạn mức dung lượng, có xử lý khi ảnh bị thay ở phía máy chủ.
+  </p>
+  <p>
+    Đây không phải một thiết lập; đây là <b>một luồng đồng bộ ngoại tuyến hoàn chỉnh</b>, và nó là
+    phần đắt nhất của cả context <code>heritage</code>.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Đề xuất</th><th>Nội dung</th><th>Cái giá</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Cắt gói ngoại tuyến đầy đủ khỏi Giai đoạn 3</b></td>
+      <td>Bản 1 thay bằng: (a) <b>phiếu đi tảo mộ in ra giấy / xuất PDF</b> — sơ đồ khu, danh sách ngôi được phân công, ảnh mộ chí thu nhỏ, chữ trên bia; (b) màn hình la bàn + khoảng cách <b>chạy được khi mất sóng nếu trang đã mở sẵn</b>. Đo lại nhu cầu sau mùa chạp mả đầu tiên rồi mới quyết có làm gói đầy đủ không.</td>
+      <td>Ai đóng ứng dụng rồi mở lại giữa nghĩa trang thì mất. Đổi lại tiết kiệm phần lớn chi phí của khối H4, và tờ giấy in <b>không bao giờ hết pin</b> — với người dùng 50–70 tuổi đây có thể là bản tốt hơn chứ không phải bản tạm.</td>
+    </tr>
+    <tr>
+      <td><b>Giữ</b> ngoại lệ nền sáng ở màn hình dẫn đường</td>
+      <td>Rẻ (một lớp CSS ghi đè trong đúng một tuyến đường), giá trị cao ngoài nắng.</td>
+      <td>Phá tính nhất quán sáng/tối. Giảm bằng một nút có nhãn chữ để tắt, và chỉ khoá trong màn hình dẫn đường chứ không khoá cả mục mộ phần.</td>
+    </tr>
+    <tr>
+      <td><b>Giữ</b> bước xác nhận bằng ảnh mộ chí</td>
+      <td>Bắt buộc, không bỏ qua được. Máy không khẳng định đúng ngôi mộ — con người khẳng định.</td>
+      <td>Thêm một chạm. Đáng, vì thắp hương nhầm mộ là chuyện nặng nề chứ không phải một lỗi giao diện.</td>
+    </tr>
+    <tr>
+      <td><b>Không làm</b> bản đồ nền trong nghĩa trang</td>
+      <td>Đã bị cắt ở tài liệu thiết kế; tái khẳng định.</td>
+      <td>Không mất gì — thứ bị cắt vốn không hoạt động.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7. FR-3.4 văn khấn &amp; sao hạn — đề xuất cắt thêm</h2>
+
+<p>
+  <a href="../00-tong-the.html">Bản chốt phạm vi mục 3</a> đã cắt <b>sao hạn nâng cao</b> (Kim Lâu,
+  Hoang Ốc) và giữ lại “văn khấn + sao hạn cơ bản, có dẫn nguồn và ghi rõ dị bản”. Kế hoạch này
+  <b>đề xuất cắt thêm phần sao hạn cơ bản</b>, giữ lại đúng văn khấn điền mẫu.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Vì sao cắt sao hạn cơ bản</h4>
+    <p>
+      Luật “luôn nêu dị bản” của chính tài liệu thiết kế đòi <b>ít nhất hai nguồn có tên sách và có
+      người chịu trách nhiệm</b> cho mỗi cách tính. Đó là việc <em>nội dung</em>, do một người am hiểu
+      làm, và dự án <b>chưa chỉ được người đó</b>. Không có người ấy thì hoặc là hiện một nguồn duy
+      nhất — vi phạm chính luật vừa đặt ra — hoặc là màn hình trống.
+    </p>
+    <p class="day">FR-3.4 là <b>COULD</b>. Đây là chỗ rẻ nhất để cắt và mất ít nhất.</p>
+  </div>
+  <div class="the">
+    <h4>Vì sao giữ văn khấn điền mẫu</h4>
+    <p>
+      Ba trong bốn trường của KD-6 lấy sẵn từ dữ liệu đã có: người được cúng lấy từ phả, ngày âm–dương
+      lấy từ bộ chuyển đổi lịch của Giai đoạn 1, gia chủ lấy từ tài khoản. Không có dị bản, không có
+      phán về vận mệnh. <b>Rẻ và an toàn.</b>
+    </p>
+    <p class="day">Chế độ đọc trước ban thờ: chữ ≥ 21px, màn hình không tự tắt, không nút nào ở nửa trên.</p>
+  </div>
+  <div class="the">
+    <h4>Mẫu văn khấn thuộc context nào</h4>
+    <p>
+      <b>Không phải <code>heritage</code>.</b> Mẫu văn khấn là nội dung biên tập có luồng duyệt — cùng
+      dạng với bản tin, không cùng dạng với văn bia (không ảnh gốc, không phiên âm, không dị bản
+      Hán-Nôm). Đặt cùng chỗ với bản tin.
+    </p>
+    <p class="day">Nếu bị cắt khỏi Giai đoạn 3 thì đưa vào phần bàn giao của Giai đoạn 4, đúng như tài liệu thiết kế đã gợi ý.</p>
+  </div>
+</div>
+
+<h2>8. Phụ thuộc</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phụ thuộc vào</th><th>Kiểu</th><th>Chặn cái gì</th></tr></thead>
+  <tbody>
+    <tr><td class="xau"><b>Chiến dịch số hoá (người thật)</b></td><td>Ngoài phần mềm</td><td><b>Chặn giá trị của toàn bộ context.</b> Không có ảnh, không có phiên âm, không có toạ độ thì cả bốn khối là màn hình trống. Xem <a href="03-rui-ro-lo-trinh.html">trang 03 mục 1</a>.</td></tr>
+    <tr><td><b>W8 nền media</b></td><td>Kỹ thuật, cứng</td><td>Chặn H1 và mọi thứ sau nó.</td></tr>
+    <tr><td><b>Đợt B nhập liệu</b></td><td>Dữ liệu</td><td>Gắn bài vị và mộ vào <em>ai</em> đòi hỏi người đó đã có trong phả. Chưa nhập xong thì tỉ lệ “chưa gắn hồ sơ” cao và trông như lỗi.</td></tr>
+    <tr><td><b><code>event</code> của Giai đoạn 1</b></td><td>Dùng lại</td><td>Không chặn — bảng và loại <code>TE_LE</code>/<code>TAO_MO</code> đã có sẵn trong <code>V4__events.sql</code>.</td></tr>
+    <tr><td><b>Kênh Zalo (đợt A)</b></td><td>Dùng lại</td><td>Nhắc “tải khu mộ về máy” đi kèm tin nhắc chạp mả. Không có Zalo thì mất cách nhắc hiệu quả nhất.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>9. Rủi ro riêng của <code>heritage</code></h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Rủi ro</th><th>Biểu hiện</th><th>Cách giảm</th></tr></thead>
+  <tbody>
+    <tr><td class="xau"><b>Thư viện toàn ảnh, không có chữ</b></td><td>Chụp bia rất nhanh, phiên âm rất chậm. Thư viện không tìm kiếm được vì tìm kiếm chạy trên chữ.</td><td><code>summary_vi NOT NULL</code> ngay từ CSDL, và hiện công khai số tư liệu “chưa phiên âm” để việc dở nhìn thấy được.</td></tr>
+    <tr><td class="xau"><b>Điểm neo lệch sau khi đổi ảnh nền</b></td><td>Sai <b>lặng lẽ</b>: sơ đồ vẫn hiện, chỉ là chỉ sai chỗ.</td><td>Toạ độ tỉ lệ <code>0..1</code>; đổi ảnh nền bật <code>needs_review</code> cho toàn bộ điểm neo; có test khẳng định điều đó.</td></tr>
+    <tr><td class="xau"><b>Toạ độ mộ bị lạm dụng</b></td><td>Vị trí chính xác công khai có thể phục vụ phá hoại hoặc trộm cắp.</td><td>Khách <b>không nhận được trường toạ độ</b> — vắng mặt hẳn khỏi JSON, không phải <code>null</code>. Công tắc ẩn theo từng ngôi. Test tích hợp kiểm đúng điều này.</td></tr>
+    <tr><td class="canh"><b>Chữ Hán-Nôm không hiện được</b></td><td>Nhiều chữ Nôm ngoài bộ chữ thông dụng; máy cũ hiện ô vuông rỗng.</td><td>Lớp <code>HAN_NOM</code> là <b>tuỳ chọn</b>; không hiện được thì rơi về ảnh gốc + phiên âm, trang không vỡ. Không đặt chữ Hán vào chỗ bắt buộc phải đọc được.</td></tr>
+    <tr><td class="canh"><b>Bản dịch chưa đối chiếu thành “bản của dòng họ”</b></td><td>Sau vài năm nó là bản duy nhất nên mặc nhiên thành bản chính thức.</td><td><code>ReviewStatus</code> hiện ngay dưới văn bản, kèm tên người làm và ngày. Cho ghi <b>dị bản song song</b> thay vì ép chọn một.</td></tr>
+    <tr><td class="canh"><b>Dung lượng ảnh</b></td><td>Ảnh bia độ phân giải cao, mỗi tấm nhiều MB, nhân với hàng trăm tư liệu và hàng trăm ngôi mộ.</td><td>Sinh sẵn biến thể thu nhỏ ngay ở bước xác nhận tải lên; chỉ phát bản gốc khi người dùng phóng sâu. <b>Volume MinIO hiện chưa có phương án sao lưu</b> — việc của Giai đoạn 4 nhưng nợ bắt đầu từ đây.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>10. Tiêu chí nghiệm thu — kiểm được, không phải mô tả</h2>
+
+<p>
+  Mỗi dòng dưới đây là một test chạy trong CI. Mẫu để theo là <b>40 test tích hợp Testcontainers</b>
+  hiện có chạy trên Postgres + AGE thật.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Khẳng định</th><th>Kiểu test</th></tr></thead>
+  <tbody>
+    <tr><td>H-1</td><td><code>ModularityTests</code> xanh sau khi thêm <code>heritage</code>; không có import nào từ <code>heritage</code> sang package con của context khác.</td><td>Modulith + ArchUnit</td></tr>
+    <tr><td>H-2</td><td><code>INSERT INTO heritage_item</code> với <code>summary_vi</code> rỗng hoặc chỉ khoảng trắng ⇒ <b>vi phạm ràng buộc</b>.</td><td>Testcontainers</td></tr>
+    <tr><td>H-3</td><td>Hai hàng <code>heritage_text_layer</code> cùng <code>(item_id, layer)</code> cùng <code>is_official = TRUE</code> ⇒ <b>vi phạm unique</b>. Hai dị bản cùng <code>is_official = FALSE</code> ⇒ <b>được phép</b>.</td><td>Testcontainers</td></tr>
+    <tr><td>H-4</td><td>Đổi <code>image_map.media_asset_id</code> ⇒ mọi <code>image_anchor</code> thuộc bản đồ đó có <code>needs_review = TRUE</code>.</td><td>Testcontainers</td></tr>
+    <tr><td>H-5</td><td><code>image_anchor</code> với <code>x = 1.4</code> ⇒ <b>vi phạm ràng buộc</b>.</td><td>Testcontainers</td></tr>
+    <tr><td>H-6</td><td><code>GET /api/v1/graves/{id}</code> với danh tính <b>khách</b> ⇒ thân phản hồi <b>không chứa khoá</b> <code>lat</code>/<code>lng</code>/<code>gpsAccuracyM</code>. Không phải trả <code>null</code> — <b>vắng mặt</b>.</td><td>Testcontainers + MockMvc</td></tr>
+    <tr><td>H-7</td><td>Mộ có <code>is_coord_hidden = TRUE</code> ⇒ thành viên đã đăng nhập cũng không nhận được toạ độ; chỉ Trưởng chi phụ trách nhánh đó nhận được.</td><td>Testcontainers</td></tr>
+    <tr><td>H-8</td><td><code>location_status = 'CONFIRMED'</code> mà thiếu toạ độ ⇒ <b>vi phạm ràng buộc</b>.</td><td>Testcontainers</td></tr>
+    <tr><td>H-9</td><td>Tìm “van bia” (không dấu) và “văn bia” (có dấu) trả về <b>cùng tập kết quả</b>, qua <code>public.vi_unaccent</code>.</td><td>Testcontainers</td></tr>
+    <tr><td>H-10</td><td>URL presigned hết hạn ⇒ MinIO trả 403; hệ thống không bao giờ trả URL có TTL dài hơn ngưỡng cấu hình.</td><td>Testcontainers (MinIO)</td></tr>
+    <tr><td>H-11</td><td>Tải lên ảnh chân dung có EXIF GPS ⇒ đối tượng lưu trong MinIO <b>không còn thẻ GPS</b>. Tải lên ảnh mộ ⇒ <b>còn</b>.</td><td>Đơn vị + Testcontainers</td></tr>
+    <tr><td>H-12</td><td>Xoá mềm một <code>heritage_item</code> ⇒ hàng vẫn còn, đối tượng MinIO vẫn còn. Xoá theo yêu cầu hợp pháp ⇒ đối tượng MinIO <b>không còn</b> ngay trong cùng giao dịch nghiệp vụ.</td><td>Testcontainers</td></tr>
+    <tr><td>H-13</td><td>Bài vị chưa gắn hồ sơ (<code>target_kind = 'NONE'</code>) <b>vẫn xuất hiện</b> trong phản hồi sơ đồ, kèm cờ chưa gắn.</td><td>MockMvc</td></tr>
+    <tr><td>H-14</td><td><b>Nếu làm phương án B của mục 5:</b> một cụm từ chỉ có trong <code>restricted_document</code> ⇒ <b>0 kết quả</b> ở tìm kiếm chung; và mỗi lượt xem sinh <b>đúng một</b> dòng <code>audit_log</code> có <code>action = 'READ_SENSITIVE'</code>.</td><td>Testcontainers</td></tr>
+    <tr><td>H-15</td><td>Tiếp cận: mọi nút mới ≥ 44×44px, mọi biểu tượng có nhãn chữ; màn hình dẫn đường giữ nền sáng kể cả khi hệ điều hành ở chế độ tối.</td><td>Playwright (desktop + Pixel 5)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Trang 01 của Kế hoạch 03. Trước: <a href="index.html">00 · Tổng quan</a> · tiếp:
+    <a href="02-fund-reporting.html">02 · fund, reporting, bản tin</a>.
+  </p>
+  <p>
+    Ba việc cần Hội đồng Tộc biểu quyết trước khi khối nào của trang này bắt đầu:
+    <b>di chúc lưu nội dung hay chỉ siêu dữ liệu</b> · <b>có cắt sao hạn cơ bản không</b> ·
+    <b>bốn cái tên phụ trách nội dung</b>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

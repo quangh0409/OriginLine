@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch triển khai phần còn lại — Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 00 · Bản chốt phạm vi</p>
+  <h1>Triển khai phần còn lại</h1>
+  <p class="tom-tat">
+    Tài liệu này <strong>chốt phạm vi và thứ tự</strong>, không mô tả chi tiết từng việc — chi tiết
+    nằm ở năm tài liệu con. Nó là <strong>ràng buộc chung</strong>: chỗ nào tài liệu con mâu thuẫn
+    với tài liệu này thì tài liệu này thắng. Mọi con số dưới đây <strong>đếm từ mã nguồn</strong>,
+    không ước lượng.
+  </p>
+</header>
+
+<h2>1. Hiện trạng thật</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phần</th><th>Trạng thái đo được</th></tr></thead>
+  <tbody>
+    <tr><td><b>Backend đã dựng</b></td><td><code>genealogy</code> 146 file · <code>kinship</code> 60 · <code>notification</code> 69 · <code>membership</code> 64 · <code>events</code> 57 · <code>audit</code> 21 · <code>calendar</code> 13. Toàn suite <b>1.827 test, 0 lỗi, 0 treo</b>.</td></tr>
+    <tr><td><b>Backend chưa dựng</b></td><td><code>heritage</code> · <code>fund</code> · <code>reporting</code> — mỗi context <b>5 file</b>, toàn bộ là <code>package-info.java</code>. Tức là <b>khung rỗng</b>.</td></tr>
+    <tr><td><b>Frontend</b></td><td>F0–F9 đã chạy · <b>679 test</b> đơn vị · <b>61 E2E</b> · đăng nhập Keycloak thật đã nối.</td></tr>
+    <tr><td><b>Thiết kế</b></td><td>6 tài liệu trong <code>design/</code> · bản mẫu <b>33 màn hình</b>, trong đó 19 đã dựng và 14 mới là đề xuất.</td></tr>
+    <tr><td><b>Migration</b></td><td><code>V1</code>–<code>V7</code> + seed 157 luật danh xưng. Giai đoạn 3 sẽ cần <code>V8</code> trở đi.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Phát hiện quan trọng nhất khi kiểm kê</p>
+  <p>
+    <b><code>notification/infrastructure/</code> chỉ có <code>inapp</code> và <code>webpush</code> —
+    KHÔNG có provider Zalo nào.</b> Trong khi BA v2 §11 ghi Giai đoạn 1 nhắc giỗ <i>"qua Zalo
+    only"</i>, và định hướng mới nhất của chủ đầu tư nhấn mạnh Zalo là kênh chính.
+  </p>
+  <p>
+    Nghĩa là <b>tiêu chí ra Giai đoạn 1 chưa đạt</b>, dù 1.827 test xanh. Đây là việc đầu tiên phải
+    làm, trước mọi thứ khác trong tài liệu này.
+  </p>
+</div>
+
+<h2>2. Năm đợt — thứ tự đã chốt</h2>
+
+<p>
+  Thứ tự này <b>không sắp theo độ khó hay theo giai đoạn trong BA</b>, mà theo một câu hỏi duy nhất:
+  <i>bỏ việc này ra thì việc sau có làm được không?</i>
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Đợt</th><th>Nội dung</th><th>Vì sao đứng ở đây</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="chip must">A</span><br><b>Đóng GĐ 1</b></td>
+      <td>Provider <b>Zalo OA/ZNS</b> · bộ áp dụng yêu cầu đính chính · endpoint công khai cho khách · Web Push tới thiết bị thật · 6 lỗi tiếp cận còn lại</td>
+      <td>Năm việc <b>chặn nghiệm thu</b>. Giai đoạn 1 hiện <b>chưa đạt tiêu chí ra</b> dù test xanh — nói "xong" lúc này là nói sai.</td>
+    </tr>
+    <tr>
+      <td><span class="chip must">B</span><br><b>Đưa dòng họ vào</b></td>
+      <td>Mẫu Excel + đường ống nhập liệu · thiếp mời Zalo · hồ sơ người sống · danh bạ dòng họ</td>
+      <td>Không có dữ liệu thật và người dùng thật thì <b>mọi tính năng sau đều là giả định</b>. Đây là đợt biến sản phẩm thành thứ có người dùng.</td>
+    </tr>
+    <tr>
+      <td><span class="chip should">C</span><br><b>Nợ GĐ 2</b></td>
+      <td>Trang chủ mới (bản tin · vinh danh · sự kiện làng) · lịch việc họ + đồng bộ lịch điện thoại · sinh nhật &amp; lời chúc · GEDCOM</td>
+      <td>Giữ chân người dùng vừa có ở đợt B. Làm trước đợt B thì <b>giữ chân ai?</b></td>
+    </tr>
+    <tr>
+      <td><span class="chip should">D</span><br><b>Giai đoạn 3</b></td>
+      <td><code>heritage</code> (di sản · từ đường · mộ phần) · <code>fund</code> (quỹ họ) · <code>reporting</code> · góc ảnh cũ</td>
+      <td>Ba context rỗng. Đợt nặng nhất về mã, nhưng <b>rủi ro lớn nhất không nằm ở mã</b> — xem mục 4.</td>
+    </tr>
+    <tr>
+      <td><span class="chip could">E</span><br><b>Giai đoạn 4</b></td>
+      <td>Kiểm tải trên cây lớn · quan trắc · rà soát bảo mật &amp; PDPD · đào tạo · bàn giao</td>
+      <td>Chỉ làm được khi đã có dữ liệu thật và người dùng thật để đo.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Quyết định gây tranh cãi nhất, nêu rõ để ai phản đối thì phản đối ngay</p>
+  <p>
+    <b>Đợt B đứng trước đợt C và D, dù BA xếp GEDCOM và Giai đoạn 3 cao hơn.</b> Lý do: một dòng họ
+    chưa nhập được dữ liệu vào thì thư viện di sản, quỹ họ, báo cáo dân số đều là <b>bốn cái kho
+    rỗng</b>. Xây kho trước khi có hàng là thứ tự ngược.
+  </p>
+</div>
+
+<h2>3. Những gì cắt hoặc hoãn</h2>
+
+<p>
+  Một lộ trình chỉ có thêm mà không có bớt là lộ trình chưa nghĩ xong. Sáu mục dưới đây
+  <b>cắt khỏi phạm vi</b>, kèm lý do — nếu Hội đồng muốn giữ thì phải nêu lại.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Cắt / hoãn</th><th>Thay bằng</th><th>Lý do</th></tr></thead>
+  <tbody>
+    <tr><td><b>FR-1.9</b> liên kết thông gia sang họ khác</td><td>Ghi "thông gia họ X, quê Y" dạng văn bản</td><td>Cần <b>hai dòng họ cùng dùng hệ thống</b> — điều kiện chưa tồn tại. BA xếp COULD.</td></tr>
+    <tr><td><b>FR-3.4</b> sao hạn nâng cao (Kim Lâu, Hoang Ốc)</td><td>Chỉ văn khấn + sao hạn cơ bản, có dẫn nguồn và ghi rõ dị bản</td><td>Càng nhiều phép tính vận mệnh càng khó giữ ranh giới <b>"trình bày, không phán"</b>.</td></tr>
+    <tr><td><b>Thanh toán trực tuyến</b> trong quỹ họ</td><td>Ghi nhận khoản đã nhận ngoài đời + ảnh biên nhận</td><td>Dòng họ thường <b>không có tư cách pháp nhân</b> để nhận tiền qua cổng thanh toán.</td></tr>
+    <tr><td><b>Xếp hạng đóng góp theo số tiền</b></td><td>Bảng vàng ghi <i>có</i> đóng góp; sổ quỹ ghi con số</td><td>Biến quỹ họ thành <b>cuộc thi giữa các chi</b>.</td></tr>
+    <tr><td><b>Báo cáo tỉ lệ có con trai / tuyệt tự</b></td><td>Bỏ khỏi báo cáo mặc định</td><td>Đi ngược <b>FR-1.8</b> đã chốt: con gái và bên ngoại ghi nhận <b>ngang bằng</b>.</td></tr>
+    <tr><td><b>Tầng AI</b> (OCR Hán-Nôm, sinh văn khấn, hỏi đáp)</td><td>Giữ kiến trúc để ngỏ, không dựng</td><td>Ngoài phạm vi 4 giai đoạn. Xem ràng buộc bắt buộc ở mục 5.</td></tr>
+    <tr><td><b>Chat trong ứng dụng</b></td><td>Zalo</td><td>Cả họ đã ở đó, và Zalo làm tốt hơn.</td></tr>
+    <tr><td><b>Ghi chú việc cá nhân / lên kế hoạch</b></td><td>Đồng bộ việc họ vào lịch điện thoại sẵn có</td><td>Đua với Google Calendar và Notion là <b>thua chắc</b>, và làm ứng dụng rối thêm với các cụ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Rủi ro lớn nhất không nằm trong phần mềm</h2>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Đợt D xây bốn cái kho rỗng</h4>
+    <p>Thư viện di sản, từ đường, mộ phần, bản tin <b>không tự sinh nội dung</b>. Chưa chốt được
+    <b>ai chụp ảnh, ai phiên âm, ai đo toạ độ, ai viết bài</b> thì kết quả là bốn màn hình đẹp và
+    trống.</p>
+    <p class="day">Đây là <b>điều kiện tiên quyết</b>, không phải việc chạy song song.</p>
+  </div>
+  <div class="the">
+    <h4>Nhập liệu ban đầu phụ thuộc người, không phụ thuộc mã</h4>
+    <p>Mỗi Trưởng chi nhập 350–400 người ≈ 6–10 buổi. Bốn chi song song thì 3–6 tuần. Nhưng
+    <b>chi nào chưa có người phụ trách thì đứng im</b>, và phần mềm không giải được việc đó.</p>
+    <p class="day">Chi có sổ Hán-Nôm: <b>chụp ảnh trước, phiên âm sau</b> — đừng để nó chặn ba chi kia.</p>
+  </div>
+  <div class="the">
+    <h4>Zalo OA cần thủ tục, không chỉ cần code</h4>
+    <p>Tài khoản Zalo Official Account phải <b>đăng ký và duyệt</b>, mẫu tin ZNS phải được phê
+    duyệt trước khi gửi. Việc giấy tờ này có thể mất vài tuần và <b>phải khởi động ngay hôm nay</b>,
+    song song với mọi thứ khác.</p>
+    <p class="day">Bỏ qua thì đợt A xong code mà vẫn không gửi được tin nào.</p>
+  </div>
+</div>
+
+<h2>5. Ràng buộc bắt buộc cho mọi đợt</h2>
+
+<ul>
+  <li><b>Người đã khuất và người còn sống là hai đường dữ liệu khác nhau.</b> Không bao giờ nhập hộ
+  người còn sống — vừa là Nghị định 13/2023, vừa là thực tế: nhập hộ hôm nay thì tháng sau đã sai.</li>
+  <li><b>Ba context mới phải theo đúng kiến trúc hiện có:</b> hexagonal, <code>api → application →
+  domain</code>, domain là POJO thuần không annotation Spring/JPA, nói chuyện với context khác qua
+  application service công khai hoặc domain event — <b>không</b> với tay vào repository của nhau.
+  <code>ModularityTests</code> phải xanh.</li>
+  <li><b>Media không bao giờ nằm trong cơ sở dữ liệu.</b> Ảnh văn bia, ảnh mộ chí, ảnh cũ đều vào
+  MinIO; bảng chỉ giữ khoá.</li>
+  <li><b>Migration mới đánh số tiếp <code>V8</code>, không sửa <code>V1</code>–<code>V7</code></b>
+  đã chạy trên dữ liệu thật.</li>
+  <li><b>Sàn tiếp cận không đàm phán:</b> 16px thân bài, 44×44px vùng chạm, biểu tượng luôn kèm chữ.
+  Xem <code>design/00-dinh-huong.html</code>.</li>
+  <li><b>Nếu sau này dựng tầng AI:</b> mô hình chỉ được làm lớp <i>dịch câu hỏi</i>; câu trả lời danh
+  xưng do bộ luật tính. Kết quả máy sinh nằm ở kho riêng, <b>không bao giờ ghi thẳng vào</b>
+  <code>person</code>/<code>relationship</code>/AGE, và chưa người xác nhận thì không xuất bản.</li>
+</ul>
+
+<h2>6. Năm tài liệu con</h2>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Tài liệu</th><th>Phạm vi</th></tr></thead>
+  <tbody>
+    <tr><td><b>01</b> Đóng Giai đoạn 1</td><td>Zalo provider · bộ áp dụng đính chính · endpoint công khai · Web Push thật · 6 lỗi tiếp cận</td></tr>
+    <tr><td><b>02</b> Nhập liệu ban đầu</td><td>Mẫu Excel · đường ống nhập · khu vực chờ · đối soát · gộp trùng · thiếp mời Zalo</td></tr>
+    <tr><td><b>03</b> Giai đoạn 3</td><td><code>heritage</code> · <code>fund</code> · <code>reporting</code> · nền media dùng chung · migration <code>V8</code>+</td></tr>
+    <tr><td><b>04</b> Frontend còn lại</td><td>14 màn đề xuất · nợ tiếp cận · hồ sơ người sống · danh bạ · lịch · sinh nhật</td></tr>
+    <tr><td><b>05</b> Lịch trình &amp; rủi ro</td><td>Phụ thuộc · đường găng · ước lượng · tiêu chí ra từng đợt · sổ rủi ro</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Thứ tự ưu tiên khi mâu thuẫn: <b>BA v2 → design/00-dinh-huong.html → tài liệu này → năm tài
+    liệu con</b>.
+  </p>
+  <p>
+    Ba câu hỏi vẫn đang chờ Hội đồng Tộc biểu và <b>không đợt nào giải hộ được</b>: màu huy hiệu
+    Dâu/Rể · quyền xoá dữ liệu của dâu/rể sau ly hôn · di chúc có tách khỏi thư viện di sản không.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

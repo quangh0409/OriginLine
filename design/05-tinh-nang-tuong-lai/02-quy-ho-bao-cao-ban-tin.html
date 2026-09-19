@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quỹ họ, báo cáo dân số học và bản tin — Tài liệu 05.02</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Tài liệu 05 · Phần 02 · Giai đoạn 3</p>
+  <h1>Quỹ họ, báo cáo dân số học<br>và bản tin dòng họ</h1>
+  <p class="tom-tat">
+    <strong>FR-4.2, FR-4.3, FR-2.4.</strong> Ba tính năng nhìn qua thì hiền lành, thực ra là ba chỗ dễ
+    gây mất lòng nhất trong cả sản phẩm: <strong>tiền</strong>, <strong>thống kê làm lộ người</strong>,
+    và <strong>vinh danh — tức là so sánh</strong>. Với ba thứ này, minh bạch và kiềm chế là yêu cầu
+    thiết kế, không phải tính năng phụ thêm vào sau.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <a href="index.html">↩ 05 · Tổng quan</a>
+  <span>·</span>
+  <a href="01-di-san-mo-phan.html">01 · Di sản, mộ phần, từ đường</a>
+  <span>·</span>
+  <b>02 · Quỹ họ, báo cáo, bản tin</b>
+  <span>·</span>
+  <a href="03-nhap-lieu-va-tang-ai.html">03 · Nhập liệu, thông gia, tầng AI</a>
+</nav>
+
+<h2>1. FR-4.2 — Quỹ họ và sổ vàng công đức</h2>
+
+<p>
+  Trong một dòng họ, tiền là chủ đề duy nhất mà một hiểu lầm nhỏ có thể làm hai chi không nhìn mặt
+  nhau nhiều năm. Phần mềm ở đây không giải quyết vấn đề tin cậy — nó chỉ có thể <b>làm cho việc kiểm
+  tra trở nên dễ tới mức không ai cần phải tin ai</b>. Đó là toàn bộ mục tiêu thiết kế của mục này.
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Một phần mềm minh bạch nửa vời còn tệ hơn cuốn sổ giấy</p>
+  <p>
+    Cuốn sổ giấy có một ưu điểm mà người ta ít nhận ra: ai cũng biết nó có thể sai, nên ai cũng kiểm.
+    Một màn hình phần mềm với những con số thẳng hàng, đẹp đẽ, tạo <b>cảm giác đã được kiểm chứng</b>
+    ngay cả khi chưa ai đối chiếu. Nếu hệ thống nhận vai trò sổ quỹ mà không kèm cơ chế kiểm tra, nó
+    làm tình hình <em>xấu đi</em>, không phải tốt lên.
+  </p>
+</div>
+
+<h3>Bốn quyết định thiết kế, đề xuất chốt trước khi làm</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Quyết định</th><th>Nội dung</th><th>Cái giá</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Sổ chỉ ghi thêm</b></td>
+      <td>Không có nút Sửa, không có nút Xoá, kể cả cho System Admin. Ghi sai thì ghi một <b>bút toán đảo</b> và một bút toán đúng; cả ba dòng đều hiện vĩnh viễn.</td>
+      <td>Thủ quỹ gõ nhầm một chữ số cũng phải làm ba dòng. Sổ trông “bẩn” hơn. Đổi lại, không ai có thể hỏi “dòng này trước đây ghi bao nhiêu”.</td>
+    </tr>
+    <tr>
+      <td><b>Ẩn danh chỉ ẩn <em>ai</em>, không bao giờ ẩn <em>bao nhiêu</em></b></td>
+      <td>Người đóng góp chọn hiện tên đầy đủ / chỉ họ và tên đệm / ẩn danh. Số tiền và ngày <b>luôn hiện</b>, vì tổng phải khớp.</td>
+      <td>Người muốn giấu hoàn toàn cả khoản tiền sẽ không hài lòng. Nhưng cho phép giấu số tiền là mở cửa cho mọi nghi ngờ về sau.</td>
+    </tr>
+    <tr>
+      <td><b>Thiếu chứng từ thì hiện rõ, không giấu</b></td>
+      <td>Khoản chi không có ảnh hoá đơn <b>vẫn ghi được</b> — thực tế ở quê là như vậy — nhưng bị đánh dấu và được gom thành một mục riêng trong báo cáo.</td>
+      <td>Nhìn không đẹp, và có thể làm thủ quỹ ngại. Nhưng che nó đi chính là cách mọi tranh cãi bắt đầu.</td>
+    </tr>
+    <tr>
+      <td><b>Tách vai thủ quỹ khỏi vai duyệt chi</b></td>
+      <td>Người ghi sổ và người duyệt khoản chi <b>không được là một tài khoản</b>. RBAC hiện tại chưa có vai “thủ quỹ” — phải thêm.</td>
+      <td>Dòng họ nhỏ có thể chỉ có một người làm cả hai. Khi đó hệ thống phải hiện cảnh báo công khai trên trang quỹ, chứ không âm thầm cho qua.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<figure id="kd-8">
+<svg viewBox="0 0 720 470" role="img" aria-label="Khung dây trang quỹ họ với dòng cân đối ở đầu trang và sổ thu chi bên dưới">
+  <rect class="wf-khung" x="8" y="8" width="704" height="454" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Quỹ họ — kỳ 2026</text>
+  <text class="wf-phu" x="24" y="46">Thủ quỹ: ông Nguyễn Văn E · Duyệt chi: Hội đồng Tộc biểu · mọi con số dưới đây là minh hoạ</text>
+
+  <rect class="wf-o" x="20" y="66" width="680" height="74"/>
+  <text class="wf-phu" x="34" y="86">CÂN ĐỐI — HỆ THỐNG TỰ KIỂM, KHÔNG AI GÕ TAY</text>
+  <text class="wf-chu" x="34" y="112">Dư đầu kỳ</text>
+  <text class="wf-chu" x="34" y="130" font-weight="600">12.000.000</text>
+  <text class="wf-chu" x="170" y="112">+ Thu</text>
+  <text class="wf-chu" x="170" y="130" font-weight="600">38.500.000</text>
+  <text class="wf-chu" x="316" y="112">− Chi</text>
+  <text class="wf-chu" x="316" y="130" font-weight="600">27.200.000</text>
+  <text class="wf-chu" x="462" y="112">= Dư cuối kỳ</text>
+  <text class="wf-chu" x="462" y="130" font-weight="600">23.300.000</text>
+  <rect class="wf-o" x="586" y="94" width="104" height="36" rx="4"/>
+  <text class="wf-chu" x="600" y="118" fill="var(--xanh)">✓ Khớp</text>
+
+  <rect class="wf-nhan" x="20" y="154" width="164" height="40" rx="4"/>
+  <text class="wf-chu" x="34" y="179" fill="var(--nen-the)">Sổ công đức (thu)</text>
+  <rect class="wf-o" x="192" y="154" width="120" height="40" rx="4"/>
+  <text class="wf-chu" x="216" y="179">Sổ chi</text>
+  <rect class="wf-o" x="320" y="154" width="150" height="40" rx="4"/>
+  <text class="wf-chu" x="340" y="179">Báo cáo kỳ</text>
+  <rect class="wf-o" x="478" y="154" width="222" height="40" rx="4"/>
+  <text class="wf-chu" x="492" y="179">Tải toàn bộ sổ ra bảng tính</text>
+
+  <rect class="wf-o" x="20" y="208" width="680" height="34"/>
+  <text class="wf-phu" x="34" y="229">NGÀY</text>
+  <text class="wf-phu" x="120" y="229">NGƯỜI ĐÓNG GÓP</text>
+  <text class="wf-phu" x="330" y="229">SỐ TIỀN</text>
+  <text class="wf-phu" x="450" y="229">NỘI DUNG</text>
+  <text class="wf-phu" x="630" y="229">BIÊN NHẬN</text>
+  <rect class="wf-o" x="20" y="242" width="680" height="36"/>
+  <text class="wf-chu" x="34" y="265">14/02</text>
+  <text class="wf-chu" x="120" y="265">Nguyễn Văn D (chi Hai)</text>
+  <text class="wf-chu" x="330" y="265">5.000.000</text>
+  <text class="wf-chu" x="450" y="265">Sửa mái từ đường</text>
+  <text class="wf-phu" x="630" y="265">có ảnh</text>
+  <rect class="wf-o" x="20" y="278" width="680" height="36"/>
+  <text class="wf-chu" x="34" y="301">18/02</text>
+  <text class="wf-chu" x="120" y="301">Một người con cháu xa quê</text>
+  <text class="wf-chu" x="330" y="301">2.000.000</text>
+  <text class="wf-chu" x="450" y="301">Khuyến học</text>
+  <text class="wf-phu" x="630" y="301">có ảnh</text>
+  <text class="wf-phu" x="120" y="316">tên ẩn theo yêu cầu — số tiền vẫn hiện</text>
+  <rect class="wf-o" x="20" y="330" width="680" height="36"/>
+  <text class="wf-chu" x="34" y="353">02/03</text>
+  <text class="wf-chu" x="120" y="353">Chi Ba (góp chung)</text>
+  <text class="wf-chu" x="330" y="353">8.000.000</text>
+  <text class="wf-chu" x="450" y="353">Giỗ Tổ</text>
+  <text class="wf-phu" x="630" y="353">có ảnh</text>
+
+  <rect class="wf-o" x="20" y="382" width="440" height="66"/>
+  <text class="wf-phu" x="34" y="404" fill="var(--ho-phach)">CẦN CHÚ Ý — HIỆN CÔNG KHAI, KHÔNG GIẤU</text>
+  <text class="wf-chu" x="34" y="426">2 khoản chi chưa có chứng từ · tổng 1.400.000</text>
+  <text class="wf-phu" x="34" y="442">Xem danh sách · nhắc người chi bổ sung biên nhận</text>
+  <rect class="wf-o" x="470" y="382" width="230" height="66"/>
+  <text class="wf-phu" x="484" y="404">AI ĐÃ XEM, AI ĐÃ GHI</text>
+  <text class="wf-chu" x="484" y="426">Nhật ký sổ quỹ — mở</text>
+  <text class="wf-phu" x="484" y="442">Ghi cả lượt xem, theo BA v2 §10</text>
+</svg>
+<figcaption>
+  <strong>KD-8 · Trang quỹ họ.</strong> Dòng cân đối nằm <strong>trên cùng, trước cả danh sách</strong>,
+  và do hệ thống tự tính — không có ô nào cho người gõ tay số dư. Nếu bốn con số không khớp, chỗ dấu
+  “Khớp” chuyển thành cảnh báo đỏ và <strong>không cho đóng lại</strong>; một sổ quỹ lệch mà im lặng là
+  tình huống tệ nhất có thể xảy ra ở màn hình này. Dòng thứ hai minh hoạ nguyên tắc ẩn danh: tên người
+  đóng góp ẩn theo yêu cầu, <strong>số tiền vẫn hiện</strong>, vì nếu số tiền cũng ẩn được thì tổng
+  không còn kiểm được và cả trang mất ý nghĩa. Khối “2 khoản chi chưa có chứng từ” đặt ở chỗ dễ thấy
+  chứ không nằm sâu trong báo cáo — đây là quyết định thiết kế quan trọng nhất của cả tính năng.
+  Các con số đều là <strong>minh hoạ</strong>.
+</figcaption>
+</figure>
+
+<figure id="kd-9">
+<svg viewBox="0 0 720 430" role="img" aria-label="Khung dây ghi khoản chi và hộp thoại bút toán điều chỉnh khi ghi sai">
+  <rect class="wf-khung" x="8" y="8" width="330" height="414" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="330" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Ghi một khoản chi</text>
+  <text class="wf-phu" x="24" y="46">Bạn đang ghi với vai Thủ quỹ</text>
+  <text class="wf-phu" x="24" y="76">SỐ TIỀN</text>
+  <rect class="wf-o" x="24" y="86" width="298" height="44"/>
+  <text class="wf-chu" x="36" y="113">1.400.000</text>
+  <text class="wf-phu" x="24" y="152">NỘI DUNG — VIẾT ĐỦ ĐỂ NGƯỜI KHÁC HIỂU</text>
+  <rect class="wf-o" x="24" y="162" width="298" height="44"/>
+  <text class="wf-chu" x="36" y="189">Thuê xe chở lễ vật lên từ đường</text>
+  <text class="wf-phu" x="24" y="228">CHỨNG TỪ</text>
+  <rect class="wf-o" x="24" y="238" width="145" height="44" rx="4"/>
+  <text class="wf-chu" x="42" y="265">Chụp biên nhận</text>
+  <rect class="wf-o" x="177" y="238" width="145" height="44" rx="4"/>
+  <text class="wf-chu" x="188" y="265">Chưa có chứng từ</text>
+  <text class="wf-phu" x="24" y="300" fill="var(--ho-phach)">Chọn “chưa có” thì khoản này sẽ hiện công khai</text>
+  <text class="wf-phu" x="24" y="316" fill="var(--ho-phach)">trong mục cần chú ý cho tới khi bổ sung.</text>
+  <rect class="wf-nhan" x="24" y="336" width="298" height="48" rx="4"/>
+  <text class="wf-chu" x="60" y="365" fill="var(--nen-the)">Gửi Hội đồng duyệt chi</text>
+  <text class="wf-phu" x="24" y="404">Không có nút “Lưu” — thủ quỹ không tự duyệt khoản chi của mình.</text>
+
+  <rect class="wf-khung" x="358" y="8" width="354" height="414" rx="6"/>
+  <rect class="wf-o" x="358" y="8" width="354" height="46"/>
+  <text class="wf-chu" x="374" y="36" font-weight="600">Dòng này đã ghi rồi — sửa thế nào?</text>
+  <text class="wf-chu" x="374" y="76">Bạn muốn sửa dòng ngày 02/03, chi Ba góp</text>
+  <text class="wf-chu" x="374" y="96">giỗ Tổ, số tiền 8.000.000.</text>
+  <text class="wf-phu" x="374" y="126">SỔ QUỸ KHÔNG SỬA ĐƯỢC. HỆ THỐNG SẼ GHI BA DÒNG:</text>
+  <rect class="wf-o" x="374" y="140" width="322" height="34"/>
+  <text class="wf-chu" x="386" y="162">1 · Dòng cũ — giữ nguyên, không đổi</text>
+  <rect class="wf-o" x="374" y="178" width="322" height="34"/>
+  <text class="wf-chu" x="386" y="200">2 · Bút toán đảo −8.000.000</text>
+  <rect class="wf-o" x="374" y="216" width="322" height="34"/>
+  <text class="wf-chu" x="386" y="238">3 · Bút toán đúng +6.000.000</text>
+  <text class="wf-phu" x="374" y="272">HỆ QUẢ</text>
+  <text class="wf-chu" x="374" y="294">· Cả ba dòng hiện vĩnh viễn trong sổ công khai.</text>
+  <text class="wf-chu" x="374" y="314">· Tên bạn gắn với dòng 2 và 3.</text>
+  <text class="wf-chu" x="374" y="334">· Lý do sửa là bắt buộc và cũng hiện công khai.</text>
+  <rect class="wf-o" x="374" y="348" width="322" height="30"/>
+  <text class="wf-phu" x="386" y="368">Lý do: gõ nhầm, chi Ba góp 6 triệu không phải 8</text>
+  <rect class="wf-nhan" x="374" y="386" width="200" height="26" rx="4"/>
+  <text class="wf-phu" x="392" y="404" fill="var(--nen-the)">Ghi bút toán điều chỉnh</text>
+  <rect class="wf-o" x="584" y="386" width="112" height="26" rx="4"/>
+  <text class="wf-phu" x="608" y="404">Thôi, để yên</text>
+</svg>
+<figcaption>
+  <strong>KD-9 · Ghi khoản chi và bút toán điều chỉnh.</strong> Hộp thoại bên phải dựng theo đúng khuôn
+  mẫu mà <a href="../00-dinh-huong.html">định hướng §2 nguyên tắc 4</a> chỉ định là mẫu chuẩn — hộp thoại
+  xác nhận ngày mất đã có trong sản phẩm
+  (<code>frontend/src/components/person-form/death-confirm-dialog.tsx</code>): nêu đích danh dòng bị
+  ảnh hưởng, chiếu lại con số để soi lỗi gõ, rồi liệt kê hệ quả cụ thể thay vì hỏi “bạn chắc chứ?”.
+  Điểm khác biệt với phần còn lại của sản phẩm nằm ở nút bên trái: <strong>không có nút “Lưu”</strong>.
+  Thủ quỹ gửi, Hội đồng duyệt. Nếu dòng họ nhỏ tới mức hai vai là một người, hệ thống vẫn đi qua hai
+  bước và ghi rõ trên trang quỹ rằng người ghi và người duyệt là một — <strong>hiện ra chứ không bỏ
+  qua</strong>.
+</figcaption>
+</figure>
+
+<h3>Rủi ro trải nghiệm của FR-4.2</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Vì sao</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="xau"><b>Sổ điện tử và sổ giấy chạy song song, lệch nhau</b></td><td>Thủ quỹ vẫn ghi giấy vì quen tay, nhập vào máy sau, và có lúc quên. Từ đó trở đi không sổ nào tin được.</td><td>Chấp nhận độ trễ: có trạng thái “đã nhập từ sổ giấy ngày …”. Và đặt <b>mốc chốt kỳ</b> — sau khi Hội đồng chốt, kỳ đó khoá lại.</td></tr>
+    <tr><td class="xau"><b>Số tiền của người sống là dữ liệu cá nhân</b></td><td>Khoản đóng góp gắn với tên một người đang sống — thuộc phạm vi Nghị định 13/2023, không phải thông tin phả hệ của người đã khuất.</td><td>Sổ công đức chỉ hiện với <b>thành viên đã đăng nhập</b>, không hiện với khách. Người đóng góp tự chọn mức hiện tên.</td></tr>
+    <tr><td class="xau"><b>Biến thành bảng so đo</b></td><td>Chỉ cần thêm một cột xếp hạng là quỹ họ chuyển từ việc chung thành cuộc thi giữa các chi và giữa các gia đình.</td><td><b>Không xếp hạng theo số tiền.</b> Sổ xếp theo thời gian. Bảng vàng ghi có đóng góp, không ghi thứ hạng.</td></tr>
+    <tr><td class="canh"><b>Người lớn tuổi không dám dùng</b></td><td>Thủ quỹ 65 tuổi sợ bấm nhầm rồi không sửa được — mà sổ này đúng là không sửa được thật.</td><td>Cho phép <b>lưu nháp</b> trước khi gửi duyệt; nháp thì sửa thoải mái. Ranh giới “không sửa được” bắt đầu từ lúc gửi, và phải nói rõ ở nút gửi.</td></tr>
+    <tr><td class="canh"><b>Không ai đọc báo cáo</b></td><td>Minh bạch mà không ai xem thì cũng như không. Trang quỹ có thể chỉ được mở vài lần một năm.</td><td>Gửi <b>bản tóm tắt kỳ qua Zalo</b> — kênh đã có từ giai đoạn 1 — với ba con số và một đường dẫn. Minh bạch phải chủ động đi tới người đọc.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>2. FR-4.3 — Báo cáo dân số học</h2>
+
+<p>
+  <b>Phục vụ ai.</b> Chủ yếu là Hội đồng Tộc biểu: họ cần biết dòng họ hiện có bao nhiêu người, phân
+  bố ở đâu, thế hệ nào đang mỏng, để tổ chức việc họ. Một phần nhỏ phục vụ con cháu tò mò — “họ mình
+  có bao nhiêu người ở nước ngoài”.
+</p>
+
+<p>
+  <b>Điều nguy hiểm nằm ở chỗ không ai để ý:</b> báo cáo thống kê không ghi tên ai, nên nó trông vô
+  hại. Nhưng “chi Ba có 1 người đang ở Nhật” là một câu <b>chỉ đích danh một người còn sống</b> với
+  bất cứ ai biết dòng họ. Đây là rò rỉ Tầng 2 mà mô hình phân tầng của BA v2 §10 không bắt được, vì
+  nó xảy ra ở tầng tổng hợp chứ không ở tầng bản ghi.
+</p>
+
+<figure id="kd-10">
+<svg viewBox="0 0 720 440" role="img" aria-label="Khung dây báo cáo dân số học với tháp tuổi, bảng phân bố địa lý và các ô bị che vì nhóm quá nhỏ">
+  <rect class="wf-khung" x="8" y="8" width="704" height="424" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Báo cáo dân số học — toàn dòng họ</text>
+  <text class="wf-phu" x="24" y="46">Số liệu trong hình là minh hoạ · ngưỡng che nhóm nhỏ đang đặt ở 5 người</text>
+  <rect class="wf-o" x="20" y="66" width="170" height="40" rx="4"/>
+  <text class="wf-chu" x="34" y="91">Phạm vi: toàn họ</text>
+  <rect class="wf-o" x="198" y="66" width="200" height="40" rx="4"/>
+  <text class="wf-chu" x="212" y="91">Chỉ tính người còn sống</text>
+  <rect class="wf-o" x="406" y="66" width="150" height="40" rx="4"/>
+  <text class="wf-chu" x="422" y="91">Tính đến 2026</text>
+  <rect class="wf-o" x="564" y="66" width="136" height="40" rx="4"/>
+  <text class="wf-chu" x="578" y="91">Tải bảng số</text>
+
+  <text class="wf-phu" x="20" y="130">CƠ CẤU TUỔI VÀ GIỚI</text>
+  <rect class="wf-o" x="20" y="140" width="330" height="200"/>
+  <text class="wf-phu" x="34" y="160">Nam</text>
+  <text class="wf-phu" x="300" y="160">Nữ</text>
+  <text class="wf-phu" x="160" y="160">60+</text>
+  <rect class="wf-nhan" x="120" y="166" width="46" height="16" opacity="0.55"/>
+  <rect class="wf-nhan" x="180" y="166" width="52" height="16" opacity="0.3"/>
+  <text class="wf-phu" x="160" y="200">40–59</text>
+  <rect class="wf-nhan" x="98" y="206" width="68" height="16" opacity="0.55"/>
+  <rect class="wf-nhan" x="180" y="206" width="72" height="16" opacity="0.3"/>
+  <text class="wf-phu" x="160" y="240">20–39</text>
+  <rect class="wf-nhan" x="82" y="246" width="84" height="16" opacity="0.55"/>
+  <rect class="wf-nhan" x="180" y="246" width="80" height="16" opacity="0.3"/>
+  <text class="wf-phu" x="160" y="280">0–19</text>
+  <rect class="wf-nhan" x="110" y="286" width="56" height="16" opacity="0.55"/>
+  <rect class="wf-nhan" x="180" y="286" width="54" height="16" opacity="0.3"/>
+  <text class="wf-phu" x="34" y="318">Biểu đồ luôn kèm bảng số bên dưới —</text>
+  <text class="wf-phu" x="34" y="332">người đeo kính và trình đọc màn hình đọc bảng dễ hơn hình.</text>
+
+  <text class="wf-phu" x="368" y="130">PHÂN BỐ ĐỊA LÝ — TỚI CẤP TỈNH, KHÔNG CHẤM ĐỊA CHỈ NHÀ</text>
+  <rect class="wf-o" x="368" y="140" width="332" height="30"/>
+  <text class="wf-phu" x="382" y="160">NƠI Ở</text>
+  <text class="wf-phu" x="600" y="160">SỐ NGƯỜI</text>
+  <rect class="wf-o" x="368" y="170" width="332" height="30"/>
+  <text class="wf-chu" x="382" y="190">Hà Nội</text>
+  <text class="wf-chu" x="600" y="190">142</text>
+  <rect class="wf-o" x="368" y="200" width="332" height="30"/>
+  <text class="wf-chu" x="382" y="220">TP. Hồ Chí Minh</text>
+  <text class="wf-chu" x="600" y="220">63</text>
+  <rect class="wf-o" x="368" y="230" width="332" height="30"/>
+  <text class="wf-chu" x="382" y="250">Các tỉnh khác trong nước</text>
+  <text class="wf-chu" x="600" y="250">88</text>
+  <rect class="wf-o" x="368" y="260" width="332" height="30"/>
+  <text class="wf-chu" x="382" y="280">Ngoài nước — Hoa Kỳ</text>
+  <text class="wf-chu" x="600" y="280">11</text>
+  <rect class="wf-nhan" x="368" y="290" width="332" height="30" opacity="0.1"/>
+  <rect class="wf-net" x="368" y="290" width="332" height="30" stroke-dasharray="4 3"/>
+  <text class="wf-chu" x="382" y="310">Ngoài nước — nơi khác (gộp)</text>
+  <text class="wf-chu" x="600" y="310">dưới 5</text>
+  <text class="wf-phu" x="368" y="340">Bốn quốc gia có ít hơn 5 người đã được gộp lại.</text>
+
+  <rect class="wf-o" x="20" y="356" width="680" height="62"/>
+  <text class="wf-phu" x="34" y="378">VÌ SAO CÓ Ô BỊ GỘP</text>
+  <text class="wf-chu" x="34" y="400">Nhóm quá nhỏ sẽ chỉ đích danh một người còn sống dù không ghi tên. Ngưỡng</text>
+  <text class="wf-chu" x="34" y="416">hiện đặt ở 5 người — đây là đề xuất, Hội đồng Tộc biểu quyết con số cuối.</text>
+</svg>
+<figcaption>
+  <strong>KD-10 · Báo cáo dân số học.</strong> Hai chi tiết là bắt buộc chứ không phải trang trí. Thứ
+  nhất, <strong>ô bị gộp phải nói rõ nó bị gộp và vì sao</strong> — nếu chỉ lặng lẽ bỏ đi thì tổng
+  không khớp và người đọc mất niềm tin vào cả báo cáo. Thứ hai, <strong>mọi biểu đồ đều kèm bảng
+  số</strong>: người đọc chính của báo cáo này là Hội đồng ở tuổi lão thị, và một cột màu không nhãn
+  không đọc được bằng một hàng số. Bản đồ chỉ tới <strong>cấp tỉnh và cấp quốc gia</strong>; không bao
+  giờ chấm toạ độ chỗ ở của người sống lên bản đồ, dù dữ liệu có sẵn.
+</figcaption>
+</figure>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Hai con số đề xuất không đưa vào báo cáo</p>
+  <p>
+    <b>Tỉ lệ tuyệt tự</b> và <b>tỉ lệ gia đình có con trai</b> là hai con số kỹ thuật thì tính được dễ
+    dàng, nhưng khi hiện lên màn hình chúng trở thành công cụ gây áp lực sinh con trai — đi thẳng ngược
+    lại FR-1.8, quyết định đã chốt của BA v2 §12 về ghi nhận con gái ngang bằng. Đề xuất bỏ khỏi báo
+    cáo mặc định. Nếu Hội đồng thực sự cần để lo việc kế tự, đặt trong một báo cáo riêng có kiểm soát
+    truy cập và có ghi nhật ký, giống cách đối xử với dữ liệu Tầng 3.
+  </p>
+</div>
+
+<h2>3. FR-2.4 — Bản tin dòng họ và bảng vàng vinh danh</h2>
+
+<p>
+  Hai thứ này bị gộp trong một mã yêu cầu nhưng phục vụ hai việc rất khác nhau. <b>Bản tin</b> là
+  truyền thông một chiều từ Hội đồng tới con cháu — việc họ sắp tới, việc họ vừa xong. <b>Bảng vàng</b>
+  là ghi công, và ghi công thì luôn kèm theo so sánh, dù không ai muốn.
+</p>
+
+<h3>Bản tin: điều quan trọng không nằm ở trang web</h3>
+
+<p>
+  Con cháu xa quê không mở trang bản tin. Họ đọc thứ hiện lên trong ứng dụng nhắn tin của họ. Giai
+  đoạn 1 đã có kênh Zalo cho nhắc giỗ; bản tin nên đi <b>cùng đường ống đó</b>: một tin ngắn có ba
+  dòng và một đường dẫn, không phải một bản tin dài mà người ta phải chủ động tìm.
+</p>
+
+<p>
+  Hệ quả thiết kế: mỗi bài bản tin phải có sẵn <b>bản rút gọn ba dòng</b> do người viết tự soạn, không
+  phải do máy cắt. Máy cắt tự động sẽ cắt giữa câu và làm hỏng giọng văn trang trọng của thông báo
+  việc họ.
+</p>
+
+<figure id="kd-11">
+<svg viewBox="0 0 720 420" role="img" aria-label="Khung dây trang bản tin dòng họ và bảng vàng vinh danh xếp theo thời gian">
+  <rect class="wf-khung" x="8" y="8" width="354" height="404" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="354" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Bản tin dòng họ</text>
+  <text class="wf-phu" x="24" y="46">Do Hội đồng Tộc biểu đăng · 12 bài trong năm 2026</text>
+  <rect class="wf-o" x="24" y="70" width="322" height="106"/>
+  <rect class="wf-nhan" x="36" y="82" width="88" height="22" rx="3" opacity="0.16"/>
+  <text class="wf-phu" x="46" y="98" fill="var(--do-tram)">Việc sắp tới</text>
+  <text class="wf-chu" x="36" y="126" font-weight="600">Chạp mả năm nay vào 20 tháng Chạp</text>
+  <text class="wf-chu" x="36" y="148">Con cháu tập trung tại từ đường lúc 7 giờ.</text>
+  <text class="wf-phu" x="36" y="168">Đã gửi qua Zalo tới 214 thành viên · 12/2026</text>
+  <rect class="wf-o" x="24" y="188" width="322" height="96"/>
+  <rect class="wf-nhan" x="36" y="200" width="104" height="22" rx="3" opacity="0.16"/>
+  <text class="wf-phu" x="46" y="216" fill="var(--do-tram)">Việc đã xong</text>
+  <text class="wf-chu" x="36" y="244" font-weight="600">Đã sửa xong mái từ đường</text>
+  <text class="wf-chu" x="36" y="266">Kinh phí lấy từ quỹ họ — xem sổ chi.</text>
+  <rect class="wf-o" x="24" y="296" width="322" height="66"/>
+  <text class="wf-phu" x="36" y="316">BẢN RÚT GỌN GỬI ZALO — DO NGƯỜI VIẾT SOẠN</text>
+  <text class="wf-chu" x="36" y="338">3 dòng, người viết tự đặt. Máy không tự cắt,</text>
+  <text class="wf-chu" x="36" y="356">vì cắt máy làm hỏng giọng văn thông báo việc họ.</text>
+  <text class="wf-phu" x="24" y="386">Khách xem được bản tin; phần nhắc tới người sống thì ẩn theo phân tầng.</text>
+
+  <rect class="wf-khung" x="378" y="8" width="334" height="404" rx="6"/>
+  <rect class="wf-o" x="378" y="8" width="334" height="46"/>
+  <text class="wf-chu" x="394" y="30" font-weight="600">Bảng vàng vinh danh</text>
+  <text class="wf-phu" x="394" y="46">Xếp theo thời gian và theo đời — không xếp hạng</text>
+  <rect class="wf-o" x="394" y="70" width="100" height="36" rx="4"/>
+  <text class="wf-phu" x="414" y="93">Khoa bảng</text>
+  <rect class="wf-o" x="502" y="70" width="100" height="36" rx="4"/>
+  <text class="wf-phu" x="518" y="93">Khuyến học</text>
+  <rect class="wf-o" x="610" y="70" width="86" height="36" rx="4"/>
+  <text class="wf-phu" x="622" y="93">Đóng góp</text>
+  <rect class="wf-o" x="394" y="120" width="302" height="60"/>
+  <text class="wf-chu" x="406" y="142" font-weight="600">Cụ Nguyễn Văn A — đời thứ 5</text>
+  <text class="wf-chu" x="406" y="162">Đỗ Cử nhân khoa Đinh Mùi</text>
+  <text class="wf-phu" x="600" y="162">đã khuất</text>
+  <rect class="wf-o" x="394" y="190" width="302" height="60"/>
+  <text class="wf-chu" x="406" y="212" font-weight="600">Nguyễn Thị F — đời thứ 8</text>
+  <text class="wf-chu" x="406" y="232">Bảo vệ luận án tiến sĩ, 2026</text>
+  <text class="wf-phu" x="580" y="232" fill="var(--xanh)">đã đồng ý</text>
+  <rect class="wf-nhan" x="394" y="260" width="302" height="60" opacity="0.1"/>
+  <rect class="wf-net" x="394" y="260" width="302" height="60" stroke-dasharray="4 3"/>
+  <text class="wf-chu" x="406" y="282" font-weight="600">Học sinh giỏi cấp tỉnh — 3 cháu</text>
+  <text class="wf-phu" x="406" y="302" fill="var(--ho-phach)">Chưa có đồng ý của phụ huynh · chưa hiện tên</text>
+  <rect class="wf-o" x="394" y="332" width="302" height="66"/>
+  <text class="wf-phu" x="406" y="352">KHÔNG CÓ CỘT THỨ HẠNG, KHÔNG CÓ SỐ TIỀN</text>
+  <text class="wf-chu" x="406" y="374">Mục Đóng góp chỉ ghi có đóng góp trong kỳ.</text>
+  <text class="wf-chu" x="406" y="392">Số tiền nằm ở sổ quỹ, nơi cần kiểm tra.</text>
+</svg>
+<figcaption>
+  <strong>KD-11 · Bản tin và bảng vàng.</strong> Ba quyết định nằm trong cột phải. (a) Bảng vàng
+  <strong>xếp theo thời gian và theo đời</strong>, không xếp hạng — một cột thứ hạng biến việc ghi công
+  thành cuộc thi giữa các chi. (b) Người còn sống được vinh danh phải <strong>tự đồng ý</strong>: thành
+  tích cá nhân của người đang sống là dữ liệu cá nhân, không phải tài sản chung của dòng họ. (c) Mục
+  khuyến học vinh danh <strong>trẻ vị thành niên</strong> — nhóm mà BA v2 §10 yêu cầu ẩn tối đa; ô nét
+  đứt cho thấy trạng thái mặc định: <strong>ghi nhận việc, chưa hiện tên</strong>, cho tới khi có đồng
+  ý của phụ huynh, và kể cả khi đó cũng chỉ hiện với thành viên đã đăng nhập chứ không hiện với khách.
+</figcaption>
+</figure>
+
+<h3>Rủi ro trải nghiệm của FR-2.4</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Vì sao</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="xau"><b>Vinh danh trẻ em vượt rào riêng tư</b></td><td>Khuyến học là hoạt động được yêu quý nhất trong nhiều dòng họ, nhưng đối tượng vinh danh là trẻ vị thành niên — nhóm BA v2 §10 yêu cầu ẩn tối đa.</td><td>Mặc định ghi nhận việc mà không hiện tên. Hiện tên cần đồng ý của phụ huynh, và không bao giờ hiện với khách. <b>Cần Hội đồng chốt trước khi làm.</b></td></tr>
+    <tr><td class="canh"><b>Bảng vàng thành bảng so đo giữa các chi</b></td><td>Chi đông người và khá giả sẽ luôn xuất hiện nhiều hơn. Lâu dần bảng vàng đọc như một bảng xếp hạng chi.</td><td>Không thống kê theo chi trên bảng vàng. Xếp theo thời gian. Không có tổng, không có phần trăm.</td></tr>
+    <tr><td class="canh"><b>Bản tin chết sau vài tháng</b></td><td>Ai cũng hào hứng ba bài đầu. Sau đó không ai viết, và một trang bản tin có bài mới nhất từ hai năm trước làm cả sản phẩm trông bị bỏ hoang.</td><td>Gắn bản tin vào việc vốn đã diễn ra: sau mỗi kỳ giỗ Tổ, mỗi kỳ chạp mả, mỗi lần chốt quỹ — hệ thống <b>gợi ý soạn một bài</b> với sẵn số liệu. Nếu không có bài mới thì hiện việc sắp tới thay vì hiện bài cũ.</td></tr>
+    <tr><td class="canh"><b>Tin đi Zalo sai đối tượng</b></td><td>Bản tin nhắc tới người còn sống có thể bị gửi tới người không được xem thông tin đó.</td><td>Dùng lại đúng cơ chế phân tầng và phạm vi chi/nhánh mà nhắc giỗ ở giai đoạn 1 đã dùng. Không làm một cơ chế gửi thứ hai.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Điểm nối giữa ba tính năng</h2>
+
+<p>
+  Ba tính năng trong tài liệu này đọc riêng thì rời rạc, nhưng chúng có một điểm chung đáng khai thác:
+  <b>cả ba đều sinh ra nội dung định kỳ</b>. Chốt quỹ một kỳ sinh ra một báo cáo; báo cáo dân số học
+  thay đổi mỗi năm; bản tin cần bài mới. Đề xuất nối chúng lại:
+</p>
+
+<ul>
+  <li>Chốt kỳ quỹ → hệ thống <b>gợi ý</b> soạn một bài bản tin với ba con số cân đối đã điền sẵn. Người
+    viết sửa và duyệt; máy không tự đăng.</li>
+  <li>Bản tin về chạp mả → kèm nút <b>“Tải khu mộ về máy”</b> của
+    <a href="01-di-san-mo-phan.html#kd-3">KD-3</a>, vì đó đúng là lúc người ta cần nhớ tải.</li>
+  <li>Bảng vàng mục đóng góp → dẫn tới sổ công đức, không nhắc lại số tiền.</li>
+</ul>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 05 · Phần 02. Mọi con số trong khung dây là <b>minh hoạ</b>. Ba việc cần Hội đồng Tộc biểu
+    quyết trước khi làm: <b>ngưỡng che nhóm nhỏ</b> trong báo cáo, <b>chính sách vinh danh trẻ vị thành
+    niên</b>, và <b>có tách vai thủ quỹ khỏi vai duyệt chi hay không</b>.
+    Quay lại <a href="index.html">tổng quan</a> · tiếp
+    <a href="03-nhap-lieu-va-tang-ai.html">03 · Nhập liệu, thông gia, tầng AI</a>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

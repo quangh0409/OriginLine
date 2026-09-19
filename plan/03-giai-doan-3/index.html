@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 03 — Giai đoạn 3 · Tổng quan &amp; nền dùng chung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 03 · Giai đoạn 3 · Trang 00</p>
+  <h1>Giai đoạn 3 — di sản, quỹ họ, báo cáo<br>Tổng quan &amp; nền dùng chung</h1>
+  <p class="tom-tat">
+    Ba bounded context <strong>rỗng hoàn toàn</strong> phải dựng: <code>heritage</code>,
+    <code>fund</code>, <code>reporting</code>. Trang này chốt <strong>phạm vi, thứ tự và ba nền
+    dùng chung</strong> phải làm trước dòng mã tính năng đầu tiên; ba trang con mô tả từng context.
+    Tài liệu này <strong>nằm dưới</strong> <code>plan/00-tong-the.html</code> — chỗ nào mâu thuẫn thì
+    bản chốt phạm vi thắng.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <a href="../00-tong-the.html">↩ 00 · Bản chốt phạm vi</a>
+  <span>·</span>
+  <b>00 · Tổng quan &amp; nền dùng chung</b>
+  <span>·</span>
+  <a href="01-heritage.html">01 · heritage</a>
+  <span>·</span>
+  <a href="02-fund-reporting.html">02 · fund · reporting · bản tin</a>
+  <span>·</span>
+  <a href="03-rui-ro-lo-trinh.html">03 · Rủi ro, ước lượng, lộ trình</a>
+</nav>
+
+<h2>1. Đo được gì trước khi bắt đầu</h2>
+
+<p>
+  Mọi con số trong bảng này <b>đếm từ mã nguồn hôm nay</b>, có đường dẫn kèm theo. Con số ước lượng
+  nằm ở <a href="03-rui-ro-lo-trinh.html">trang 03</a> và luôn được ghi rõ là ước lượng.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Đo được</th><th>Đường dẫn</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Ba context của Giai đoạn 3</td>
+      <td><b>5 file mỗi context</b>, toàn bộ là <code>package-info.java</code>. Không có domain, không có bảng, không có endpoint.</td>
+      <td><code>backend/src/main/java/vn/giapha/{heritage,fund,reporting}/</code></td>
+    </tr>
+    <tr>
+      <td>Context làm mẫu</td>
+      <td><code>events</code> <b>57 file</b> — đủ bốn lớp, có adapter JDBC đọc chéo context, có DTO riêng ở tầng api.</td>
+      <td><code>backend/src/main/java/vn/giapha/events/</code></td>
+    </tr>
+    <tr>
+      <td>Migration</td>
+      <td><code>V1</code>–<code>V7</code> + một <code>R__</code> lặp lại. Giai đoạn 3 bắt đầu từ <code>V8</code>.</td>
+      <td><code>backend/src/main/resources/db/migration/</code></td>
+    </tr>
+    <tr>
+      <td class="xau">Client MinIO</td>
+      <td><b>Chưa tồn tại.</b> Toàn bộ mã nguồn không có một dòng nào gọi S3/MinIO — chỉ có bình luận và một dòng cấu hình nói rõ việc này để lại Giai đoạn 3.</td>
+      <td><code>backend/src/main/resources/application-dev.yml</code> dòng 46</td>
+    </tr>
+    <tr>
+      <td>Bucket MinIO đã tạo sẵn</td>
+      <td>4 bucket, tất cả <b>private</b>: <code>giapha-portraits</code>, <code>giapha-stele</code>, <code>giapha-graves</code>, <code>giapha-documents</code>.</td>
+      <td><code>infra/docker-compose.yml</code> mục <code>minio-init</code></td>
+    </tr>
+    <tr>
+      <td>Sự kiện theo lịch âm</td>
+      <td>Bảng <code>event</code> <b>đã có sẵn</b> loại <code>TE_LE</code>, <code>TAO_MO</code>, <code>GIO_TO</code> và cột <code>location</code>. Lịch tế lễ và lịch tảo mộ <b>không cần bảng mới</b>.</td>
+      <td><code>V4__events.sql</code> · <code>events/domain/EventType.java</code></td>
+    </tr>
+    <tr>
+      <td>Nền tìm kiếm tiếng Việt</td>
+      <td>Hàm <code>vn_unaccent()</code> và cấu hình FTS <code>public.vi_unaccent</code> đã có. Tìm kiếm tư liệu di sản dùng lại, <b>không dựng cái thứ hai</b>.</td>
+      <td><code>V6__search.sql</code></td>
+    </tr>
+    <tr>
+      <td class="canh">Nơi ở của nhân khẩu</td>
+      <td><code>person.native_place</code> và <code>person.current_place</code> là <b><code>VARCHAR(255)</code> văn bản tự do</b>. Không có mã tỉnh, không có mã quốc gia.</td>
+      <td><code>V2__core.sql</code> dòng 106–107</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Phát hiện quan trọng nhất khi kiểm kê cho Giai đoạn 3</p>
+  <p>
+    <b>FR-4.3 “bản đồ phân bố địa lý kể cả kiều bào” hiện <em>không dựng được</em>.</b> Nơi ở đang là
+    văn bản tự do, nên “Hà Nội”, “TP Hà Nội”, “Ha Noi”, “Cầu Giấy, Hà Nội” là bốn giá trị khác nhau
+    với cơ sở dữ liệu. Không có phép gộp nào chạy được trên đó mà không bịa.
+  </p>
+  <p>
+    Hệ quả: <b>mã tỉnh và mã quốc gia phải được thêm ở đợt B (nhập liệu ban đầu)</b>, trong mẫu Excel
+    và trong ô nhập của hồ sơ người, chứ không phải ở đợt D. Nếu đợt B đã chạy xong mới phát hiện, cả
+    dòng họ phải nhập lại nơi ở. Xem <a href="02-fund-reporting.html">trang 02 mục 2</a>.
+  </p>
+</div>
+
+<h2>2. Hai nền dùng chung — thẩm định lại đề xuất của tài liệu thiết kế</h2>
+
+<p>
+  <code>design/05-tinh-nang-tuong-lai/01-di-san-mo-phan.html</code> mục 5 chốt hai việc phải quyết
+  trước dòng mã đầu tiên: <b>một trình đọc tư liệu</b> và <b>một công cụ đặt điểm neo lên ảnh</b>.
+  Dưới đây là kết luận sau khi đối chiếu với mã nguồn hiện có.
+</p>
+
+<h3>2.1 Trình đọc tư liệu dùng chung — <span class="tot">đồng ý, kèm một chỗ sửa</span></h3>
+
+<p>
+  Đồng ý, và lý do mạnh hơn tài liệu thiết kế nêu. Văn bia, hương ước, gia huấn, câu đối, hoành phi,
+  sắc phong, mộ chí và chữ trên bài vị <b>không chỉ giống nhau ở giao diện</b> — chúng giống nhau ở
+  <b>mô hình dữ liệu</b>: một ảnh gốc, nhiều <em>dòng</em> văn bản xếp theo lớp, mỗi lớp có người làm
+  và một trạng thái đối chiếu. Tám thứ đó dùng chung <b>một aggregate</b>
+  (<code>heritage_item</code> + <code>heritage_text_layer</code> + <code>heritage_text_line</code>),
+  không chỉ chung một màn hình. Làm bốn giao diện riêng thì chi phí bảo trì nhân bốn <em>và</em> mô
+  hình dữ liệu phân mảnh — cái thứ hai mới là cái đắt.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Chỗ phải sửa so với tài liệu thiết kế</p>
+  <p>
+    Tài liệu 05.01 mục 5 xếp <b>bản tin</b> vào cùng nhóm “ảnh kèm chữ”. <b>Không đúng.</b> Bản tin
+    là văn bản <em>sinh ra đã là số</em>, do người sống viết, có luồng nháp → duyệt → xuất bản, có
+    bản rút gọn ba dòng gửi Zalo. Nó không có ảnh gốc để đối chiếu, không có phiên âm, không có dị
+    bản, không có câu hỏi “ai dịch bản này”.
+  </p>
+  <p>
+    Ép bản tin vào trình đọc bốn lớp thì được một biên tập viên phải bỏ trống ba lớp và một mô hình
+    dữ liệu có bốn cột luôn NULL. <b>Bản tin ở context riêng</b> — xem
+    <a href="02-fund-reporting.html">trang 02 mục 3</a>. Cái dùng chung được là <em>thành phần hiển
+    thị ảnh</em>, không phải aggregate.
+  </p>
+</div>
+
+<p>
+  <b>Cái giá của việc gộp tám loại tư liệu vào một bảng:</b> <code>heritage_item</code> có nguy cơ
+  thành bảng thần thánh. Cách giữ: cột <code>item_kind</code> <b>chỉ được dùng để lọc và để hiển
+  thị</b>, không bao giờ để rẽ nhánh luật nghiệp vụ; thuộc tính riêng theo loại nằm trong
+  <code>attributes JSONB</code> đúng như <code>person.attributes</code> đang làm. Có một ngoại lệ duy
+  nhất được phép rẽ theo loại: <b>phạm vi hiển thị</b>.
+</p>
+
+<h3>2.2 Công cụ đặt điểm neo lên ảnh — <span class="tot">đồng ý hoàn toàn</span></h3>
+
+<p>
+  Sơ đồ khu mộ (KD-4) và sơ đồ bài vị (KD-5) là <b>đúng một bài toán</b>: một ảnh nền thật, các điểm
+  chạm được đặt lên trên, mỗi điểm trỏ tới một hồ sơ. Một bảng <code>image_map</code> + một bảng
+  <code>image_anchor</code> phục vụ cả hai, và về sau phục vụ cả sơ đồ vị trí văn bia trong khuôn viên
+  từ đường mà chưa ai yêu cầu.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Toạ độ phải là tỉ lệ, không phải pixel</h4>
+    <p>
+      Lưu <code>x</code>, <code>y</code> dạng số thực <code>0..1</code> theo kích thước gốc của ảnh.
+      Lưu pixel thì đổi ảnh nền, đổi độ phân giải hoặc xoay ảnh là toàn bộ điểm neo lệch mà không ai
+      biết.
+    </p>
+    <p class="day">Kéo theo: <code>media_asset</code> <b>bắt buộc</b> lưu <code>width</code>/<code>height</code> gốc.</p>
+  </div>
+  <div class="the">
+    <h4>Đổi ảnh nền là một sự kiện, không phải một lần sửa</h4>
+    <p>
+      KD-4 có nút “Đổi ảnh nền khu mộ”. Khi ảnh nền đổi, mọi điểm neo trên nó phải bị đánh dấu
+      <code>needs_review = true</code> chứ không im lặng giữ nguyên toạ độ cũ.
+    </p>
+    <p class="day">Đây là chỗ dữ liệu sai <b>lặng lẽ</b> — kiểu sai đắt nhất.</p>
+  </div>
+  <div class="the">
+    <h4>Không bao giờ tự sắp lại điểm neo</h4>
+    <p>
+      Vị trí bài vị trên ban thờ là chuyện nghi lễ. Cấm mọi thuật toán bố cục chạm vào. Nếu vị trí
+      thật lệch với thế thứ trong phả, đó là <em>phát hiện</em> báo cho Hội đồng, không phải lỗi cần
+      hệ thống sửa lặng lẽ.
+    </p>
+    <p class="day">Ghi thành test: toạ độ điểm neo chỉ đổi khi người dùng kéo tay.</p>
+  </div>
+  <div class="the">
+    <h4>Trạng thái “phỏng đoán” là hạng nhất</h4>
+    <p>
+      <code>is_estimated</code> không phải cột phụ. Nhiều mộ tổ đã mất dấu; ghi một toạ độ chắc chắn
+      cho một vị trí phỏng đoán là cách chắc chắn nhất để đời sau tìm nhầm.
+    </p>
+    <p class="day">Ba trạng thái: <code>CONFIRMED</code> · <code>ESTIMATED</code> · <code>LOST</code>.</p>
+  </div>
+</div>
+
+<h2>3. Nền thứ ba mà tài liệu thiết kế không nêu: media</h2>
+
+<p>
+  Hai nền trên là nền <em>tính năng</em>. Có một nền <em>hạ tầng</em> đứng dưới cả ba context và hiện
+  chưa tồn tại một dòng mã nào: <b>lớp media</b>. Ràng buộc “media không bao giờ nằm trong CSDL” của
+  <a href="../00-tong-the.html">bản chốt phạm vi mục 5</a> chỉ là một câu cho tới khi có adapter MinIO
+  thật.
+</p>
+
+<p>
+  <code>fund</code> cần ảnh biên nhận. <code>heritage</code> cần ảnh văn bia, ảnh mộ chí, ảnh mặt bằng
+  ban thờ, ảnh khu mộ chụp từ trên cao. <code>reporting</code> không cần media nhưng cần xuất bảng
+  tính. <b>Cả ba đợi cùng một thứ</b> — vì vậy lớp media là việc <b>W8</b>, đứng trước mọi việc khác.
+</p>
+
+<h3>W8 — <code>media_asset</code> và adapter MinIO</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Nội dung</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Bảng</b></td>
+      <td>
+        <code>media_asset</code>: <code>id</code>, <code>bucket</code>, <code>object_key</code>,
+        <code>content_type</code>, <code>byte_size</code>, <code>sha256</code>,
+        <code>original_filename</code>, <code>width</code>, <code>height</code>,
+        <code>captured_at</code>, <code>uploaded_by_user_id</code>, <code>min_tier</code>
+        (<code>PUBLIC/TIER_1/TIER_2/TIER_3</code>), <code>upload_state</code>
+        (<code>PENDING/CONFIRMED</code>), <code>is_deleted</code>, <code>deleted_at</code>, cột thời
+        gian + <code>version</code> theo đúng quy ước của <code>V2__core.sql</code>.
+        <b>Không có cột URL.</b>
+      </td>
+    </tr>
+    <tr>
+      <td><b>Cổng (port)</b></td>
+      <td>
+        <code>ObjectStoragePort</code> — <code>presignPut</code>, <code>presignGet</code>,
+        <code>stat</code>, <code>delete</code>. Hiện thực bằng SDK S3 trong
+        <code>infrastructure/</code>; MinIO nói giao thức S3 nên không khoá vào MinIO.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Luồng tải lên</b></td>
+      <td>
+        Trình duyệt <code>PUT</code> <b>thẳng lên MinIO</b> bằng presigned URL, rồi gọi
+        <code>POST /api/v1/media/{id}/confirm</code> để backend <code>stat</code> lại đối tượng và
+        kiểm kích thước, kiểu (<b>theo magic byte, không theo phần mở rộng</b>), checksum. Không proxy
+        ảnh 10 MB qua Spring.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Luồng đọc</b></td>
+      <td>
+        Presigned GET, <b>TTL ngắn</b> (đề xuất 5 phút), chỉ phát sau khi qua kiểm tra phạm vi. Mọi
+        bucket đã private sẵn từ <code>minio-init</code> — không mở anonymous read với bất kỳ bucket nào.
+      </td>
+    </tr>
+    <tr>
+      <td class="canh"><b>EXIF</b></td>
+      <td>
+        <b>Xoá EXIF GPS với ảnh chân dung người sống</b> — một tấm ảnh mang toạ độ nhà riêng là rò rỉ
+        Tầng 3 không ai để ý. <b>Giữ EXIF GPS với ảnh mộ</b> — đó là cách rẻ nhất để có toạ độ mà
+        không cần ai đo. Hai chính sách ngược nhau trên cùng một đường ống, phải viết thành luật và
+        thành test.
+      </td>
+    </tr>
+    <tr>
+      <td class="xau"><b>Hai nghĩa của “xoá”</b></td>
+      <td>
+        Xoá mềm <code>media_asset</code> <b>không</b> xoá đối tượng MinIO — một job dọn sau N ngày.
+        Nhưng <b>xoá theo yêu cầu hợp pháp (Nghị định 13/2023) phải xoá thật, ngay</b>, cả bản gốc lẫn
+        mọi biến thể. Hai nghĩa khác nhau ⇒ hai đường mã và hai test.
+      </td>
+    </tr>
+    <tr>
+      <td><b>Rác</b></td>
+      <td>Đối tượng ở trạng thái <code>PENDING</code> quá 24 giờ bị job dọn. Không có job này thì mỗi lần người dùng bỏ dở là một file mồ côi vĩnh viễn.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Đặt lớp media ở đâu — một quyết định kiến trúc cần phản biện</p>
+  <p>
+    TDD §2 xếp <code>MediaAsset</code> vào <code>heritage</code>. Nhưng <code>fund</code> cần ảnh biên
+    nhận và <code>genealogy</code> đã có <code>avatarKey</code>
+    (<code>backend/src/main/java/vn/giapha/genealogy/application/view/PersonView.java</code>). Nếu
+    media nằm trong <code>heritage</code> thì <code>fund</code> phải phụ thuộc <code>heritage</code> —
+    một phụ thuộc vô nghĩa về mặt miền, và <code>Documenter</code> sẽ ghi nó vào tài liệu module như
+    một quan hệ thật.
+  </p>
+  <p>
+    <b>Đề xuất: thêm bounded context thứ mười một, <code>media</code></b> — nhỏ, không có luật nghiệp
+    vụ, chỉ giữ <code>media_asset</code> + <code>ObjectStoragePort</code> + chính sách phát URL. Đây
+    là <b>lệch với TDD §2</b>, nên nêu rõ để ai phản đối thì phản đối ngay. <b>Cái giá:</b> thêm một
+    context vào sơ đồ module và TDD §2 phải sửa một dòng. Đổi lại, tránh được một phụ thuộc sai hướng
+    mà về sau rất khó gỡ.
+  </p>
+</div>
+
+<h2>4. Ba context nói chuyện với nhau kiểu gì</h2>
+
+<p>
+  Đây là chỗ dễ làm hỏng <code>ModularityTests</code> nhất, và mã nguồn hiện có <b>đã trả lời sẵn</b>.
+</p>
+
+<p>
+  Quan sát đo được: <b>không có một dòng <code>import vn.giapha.&lt;context khác&gt;</code> nào</b>
+  giữa các context nghiệp vụ — mọi context chỉ import <code>shared</code>. Cách <code>events</code>
+  lấy tên và chi/ngành của một người là <b>một port của chính nó</b>, hiện thực bằng một adapter JDBC
+  <b>chỉ SELECT</b> trên bảng của <code>genealogy</code>:
+  <code>backend/src/main/java/vn/giapha/events/infrastructure/jdbc/EventSubjectJdbcAdapter.java</code>.
+  Javadoc của lớp đó gọi thẳng đây là <i>“nợ kiến trúc đã biết”</i> và nêu điều kiện trả nợ.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Luật cho ba context mới</p>
+  <ul>
+    <li><b>Cần dữ liệu của context khác ⇒ khai một port ở domain của mình</b>, hiện thực bằng adapter
+      JDBC read-only trong <code>infrastructure/</code> của mình. Tuyệt đối không <code>INSERT</code>,
+      không <code>UPDATE</code> vào bảng của context khác.</li>
+    <li><b>Vì sao không gọi thẳng application service của context kia:</b> Spring Modulith mặc định
+      chỉ coi kiểu ở <em>package gốc</em> của module là công khai; <code>genealogy.application.PrivacyTierService</code>
+      nằm ở package con nên là nội bộ. Gọi nó sẽ làm <code>ModularityTests</code> đỏ, trừ khi
+      <code>genealogy</code> mở <code>@NamedInterface</code> — một thay đổi ngoài vùng sở hữu của
+      Giai đoạn 3.</li>
+    <li><b>Khoá ngoại chéo context ở tầng CSDL thì được.</b> <code>change_request.person_id</code> và
+      <code>event.target_branch_id</code> đã làm vậy. Ranh giới module là ranh giới <em>package
+      Java</em>, không phải ranh giới bảng.</li>
+    <li><b>Phân tầng riêng tư phải viết lại trong từng context.</b> Không dùng lại được
+      <code>PrivacyTierService</code>. <code>heritage</code> có <code>GraveVisibilityPolicy</code>,
+      <code>fund</code> có <code>DonorVisibilityPolicy</code>, <code>reporting</code> có
+      <code>SmallCellSuppressor</code>. <b>Cái giá: ba bản luật riêng tư song song, có thể lệch nhau.</b>
+      Cách giảm: mỗi cái một test tích hợp Testcontainers khẳng định khách không thấy gì, và ghi vào
+      sổ nợ để Giai đoạn 4 gộp lại.</li>
+  </ul>
+</div>
+
+<h2>5. Thứ tự dựng — và vì sao không theo thứ tự trong BA</h2>
+
+<p>
+  Thứ tự dưới đây theo <b>một câu hỏi duy nhất</b>: <i>ngày bàn giao, màn hình này có nội dung thật
+  bên trong không?</i> Đó là câu hỏi khác với “việc nào khó nhất” và khác với “việc nào BA xếp trước”.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Việc</th><th>Vì sao đứng ở đây</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="chip must">0</span></td>
+      <td><b>Chốt bốn cái tên</b> — ai chụp ảnh, ai phiên âm, ai đo toạ độ, ai viết bài — và khởi động chiến dịch số hoá</td>
+      <td><b>Không phải việc mã.</b> Nội dung có thời gian chờ dài nhất trong cả giai đoạn, nên nó phải bắt đầu ở tuần đầu tiên dù phần mềm ra sau cùng. Xem <a href="03-rui-ro-lo-trinh.html">trang 03 mục 1</a> — đây là <b>cổng vào</b>, không phải lời khuyên.</td>
+    </tr>
+    <tr>
+      <td><span class="chip must">1</span></td>
+      <td><b>W8 · nền media</b> (context <code>media</code> + adapter S3 + <code>media_asset</code>)</td>
+      <td>Cả ba context sau đều đợi nó, và hiện <b>chưa có một dòng mã MinIO nào</b>. Không có W8 thì <code>fund</code> không có ảnh biên nhận và <code>heritage</code> không có gì để hiển thị.</td>
+    </tr>
+    <tr>
+      <td><span class="chip must">2</span></td>
+      <td><b><code>fund</code></b> — quỹ họ &amp; sổ công đức</td>
+      <td>Là context <b>duy nhất tự sinh nội dung</b>: thủ quỹ ghi sổ vì đó là việc họ vốn đã làm, không cần chiến dịch số hoá nào. Ngày bàn giao nó chắc chắn có dữ liệu. Nó cũng có thiết kế <b>khó đảo ngược nhất</b> (sổ chỉ ghi thêm) nên cần thời gian phản biện dài nhất.</td>
+    </tr>
+    <tr>
+      <td><span class="chip should">3</span></td>
+      <td><b><code>reporting</code></b> — báo cáo dân số học</td>
+      <td>Chỉ đọc, không bảng mới, không media, không vai trò mới. Rẻ nhất trong ba. Nó còn <b>soi ra lỗ hổng dữ liệu</b> của đợt B — bao nhiêu người thiếu năm sinh, thiếu nơi ở — và thông tin đó có sớm thì đợt B sửa được sớm.</td>
+    </tr>
+    <tr>
+      <td><span class="chip should">4</span></td>
+      <td><b><code>heritage</code></b> — nền đọc &amp; neo → di sản → từ đường → mộ phần</td>
+      <td>Nặng nhất về mã <b>và</b> nặng nhất về nội dung. Đứng cuối để chiến dịch số hoá ở việc 0 có thời gian chạy trước. Mộ phần đứng cuối trong nội bộ <code>heritage</code> vì đó là bối cảnh đắt nhất (ngoài trời, ngoại tuyến, GPS) và vì nó dùng lại công cụ điểm neo đã được từ đường thử trước ở nơi dễ hơn.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Điểm phản biện lớn nhất của thứ tự này</p>
+  <p>
+    <b>Mộ phần bị đẩy xuống cuối, trong khi nó nhiều khả năng là thứ dòng họ mong nhất.</b> Chạp mả là
+    việc cả họ tham gia; thư viện di sản thì vài người đọc. Nếu Hội đồng ưu tiên mộ phần thì đảo được —
+    nhưng phải đảo <b>cả lịch chụp ảnh mộ chí và đo toạ độ</b> lên trước, và chấp nhận rằng công cụ đặt
+    điểm neo lần đầu chạy thật sẽ chạy ở bối cảnh khó nhất chứ không phải ở ban thờ trong nhà.
+  </p>
+</div>
+
+<h2>6. Bảng migration dự kiến</h2>
+
+<p>
+  Bản chốt phạm vi yêu cầu đánh số tiếp từ <code>V8</code>. Có một cái bẫy phải nêu:
+  <b>đợt A, B, C cũng sẽ thêm migration và chúng chạy trước đợt D</b>. Vì vậy các số dưới đây là
+  <b>thứ tự logic, không phải số cuối cùng</b> — mỗi migration nhận số trống kế tiếp <em>tại thời điểm
+  nó được trộn vào nhánh chính</em>. Không tài liệu kế hoạch nào được ghim cứng một con số, và
+  <code>V1</code>–<code>V7</code> không bao giờ bị sửa.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Thứ tự</th><th>Tên logic</th><th>Nội dung</th><th>Sở hữu</th></tr></thead>
+  <tbody>
+    <tr><td>V8</td><td><code>__media.sql</code></td><td><code>media_asset</code> + chỉ mục + trigger <code>giapha_touch_updated_at</code></td><td><code>media</code></td></tr>
+    <tr><td>V9</td><td><code>__fund.sql</code></td><td><code>fund_period</code>, <code>fund_entry</code> (bất biến), <code>fund_entry_draft</code>, <code>fund_donor_link</code>, trigger chặn UPDATE/DELETE, <b>nới <code>ck_role_code</code></b> để thêm <code>TREASURER</code>, nới <code>ck_audit_log_action</code></td><td><code>fund</code> (chạm bảng của <code>membership</code> và <code>audit</code>)</td></tr>
+    <tr><td>V10</td><td><code>__reporting.sql</code></td><td><b>Có thể không có bảng nào.</b> Chỉ thêm chỉ mục phục vụ gộp nhóm, và bảng tra <code>place_alias</code> nếu chọn phương án đối chiếu văn bản. Việc thêm <code>current_province_code</code>/<code>current_country_code</code> vào <code>person</code> <b>thuộc đợt B</b>, không thuộc đây.</td><td><code>reporting</code></td></tr>
+    <tr><td>V11</td><td><code>__heritage_core.sql</code></td><td><code>heritage_item</code>, <code>heritage_item_media</code>, <code>heritage_text_layer</code>, <code>heritage_text_line</code>, <code>image_map</code>, <code>image_anchor</code> + cột FTS dùng lại <code>public.vi_unaccent</code></td><td><code>heritage</code></td></tr>
+    <tr><td>V12</td><td><code>__heritage_places.sql</code></td><td><code>cemetery</code>, <code>grave</code>, <code>grave_history</code>, <code>hall</code>, <code>tablet</code>, <code>tao_mo_assignment</code> + liên kết sang <code>event</code></td><td><code>heritage</code></td></tr>
+    <tr><td class="canh">V13</td><td><code>__restricted_document.sql</code></td><td><b>Chỉ tạo nếu Hội đồng và người có chuyên môn pháp lý ký duyệt.</b> Kế hoạch này <b>đề xuất không tạo ở Giai đoạn 3</b> — xem <a href="01-heritage.html">trang 01 mục 5</a>.</td><td><code>heritage</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>7. Ràng buộc áp cho cả ba context, kiểm được bằng test</h2>
+
+<ul>
+  <li><b>Hexagonal:</b> <code>api → application → domain</code>. Domain là POJO thuần: không
+    <code>@Entity</code>, không <code>@Component</code>, không <code>@Transactional</code> trong
+    <code>*/domain/**</code>. <i>Kiểm:</i> một test ArchUnit quét annotation trong package domain, chứ
+    không dựa vào kỷ luật người viết mã.</li>
+  <li><b>Không import chéo context:</b> <i>kiểm:</i>
+    <code>ModularityTests.ranhGioiModuleKhongBiViPham()</code> xanh, và bổ sung khẳng định rằng ba
+    package mới không xuất hiện trong danh sách phụ thuộc của tài liệu module do
+    <code>Documenter</code> sinh ra.</li>
+  <li><b>Media không nằm trong CSDL:</b> <i>kiểm:</i> một test quét toàn bộ file migration, fail nếu
+    có cột kiểu <code>BYTEA</code> hoặc <code>OID</code> nào được thêm từ <code>V8</code> trở đi.</li>
+  <li><b>Xoá mềm ở mọi nơi, trừ sổ quỹ.</b> Mọi bảng mới của <code>heritage</code> có
+    <code>is_deleted</code>; <code>fund_entry</code> <b>cố ý không có</b> — xem
+    <a href="02-fund-reporting.html">trang 02 mục 1</a>.</li>
+  <li><b>Nhật ký thay đổi:</b> <code>audit/application/AuditTrailService</code> nằm ở package con nên
+    <b>không gọi được từ context khác</b>. Vì vậy mỗi context ghi <code>audit_log</code> qua adapter
+    JDBC của mình, dùng đúng tập <code>action</code> mà <code>ck_audit_log_action</code> trong
+    <code>V5__membership_audit.sql</code> cho phép; cần action mới thì nới ràng buộc đó trong migration
+    của chính context ấy.</li>
+  <li><b>Sàn tiếp cận:</b> 16px thân bài, 44×44px vùng chạm, biểu tượng luôn kèm chữ. Hai màn hình có
+    sàn cao hơn (chế độ đọc văn khấn và màn hình dẫn đường tới mộ) — xem
+    <a href="01-heritage.html">trang 01</a>.</li>
+  <li><b>Song ngữ VI–EN</b> cho mọi nhãn giao diện mới, theo đúng cách
+    <code>frontend/messages/vi.json</code> và <code>frontend/messages/en.json</code> đang làm.</li>
+</ul>
+
+<footer class="chan-trang">
+  <p>
+    Trang 00 của Kế hoạch 03. Tiếp: <a href="01-heritage.html">01 · heritage</a> ·
+    <a href="02-fund-reporting.html">02 · fund, reporting, bản tin</a> ·
+    <a href="03-rui-ro-lo-trinh.html">03 · rủi ro, ước lượng, lộ trình</a>.
+  </p>
+  <p>
+    Hai đề xuất trong trang này <b>lệch với tài liệu cấp trên</b> và cần được duyệt trước khi làm:
+    thêm bounded context <code>media</code> (lệch TDD §2), và tách bản tin khỏi trình đọc tư liệu
+    (lệch <code>design/05-tinh-nang-tuong-lai/01-di-san-mo-phan.html</code> mục 5).
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

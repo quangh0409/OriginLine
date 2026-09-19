@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hệ thống thiết kế — Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Hệ thống Quản lý Gia phả &amp; Cổng thông tin Dòng họ · Tài liệu 02</p>
+  <h1>Hệ thống thiết kế</h1>
+  <p class="tom-tat">
+    Tài liệu này mô tả <strong>vật liệu thị giác</strong> của sản phẩm: màu, chữ, khoảng cách,
+    kho thành phần, mật độ và chuyển động. Nó viết trên <strong>sản phẩm đang chạy thật</strong> —
+    mọi con số có ghi đường dẫn tệp đều là số đọc ra từ mã nguồn, không phải số mong muốn.
+    Chỗ nào tài liệu này mâu thuẫn với <code>design/00-dinh-huong.html</code> thì
+    <strong>00 thắng</strong>.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <p><a href="../00-dinh-huong.html">← 00 · Định hướng thiết kế (ràng buộc chung)</a></p>
+</nav>
+
+<h2>0. Cách đọc tài liệu này</h2>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Số lấy từ mã nguồn</h4>
+    <p>
+      Ghi kèm đường dẫn, ví dụ <code>tokens.ts</code>, <code>layout-constants.ts</code>.
+      Đây là <b>hiện trạng</b>, không phải khuyến nghị.
+    </p>
+  </div>
+  <div class="the">
+    <h4>Số là đề xuất</h4>
+    <p>
+      Đánh dấu <span class="chip should">đề xuất</span>. Chưa có trong sản phẩm. Mỗi đề xuất
+      đều kèm mục <b>Cái giá</b>.
+    </p>
+  </div>
+  <div class="the">
+    <h4>Tỉ số tương phản</h4>
+    <p>
+      Tính theo công thức WCAG 2.x (relative luminance, sRGB) từ chính mã hex trong
+      <code>tokens.ts</code>. Ngưỡng: <b>4,5:1</b> chữ thường · <b>3:1</b> chữ lớn
+      (≥18,66px đậm hoặc ≥24px thường) và thành phần giao diện.
+    </p>
+  </div>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Cảnh báo về phạm vi</p>
+  <p>
+    Có <b>ba lỗi ở tầng cấu hình</b> khiến một phần hệ thống màu hiện <em>không chạy</em> trong
+    sản phẩm (mục 1.6). Trước khi tranh luận về sắc độ, phải sửa ba lỗi đó — không thì mọi
+    tinh chỉnh màu đều rơi vào khoảng không.
+  </p>
+</div>
+
+<h2>1. Màu</h2>
+
+<h3>1.1 · Bảng token nguồn</h3>
+
+<p>
+  Nguồn duy nhất: <code>frontend/src/styles/tokens.ts</code>. Cả Tailwind
+  (<code>frontend/tailwind.config.ts</code>) lẫn Ant Design
+  (<code>frontend/src/styles/antd-theme.ts</code>) đều đọc từ tệp này, đúng như ghi chú trong
+  chính tệp — nhờ vậy hai hệ giao diện không thể trôi lệch nhau. <b>17 token</b>, không token
+  nào khác được phép sinh ra ngoài tệp này.
+</p>
+
+<figure>
+<svg viewBox="0 0 940 344" role="img" aria-label="Bảng 17 màu nguồn của sản phẩm">
+  <text class="wf-chu" x="0" y="14" font-weight="600">Nhóm thương hiệu</text>
+  <rect x="0"   y="24" width="140" height="56" rx="6" fill="#8c2d19"/>
+  <rect x="150" y="24" width="140" height="56" rx="6" fill="#661e0f"/>
+  <rect x="300" y="24" width="140" height="56" rx="6" fill="#fbeee9" stroke="#cdbeaa"/>
+  <rect x="450" y="24" width="140" height="56" rx="6" fill="#d97706"/>
+  <rect x="600" y="24" width="140" height="56" rx="6" fill="#2c3e50"/>
+  <text class="wf-phu" x="0"   y="96">primary #8c2d19 · đỏ trầm</text>
+  <text class="wf-phu" x="150" y="96">primaryDark #661e0f</text>
+  <text class="wf-phu" x="300" y="96">primaryLight #fbeee9</text>
+  <text class="wf-phu" x="450" y="96">accent #d97706 · hổ phách</text>
+  <text class="wf-phu" x="600" y="96">secondary #2c3e50</text>
+
+  <text class="wf-chu" x="0" y="140" font-weight="600">Nhóm nền</text>
+  <rect x="0"   y="150" width="140" height="56" rx="6" fill="#f8f6f2" stroke="#cdbeaa"/>
+  <rect x="150" y="150" width="140" height="56" rx="6" fill="#ffffff" stroke="#cdbeaa"/>
+  <rect x="300" y="150" width="140" height="56" rx="6" fill="#f2ede2" stroke="#8c2d19" stroke-width="2"/>
+  <rect x="450" y="150" width="140" height="56" rx="6" fill="#e6dfd5" stroke="#cdbeaa"/>
+  <rect x="600" y="150" width="140" height="56" rx="6" fill="#cdbeaa"/>
+  <text class="wf-phu" x="0"   y="222">bgPage #f8f6f2 · nền kem</text>
+  <text class="wf-phu" x="150" y="222">bgCard #ffffff</text>
+  <text class="wf-phu" x="300" y="222">bgDeceased #f2ede2</text>
+  <text class="wf-phu" x="300" y="236" fill="#8c2d19">giấy cũ — người đã khuất</text>
+  <text class="wf-phu" x="450" y="222">border #e6dfd5</text>
+  <text class="wf-phu" x="600" y="222">borderDark #cdbeaa</text>
+
+  <text class="wf-chu" x="0" y="270" font-weight="600">Nhóm mực &amp; trạng thái</text>
+  <rect x="0"   y="280" width="140" height="40" rx="6" fill="#2b2825"/>
+  <rect x="150" y="280" width="140" height="40" rx="6" fill="#5e564d"/>
+  <rect x="300" y="280" width="66"  height="40" rx="6" fill="#15803d"/>
+  <rect x="374" y="280" width="66"  height="40" rx="6" fill="#eaf6ee" stroke="#cdbeaa"/>
+  <rect x="450" y="280" width="66"  height="40" rx="6" fill="#b91c1c"/>
+  <rect x="524" y="280" width="66"  height="40" rx="6" fill="#fbeae9" stroke="#cdbeaa"/>
+  <rect x="600" y="280" width="140" height="40" rx="6" fill="#fdf6e7" stroke="#cdbeaa"/>
+  <text class="wf-phu" x="0"   y="336">textMain #2b2825</text>
+  <text class="wf-phu" x="150" y="336">textMuted #5e564d</text>
+  <text class="wf-phu" x="300" y="336">success · successBg</text>
+  <text class="wf-phu" x="450" y="336">danger · dangerBg</text>
+  <text class="wf-phu" x="600" y="336">warningBg #fdf6e7</text>
+</svg>
+<figcaption><strong>Hình 1.</strong> 17 token trong <code>frontend/src/styles/tokens.ts</code>. Ô <code>bgDeceased</code> viền đỏ là quyết định thị giác trọng yếu, bàn riêng ở mục 1.4.</figcaption>
+</figure>
+
+<h3>1.2 · Tỉ số tương phản — chế độ sáng</h3>
+
+<p>
+  Bảng dưới chỉ liệt kê những cặp <b>thực sự xuất hiện</b> trong sản phẩm hoặc được tài liệu này
+  đề xuất. Cột “Ngưỡng” là ngưỡng áp cho <em>vai trò</em> của cặp đó, không phải ngưỡng chung.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Chữ / nét</th><th>Trên nền</th><th>Vai trò</th><th>Tỉ số</th><th>Ngưỡng</th><th>Kết quả</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>textMain</code> #2b2825</td><td><code>bgPage</code> #f8f6f2</td><td>Thân bài</td><td class="so">13,58</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMain</code></td><td><code>bgCard</code> #ffffff</td><td>Thân bài trong thẻ</td><td class="so">14,66</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMain</code></td><td><code>bgDeceased</code> #f2ede2</td><td>Tên người đã khuất</td><td class="so">12,55</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMuted</code> #5e564d</td><td><code>bgPage</code></td><td>Phụ chú</td><td class="so">6,68</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMuted</code></td><td><code>bgCard</code></td><td>Phụ chú</td><td class="so">7,21</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMuted</code></td><td><code>bgDeceased</code></td><td>Đời · chi trên thẻ đã khuất</td><td class="so">6,17</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>primary</code> #8c2d19</td><td><code>bgCard</code></td><td>Tiêu đề mục, liên kết</td><td class="so">8,38</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>primary</code></td><td><code>bgPage</code></td><td>Liên kết trên nền trang</td><td class="so">7,77</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>primary</code></td><td><code>bgDeceased</code></td><td>Vạch tưởng niệm</td><td class="so">7,18</td><td class="so">3</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>primary</code></td><td><code>primaryLight</code> #fbeee9</td><td>Chip mục đang chọn</td><td class="so">7,39</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>primaryDark</code> #661e0f</td><td><code>bgCard</code></td><td>Nút chính khi di chuột</td><td class="so">11,95</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td>#ffffff</td><td><code>primary</code> (nút chính)</td><td>Chữ trên nút</td><td class="so">8,38</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>secondary</code> #2c3e50</td><td><code>bgCard</code></td><td>Badge “Con nuôi”</td><td class="so">10,98</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>danger</code> #b91c1c</td><td><code>bgCard</code></td><td>Lỗi biểu mẫu</td><td class="so">6,47</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>danger</code></td><td><code>dangerBg</code> #fbeae9</td><td>Hộp lỗi</td><td class="so">5,56</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>success</code> #15803d</td><td><code>bgCard</code></td><td>Chấm “còn sống”</td><td class="so">5,02</td><td class="so">3</td><td class="tot">Đạt</td></tr>
+    <tr><td>#a3336b (Dâu)</td><td><code>bgCard</code></td><td>Chữ trên badge</td><td class="so">6,48</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td>#2f6fa8 (Rể)</td><td><code>bgCard</code></td><td>Chữ trên badge</td><td class="so">5,30</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td>#2f6fa8 (Rể)</td><td><code>bgDeceased</code></td><td>Badge trên thẻ đã khuất</td><td class="so">4,54</td><td class="so">4,5</td><td class="canh">Sát ngưỡng</td></tr>
+    <tr><td><code>success</code> #15803d</td><td><code>bgDeceased</code></td><td>Chữ xanh trên giấy cũ</td><td class="so">4,30</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>success</code></td><td><code>primaryLight</code></td><td>Chữ xanh trên hồng nhạt</td><td class="so">4,42</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code> #d97706</td><td><code>bgCard</code></td><td>Chữ (link hover, badge)</td><td class="so">3,19</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code></td><td><code>bgPage</code></td><td>Chữ</td><td class="so">2,95</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code></td><td><code>warningBg</code> #fdf6e7</td><td>Thẻ “sắp tới” (SOON)</td><td class="so">2,96</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code></td><td><code>bgDeceased</code></td><td>Badge đích tôn / thừa tự</td><td class="so">2,73</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code></td><td><code>primaryLight</code></td><td>Chữ</td><td class="so">2,81</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td>#ffffff</td><td><code>accent</code> (nút cảnh báo)</td><td>Chữ trên nút</td><td class="so">3,19</td><td class="so">4,5</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code> (vòng tiêu điểm)</td><td><code>bgPage</code></td><td>Viền tiêu điểm bàn phím</td><td class="so">2,95</td><td class="so">3</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code> (vòng tiêu điểm)</td><td><code>bgDeceased</code></td><td>Tiêu điểm trên thẻ đã khuất</td><td class="so">2,73</td><td class="so">3</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>accent</code> (vòng tiêu điểm)</td><td><code>primary</code> (nút chính)</td><td>Viền quanh nút đỏ</td><td class="so">2,63</td><td class="so">3</td><td class="xau">TRƯỢT</td></tr>
+    <tr><td><code>border</code> #e6dfd5</td><td><code>bgCard</code></td><td>Viền thẻ</td><td class="so">1,32</td><td class="so">3*</td><td class="canh">Xem 1.5</td></tr>
+    <tr><td><code>border</code></td><td><code>bgPage</code></td><td>Viền thẻ trên nền trang</td><td class="so">1,23</td><td class="so">3*</td><td class="canh">Xem 1.5</td></tr>
+    <tr><td><code>borderDark</code> #cdbeaa</td><td><code>bgCard</code></td><td>Viền thẻ đã khuất</td><td class="so">1,82</td><td class="so">3*</td><td class="canh">Xem 1.5</td></tr>
+    <tr><td><code>borderDark</code></td><td><code>bgDeceased</code></td><td>Viền trên chính nền giấy cũ</td><td class="so">1,56</td><td class="so">3*</td><td class="canh">Xem 1.5</td></tr>
+    <tr><td><code>bgCard</code></td><td><code>bgPage</code></td><td>Thẻ nổi trên trang</td><td class="so">1,08</td><td class="so">—</td><td class="canh">Xem 3.2</td></tr>
+    <tr><td><code>bgDeceased</code></td><td><code>bgCard</code></td><td>Giấy cũ so với nền thẻ</td><td class="so">1,17</td><td class="so">—</td><td class="canh">Xem 1.4</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <small>* Ngưỡng 3:1 của WCAG 1.4.11 chỉ bắt buộc khi <em>viền là thứ duy nhất</em> nhận diện
+  thành phần. Bàn kỹ ở mục 1.5.</small>
+</p>
+
+<h3>1.3 · Bảy cặp trượt chuẩn và cách sửa</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Thủ phạm chính là hổ phách <code>#d97706</code> khi làm chữ</p>
+  <p>
+    Hổ phách <b>không đạt 4,5:1 trên bất kỳ nền sáng nào</b> của bảng màu — cao nhất là 3,19:1
+    trên nền trắng tuyệt đối. Nó cũng không đạt 3:1 khi làm vòng tiêu điểm trên nền kem (2,95)
+    hay quanh nút đỏ (2,63). Đây không phải chuyện tinh chỉnh: hổ phách là màu <em>sáng</em>,
+    và mọi nền của sản phẩm cũng <em>sáng</em>.
+  </p>
+</div>
+
+<p>Nơi hổ phách đang làm chữ hoặc làm nét, đọc từ mã nguồn:</p>
+
+<ul>
+  <li><code>frontend/src/styles/antd-theme.ts</code> — <code>colorLinkHover: accent</code> và <code>colorWarning: accent</code>: mọi liên kết khi di chuột, mọi nút/thẻ “cảnh báo” của Ant Design.</li>
+  <li><code>frontend/src/lib/tree/badges.ts</code> — badge <b>Đích tôn</b>, <b>Thừa tự</b>, <b>Kế tự</b> tô <code>accent</code>. Ba danh xưng quan trọng bậc nhất của phả hệ đang là ba chữ khó đọc nhất trên màn hình.</li>
+  <li><code>frontend/src/components/events/event-card.tsx</code> — trạng thái <code>SOON</code>: chữ <code>accent</code> trên <code>warningBg</code> = <b>2,96:1</b>.</li>
+  <li><code>frontend/src/components/tree/person-node.tsx</code> và <code>tree-legend.tsx</code> — <code>focus-visible:outline-accent</code>, vòng tiêu điểm của nút bung nhánh và nút mở chú giải.</li>
+</ul>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Cặp trượt</th><th>Số thật</th><th>Đề xuất sửa</th><th>Số sau khi sửa</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>accent</code> làm <b>chữ</b> trên mọi nền sáng</td>
+      <td class="so">2,73 – 3,19</td>
+      <td>Thêm token <code>accentText: #9c5a06</code> <span class="chip should">đề xuất</span>. Giữ nguyên <code>accent #d97706</code> cho <b>mảng tô lớn</b> (thanh nhấn, vạch, nền chip) — nơi ngưỡng phi văn bản 3:1 là đủ.</td>
+      <td class="so">bgCard 5,41 · bgPage 5,02 · bgDeceased 4,64 · primaryLight 4,77</td>
+    </tr>
+    <tr>
+      <td>#ffffff trên nút <code>accent</code></td>
+      <td class="so">3,19</td>
+      <td>Bỏ hẳn nút hổ phách nền đặc (khuyến nghị — sản phẩm chỉ cần một nút chính, là đỏ trầm). Nếu buộc phải có, nền dùng <code>accentText</code>.</td>
+      <td class="so">5,41</td>
+    </tr>
+    <tr>
+      <td><code>success</code> trên <code>bgDeceased</code></td>
+      <td class="so">4,30</td>
+      <td>Đậm xanh lên <code>#116533</code> <span class="chip should">đề xuất</span>; giữ <code>#15803d</code> cho mảng tô.</td>
+      <td class="so">6,13</td>
+    </tr>
+    <tr>
+      <td><code>success</code> trên <code>primaryLight</code></td>
+      <td class="so">4,42</td>
+      <td>Như trên.</td>
+      <td class="so">6,31</td>
+    </tr>
+    <tr>
+      <td>Tiêu điểm <code>accent</code> trên <code>bgPage</code></td>
+      <td class="so">2,95</td>
+      <td rowspan="3">Bỏ vòng đơn sắc, dùng <b>vòng hai lớp</b>: lõi <code>textMain</code> 2px + quầng #ffffff 2px (mục 1.8).</td>
+      <td rowspan="3" class="so">lớp mạnh ≥ 8,38 ở mọi nền</td>
+    </tr>
+    <tr><td>Tiêu điểm <code>accent</code> trên <code>bgDeceased</code></td><td class="so">2,73</td></tr>
+    <tr><td>Tiêu điểm <code>accent</code> quanh nút <code>primary</code></td><td class="so">2,63</td></tr>
+    <tr>
+      <td>#2f6fa8 (Rể) trên <code>bgDeceased</code></td>
+      <td class="so">4,54</td>
+      <td>Chưa trượt, nhưng chỉ dư 0,04. Một lần chỉnh nền giấy cũ tối đi là trượt. Đưa hai màu Dâu/Rể vào <code>tokens.ts</code> rồi đậm thêm một nấc.</td>
+      <td class="so">—</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Cái giá của việc sửa hổ phách</p>
+  <p>
+    <b>Mất sắc.</b> <code>#9c5a06</code> không còn là “hổ phách” mà ngả nâu đất. BA v2 chọn
+    <code>#d97706</code> vì nó <em>rực</em> — màu của hương, của đèn dầu, của sơn son thếp vàng.
+    Làm nó tối đi là làm sản phẩm bớt ấm đi thật.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> lời giải “hai token, một cho chữ một cho mảng” chỉ đúng nếu đội ngũ
+    <em>kỷ luật</em> được việc chọn đúng token. Kinh nghiệm chung là không: vài tháng nữa sẽ có
+    người viết <code>text-accent</code> vì tên ngắn hơn. Thứ duy nhất chặn được là một
+    <b>quy tắc ESLint cấm <code>text-accent</code></b> và cấm gán
+    <code>colorLinkHover: accent</code>, chứ không phải một dòng ghi chú trong tài liệu này.
+  </p>
+  <p>
+    <b>Phương án đã cân nhắc và loại:</b> giữ hổ phách làm chữ nhưng chỉ cho phép ở cỡ ≥24px để
+    rơi vào ngưỡng 3:1. Loại, vì badge <em>Đích tôn</em> vốn là chữ nhỏ trên thẻ phả đồ, không
+    thể phóng lên 24px; và “chỉ được dùng khi chữ đủ to” là loại quy tắc chắc chắn bị vi phạm.
+  </p>
+  <p>
+    <b>Ghi chú đối chiếu chéo.</b> Bản nháp đầu của tài liệu này đề xuất <code>#a55a06</code>.
+    Tài liệu 01 đề xuất <code>#9c5a06</code>; tính lại độc lập thì <code>#9c5a06</code>
+    <b>tốt hơn thật</b> — nó vượt 4,5:1 ở <em>cả bốn</em> nền sáng (5,41 / 5,02 / 4,64 / 4,77),
+    còn <code>#a55a06</code> hụt ở <code>bgDeceased</code> (4,42) và <code>primaryLight</code>
+    (4,55). Tài liệu này <b>bỏ đề xuất cũ và lấy <code>#9c5a06</code></b>. Nhờ vậy cũng không còn
+    phải cấm đặt chữ hổ phách trên nền hồng nhạt như bản nháp trước tính.
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗi nặng nhất của cả bảng màu: <b>di chuột làm liên kết khó đọc đi 2,63 lần</b></p>
+  <p>
+    <code>frontend/src/styles/antd-theme.ts</code> khai hai dòng cạnh nhau:
+  </p>
+  <ul>
+    <li><code>colorLink: colorTokens.primary</code> → <b>7,77:1</b> trên nền kem. Đạt AAA.</li>
+    <li><code>colorLinkHover: colorTokens.accent</code> → <b>2,95:1</b> trên nền kem. Trượt cả AA lẫn ngưỡng phi văn bản.</li>
+  </ul>
+  <p>
+    Nghĩa là: liên kết ở trạng thái nghỉ thì đọc tốt, <b>vừa đưa chuột vào là tụt xuống dưới
+    chuẩn</b> — hệ số 7,77 / 2,95 = <b>2,63 lần</b>. Trạng thái di chuột hiếm khi được kiểm thử
+    tiếp cận, nên lỗi loại này sống rất lâu. Nó cũng đặc biệt hại với đúng nhóm người dùng của
+    sản phẩm: người lão thị dùng chuột trên máy tính bảng hoặc màn hình lớn (00 §1) là nhóm
+    <em>duy nhất</em> gặp trạng thái hover, và cũng là nhóm chịu thiệt nhất khi tương phản tụt.
+  </p>
+  <p>
+    <b>Sửa:</b> <code>colorLinkHover: colorTokens.primaryDark</code> → <b>11,07:1</b> trên nền
+    kem, <b>11,95:1</b> trên nền thẻ. Di chuột làm liên kết <em>đậm lên</em>, đúng hướng trực
+    giác, và đắt bằng đúng một dòng sửa. <b>Cái giá:</b> mất hiệu ứng “ấm lên thành màu hổ phách”
+    khi rê chuột — một mất mát thẩm mỹ có thật, nhưng đổi lại là một lỗi tiếp cận biến mất.
+    Nếu vẫn muốn giữ sắc hổ phách khi hover thì dùng <code>accentText #9c5a06</code> (5,02:1),
+    kém đậm hơn <code>primaryDark</code> nhưng vẫn đạt chuẩn.
+  </p>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Một chỗ tài liệu này <em>không</em> đồng ý với tài liệu 01</p>
+  <p>
+    Tài liệu 01 xếp cặp <code>bgDeceased #f2ede2</code> cạnh <code>bgCard #ffffff</code> ở
+    <b>1,17:1</b> vào nhóm “trượt, cần 3,0”. <b>Con số thì giống hệt</b> — tính lại độc lập cũng
+    ra 1,17. Nhưng <b>ngưỡng thì tài liệu này bác</b>, vì hai lý do:
+  </p>
+  <ol>
+    <li>
+      <b>WCAG không đặt ngưỡng cho cặp nền–nền.</b> Tiêu chí 1.4.11 áp cho <em>thành phần giao
+      diện</em> và <em>đồ hoạ mang thông tin</em>. Ở đây thông tin “đã khuất” được mang bởi ba
+      thứ khác — vạch đỏ trầm (7,18:1), thẻ chữ “đã khuất”, và văn bản cho trình đọc màn hình —
+      chứ không phải bởi bản thân nước nền.
+    </li>
+    <li>
+      <b>Quan trọng hơn: đẩy cặp này lên 3:1 sẽ phá hỏng chính điều 00 §3 yêu cầu.</b> Muốn
+      3:1 so với nền trắng thì nền giấy cũ phải tụt xuống quãng <code>#9a948a</code> — tức
+      <em>tối đi rõ rệt</em>. Một khối nội dung tối màu hơn hẳn phần còn lại của trang chính là
+      định nghĩa thị giác của “bị làm mờ / bị vô hiệu hoá”. Sửa theo hướng đó là đạt được con số
+      và <b>mất đúng thứ mà con số sinh ra để bảo vệ</b>.
+    </li>
+  </ol>
+  <p>
+    <b>Kết luận của tài liệu này:</b> giữ 1,17:1 là <em>cố ý</em>, và bù bằng dấu hiệu dư thừa
+    (luật 3, mục 1.4). <b>Chỗ có thể sai:</b> nếu về sau đo trên người dùng thật mà thấy không ai
+    nhận ra sự khác biệt kể cả khi đã có vạch đỏ và thẻ chữ, thì kết luận này sai và phải quay lại
+    phương án “khung viền kép kiểu bài vị” đã nêu ở cuối mục 1.4 — chứ vẫn <b>không</b> phải
+    phương án làm tối nền.
+  </p>
+</div>
+
+<h3>1.4 · <code>bgDeceased #f2ede2</code> — nền giấy cũ</h3>
+
+<p>
+  Đây là quyết định thị giác quan trọng nhất của sản phẩm, và nó hỏng theo một cách rất cụ thể:
+  <b>nếu người xem đọc nó là “bị làm mờ” thì sản phẩm vừa xúc phạm tổ tiên của chính người dùng
+  đang xem</b>. Ranh giới giữa “tôn kính” và “vô hiệu hoá” không nằm ở chọn màu nào, mà ở
+  <em>cơ chế</em> tạo ra khác biệt.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Vô hiệu hoá trông thế nào</h4>
+    <p>
+      Giảm tương phản của <b>chữ</b>. Giảm độ đục toàn khối. Xám hoá (bỏ bão hoà). Bỏ viền.
+      Bỏ đổ bóng. Tất cả đều nói: <em>“thứ này không dùng được”</em>.
+    </p>
+  </div>
+  <div class="the">
+    <h4>Tôn kính trông thế nào</h4>
+    <p>
+      Đổi <b>sắc</b> của nền mà giữ nguyên độ sáng. Giữ chữ ở tương phản <b>bằng hoặc cao
+      hơn</b>. <b>Thêm</b> dấu hiệu chứ không bớt: một vạch đỏ trầm trên đỉnh thẻ, một thẻ chữ
+      “đã khuất”.
+    </p>
+  </div>
+  <div class="the">
+    <h4>Con số nói gì</h4>
+    <p>
+      <code>bgDeceased</code> so với <code>bgCard</code> chỉ chênh <b>1,17:1</b> — đúng điều
+      <em>mong muốn</em>: gần như không chênh độ sáng, chỉ chênh sắc (ngả vàng ấm). Chữ trên nó
+      vẫn <b>12,55:1</b>, cao hơn cả ngưỡng AAA (7:1).
+    </p>
+  </div>
+</div>
+
+<figure>
+<svg viewBox="0 0 940 200" role="img" aria-label="So sánh thẻ người còn sống, thẻ người đã khuất đúng cách, và một phản ví dụ làm mờ">
+  <text class="wf-chu" x="0" y="12" font-weight="600">Còn sống</text>
+  <rect x="0" y="22" width="280" height="118" rx="8" fill="#ffffff" stroke="#e6dfd5" stroke-width="1.5"/>
+  <rect x="0" y="22" width="280" height="3" rx="1.5" fill="#d97706"/>
+  <circle cx="252" cy="46" r="5" fill="#15803d"/>
+  <text x="16" y="58" font-family="Be Vietnam Pro" font-size="17" font-weight="600" fill="#2b2825">Nguyễn Thị Hường</text>
+  <text x="16" y="80" font-family="Be Vietnam Pro" font-size="14" fill="#5e564d">Đời 7 · Chi Giáp</text>
+  <text x="16" y="100" font-family="Be Vietnam Pro" font-size="14" fill="#5e564d">1958 –</text>
+  <rect x="16" y="110" width="88" height="21" rx="4" fill="#fbeee9"/>
+  <text x="24" y="125" font-family="Be Vietnam Pro" font-size="12" fill="#8c2d19">Trưởng chi</text>
+  <text class="wf-phu" x="0" y="162">chữ / nền = 14,66 : 1</text>
+  <text class="wf-phu" x="0" y="178">chấm xanh / nền = 5,02 : 1</text>
+
+  <text class="wf-chu" x="330" y="12" font-weight="600">Đã khuất — ĐÚNG</text>
+  <rect x="330" y="22" width="280" height="118" rx="8" fill="#f2ede2" stroke="#cdbeaa" stroke-width="1.5"/>
+  <rect x="330" y="22" width="280" height="3" rx="1.5" fill="#8c2d19"/>
+  <rect x="512" y="36" width="82" height="21" rx="4" fill="#8c2d19"/>
+  <text x="521" y="51" font-family="Be Vietnam Pro" font-size="12" fill="#ffffff">đã khuất</text>
+  <text x="346" y="58" font-family="Be Vietnam Pro" font-size="17" font-weight="600" fill="#2b2825">Nguyễn Văn Cẩn</text>
+  <text x="346" y="80" font-family="Be Vietnam Pro" font-size="14" fill="#5e564d">Đời 6 · Chi Giáp</text>
+  <text x="346" y="100" font-family="Be Vietnam Pro" font-size="14" fill="#5e564d">1921 – 1994</text>
+  <rect x="346" y="110" width="80" height="21" rx="4" fill="#f8f6f2" stroke="#cdbeaa"/>
+  <text x="354" y="125" font-family="Be Vietnam Pro" font-size="12" fill="#a55a06">Đích tôn</text>
+  <text class="wf-phu" x="330" y="162">chữ / nền = 12,55 : 1 — cao hơn ngưỡng AAA</text>
+  <text class="wf-phu" x="330" y="178">giấy cũ / nền thẻ = 1,17 : 1 — lệch SẮC, không lệch SÁNG</text>
+
+  <text class="wf-chu" x="660" y="12" font-weight="600" fill="#b91c1c">Phản ví dụ — CẤM</text>
+  <rect x="660" y="22" width="280" height="118" rx="8" fill="#f4f2ee" stroke="#eeeae4" stroke-width="1.5"/>
+  <text x="676" y="58" font-family="Be Vietnam Pro" font-size="17" font-weight="600" fill="#a9a49c">Nguyễn Văn Cẩn</text>
+  <text x="676" y="80" font-family="Be Vietnam Pro" font-size="14" fill="#c2bcb3">Đời 6 · Chi Giáp</text>
+  <text x="676" y="100" font-family="Be Vietnam Pro" font-size="14" fill="#c2bcb3">1921 – 1994</text>
+  <text class="wf-phu" x="660" y="162" fill="#b91c1c">Làm mờ chữ (opacity .45) — đọc ra là “không dùng được”.</text>
+  <text class="wf-phu" x="660" y="178" fill="#b91c1c">Đây là mặc định của gần như mọi hệ thống thiết kế.</text>
+</svg>
+<figcaption><strong>Hình 2.</strong> Cùng một dữ liệu, ba cách thể hiện. Khác biệt giữa cột giữa và cột phải không phải gu thẩm mỹ: cột giữa <em>thêm</em> thông tin (vạch đỏ, thẻ chữ), cột phải <em>bớt</em> thông tin.</figcaption>
+</figure>
+
+<div class="khoi chot">
+  <p class="nhan">Bốn luật của nền giấy cũ</p>
+  <ol>
+    <li><b>Chữ trên giấy cũ không bao giờ nhạt hơn chữ trên nền thường.</b> Cùng dùng <code>textMain</code>/<code>textMuted</code>, không có biến thể mờ.</li>
+    <li><b>Không dùng <code>opacity</code></b> ở bất kỳ đâu để biểu thị “đã khuất”. Opacity là ngôn ngữ của “vô hiệu hoá”, và nó kéo tụt tương phản của mọi thứ bên trong.</li>
+    <li><b>Giấy cũ không bao giờ là dấu hiệu duy nhất.</b> 1,17:1 nghĩa là người mù màu, người dùng màn hình rẻ, người ngồi ngoài nắng đều <em>không thấy</em> nó. Luôn kèm: vạch đỏ trầm 3px trên đỉnh + thẻ chữ “đã khuất” + văn bản cho trình đọc màn hình. Cả ba đã có trong <code>person-profile-header.tsx</code>.</li>
+    <li><b>Giấy cũ dành riêng cho người đã khuất.</b> Không dùng cho ô nhập bị khoá, hàng bảng xen kẽ, khối mã. Hiện <code>event-card.tsx</code> dùng <code>bgDeceased</code> làm nền thẻ mức khẩn <code>LATER</code> và <code>PAST</code> — <b>vi phạm luật này</b>, dù nhỏ: nó pha loãng nghĩa “giấy cũ = người khuất”.</li>
+  </ol>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Cái giá</p>
+  <p>
+    <b>Khác biệt 1,17:1 là cố ý yếu, nên nó không tự đứng được.</b> Hệ quả: mọi nơi hiển thị
+    người đã khuất phải <em>gánh thêm</em> hai dấu hiệu nữa. Trên thẻ phả đồ rộng 208px thì đó là
+    chỗ đắt — và hiện tại thẻ phả đồ <b>chỉ có nền giấy cũ, thiếu cả vạch đỏ lẫn thẻ chữ</b>
+    (mục 1.6). Nói cách khác, luật 3 đang bị vi phạm ở đúng màn hình quan trọng nhất của sản phẩm.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> tài liệu này giả định “tôn kính” trong văn hoá thị giác Việt tương ứng
+    với <em>giấy dó / mộc bản ngả vàng</em>. Có dòng họ có thể đọc sắc vàng ngà là “cũ kỹ, bỏ bê”
+    chứ không phải “trang trọng”. Việc này <b>phải hỏi Hội đồng Tộc biểu</b>, không quyết bằng tỉ
+    số tương phản. Nếu Hội đồng bác, phương án hai là nền trắng + <b>khung viền kép kiểu bài
+    vị</b> — đắt hơn về không gian hiển thị, nhưng mang tính nghi lễ rõ ràng hơn.
+  </p>
+</div>
+
+<h3>1.5 · Viền có bắt buộc đạt 3:1 không?</h3>
+
+<p>Mọi token viền của sản phẩm đều <b>không</b> đạt 3:1 so với nền liền kề. Nhưng không phải chỗ nào cũng cần:</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Cặp</th><th>Tỉ số</th><th>Có bắt buộc 3:1 không?</th></tr></thead>
+  <tbody>
+    <tr><td><code>border</code> trên <code>bgCard</code></td><td class="so">1,32</td><td><b>Không</b> — thẻ đã nhận diện được bằng nội dung và bằng lệch nền so với trang.</td></tr>
+    <tr><td><code>border</code> trên <code>bgPage</code></td><td class="so">1,23</td><td><b>Không</b>, cùng lý do.</td></tr>
+    <tr><td><code>border</code> trên <code>bgDeceased</code></td><td class="so">1,13</td><td><b>Không.</b></td></tr>
+    <tr><td><code>borderDark</code> trên <code>bgCard</code></td><td class="so">1,82</td><td><b>Không</b> khi làm viền thẻ.</td></tr>
+    <tr><td><code>border</code> quanh <b>ô nhập liệu</b></td><td class="so">1,32</td><td><b>CÓ</b> — WCAG 1.4.11: viền là thứ <em>duy nhất</em> cho biết “đây là chỗ gõ vào”. Cần <span class="chip should">đề xuất</span> <code>borderInput: #8a7a66</code> → <b>4,15:1</b> trên nền trắng, <b>3,85:1</b> trên nền kem, <b>3,56:1</b> trên giấy cũ.</td></tr>
+    <tr><td><code>border</code> làm đường phân cách giữa hai hàng <b>bấm được</b></td><td class="so">1,32</td><td><b>Không</b> theo chữ nghĩa WCAG, nhưng thực tế người lão thị không thấy ranh giới hàng. Xem mục 3.2.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Cái giá của viền ô nhập đậm hơn</p>
+  <p>
+    <code>#8a7a66</code> ở 4,15:1 là đường <em>nhìn thấy rõ</em>. Biểu mẫu sửa hồ sơ người có tới
+    sáu tầng tên (HUY, TU, HIEU, THUY, THUONG_GOI, PHAP_DANH) — đậm viền tất cả sẽ biến nó thành
+    một lưới ô vuông nặng nề, đúng cái “trông như biểu mẫu hành chính” mà tông ấm truyền thống
+    muốn tránh.
+  </p>
+  <p>
+    <b>Đánh đổi đề xuất:</b> chỉ ô ở trạng thái <em>nghỉ</em> dùng viền đậm; trong nhóm ô liền kề
+    thì viền nhóm gánh vai trò nhận diện. <b>Chỗ có thể sai:</b> “nghỉ” và “đang dùng” khó phân
+    định trong một biểu mẫu dài, và quy tắc chỉ áp cho “một số ô” gần như chắc chắn bị hiện thực
+    sai. Phương án an toàn nhưng xấu hơn: đậm toàn bộ, bù lại bằng bo góc lớn hơn và khoảng cách
+    rộng hơn.
+  </p>
+</div>
+
+<h3>1.6 · Ba lỗi cấu hình khiến hệ màu chưa chạy</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗi 1 — bảy token không tồn tại trong Tailwind</p>
+  <p>
+    <code>frontend/tailwind.config.ts</code> chỉ khai <code>primary</code> (+dark/light),
+    <code>accent</code>, <code>secondary</code>, <code>bg.page</code>, <code>bg.card</code>,
+    <code>text.main</code>, <code>text.muted</code>, <code>border.DEFAULT</code>.
+    <b>Không có</b> <code>bgDeceased</code>, <code>borderDark</code>, <code>success</code>,
+    <code>successBg</code>, <code>danger</code>, <code>dangerBg</code>, <code>warningBg</code>.
+  </p>
+  <p>
+    Hệ quả đo được trong <code>frontend/src/components/tree/person-node.tsx</code>: các lớp
+    <code>border-border-dark</code> (dòng 41, 96), <code>bg-border-dark</code> (dòng 45, 46) và
+    <code>bg-success</code> (dòng 67) <b>không sinh ra CSS nào cả</b>. Trên thẻ phả đồ, điều đó
+    có nghĩa:
+  </p>
+  <ul>
+    <li>Viền thẻ người đã khuất <b>không</b> đậm hơn viền thường.</li>
+    <li>Chấm “còn sống / đã khuất” <b>không có màu</b> — nó là một ô 8×8 trong suốt.</li>
+  </ul>
+  <p>
+    Cộng với việc thẻ phả đồ không có vạch đỏ trầm và không có thẻ chữ “đã khuất”, dấu hiệu duy
+    nhất còn lại là <code>bg-[#f2ede2]</code> — một mã hex viết thẳng, ở mức <b>1,17:1</b>.
+    Trên thực tế, <b>người xem phả đồ hiện không phân biệt được ai còn ai mất</b>, dù chú giải
+    ở góc màn hình vẫn nói là có.
+  </p>
+  <p>
+    Ghi chú công bằng: mã nguồn <em>viết đúng ý định</em> và có bình luận rõ ràng; các thành phần
+    khác (<code>tree-legend.tsx</code>, <code>search-result-card.tsx</code>) dùng
+    <code>colorTokens.success</code> qua thuộc tính <code>style</code> nên vẫn hiện đúng màu.
+    Chỉ riêng <code>person-node.tsx</code> đi qua Tailwind nên rơi vào lỗ hổng này.
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗi 2 — <code>:root</code> chỉ khai 10 trên 17 màu</p>
+  <p>
+    <code>frontend/src/app/globals.css</code> khai 10 biến CSS, thiếu <code>bgDeceased</code>,
+    <code>borderDark</code>, <code>success</code>, <code>successBg</code>, <code>danger</code>,
+    <code>dangerBg</code>, <code>warningBg</code>. Định hướng 00 §3 nói thẳng: <em>“mọi màu phải
+    khai ở <code>:root</code> trước”</em>. Đây đúng là lỗi kinh điển mà 00 cảnh báo, và nó sẽ nổ
+    ngay khi bắt đầu làm chế độ tối.
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗi 3 — chế độ tối được khai báo nhưng không tồn tại</p>
+  <p>
+    <code>tailwind.config.ts</code> đặt <code>darkMode: "class"</code>. Toàn bộ
+    <code>frontend/src/</code> có <b>0</b> lần dùng tiền tố <code>dark:</code>. Không có bộ màu
+    tối trong <code>tokens.ts</code>, không có <code>theme.algorithm</code> trong
+    <code>providers.tsx</code>, không có công tắc chủ đề. Ba trạng thái sáng / tối / theo hệ
+    thống mà 00 §3 chốt hiện <b>chưa có trạng thái nào ngoài “sáng”</b>.
+  </p>
+</div>
+
+<h3>1.7 · Chế độ tối</h3>
+
+<p>
+  Bộ màu tối đề xuất dưới đây <b>không phải màu mới</b>: nó chép từ khối
+  <code>prefers-color-scheme: dark</code> đã có sẵn trong
+  <code>design/assets/design-doc.css</code> — tức bộ màu tối mà chính các tài liệu thiết kế này
+  đang chạy. Dùng lại nó giữ được nguyên tắc “một nguồn duy nhất”.
+</p>
+
+<figure>
+<svg viewBox="0 0 940 196" role="img" aria-label="Bảng màu chế độ tối đề xuất">
+  <rect x="0" y="0" width="940" height="196" rx="8" fill="#1a1614"/>
+  <text x="16" y="26" font-family="Be Vietnam Pro" font-size="13" font-weight="600" fill="#efe8df">Chế độ tối — nền &amp; mực</text>
+  <rect x="16"  y="36" width="130" height="44" rx="6" fill="#1a1614" stroke="#56483f"/>
+  <rect x="156" y="36" width="130" height="44" rx="6" fill="#241f1c" stroke="#56483f"/>
+  <rect x="296" y="36" width="130" height="44" rx="6" fill="#2b2521" stroke="#e08a72" stroke-width="2"/>
+  <rect x="436" y="36" width="130" height="44" rx="6" fill="#efe8df"/>
+  <rect x="576" y="36" width="130" height="44" rx="6" fill="#a99c8e"/>
+  <text x="16"  y="96" font-family="Be Vietnam Pro" font-size="11" fill="#a99c8e">bgPage #1a1614</text>
+  <text x="156" y="96" font-family="Be Vietnam Pro" font-size="11" fill="#a99c8e">bgCard #241f1c</text>
+  <text x="296" y="96" font-family="Be Vietnam Pro" font-size="11" fill="#e08a72">bgDeceased #2b2521</text>
+  <text x="436" y="96" font-family="Be Vietnam Pro" font-size="11" fill="#a99c8e">textMain #efe8df</text>
+  <text x="576" y="96" font-family="Be Vietnam Pro" font-size="11" fill="#a99c8e">textMuted #a99c8e</text>
+
+  <text x="16" y="128" font-family="Be Vietnam Pro" font-size="13" font-weight="600" fill="#efe8df">Thương hiệu &amp; trạng thái</text>
+  <rect x="16"  y="138" width="130" height="36" rx="6" fill="#e08a72"/>
+  <rect x="156" y="138" width="130" height="36" rx="6" fill="#e9a83f"/>
+  <rect x="296" y="138" width="130" height="36" rx="6" fill="#8ba9c4"/>
+  <rect x="436" y="138" width="130" height="36" rx="6" fill="#74c68f"/>
+  <rect x="576" y="138" width="130" height="36" rx="6" fill="#ec8a80"/>
+  <text x="722" y="161" font-family="Be Vietnam Pro" font-size="11" fill="#a99c8e">primary · accent · secondary · success · danger</text>
+</svg>
+<figcaption><strong>Hình 3.</strong> Bộ màu tối đề xuất, chép nguyên từ <code>design/assets/design-doc.css</code>.</figcaption>
+</figure>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Cặp (chế độ tối)</th><th>Tỉ số</th><th>Ngưỡng</th><th>Kết quả</th></tr></thead>
+  <tbody>
+    <tr><td><code>textMain</code> #efe8df / <code>bgPage</code> #1a1614</td><td class="so">14,78</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMain</code> / <code>bgCard</code> #241f1c</td><td class="so">13,42</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMain</code> / <code>bgDeceased</code> #2b2521</td><td class="so">12,44</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMuted</code> #a99c8e / <code>bgCard</code></td><td class="so">6,08</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>textMuted</code> / <code>bgDeceased</code></td><td class="so">5,64</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>primary</code> #e08a72 / <code>bgCard</code></td><td class="so">6,25</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>accent</code> #e9a83f / <code>bgCard</code></td><td class="so">7,87</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>accent</code> / <code>bgPage</code></td><td class="so">8,67</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>success</code> #74c68f / <code>bgDeceased</code></td><td class="so">7,35</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>danger</code> #ec8a80 / <code>bgCard</code></td><td class="so">6,61</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>secondary</code> #8ba9c4 / <code>bgCard</code></td><td class="so">6,65</td><td class="so">4,5</td><td class="tot">Đạt</td></tr>
+    <tr><td><code>bgDeceased</code> / <code>bgCard</code></td><td class="so">1,08</td><td class="so">—</td><td class="canh">Yếu hơn cả chế độ sáng</td></tr>
+    <tr><td><code>borderDark</code> #56483f / <code>bgCard</code></td><td class="so">1,86</td><td class="so">3*</td><td class="canh">Như chế độ sáng</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Điều đáng chú ý: hổ phách <em>hết trượt</em> ở chế độ tối</p>
+  <p>
+    <code>#e9a83f</code> đạt 7,87–8,67:1. Vấn đề tương phản của hổ phách <b>chỉ tồn tại ở chế độ
+    sáng</b>. Điều này củng cố đề xuất tách <code>accent</code> (mảng tô) khỏi
+    <code>accentText</code> (chữ): ở chế độ tối, <code>accentText</code> ánh xạ thẳng về
+    <code>accent</code>, không cần token thứ ba.
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ba cái bẫy của chế độ tối trong sản phẩm này</p>
+  <p>
+    <b>1 · Nền giấy cũ càng yếu đi.</b> 1,08:1 so với nền thẻ — nghĩa là ở chế độ tối, phân biệt
+    người đã khuất bằng nền là <em>hoàn toàn</em> bất khả. Ba dấu hiệu kèm theo không còn là “dự
+    phòng” mà trở thành <b>dấu hiệu chính</b>. Ở chế độ tối, vạch đỉnh thẻ nên dày <b>4px</b> thay
+    vì 3px <span class="chip should">đề xuất</span>.
+  </p>
+  <p>
+    <b>2 · Ảnh chân dung và bản dập văn bia.</b> Ảnh quét giấy cũ là mảng sáng lớn trên nền tối —
+    chói mắt. Cần lớp phủ mờ nhẹ khi ảnh ở cỡ thu nhỏ và <b>bỏ lớp phủ khi phóng to</b>.
+    <b>Chỗ có thể sai:</b> làm tối ảnh di sản có thể bị xem là thiếu tôn trọng hiện vật. Phải hỏi
+    trước khi làm.
+  </p>
+  <p>
+    <b>3 · Nền phả đồ.</b> React Flow vẽ lưới chấm và <code>&lt;MiniMap&gt;</code> theo màu riêng;
+    <code>tree-canvas.tsx</code> đã có ghi chú rằng màu mặc định của bộ chủ đề (<code>#2c3e50</code>)
+    “đổ ra một mảng xám lạnh giữa nền”. Ở chế độ tối vấn đề nặng hơn, vì <code>secondary</code>
+    tối là <code>#8ba9c4</code> — một màu <em>sáng</em>.
+  </p>
+</div>
+
+<h3>1.8 · Vòng tiêu điểm bàn phím</h3>
+
+<p>
+  Sản phẩm hiện dùng <code>focus-visible:outline-2 outline-accent</code> ở đúng hai thành phần
+  (<code>person-node.tsx</code>, <code>tree-legend.tsx</code>), và hổ phách trượt ngưỡng 3:1 ở cả
+  ba nền quan trọng. Đề xuất thay bằng <b>vòng hai lớp</b>, một mẫu duy nhất cho toàn sản phẩm.
+</p>
+
+<figure>
+<svg viewBox="0 0 940 150" role="img" aria-label="Vòng tiêu điểm hai lớp trên bốn loại nền">
+  <text class="wf-chu" x="0" y="12">Vòng hai lớp: lõi #2b2825 dày 2px + quầng #ffffff dày 2px</text>
+
+  <rect x="0" y="26" width="220" height="90" rx="6" fill="#f8f6f2" stroke="#e6dfd5"/>
+  <rect x="30" y="54" width="160" height="36" rx="6" fill="#ffffff" stroke="#e6dfd5"/>
+  <rect x="26" y="50" width="168" height="44" rx="8" fill="none" stroke="#ffffff" stroke-width="4"/>
+  <rect x="24" y="48" width="172" height="48" rx="9" fill="none" stroke="#2b2825" stroke-width="2"/>
+  <text x="66" y="77" font-family="Be Vietnam Pro" font-size="13" fill="#2b2825">Xem phả đồ</text>
+  <text class="wf-phu" x="0" y="136">Nền kem · lõi 13,58:1</text>
+
+  <rect x="240" y="26" width="220" height="90" rx="6" fill="#f2ede2" stroke="#cdbeaa"/>
+  <rect x="270" y="54" width="160" height="36" rx="6" fill="#f2ede2" stroke="#cdbeaa"/>
+  <rect x="266" y="50" width="168" height="44" rx="8" fill="none" stroke="#ffffff" stroke-width="4"/>
+  <rect x="264" y="48" width="172" height="48" rx="9" fill="none" stroke="#2b2825" stroke-width="2"/>
+  <text x="296" y="77" font-family="Be Vietnam Pro" font-size="13" fill="#2b2825">Nguyễn Văn Cẩn</text>
+  <text class="wf-phu" x="240" y="136">Giấy cũ · lõi 12,55:1</text>
+
+  <rect x="480" y="26" width="220" height="90" rx="6" fill="#f8f6f2" stroke="#e6dfd5"/>
+  <rect x="510" y="54" width="160" height="36" rx="6" fill="#8c2d19"/>
+  <rect x="506" y="50" width="168" height="44" rx="8" fill="none" stroke="#ffffff" stroke-width="4"/>
+  <rect x="504" y="48" width="172" height="48" rx="9" fill="none" stroke="#2b2825" stroke-width="2"/>
+  <text x="538" y="77" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Lưu thay đổi</text>
+  <text class="wf-phu" x="480" y="136">Nút đỏ · quầng trắng 8,38:1 gánh vai trò</text>
+
+  <rect x="720" y="26" width="220" height="90" rx="6" fill="#1a1614"/>
+  <rect x="750" y="54" width="160" height="36" rx="6" fill="#241f1c" stroke="#56483f"/>
+  <rect x="746" y="50" width="168" height="44" rx="8" fill="none" stroke="#1a1614" stroke-width="4"/>
+  <rect x="744" y="48" width="172" height="48" rx="9" fill="none" stroke="#efe8df" stroke-width="2"/>
+  <text x="782" y="77" font-family="Be Vietnam Pro" font-size="13" fill="#efe8df">Xem phả đồ</text>
+  <text x="720" y="136" font-family="Be Vietnam Pro" font-size="11" fill="#a99c8e">Chế độ tối · đảo lõi và quầng</text>
+</svg>
+<figcaption><strong>Hình 4.</strong> Hai lớp trái sắc nhau nên <em>luôn có một lớp</em> đạt ≥3:1 với bất kỳ nền nào bên dưới. Trên nút đỏ trầm, lõi #2b2825 chỉ đạt 1,75:1 nhưng quầng trắng đạt 8,38:1 — vòng vẫn nhìn thấy.</figcaption>
+</figure>
+
+<div class="khoi">
+  <p class="nhan">Cái giá</p>
+  <p>
+    Vòng hai lớp chiếm <b>4px mỗi phía</b>. Ở chỗ chật — hàng badge trên thẻ phả đồ, thanh điều
+    hướng đáy trên điện thoại — nó sẽ đè lên thành phần bên cạnh. Cách chữa duy nhất tôn trọng
+    được cả vùng chạm 44px lẫn vòng tiêu điểm là <b>chừa 4px lề chết</b> quanh mọi thứ bấm được,
+    tức khoảng cách tối thiểu giữa hai thành phần bấm được là <b>8px</b>. Ràng buộc này ăn thẳng
+    vào ngân sách của mật độ “Gọn” (mục 5).
+  </p>
+</div>
+
+<h3>1.9 · Màu badge Dâu / Rể — hệ quả của 00 §1b</h3>
+
+<p>
+  Tài liệu 00 bổ sung mục <b>1b “Trục thứ hai: thuộc hay không thuộc huyết thống”</b> sau khi phần
+  trên của tài liệu này đã viết xong. Mục đó ràng buộc: <em>“tránh mọi cách diễn đạt dựng lên khung
+  <b>người trong họ</b> đối lập <b>người ngoài</b>”</em>. Ràng buộc ấy không chỉ áp cho câu chữ —
+  <b>nó áp cho màu</b>, và ở đây bảng màu hiện tại đang nói ngược lại.
+</p>
+
+<figure>
+<svg viewBox="0 0 940 150" role="img" aria-label="Tám màu badge, tách nhóm màu ấm trong palette và hai màu lạ ngoài palette">
+  <text class="wf-chu" x="0" y="14" font-weight="600">Sáu badge lấy màu TỪ bảng màu — đều là sắc ấm hoặc trung tính</text>
+  <rect x="0"   y="24" width="128" height="30" rx="4" fill="#d97706"/><text x="12" y="44" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Đích tôn</text>
+  <rect x="140" y="24" width="128" height="30" rx="4" fill="#d97706"/><text x="152" y="44" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Thừa tự</text>
+  <rect x="280" y="24" width="128" height="30" rx="4" fill="#d97706"/><text x="292" y="44" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Kế tự</text>
+  <rect x="420" y="24" width="128" height="30" rx="4" fill="#8c2d19"/><text x="432" y="44" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Trưởng chi</text>
+  <rect x="560" y="24" width="128" height="30" rx="4" fill="#2c3e50"/><text x="572" y="44" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Con nuôi</text>
+  <rect x="700" y="24" width="128" height="30" rx="4" fill="#5e564d"/><text x="712" y="44" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Tuyệt tự</text>
+
+  <text class="wf-chu" x="0" y="90" font-weight="600" fill="#b91c1c">Hai badge dùng mã hex viết thẳng, NGOÀI bảng màu — và là hai sắc LẠNH duy nhất</text>
+  <rect x="0"   y="100" width="128" height="30" rx="4" fill="#a3336b"/><text x="12" y="120" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Dâu</text>
+  <rect x="140" y="100" width="128" height="30" rx="4" fill="#2f6fa8"/><text x="152" y="120" font-family="Be Vietnam Pro" font-size="13" fill="#ffffff">Rể</text>
+  <text class="wf-phu" x="284" y="112">#a3336b hồng sen · #2f6fa8 lam</text>
+  <text class="wf-phu" x="284" y="128" fill="#b91c1c">Hai hệ sắc không tồn tại ở bất kỳ chỗ nào khác trong sản phẩm.</text>
+</svg>
+<figcaption><strong>Hình 4b.</strong> Nguồn: <code>frontend/src/lib/tree/badges.ts</code>. Sáu badge đầu đọc màu từ <code>colorTokens</code>; hai badge cuối viết thẳng mã hex.</figcaption>
+</figure>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Màu đang nói điều mà 00 §1b cấm nói</p>
+  <p>
+    Bảng màu của sản phẩm là một hệ <b>ấm</b>: đỏ trầm, hổ phách, kem, mực nâu. Sắc lạnh duy nhất
+    được phép là <code>secondary #2c3e50</code>, một xanh xám gần như trung tính. Trong tám badge
+    phả hệ, <b>đúng hai badge dùng sắc lạ</b> — và đó chính là <b>Dâu</b> và <b>Rể</b>, tức đúng
+    hai badge đánh dấu người <em>không thuộc huyết thống</em>.
+  </p>
+  <p>
+    Không ai cố ý làm việc này; hai mã hex kia gần như chắc chắn được chọn cho “dễ phân biệt”.
+    Nhưng kết quả thị giác thì rõ: trên một phả đồ toàn sắc đất, <b>người dâu và người rể là hai
+    đốm màu lạ</b>. Đó đúng là khung “người trong họ / người ngoài” mà 00 §1b yêu cầu tránh, chỉ
+    khác là nó được nói bằng màu chứ không bằng chữ — nên không ai rà soát nó.
+  </p>
+  <p>
+    Sức nặng của việc này đến từ chính 00 §1b: người dâu, người rể là nhóm <b>phải xưng hô đúng
+    nhiều nhất và biết ít nhất</b>, và là nhóm mà 30 luật danh xưng nhóm J6 sinh ra để phục vụ.
+    Đánh dấu họ bằng màu lạ là điều cuối cùng nên làm.
+  </p>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Đề xuất</p>
+  <p>
+    Đưa hai màu vào <code>tokens.ts</code> và <b>kéo chúng về hệ ấm</b>, giữ khác biệt bằng
+    <em>sắc độ trong cùng một họ màu</em> thay vì bằng một họ màu khác
+    <span class="chip should">đề xuất</span>. Ba điều kiện phải thoả cùng lúc:
+  </p>
+  <ul>
+    <li>Phân biệt được với <code>primary</code> (Trưởng chi) và <code>accent</code> (đích tôn / thừa tự / kế tự) khi đứng cạnh nhau trên cùng một thẻ.</li>
+    <li>Đạt ≥4,5:1 với chữ trắng trên nền badge đặc, và ≥4,5:1 khi làm chữ trên nền giấy cũ (hiện <code>#2f6fa8</code> chỉ được 4,54 — dư 0,04).</li>
+    <li>Cùng nhiệt độ màu với phần còn lại của bảng màu.</li>
+  </ul>
+  <p>
+    <b>Cái giá — và đây là một đánh đổi thật, không phải hình thức.</b> Kéo Dâu/Rể về hệ ấm làm
+    chúng <em>khó phân biệt hơn</em> với bốn badge ấm sẵn có. Trên một thẻ phả đồ 240px mang ba
+    badge cùng tông đất, người dùng sẽ phải <b>đọc chữ</b> chứ không liếc màu là biết. Chấp nhận
+    được — vì badge vốn đã luôn có nhãn chữ (00 §2.3 “biểu tượng luôn đi kèm chữ”), nên màu chưa
+    bao giờ là kênh thông tin duy nhất. Nhưng phải nói rõ rằng ta đang <b>đổi tốc độ nhận diện
+    lấy việc không dán nhãn người ngoài</b>.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> tài liệu này <b>không đề xuất mã hex cụ thể</b>, vì chọn hai sắc ấm vừa
+    phân biệt được với nhau vừa phân biệt được với bốn badge sẵn có là bài toán cần thử trên thẻ
+    thật, không giải được bằng tính tỉ số tương phản. Và <b>chỗ có thể sai lớn hơn</b>: có thể
+    Hội đồng Tộc biểu <em>muốn</em> dâu/rể được đánh dấu rõ, vì trong nếp phả truyền thống đó là
+    một phân biệt có thật và không mang nghĩa xúc phạm. Nếu vậy thì mục này sai, và cái đúng là
+    giữ phân biệt nhưng bỏ hàm ý “ngoại lai” — ví dụ dùng <b>viền nét đứt cùng màu ấm</b> thay vì
+    một họ màu khác. <b>Đây là câu hỏi cho Hội đồng, tài liệu thiết kế nêu ra chứ không tự quyết.</b>
+  </p>
+</div>
+
+<h2>2. Chữ</h2>
+
+<h3>2.1 · Hai bộ chữ, và vì sao chúng đúng</h3>
+
+<p>
+  Nạp trong <code>frontend/src/app/[locale]/layout.tsx</code>:
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Be Vietnam Pro — thân bài, giao diện</h4>
+    <p>
+      Weight nạp: <b>400 · 500 · 600 · 700</b>. Subset: <code>vietnamese</code> + <code>latin</code>.
+      Thiết kế tại Việt Nam, chữ số và dấu vẽ riêng cho tiếng Việt.
+    </p>
+    <p class="day"><b>Đã đúng ràng buộc 00 §3:</b> weight 300 <b>không</b> được nạp. Không thể vô tình dùng chữ mảnh vì nó không có trong gói.</p>
+  </div>
+  <div class="the">
+    <h4>Noto Serif — tiêu đề, tên người</h4>
+    <p>
+      Weight nạp: <b>600 · 700</b>. Subset: <code>vietnamese</code> + <code>latin</code>.
+      Gán cho <code>h1..h4</code> trong <code>globals.css</code>, và cho tên người trong
+      <code>person-node.tsx</code>, <code>search-result-card.tsx</code>, <code>event-card.tsx</code>.
+    </p>
+    <p class="day">Chỉ có hai weight đậm — nghĩa là <b>không có Noto Serif 400</b>. Một đoạn văn dài đặt bằng serif sẽ buộc phải dùng 600, tức quá đậm. Serif ở đây là chữ <em>hiển thị</em>, không phải chữ đọc dài.</p>
+  </div>
+  <div class="the">
+    <h4>Hán-Nôm</h4>
+    <p>
+      <code>person-profile-header.tsx</code> đặt <code>lang="zh-Hant"</code> cho dòng Hán-Nôm —
+      đúng, vì nó buộc trình duyệt chọn phông CJK phồn thể thay vì phông Việt.
+    </p>
+    <p class="day"><b>Còn thiếu:</b> không có phông CJK dự phòng nào được nạp. Trên máy không cài phông Hán, dòng này sẽ ra ô vuông. Cần <span class="chip should">đề xuất</span> nạp Noto Serif TC subset theo yêu cầu.</p>
+  </div>
+</div>
+
+<h3>2.2 · Thang cỡ chữ</h3>
+
+<p>
+  Sàn <b>16px cho thân bài</b> theo 00 §2.2, nội dung chính 17–18px. Thang dưới đây là
+  <span class="chip should">đề xuất</span> — sản phẩm hiện <em>không</em> có thang nào (mục 2.5).
+</p>
+
+<figure>
+<svg viewBox="0 0 940 430" role="img" aria-label="Thang cỡ chữ đề xuất, từ 32px xuống 14px">
+  <line x1="292" y1="0" x2="292" y2="418" class="wf-net" stroke-dasharray="3 3"/>
+
+  <text x="0" y="30" font-family="Piazzolla, Georgia, serif" font-size="32" font-weight="700" fill="#2b2825">Nguyễn Đức Trọng</text>
+  <text class="wf-phu" x="300" y="22">D1 · 32/38 · serif 700 · tên người ở trang hồ sơ</text>
+  <text class="wf-phu" x="300" y="36">chỉ 1 lần mỗi màn hình</text>
+
+  <text x="0" y="76" font-family="Piazzolla, Georgia, serif" font-size="26" font-weight="700" fill="#2b2825">Chi Giáp — Ngành Trưởng</text>
+  <text class="wf-phu" x="300" y="68">D2 · 26/32 · serif 700 · tiêu đề màn hình</text>
+  <text class="wf-phu" x="300" y="82">= h1 hiện tại ở mobile (text-xl)</text>
+
+  <text x="0" y="118" font-family="Piazzolla, Georgia, serif" font-size="21" font-weight="600" fill="#8c2d19">Quan hệ thân tộc</text>
+  <text class="wf-phu" x="300" y="110">D3 · 21/28 · serif 600 · tiêu đề mục</text>
+  <text class="wf-phu" x="300" y="124">màu primary, 8,38:1</text>
+
+  <text x="0" y="158" font-family="Be Vietnam Pro" font-size="18" font-weight="600" fill="#2b2825">Ngày giỗ và lễ sắp tới</text>
+  <text class="wf-phu" x="300" y="150">D4 · 18/26 · sans 600 · tiêu đề thẻ, tên trên thẻ phả đồ</text>
+  <text class="wf-phu" x="300" y="164">ngưỡng “chữ lớn” của WCAG khi đậm (≥18,66px → ở đây dùng 3:1 phải cẩn thận)</text>
+
+  <text x="0" y="196" font-family="Be Vietnam Pro" font-size="17" font-weight="400" fill="#2b2825">Ông là con trưởng của cụ Nguyễn Đức Cẩn.</text>
+  <text class="wf-phu" x="300" y="196">T1 · 17/28 · sans 400 · NỘI DUNG CHÍNH — tiểu sử, mô tả</text>
+
+  <text x="0" y="232" font-family="Be Vietnam Pro" font-size="16" font-weight="400" fill="#2b2825">Đời 6 · Chi Giáp · Nam Định</text>
+  <text class="wf-phu" x="300" y="232">T2 · 16/24 · sans 400 · SÀN. Mọi câu văn, mọi nhãn ô nhập, mọi nút.</text>
+
+  <text x="0" y="266" font-family="Be Vietnam Pro" font-size="16" font-weight="500" fill="#5e564d">Họ và tên khai sinh</text>
+  <text class="wf-phu" x="300" y="266">T2đ · 16/24 · sans 500 · nhãn ô nhập, nhãn cột bảng</text>
+
+  <text x="0" y="300" font-family="Be Vietnam Pro" font-size="14" font-weight="500" fill="#5e564d">ĐÍCH TÔN · 1921–1994</text>
+  <text class="wf-phu" x="300" y="294">P1 · 14/20 · sans 500 · CHỈ dữ liệu phi câu văn:</text>
+  <text class="wf-phu" x="300" y="308">badge, khoảng năm, số trang, nhãn trục biểu đồ</text>
+
+  <line x1="0" y1="326" x2="940" y2="326" class="wf-net"/>
+  <text class="wf-phu" x="0" y="348" fill="#b91c1c" font-weight="600">VÙNG CẤM — dưới 14px</text>
+  <text x="0" y="372" font-family="Be Vietnam Pro" font-size="12" fill="#5e564d">Đời 6 · Chi Giáp · Nam Định (12px)</text>
+  <text x="0" y="394" font-family="Be Vietnam Pro" font-size="10.5" fill="#5e564d">Đời 6 · Chi Giáp · Nam Định (10,5px)</text>
+  <text x="0" y="414" font-family="Be Vietnam Pro" font-size="9.5" fill="#5e564d">Đích tôn (9,5px)</text>
+  <text class="wf-phu" x="300" y="372" fill="#b91c1c">Ba cỡ này ĐANG CÓ trong sản phẩm. Xem mục 2.5.</text>
+  <text class="wf-phu" x="300" y="392" fill="#b91c1c">Ở 9,5px, dấu “ộ” và “ữ” gần như mất hẳn tầng trên.</text>
+</svg>
+<figcaption><strong>Hình 5.</strong> Thang tám bậc đề xuất. Tỉ lệ xấp xỉ 1,15–1,2 giữa các bậc gần sàn (16 → 17 → 18) và giãn dần ở nhóm hiển thị (21 → 26 → 32), vì mắt phân biệt cỡ lớn kém nhạy hơn.</figcaption>
+</figure>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Bậc</th><th>Cỡ / dòng</th><th>Bộ chữ · weight</th><th>Dùng cho</th><th>Độ dài dòng tối đa</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>D1</b></td><td class="so">32 / 38</td><td>Noto Serif 700</td><td>Tên người ở trang hồ sơ (một lần / màn hình)</td><td>—</td></tr>
+    <tr><td><b>D2</b></td><td class="so">26 / 32</td><td>Noto Serif 700</td><td>Tiêu đề màn hình, tên chi/ngành</td><td>—</td></tr>
+    <tr><td><b>D3</b></td><td class="so">21 / 28</td><td>Noto Serif 600</td><td>Tiêu đề mục trong hồ sơ</td><td>—</td></tr>
+    <tr><td><b>D4</b></td><td class="so">18 / 26</td><td>Noto Serif 600 · sans 600</td><td>Tiêu đề thẻ; <b>tên người trên thẻ phả đồ</b></td><td>—</td></tr>
+    <tr><td><b>T1</b></td><td class="so">17 / 28</td><td>Be Vietnam Pro 400</td><td>Nội dung chính: tiểu sử, mô tả, văn bản dài</td><td><b>68 ký tự</b></td></tr>
+    <tr><td><b>T2</b></td><td class="so">16 / 24</td><td>Be Vietnam Pro 400</td><td><b>Sàn.</b> Mọi câu văn khác, nhãn nút, nội dung ô nhập</td><td><b>72 ký tự</b></td></tr>
+    <tr><td><b>T2đ</b></td><td class="so">16 / 24</td><td>Be Vietnam Pro 500</td><td>Nhãn ô nhập, tiêu đề cột bảng</td><td>—</td></tr>
+    <tr><td><b>P1</b></td><td class="so">14 / 20</td><td>Be Vietnam Pro 500</td><td><b>Chỉ dữ liệu phi câu văn:</b> badge, khoảng năm, nhãn trục, số trang</td><td>≤ 24 ký tự</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Luật P1 — bậc dễ bị lạm dụng nhất</p>
+  <p>
+    P1 (14px) <b>không phải</b> một bậc “chữ nhỏ dùng khi chật”. Nó chỉ hợp lệ khi cả ba điều
+    sau đúng: (1) nội dung là <em>nhãn</em> hoặc <em>số</em>, không phải câu; (2) không quá 24 ký
+    tự; (3) có một bậc ≥16px ngay bên cạnh mang cùng thông tin, hoặc thông tin đó không thiết yếu.
+    Một dòng “Đời 6 · Chi Giáp · Nam Định” <b>không</b> thoả — đó là dữ liệu phả hệ thiết yếu,
+    phải ở T2.
+  </p>
+</div>
+
+<h3>2.3 · Dấu chồng tầng — vì sao cấm chữ mảnh</h3>
+
+<p>
+  Tiếng Việt có ký tự mang <b>hai dấu chồng lên nhau</b>: dấu phụ của nguyên âm (ă, â, ê, ô, ơ, ư)
+  cộng dấu thanh (sắc, huyền, hỏi, ngã, nặng). Ở <b>ắ, ộ, ữ, ể, ỡ</b>, chiều cao dành cho phần
+  dấu chiếm khoảng một phần ba chiều cao chữ hoa. Khi cỡ chữ nhỏ và nét mảnh, hai tầng dấu này
+  hoặc dính vào nhau, hoặc rơi xuống dưới ngưỡng một điểm ảnh và <em>biến mất</em>.
+</p>
+
+<figure>
+<svg viewBox="0 0 940 260" role="img" aria-label="So sánh dấu tiếng Việt ở các cỡ và độ đậm khác nhau">
+  <text class="wf-chu" x="0" y="14" font-weight="600">Cùng một chuỗi, năm cỡ · weight 400</text>
+  <text x="0"   y="60" font-family="Be Vietnam Pro" font-size="34" font-weight="400" fill="#2b2825">Nguyễn Thị Ửng — ắ ộ ữ ể ỡ</text>
+  <text x="0"   y="96" font-family="Be Vietnam Pro" font-size="17" font-weight="400" fill="#2b2825">Nguyễn Thị Ửng — ắ ộ ữ ể ỡ</text>
+  <text x="0"   y="122" font-family="Be Vietnam Pro" font-size="14" font-weight="400" fill="#2b2825">Nguyễn Thị Ửng — ắ ộ ữ ể ỡ</text>
+  <text x="0"   y="144" font-family="Be Vietnam Pro" font-size="11" font-weight="400" fill="#2b2825">Nguyễn Thị Ửng — ắ ộ ữ ể ỡ</text>
+  <text x="0"   y="162" font-family="Be Vietnam Pro" font-size="9.5" font-weight="400" fill="#2b2825">Nguyễn Thị Ửng — ắ ộ ữ ể ỡ</text>
+  <text class="wf-phu" x="330" y="60">34px — hai tầng dấu tách bạch</text>
+  <text class="wf-phu" x="330" y="96">17px — vẫn phân biệt được ữ / ư</text>
+  <text class="wf-phu" x="330" y="122">14px — sàn thực tế của dấu chồng tầng</text>
+  <text class="wf-phu" x="330" y="144" fill="#b91c1c">11px — ữ và ư bắt đầu lẫn</text>
+  <text class="wf-phu" x="330" y="162" fill="#b91c1c">9,5px — ộ và o gần như đồng nhất</text>
+
+  <line x1="0" y1="182" x2="940" y2="182" class="wf-net"/>
+
+  <text class="wf-chu" x="0" y="204" font-weight="600">Cùng cỡ 14px, ba weight</text>
+  <text x="0"   y="228" font-family="Be Vietnam Pro" font-size="14" font-weight="300" fill="#2b2825">ắ ộ ữ ể ỡ — weight 300 (không nạp)</text>
+  <text x="300" y="228" font-family="Be Vietnam Pro" font-size="14" font-weight="400" fill="#2b2825">ắ ộ ữ ể ỡ — weight 400</text>
+  <text x="600" y="228" font-family="Be Vietnam Pro" font-size="14" font-weight="600" fill="#2b2825">ắ ộ ữ ể ỡ — weight 600</text>
+  <text class="wf-phu" x="0"   y="250" fill="#b91c1c">Trình duyệt sẽ thay bằng 400 vì 300 không có trong gói — đó chính là hàng rào đang bảo vệ sản phẩm.</text>
+</svg>
+<figcaption><strong>Hình 6.</strong> Hàng dưới cùng chỉ hiển thị đúng nếu máy bạn có sẵn weight 300; trên sản phẩm thì không, vì <code>layout.tsx</code> chỉ nạp 400–700. Đó là cách tốt nhất để thực thi một quy tắc: làm cho vi phạm trở nên bất khả thi.</figcaption>
+</figure>
+
+<div class="khoi chot">
+  <p class="nhan">Bốn luật chữ tiếng Việt</p>
+  <ol>
+    <li><b>Cấm weight ≤ 300 cho mọi nội dung đọc.</b> Đã được thực thi bằng danh sách weight trong <code>layout.tsx</code>. Giữ nguyên hàng rào đó — đừng thêm 200/300 vào gói “cho đủ bộ”.</li>
+    <li><b>Chiều cao dòng tối thiểu 1,45</b> cho văn bản Việt, so với 1,4 thường dùng cho tiếng Anh. Lý do: dấu chồng tầng ăn lên phần trên của dòng; ở 1,4 thì dấu của dòng dưới chạm chân chữ dòng trên. Thang ở mục 2.2 dùng 17/28 (1,65) và 16/24 (1,5).</li>
+    <li><b>Cấm <code>text-transform: uppercase</code> cho tiếng Việt.</b> Chữ hoa toàn phần làm dấu thanh phải đặt cao hơn nữa, và nhiều phông xử lý sai (Ẳ, Ộ, Ữ). Với tên người thì còn có lý do thứ hai, mạnh hơn — mục 2.4.</li>
+    <li><b>Cấm <code>letter-spacing</code> âm.</b> Nó đẩy dấu của ký tự này chạm vào thân ký tự kế bên.</li>
+  </ol>
+</div>
+
+<h3>2.4 · Tên người và tên chi là <em>dữ liệu</em></h3>
+
+<p>
+  00 §3 chốt: “Tên người và tên chi là <b>dữ liệu</b>, không phải nhãn giao diện: không bao giờ
+  viết hoa toàn bộ, không bao giờ cắt bớt bằng dấu ba chấm nếu tránh được.” Đây là ràng buộc có
+  lý do phả hệ, không phải thẩm mỹ:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Luật</th><th>Vì sao</th><th>Cách làm</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Không viết hoa toàn bộ</b></td>
+      <td>Tên người trong gia phả có phân tầng chính tả mang nghĩa (tên <code>HUY</code> kiêng huý, <code>THUY</code> thuỵ hiệu, <code>PHAP_DANH</code> pháp danh). Viết hoa toàn bộ xoá phân biệt hoa/thường mà chính chữ Hán-Việt dựa vào, và biến tên tổ tiên thành một nhãn giao diện.</td>
+      <td>Không dùng <code>uppercase</code>. Muốn nhấn thì tăng weight hoặc dùng serif.</td>
+    </tr>
+    <tr>
+      <td><b>Không cắt bằng “…”</b></td>
+      <td>Một cái tên bị cắt là một cái tên <em>sai</em>. Với người trong họ, thấy tên cụ mình hiện ra “Nguyễn Đức Trọng Ngh…” không phải bất tiện, mà là thất kính.</td>
+      <td>Cho <b>xuống dòng</b> (2 dòng), không cắt. Thẻ phả đồ phải cao đủ chứa 2 dòng.</td>
+    </tr>
+    <tr>
+      <td><b>Không tự ghép chuỗi có tên</b></td>
+      <td>Ghép “Giỗ ” + tên ở phía client có thể in ra tên người mà người xem không được phép thấy. <code>event-card.tsx</code> đã ghi chú đúng điều này và render <code>event.title</code> nguyên văn từ máy chủ.</td>
+      <td>Chuỗi có chứa tên phải do máy chủ soạn theo <code>Accept-Language</code>.</td>
+    </tr>
+    <tr>
+      <td><b>Tên chi/ngành hiển thị đầy đủ</b></td>
+      <td>“Chi Giáp — Ngành Trưởng” khác hẳn “Chi Giáp”. Cắt phần ngành là làm mất định vị phả hệ.</td>
+      <td>Xuống dòng, hoặc đưa xuống dòng phụ, không rút gọn.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Sản phẩm đang vi phạm luật “không cắt bằng …”</p>
+  <p>
+    <code>frontend/src/components/tree/person-node.tsx</code> dòng 57 đặt lớp
+    <code>truncate</code> lên chính dòng tên người, ở cỡ <code>text-[13px]</code>, trong một thẻ
+    rộng <b>208px</b> (<code>NODE_WIDTH</code> trong <code>layout-constants.ts</code>). Dòng
+    “Đời · Chi” ngay dưới cũng <code>truncate</code>, ở <code>text-[10.5px]</code>.
+  </p>
+  <p>
+    Có <code>title={person.displayName}</code> làm dự phòng — nhưng <code>title</code> chỉ hiện
+    khi <b>di chuột</b>. Người dùng chính của sản phẩm là kiều bào dùng điện thoại: họ không có
+    chuột, nên với họ tên bị cắt là bị cắt hẳn.
+  </p>
+</div>
+
+<h3>2.5 · Sản phẩm hiện lệch khỏi thang chữ ở đâu</h3>
+
+<p>
+  Đếm trong <code>frontend/src/</code>: <b>14 cỡ chữ tuỳ ý</b> khác nhau viết bằng
+  <code>text-[Npx]</code>, cộng thêm 8 bậc có tên của Tailwind. Không có thang.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Cỡ</th><th>Số lần dùng</th><th>So với thang</th></tr></thead>
+  <tbody>
+    <tr><td class="so">13px</td><td class="so">31</td><td class="xau">Dưới sàn. Cỡ phổ biến nhất trong sản phẩm.</td></tr>
+    <tr><td class="so">12px</td><td class="so">23</td><td class="xau">Dưới sàn.</td></tr>
+    <tr><td class="so">12,5px</td><td class="so">14</td><td class="xau">Dưới sàn, và là nửa điểm ảnh.</td></tr>
+    <tr><td class="so">15px</td><td class="so">13</td><td class="xau">Dưới sàn 1px.</td></tr>
+    <tr><td class="so">14px</td><td class="so">9</td><td class="canh">= P1, hợp lệ nếu là nhãn/số.</td></tr>
+    <tr><td class="so">11px</td><td class="so">9</td><td class="xau">Dưới sàn.</td></tr>
+    <tr><td class="so">11,5px</td><td class="so">8</td><td class="xau">Dưới sàn.</td></tr>
+    <tr><td class="so">16px</td><td class="so">4</td><td class="tot">= T2.</td></tr>
+    <tr><td class="so">17px</td><td class="so">3</td><td class="tot">= T1.</td></tr>
+    <tr><td class="so">10,5px</td><td class="so">3</td><td class="xau">Nhãn thanh điều hướng đáy trên điện thoại.</td></tr>
+    <tr><td class="so">13,5px</td><td class="so">2</td><td class="xau">Dưới sàn.</td></tr>
+    <tr><td class="so">10px</td><td class="so">2</td><td class="xau">Dưới sàn.</td></tr>
+    <tr><td class="so">9px</td><td class="so">2</td><td class="xau">Mũi tên mở/thu chú giải phả đồ.</td></tr>
+    <tr><td class="so">9,5px</td><td class="so">1</td><td class="xau">Chữ trên badge <b>Đích tôn</b> ở thẻ phả đồ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Vài chỗ đáng gọi tên vì hậu quả nặng nhất:
+</p>
+
+<ul>
+  <li><code>person-node.tsx</code> — tên người <b>13px</b>, đời·chi <b>10,5px</b>, badge <b>9,5px</b>. Thẻ phả đồ là màn hình đặc trưng của sản phẩm và cũng là màn hình chữ nhỏ nhất.</li>
+  <li><code>mobile-nav.tsx</code> — nhãn năm mục điều hướng chính <b>10,5px</b>. Đây vừa là chữ nhỏ, vừa là nơi 00 §2 “biểu tượng luôn đi kèm chữ” phụ thuộc vào — nhãn nhỏ tới mức không đọc được thì coi như biểu tượng đứng một mình.</li>
+  <li><code>form-field.tsx</code> — nhãn ô nhập <b>13px</b>, gợi ý <b>12px</b>, <b>thông báo lỗi 12px</b>. Người sợ làm hỏng dữ liệu nhất (00 §1) đang phải đọc thông báo lỗi ở cỡ nhỏ nhất trên màn hình.</li>
+  <li><code>optional-field.tsx</code> — nhãn trường <b>13px</b>, giá trị <b>15px</b>. Đây là khung xương của toàn bộ trang hồ sơ người.</li>
+</ul>
+
+<div class="khoi">
+  <p class="nhan">Cái giá của việc nâng lên sàn 16px</p>
+  <p>
+    <b>Thẻ phả đồ phải to ra.</b> Với tên ở 18px (D4) và một dòng phụ ở 14px (P1), thẻ 208×96
+    hiện tại không đủ. Ước tính cần <b>240×112</b> <span class="chip should">đề xuất</span>.
+    Ảnh hưởng tới <code>layout-constants.ts</code>: bước dòng mỗi đời tăng từ 96+128=224 lên
+    112+128=240 (<b>+7%</b>), bề ngang mỗi thẻ tăng <b>+32px</b> (<b>+15%</b>). Nghĩa là mỗi màn
+    hình chứa ít người hơn khoảng một phần bảy.
+  </p>
+  <p>
+    <b>Đó là cái giá đúng phải trả.</b> Một phả đồ hiển thị nhiều người hơn nhưng không đọc được
+    tên là một phả đồ vô dụng. Nhưng phải nói rõ để không ai ngạc nhiên khi mật độ giảm.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> con số 240×112 là <em>ước tính</em>, dựa trên giả định bề rộng ký tự
+    trung bình ≈ 0,5em với Be Vietnam Pro. Nó <b>phải được đo lại</b> bằng một mẫu tên thật lấy
+    từ dữ liệu demo (<code>demo/</code>), không phải chốt từ tài liệu này. Tên Việt dài nhất
+    trong dữ liệu thật sẽ quyết định con số cuối.
+  </p>
+  <p>
+    <b>Phương án thay thế đã cân nhắc và loại:</b> giữ thẻ 208px, giảm tên xuống một dòng và cho
+    phép cắt. Loại vì vi phạm 00 §3 (mục 2.4).
+  </p>
+</div>
+
+<h3>2.6 · Lỗi diện rộng: Ant Design đang chạy ở 14px và 32px</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đây là vi phạm sàn lớn nhất trong sản phẩm, và nó không nằm trong bất kỳ tệp component nào</p>
+  <p>
+    <code>frontend/src/styles/antd-theme.ts</code> khai 13 token màu, <code>fontFamily</code>,
+    <code>borderRadius</code> và <code>wireframe</code>. Nó <b>không khai</b>
+    <code>fontSize</code>, <b>không khai</b> <code>controlHeight</code>, <b>không khai</b>
+    <code>lineHeight</code>. Với Ant Design v5 (<code>package.json</code>:
+    <code>"antd": "^5.29.3"</code>), bỏ trống ba token đó nghĩa là nhận giá trị hạt giống mặc
+    định: <b><code>fontSize: 14</code></b> và <b><code>controlHeight: 32</code></b>.
+  </p>
+  <p>Hệ quả trải khắp sản phẩm, vì gần như mọi widget đều là widget của Ant Design:</p>
+  <ul>
+    <li>Mọi <b>ô nhập</b> trong biểu mẫu hồ sơ người: chữ 14px, cao 32px.</li>
+    <li>Mọi <b>nút</b> cỡ mặc định: chữ 14px, cao 32px — <b>bằng 73% ngưỡng chạm 44px</b>.</li>
+    <li>Mọi <b>thẻ tag</b>, mục chọn <code>Segmented</code> ở thanh công cụ phả đồ, dòng
+      <code>Select</code>, ô ngày, phân trang, mục menu.</li>
+    <li>Chữ trong <b>hộp thoại xác nhận ngày mất</b> — đúng cái hộp thoại mà 00 §2.4 gọi là
+      “mẫu chuẩn” của sản phẩm.</li>
+  </ul>
+  <p>
+    Nói thẳng: <b>sàn “16px thân bài / 44×44px vùng chạm, không ngoại lệ” của 00 §2.2 đang bị vi
+    phạm trên diện rộng</b>, và không phải do lập trình viên nào viết sai một dòng, mà do <em>ba
+    dòng không được viết</em>. Đây cũng là lý do các con số ở mục 2.5 chỉ là phần nổi: chúng đếm
+    những chỗ có người <em>chủ động</em> viết <code>text-[13px]</code>. Phần chìm lớn hơn nhiều
+    và không đếm được bằng cách tìm chuỗi.
+  </p>
+</div>
+
+<p>Sửa bằng cách khai đủ trong <code>antd-theme.ts</code> <span class="chip should">đề xuất</span>:</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Token AntD</th><th>Đang là</th><th>Đề xuất</th><th>Vì sao</th></tr></thead>
+  <tbody>
+    <tr><td><code>fontSize</code></td><td class="so">14 (mặc định)</td><td class="so">16</td><td>Sàn T2. Kéo theo cả thang <code>fontSizeSM/LG/XL</code> của AntD lên tương ứng.</td></tr>
+    <tr><td><code>lineHeight</code></td><td class="so">1,5714 (mặc định)</td><td class="so">1,5</td><td>Ở 16px cho ra 24px chẵn, khớp bậc k5. Vẫn ≥1,45 theo luật dấu chồng tầng.</td></tr>
+    <tr><td><code>controlHeight</code></td><td class="so">32 (mặc định)</td><td class="so">44</td><td>Ngưỡng chạm. Đây là token gốc — <code>controlHeightSM/LG</code> suy ra từ nó.</td></tr>
+    <tr><td><code>controlHeightSM</code></td><td class="so">24 (suy ra)</td><td class="so">44</td><td><b>Không</b> để AntD tự suy. Mọi <code>size="small"</code> hiện có trong mã (ví dụ nút Sửa ở <code>person-profile-header.tsx</code>) sẽ ra 24px — dưới cả ngưỡng tối thiểu 24px của WCAG 2.5.8.</td></tr>
+    <tr><td><code>borderRadius</code></td><td class="so">8 (đã khai)</td><td class="so">8</td><td>Giữ nguyên.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Cái giá — và nó không nhỏ</p>
+  <p>
+    <b>Mọi màn hình dày đặc sẽ vỡ bố cục một lượt.</b> Nâng <code>controlHeight</code> từ 32 lên
+    44 là cộng <b>12px cho mỗi điều khiển</b>. Biểu mẫu hồ sơ người có sáu tầng tên cộng ngày
+    sinh/mất âm–dương cộng liên kết quan hệ — ước chừng hơn hai chục điều khiển, tức trang dài
+    thêm khoảng <b>240–300px</b>. Thanh công cụ phả đồ (hai cụm <code>Segmented</code> + nút +
+    thẻ đếm) sẽ không còn vừa một hàng trên điện thoại 393px và phải xuống dòng.
+  </p>
+  <p>
+    <b>Đây là việc phải làm một lần, sớm, và làm dứt điểm.</b> Càng nhiều màn hình được dựng trên
+    nền 32px thì càng đắt. Thời điểm rẻ nhất là bây giờ, khi F6–F9 chưa dựng.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> con số 14 và 32 là <em>giá trị mặc định đã biết của Ant Design v5</em>,
+    suy ra từ việc <code>antd-theme.ts</code> không ghi đè chúng — <b>không phải số đo được từ
+    trình duyệt</b>. Trước khi lấy đó làm căn cứ cho một đợt sửa lớn, cần <code>qa-tester</code>
+    xác nhận bằng cách đo <code>getComputedStyle</code> trên một nút và một ô nhập thật.
+    Nếu một bản vá hoặc một <code>ConfigProvider</code> lồng bên trong đã đổi giá trị này thì
+    toàn bộ mục 2.6 phải viết lại.
+  </p>
+</div>
+
+<h3>2.7 · px cứng làm vô hiệu hoá cỡ chữ hệ điều hành</h3>
+
+<p>
+  00 §2.1 cấm làm “chế độ người già”, và thay vào đó giao phó cho hai thứ: mặc định đã rộng rãi
+  sẵn, và <b>tôn trọng cỡ chữ hệ điều hành</b>. Vế thứ hai hiện <b>không hoạt động</b>.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Đo được</th><th>Số</th><th>Nghĩa</th></tr></thead>
+  <tbody>
+    <tr><td>Cỡ chữ viết cứng bằng px trong <code>src/components/</code></td><td class="so">124</td><td>Không co giãn theo thiết lập người dùng</td></tr>
+    <tr><td>Giá trị dùng <code>rem</code> trong <code>src/components/</code></td><td class="so">12</td><td>Chưa tới 10% tổng số</td></tr>
+    <tr><td>Khai <code>font-size</code> cho <code>html</code> trong <code>globals.css</code></td><td class="so">0</td><td>Điểm này thì <b>đúng</b> — xem dưới</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Hệ quả cụ thể: một cụ trong Hội đồng đặt cỡ chữ trình duyệt lên 130% sẽ thấy
+  <b>gần như không có gì thay đổi</b> — tên người trên phả đồ vẫn 13px, nhãn điều hướng vẫn
+  10,5px, thông báo lỗi biểu mẫu vẫn 12px. Người đó không kết luận “sản phẩm không hỗ trợ”; người
+  đó kết luận <b>“mắt mình kém quá”</b>. Đó là kết cục tệ nhất có thể của một quyết định kỹ thuật.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Đề xuất: thang chữ khai bằng <code>rem</code>, khoảng cách giữ bằng <code>px</code></p>
+  <p>
+    Không phải mọi thứ đều nên đổi sang <code>rem</code>. Ranh giới rõ ràng:
+  </p>
+  <ul>
+    <li><b>Dùng <code>rem</code>:</b> cỡ chữ, chiều cao dòng, chiều cao tối thiểu của thứ chứa chữ (nút, ô nhập, hàng danh sách). Những thứ này <em>phải</em> lớn lên cùng chữ, nếu không chữ sẽ tràn ra ngoài hộp.</li>
+    <li><b>Giữ <code>px</code>:</b> bề dày viền, bán kính bo góc, độ dày vòng tiêu điểm, độ lệch bóng, và <b>toàn bộ hình học phả đồ</b> trong <code>layout-constants.ts</code> — vì đó là toạ độ trong không gian canvas đã có phép phóng riêng, không liên quan tới cỡ chữ hệ thống.</li>
+    <li><b>Tuyệt đối không khai <code>html { font-size: 62.5% }</code></b> (thủ thuật “1rem = 10px” quen thuộc). Nó nhân thiết lập của người dùng với 0,625 và <em>chính là</em> cách vô hiệu hoá cỡ chữ hệ điều hành. Hiện <code>globals.css</code> không khai gì cả — <b>đó là trạng thái đúng</b>, cần giữ.</li>
+  </ul>
+  <p>Thang ở mục 2.2 quy đổi: T2 = <code>1rem</code> · T1 = <code>1.0625rem</code> · D4 = <code>1.125rem</code> · D3 = <code>1.3125rem</code> · D2 = <code>1.625rem</code> · D1 = <code>2rem</code> · P1 = <code>0.875rem</code>.</p>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Cái giá của việc chuyển sang rem</p>
+  <p>
+    <b>1 · Bố cục vỡ ở cỡ chữ lớn, và vỡ ở chỗ khó đoán.</b> Khi mọi cỡ chữ co giãn còn khoảng
+    cách thì không, một người để 200% sẽ thấy chữ tràn khỏi thẻ, hai dòng dính vào nhau, thẻ phả
+    đồ không chứa nổi tên. Chuyển sang <code>rem</code> <b>không</b> tự nó làm sản phẩm co giãn
+    tốt — nó chỉ làm cho việc co giãn <em>xảy ra</em>. Muốn nó xảy ra êm thì mọi hộp chứa chữ
+    phải chuyển từ chiều cao cố định sang <code>min-height</code> + tự giãn, và đó mới là phần
+    việc lớn.
+  </p>
+  <p>
+    <b>2 · Phả đồ là ngoại lệ thật sự, không phải ngoại lệ tiện tay.</b> Thẻ nhân khẩu có kích
+    thước cố định vì <em>thuật toán bố cục</em> (dagre/d3/ma trận) cần biết trước bề rộng để tính
+    toạ độ — <code>layout-constants.ts</code> nói rõ điều này. Nếu cỡ chữ hệ thống làm thẻ cao
+    lên mà hằng số bố cục không đổi thì đường nối sẽ chui dưới thẻ, đúng lỗi cũ đã phải chữa.
+    Lối ra <b>không</b> phải là bỏ mặc phả đồ ở px, mà là <b>đọc cỡ chữ gốc lúc chạy rồi truyền
+    vào hàm bố cục</b> <span class="chip should">đề xuất</span> — phức tạp hơn hẳn, và là hạng mục
+    riêng cần ước lượng riêng.
+  </p>
+  <p>
+    <b>3 · Chỗ có thể sai — và đây là chỗ dễ hứa hão nhất.</b> <code>rem</code> tôn trọng thiết
+    lập cỡ chữ của <em>trình duyệt</em>. Trên Chrome Android và trên trình duyệt máy tính, thiết
+    lập cỡ chữ hệ điều hành có tác động tới giá trị đó. Trên <b>iOS Safari thì không</b>:
+    Dynamic Type của iOS <em>không</em> làm đổi cỡ gốc của trang web. Sản phẩm là PWA và người
+    dùng chính là kiều bào dùng điện thoại — trong đó một phần đáng kể dùng iPhone. Nghĩa là
+    <b>chuyển sang <code>rem</code> sẽ không phục vụ được toàn bộ nhóm người dùng như câu chữ
+    gợi ý.</b> Với iOS, thứ thực sự có tác dụng là cỡ mặc định đủ lớn ngay từ đầu (mục 2.2) cộng
+    tuỳ chọn mật độ trong chính sản phẩm (mục 5). <b>Phải nói điều này ra</b>, chứ không được để
+    “đã dùng rem” trở thành lời bảo đảm mà nó không gánh nổi.
+  </p>
+</div>
+
+<h2>3. Khoảng cách, lưới, bo góc, đổ bóng</h2>
+
+<h3>3.1 · Thang khoảng cách</h3>
+
+<p>
+  Đơn vị gốc <b>4px</b>. Sản phẩm hiện đã dùng thang mặc định của Tailwind (tức bội số 4px), nhưng
+  rải đều trên cả nửa bậc (<code>gap-0.5</code> = 2px, <code>mt-1.5</code> = 6px) nên trên thực tế
+  là một thang 2px — quá dày để tạo được nhịp.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bậc</th><th>px</th><th>Vai trò</th><th>Ví dụ</th></tr></thead>
+  <tbody>
+    <tr><td><b>k0</b></td><td class="so">2</td><td>Chỉ để tách chữ khỏi biểu tượng cùng dòng</td><td>chấm trạng thái ↔ nhãn</td></tr>
+    <tr><td><b>k1</b></td><td class="so">4</td><td>Trong cùng một cụm chữ</td><td>tên ↔ Hán-Nôm</td></tr>
+    <tr><td><b>k2</b></td><td class="so">8</td><td><b>Khoảng cách tối thiểu giữa hai thứ bấm được</b> (mục 1.8)</td><td>badge ↔ badge</td></tr>
+    <tr><td><b>k3</b></td><td class="so">12</td><td>Giữa các dòng trong một thẻ</td><td>nhãn ↔ giá trị</td></tr>
+    <tr><td><b>k4</b></td><td class="so">16</td><td>Đệm trong thẻ (điện thoại); giữa hai thẻ trong danh sách</td><td>thẻ kết quả tìm kiếm</td></tr>
+    <tr><td><b>k5</b></td><td class="so">24</td><td>Đệm trong thẻ (màn rộng); giữa hai mục của hồ sơ</td><td>mục “Quan hệ thân tộc”</td></tr>
+    <tr><td><b>k6</b></td><td class="so">32</td><td>Giữa hai khối lớn của trang</td><td>đầu trang ↔ nội dung</td></tr>
+    <tr><td><b>k7</b></td><td class="so">48</td><td>Giữa hai vùng chức năng khác nhau</td><td>nội dung ↔ chân trang</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Luật một-nhịp:</b> trong một khối, khoảng cách <em>bên trong</em> phải nhỏ hơn hẳn khoảng cách
+  <em>bên ngoài</em> — cách ít nhất hai bậc. Nếu nhãn cách giá trị 12px (k3) thì thẻ này phải cách
+  thẻ kia ít nhất 24px (k5). Không cách hai bậc thì mắt không nhóm được, và mọi thứ trông như một
+  danh sách phẳng.
+</p>
+
+<h3>3.2 · Viền, nền hay bóng — chọn <em>một</em></h3>
+
+<p>
+  Đây là chỗ hệ thống thiết kế hay tự phá mình. Ba thứ — viền, nền khác, đổ bóng — đều nói cùng
+  một câu: <em>“đây là một vật thể riêng”</em>. Dùng cả ba cùng lúc không làm câu đó mạnh hơn; nó
+  làm mọi vật thể trông ngang nhau, và thứ bậc biến mất.
+</p>
+
+<figure>
+<svg viewBox="0 0 940 260" role="img" aria-label="Bốn mức nổi: phẳng, viền, nền, bóng — và một phản ví dụ dùng cả ba">
+  <rect x="0" y="0" width="940" height="200" rx="8" fill="#f8f6f2"/>
+
+  <text class="wf-chu" x="20" y="30" font-weight="600">M0 · Phẳng</text>
+  <rect x="20" y="42" width="190" height="86" rx="8" fill="none"/>
+  <text class="wf-phu" x="20" y="62">Nội dung nằm thẳng trên trang.</text>
+  <text class="wf-phu" x="20" y="78">Không tín hiệu nào.</text>
+  <text class="wf-phu" x="20" y="150">Dùng cho: đoạn văn, danh sách</text>
+  <text class="wf-phu" x="20" y="166">trong một khối đã có ranh giới.</text>
+
+  <text class="wf-chu" x="245" y="30" font-weight="600">M1 · Viền</text>
+  <rect x="245" y="42" width="190" height="86" rx="8" fill="none" stroke="#e6dfd5" stroke-width="1.5"/>
+  <text class="wf-phu" x="257" y="70">Cùng mặt phẳng với trang,</text>
+  <text class="wf-phu" x="257" y="86">chỉ là một vùng khoanh lại.</text>
+  <text class="wf-phu" x="245" y="150">Dùng cho: nhóm ô nhập, thẻ</text>
+  <text class="wf-phu" x="245" y="166">không bấm được, khối chú thích.</text>
+
+  <text class="wf-chu" x="470" y="30" font-weight="600">M2 · Nền</text>
+  <rect x="470" y="42" width="190" height="86" rx="8" fill="#ffffff"/>
+  <text class="wf-phu" x="482" y="70">Vật liệu khác với trang.</text>
+  <text class="wf-phu" x="482" y="86">Vẫn nằm trên trang.</text>
+  <text class="wf-phu" x="470" y="150">Dùng cho: thẻ nội dung, hàng</text>
+  <text class="wf-phu" x="470" y="166">danh sách, thẻ hồ sơ người.</text>
+
+  <text class="wf-chu" x="695" y="30" font-weight="600">M3 · Nền + bóng</text>
+  <rect x="697" y="46" width="190" height="86" rx="8" fill="#cdbeaa" opacity="0.30"/>
+  <rect x="695" y="42" width="190" height="86" rx="8" fill="#ffffff"/>
+  <text class="wf-phu" x="707" y="70">Nổi LÊN TRÊN trang.</text>
+  <text class="wf-phu" x="707" y="86">Đè lên thứ khác.</text>
+  <text class="wf-phu" x="695" y="150">Dùng cho: hộp thoại, ngăn kéo,</text>
+  <text class="wf-phu" x="695" y="166">chú giải phả đồ, menu bật ra.</text>
+
+  <rect x="0" y="212" width="940" height="48" rx="6" fill="#fbeae9"/>
+  <text x="16" y="232" font-family="Be Vietnam Pro" font-size="13" font-weight="600" fill="#b91c1c">Phản ví dụ: viền + nền khác + bóng cùng lúc trên MỌI thẻ</text>
+  <text x="16" y="250" font-family="Be Vietnam Pro" font-size="12" fill="#b91c1c">Khi mọi thứ đều nổi thì không gì nổi. Người dùng mất khả năng đoán cái nào bấm được, cái nào đè lên cái nào.</text>
+</svg>
+<figcaption><strong>Hình 7.</strong> Bốn mức nổi. Một thành phần chọn <b>đúng một</b> mức và giữ nguyên; đổi mức là nói rằng bản chất của nó đã đổi.</figcaption>
+</figure>
+
+<div class="khoi chot">
+  <p class="nhan">Luật chọn mức nổi</p>
+  <ul>
+    <li><b>M1 (viền) khi vật thể không rời khỏi mặt phẳng trang.</b> Nhóm ô nhập, khối chú thích, bảng.</li>
+    <li><b>M2 (nền) khi vật thể là một mẩu <em>nội dung độc lập</em>.</b> Thẻ người, thẻ sự kiện, hàng kết quả tìm kiếm.</li>
+    <li><b>M3 (nền + bóng) CHỈ khi vật thể đè lên thứ khác.</b> Hộp thoại, ngăn kéo hồ sơ, chú giải phả đồ, menu bật ra. Bóng là ngôn ngữ của trục z, không phải trang trí.</li>
+    <li><b>Không bao giờ M1+M3.</b> Đã nổi lên rồi thì không cần khoanh vùng nữa.</li>
+    <li><b>Ngoại lệ duy nhất là M2+M1 nhạt</b> — và chỉ vì lý do đo được: <code>bgCard</code> so với <code>bgPage</code> chỉ 1,08:1, mắt gần như không thấy. Viền ở đây không phải để trang trí mà để <em>bù</em> cho một nền quá gần nhau. Nếu về sau đổi <code>bgPage</code> hoặc <code>bgCard</code> để chênh ≥1,3:1 thì bỏ viền đi.</li>
+  </ul>
+</div>
+
+<h3>3.3 · Bo góc</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bán kính</th><th>Dùng cho</th><th>Hiện trạng trong sản phẩm</th></tr></thead>
+  <tbody>
+    <tr><td class="so">4px</td><td>Badge, chip, thẻ nhỏ</td><td>Ant Design tự lo</td></tr>
+    <tr><td class="so">8px</td><td>Nút, ô nhập, thẻ nội dung, thẻ phả đồ</td><td><code>antd-theme.ts</code> đặt <code>borderRadius: 8</code>; Tailwind <code>rounded</code> cũng ghi đè thành 8px</td></tr>
+    <tr><td class="so">12px</td><td>Hộp thoại, ngăn kéo, khối lớn</td><td><span class="chip should">đề xuất</span> — chưa có</td></tr>
+    <tr><td class="so">tròn</td><td>Chấm trạng thái, avatar, nút bung nhánh</td><td><code>rounded-full</code>, 8 lần</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Một va chạm nhỏ nhưng gây nhầm</p>
+  <p>
+    <code>tailwind.config.ts</code> ghi đè <code>borderRadius.DEFAULT</code> thành 8px. Nhưng
+    <code>rounded-lg</code> của Tailwind <em>cũng</em> là 8px. Nghĩa là <code>rounded</code> và
+    <code>rounded-lg</code> hiện cho ra kết quả <b>y hệt nhau</b>, trong khi tên gọi ngụ ý khác
+    nhau — sản phẩm dùng <code>rounded-lg</code> 25 lần và <code>rounded</code> 10 lần, có lẽ với
+    ý định phân biệt. Ngoài ra <code>person-node.tsx</code> là chỗ <b>duy nhất</b> dùng
+    <code>rounded-md</code> (6px), nên thẻ phả đồ đang bo góc khác mọi thẻ khác 2px.
+  </p>
+  <p>
+    <b>Đề xuất:</b> khai đủ ba bậc trong <code>tailwind.config.ts</code>
+    (<code>sm: 4px</code>, <code>DEFAULT/lg: 8px</code>, <code>xl: 12px</code>) và sửa thẻ phả đồ
+    về 8px. <b>Cái giá:</b> gần như bằng không — nhưng cũng gần như không ai nhận ra. Đây là hạng
+    mục ưu tiên thấp nhất trong tài liệu này; nêu ra để nó không âm thầm sinh sôi.
+  </p>
+</div>
+
+<h3>3.4 · Đổ bóng</h3>
+
+<p>
+  Ba bậc, không hơn. Bóng dùng <code>borderDark #cdbeaa</code> pha loãng thay vì đen thuần — bóng
+  đen trên nền kem ấm cho ra viền xám lạnh, phá tông.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bậc</th><th>Giá trị đề xuất</th><th>Dùng cho</th></tr></thead>
+  <tbody>
+    <tr><td><b>b1</b></td><td><code>0 1px 2px rgba(205,190,170,.45)</code></td><td>Hầu như không dùng. Chỉ cho nút nổi trên nền ảnh.</td></tr>
+    <tr><td><b>b2</b></td><td><code>0 4px 12px rgba(205,190,170,.55)</code></td><td>Chú giải phả đồ, menu bật ra, thẻ đang kéo.</td></tr>
+    <tr><td><b>b3</b></td><td><code>0 12px 32px rgba(43,40,37,.22)</code></td><td>Hộp thoại, ngăn kéo hồ sơ. Bậc duy nhất dùng sắc mực.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Cái giá</p>
+  <p>
+    Bóng ấm (pha <code>#cdbeaa</code>) <b>gần như vô hình trên nền kem</b> — <code>borderDark</code>
+    so với <code>bgPage</code> chỉ 1,69:1. Nó giữ được tông ấm nhưng gần như không truyền tải được
+    độ nổi. Đó là lý do b3 (hộp thoại) phải đổi sang sắc mực: hộp thoại là nơi <em>bắt buộc</em>
+    người dùng phải nhận ra rằng phần nền phía sau đã bị khoá — thứ mà 00 §2.4 (“không thao tác
+    khó thu hồi nào diễn ra trong im lặng”) phụ thuộc vào.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> đánh đổi này chưa được kiểm chứng trên màn hình thật kém tương phản
+    (điện thoại giá rẻ, màn hình ngoài trời). Nếu b2 hoá ra vô hình trong thực tế, phương án dự
+    phòng là <b>thay bóng bằng viền <code>borderDark</code> 1px</b> cho lớp M3 — kém sang hơn,
+    nhưng nhìn thấy được.
+  </p>
+</div>
+
+<h3>3.5 · Lưới và hình học phả đồ</h3>
+
+<p>
+  Phả đồ không nằm trên lưới của trang; nó có hệ hình học riêng, khai trong
+  <code>frontend/src/lib/tree/layout-constants.ts</code>. Các số này <b>đang chạy thật</b>:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hằng số</th><th>Giá trị</th><th>Nghĩa</th></tr></thead>
+  <tbody>
+    <tr><td><code>NODE_WIDTH</code> × <code>NODE_HEIGHT</code></td><td class="so">208 × 96</td><td>Kích thước thẻ một nhân khẩu</td></tr>
+    <tr><td><code>COUPLE_GAP</code></td><td class="so">48</td><td>Khe giữa hai vợ chồng — <b>đồng thời là hành lang</b> cho đường rơi xuống con đi qua</td></tr>
+    <tr><td><code>FAMILY_GAP</code></td><td class="so">80</td><td>Khe giữa hai gia đình khác nhau</td></tr>
+    <tr><td><code>HIERARCHICAL_NODE_SEP</code></td><td class="so">32</td><td>Khe giữa hai anh em ruột</td></tr>
+    <tr><td><code>FAMILY_RANK_SEP</code></td><td class="so">128</td><td>Khoảng cách giữa hai đời</td></tr>
+    <tr><td><code>SIBLING_BAR_STAGGER</code></td><td class="so">36</td><td>Độ lệch tầng thanh anh em giữa các bà vợ khác nhau</td></tr>
+    <tr><td><code>RADIAL_RADIUS_STEP</code></td><td class="so">190</td><td>Bước bán kính chế độ xem toả tròn</td></tr>
+    <tr><td><code>MATRIX_ROW_HEIGHT</code></td><td class="so">192</td><td>= <code>NODE_HEIGHT</code> + 96, chiều cao hàng ma trận thế hệ</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Hai tỉ lệ phải giữ, không phải hai con số phải giữ</p>
+  <p>
+    Ghi chú trong chính <code>layout-constants.ts</code> nói rõ hai ràng buộc, và chúng là
+    <em>quan hệ</em> chứ không phải trị tuyệt đối:
+  </p>
+  <ol>
+    <li><b><code>FAMILY_GAP</code> (80) phải lớn hơn hẳn <code>HIERARCHICAL_NODE_SEP</code> (32)</b> — tỉ lệ 2,5×. Nếu không, các nhóm con dính vào nhau thành một dải liền và ranh giới gia đình biến mất. Đây chính là “luật một-nhịp” ở mục 3.1, áp cho phả đồ.</li>
+    <li><b><code>COUPLE_GAP</code> (48) không được thu hẹp</b> — nó là hành lang cho đường nối xuống con. Thu nó lại là làm hỏng chính cơ chế đã chữa được lỗi “đường nối chui dưới thẻ”.</li>
+  </ol>
+  <p>
+    Hệ quả cho đề xuất tăng thẻ lên 240×112 (mục 2.5): <b><code>FAMILY_GAP</code> phải tăng theo
+    cùng tỉ lệ</b>, tức 80 → 92 <span class="chip should">đề xuất</span>, nếu không tỉ lệ 2,5×
+    tụt xuống còn 2,2× và ranh giới gia đình mờ đi. <b>Chỗ có thể sai:</b> tỉ lệ 2,5× là suy ra
+    từ các số đang chạy chứ không phải một hằng số được kiểm chứng; con số đúng phải tìm bằng cách
+    xem phả đồ thật ở dữ liệu <code>demo/</code>.
+  </p>
+</div>
+
+<h2>4. Kho thành phần</h2>
+
+<p>
+  Kiểm kê <b>60 tệp</b> trong <code>frontend/src/components/</code>, nhóm theo miền. Mỗi thành
+  phần được soi qua <b>bảy trạng thái bắt buộc</b>. Ô trống nghĩa là trạng thái đó
+  <em>chưa được xử lý</em> — không phải “không cần”.
+</p>
+
+<h3>4.1 · Bảy trạng thái bắt buộc</h3>
+
+<figure>
+<svg viewBox="0 0 940 210" role="img" aria-label="Bảy trạng thái chuẩn của một nút">
+  <text class="wf-chu" x="0" y="12" font-weight="600">Nút chính — bảy trạng thái</text>
+
+  <rect x="0" y="26" width="126" height="44" rx="8" fill="#8c2d19"/>
+  <text x="20" y="53" font-family="Be Vietnam Pro" font-size="16" fill="#ffffff">Lưu thay đổi</text>
+  <text class="wf-phu" x="0" y="86">1 · Bình thường</text>
+  <text class="wf-phu" x="0" y="100">nền primary, chữ 16px</text>
+
+  <rect x="146" y="26" width="126" height="44" rx="8" fill="#661e0f"/>
+  <text x="166" y="53" font-family="Be Vietnam Pro" font-size="16" fill="#ffffff">Lưu thay đổi</text>
+  <text class="wf-phu" x="146" y="86">2 · Di chuột</text>
+  <text class="wf-phu" x="146" y="100">ĐẬM lên, không nhạt đi</text>
+
+  <rect x="296" y="30" width="126" height="44" rx="8" fill="#8c2d19"/>
+  <rect x="292" y="26" width="134" height="52" rx="10" fill="none" stroke="#ffffff" stroke-width="4"/>
+  <rect x="290" y="24" width="138" height="56" rx="11" fill="none" stroke="#2b2825" stroke-width="2"/>
+  <text x="316" y="57" font-family="Be Vietnam Pro" font-size="16" fill="#ffffff">Lưu thay đổi</text>
+  <text class="wf-phu" x="290" y="94">3 · Tiêu điểm bàn phím</text>
+  <text class="wf-phu" x="290" y="108">vòng hai lớp (mục 1.8)</text>
+
+  <rect x="452" y="26" width="126" height="44" rx="8" fill="#8c2d19"/>
+  <circle cx="476" cy="48" r="7" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="22 11"/>
+  <text x="492" y="53" font-family="Be Vietnam Pro" font-size="16" fill="#ffffff">Đang lưu…</text>
+  <text class="wf-phu" x="452" y="86">4 · Đang tải</text>
+  <text class="wf-phu" x="452" y="100">giữ nguyên bề rộng, đổi nhãn</text>
+
+  <rect x="598" y="26" width="126" height="44" rx="8" fill="#e6dfd5"/>
+  <text x="618" y="53" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Lưu thay đổi</text>
+  <text class="wf-phu" x="598" y="86">5 · Vô hiệu</text>
+  <text class="wf-phu" x="598" y="100">phải kèm lý do bằng chữ</text>
+
+  <rect x="744" y="26" width="196" height="44" rx="8" fill="#fbeae9" stroke="#b91c1c" stroke-width="1.5"/>
+  <text x="758" y="53" font-family="Be Vietnam Pro" font-size="15" fill="#b91c1c">Không lưu được — thử lại</text>
+  <text class="wf-phu" x="744" y="86">6 · Lỗi</text>
+  <text class="wf-phu" x="744" y="100">nói việc phải làm, không nói mã lỗi</text>
+
+  <line x1="0" y1="126" x2="940" y2="126" class="wf-net"/>
+  <text class="wf-chu" x="0" y="148" font-weight="600">7 · Rỗng — ba loại rỗng KHÁC NHAU, cấm gộp</text>
+  <rect x="0" y="158" width="300" height="44" rx="8" fill="#ffffff" stroke="#e6dfd5" stroke-dasharray="4 3"/>
+  <text x="14" y="185" font-family="Be Vietnam Pro" font-size="15" fill="#5e564d">Gõ tên để tìm — chưa nhập gì</text>
+  <rect x="320" y="158" width="300" height="44" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <text x="334" y="185" font-family="Be Vietnam Pro" font-size="15" fill="#5e564d">Không tìm thấy ai — đã tìm, rỗng</text>
+  <rect x="640" y="158" width="300" height="44" rx="8" fill="#fbeae9" stroke="#b91c1c"/>
+  <text x="654" y="185" font-family="Be Vietnam Pro" font-size="15" fill="#b91c1c">Không tải được — hỏng, cần thử lại</text>
+</svg>
+<figcaption><strong>Hình 8.</strong> <code>search-result-list.tsx</code> đã tách đúng ba loại rỗng và ghi chú rõ vì sao. Đó là mẫu chuẩn — mọi danh sách khác phải theo.</figcaption>
+</figure>
+
+<div class="khoi chot">
+  <p class="nhan">Ba luật trạng thái riêng của sản phẩm này</p>
+  <ol>
+    <li>
+      <b>“Rỗng” không được lộ chuyện có dữ liệu bị ẩn.</b> Một khách tìm tên người còn sống phải
+      nhận được kết quả rỗng <em>y hệt</em> như khi tìm một cái tên chưa ai trong họ từng mang.
+      <code>search-result-list.tsx</code> và <code>optional-field.tsx</code> đã làm đúng và ghi
+      chú rõ lý do. Đây là luật <b>an toàn dữ liệu</b>, không phải luật thẩm mỹ — không được nới.
+    </li>
+    <li>
+      <b>“Vô hiệu” phải nói lý do.</b> Một nút xám không giải thích được vì sao nó xám là một ngõ
+      cụt, và với người sợ làm hỏng dữ liệu (00 §1) thì đó là lý do để họ bỏ cuộc. Kèm một dòng
+      chữ cạnh nút, không phải một tooltip — trên điện thoại không có tooltip.
+    </li>
+    <li>
+      <b>“Đang tải” không được đổi kích thước.</b> Nút co lại khi chuyển sang trạng thái tải sẽ
+      làm nội dung bên dưới nhảy, và người dùng chạm nhầm. Giữ nguyên bề rộng, chỉ đổi nhãn.
+    </li>
+  </ol>
+</div>
+
+<h3>4.2 · Bảng kiểm kê</h3>
+
+<p>
+  <span class="chip xong">có</span> = đã xử lý ·
+  <span class="chip could">antd</span> = dựa vào mặc định Ant Design ·
+  <span class="chip must">thiếu</span> = chưa có, cần bổ sung ·
+  <span class="chip could">—</span> = không áp dụng.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr>
+      <th>Thành phần</th><th>Bình thường</th><th>Di chuột</th><th>Tiêu điểm</th>
+      <th>Đang tải</th><th>Rỗng</th><th>Lỗi</th><th>Vô hiệu</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="8"><b>Phả đồ</b> — <code>components/tree/</code></td></tr>
+    <tr>
+      <td><code>person-node</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip must">thiếu</span> trên thẻ; nút bung nhánh có</td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>tree-canvas</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip must">thiếu</span> điều hướng bàn phím trên canvas</td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>tree-toolbar</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip must">thiếu</span></td>
+    </tr>
+    <tr>
+      <td><code>tree-legend</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>tree-truncated-banner</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+
+    <tr><td colspan="8"><b>Hồ sơ người</b> — <code>components/person/</code></td></tr>
+    <tr>
+      <td><code>person-profile</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>person-profile-header</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>optional-field</code> · <code>person-section</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span> — biến mất hoàn toàn, đúng luật riêng tư</td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>person-picker</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+    <tr>
+      <td><code>person-profile-drawer</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+
+    <tr><td colspan="8"><b>Biểu mẫu</b> — <code>components/person-form/</code></td></tr>
+    <tr>
+      <td><code>form-field</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span> — <code>role="alert"</code> + <code>aria-describedby</code></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>person-form</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+    <tr>
+      <td><code>death-confirm-dialog</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+    <tr>
+      <td><code>taboo-conflict-dialog</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+    <tr>
+      <td><code>name-layers-field</code> · <code>date-dual-field</code> · <code>relationship-link-field</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+
+    <tr><td colspan="8"><b>Tìm kiếm</b> — <code>components/search/</code></td></tr>
+    <tr>
+      <td><code>search-result-list</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span> — <b>ba loại rỗng tách bạch</b></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>search-result-card</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip must">thiếu</span> — thẻ là <code>&lt;Link&gt;</code>, không có kiểu tiêu điểm</td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>search-box</code> · <code>search-filters</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip must">thiếu</span> — lỗi tải danh sách chi</td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+
+    <tr><td colspan="8"><b>Lịch &amp; sự kiện</b> — <code>components/events/</code></td></tr>
+    <tr>
+      <td><code>event-card</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>events-screen</code> · <code>event-year-calendar</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+
+    <tr><td colspan="8"><b>Thông báo</b> — <code>components/notifications/</code></td></tr>
+    <tr>
+      <td><code>notification-bell</code> · <code>notification-center</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>notification-item</code></td>
+      <td><span class="chip xong">có</span> — “chưa đọc” báo bằng <b>weight + màu</b>, không chỉ màu</td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>push-permission-prompt</code> · <code>push-settings-card</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+
+    <tr><td colspan="8"><b>Khung &amp; điều hướng</b> — <code>components/layout/</code></td></tr>
+    <tr>
+      <td><code>mobile-nav</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip could">—</span></td>
+    </tr>
+    <tr>
+      <td><code>header</code> · <code>auth-menu</code> · <code>language-switcher</code></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">—</span></td>
+      <td><span class="chip must">thiếu</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+
+    <tr><td colspan="8"><b>Danh xưng</b> — <code>components/kinship/</code></td></tr>
+    <tr>
+      <td><code>kinship-lookup</code> và bốn thành phần con</td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip could">antd</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+      <td><span class="chip xong">có</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗ hổng lớn nhất: tiêu điểm bàn phím</p>
+  <p>
+    Trên <b>60 tệp thành phần</b>, chỉ <b>2</b> khai kiểu tiêu điểm riêng
+    (<code>person-node.tsx</code>, <code>tree-legend.tsx</code>) — và cả hai đều dùng vòng hổ
+    phách trượt chuẩn (mục 1.3). Phần còn lại chia hai nhóm:
+  </p>
+  <ul>
+    <li>
+      <b>Widget của Ant Design</b> — có vòng tiêu điểm mặc định, tạm chấp nhận được.
+    </li>
+    <li>
+      <b>Thẻ tự dựng bọc trong <code>&lt;Link&gt;</code></b> — <code>search-result-card</code>,
+      <code>event-card</code>, <code>mobile-nav</code>. Đây là <b>những thứ bấm được lớn nhất và
+      hay dùng nhất trên điện thoại</b>, và chúng chỉ có vòng tiêu điểm mặc định của trình duyệt,
+      thứ mà nhiều bản “CSS reset” xoá mất. Người duyệt phả đồ bằng bàn phím sẽ mất dấu hoàn toàn.
+    </li>
+  </ul>
+  <p>
+    <b>Sửa:</b> áp vòng hai lớp (mục 1.8) thành một lớp tiện ích dùng chung, gắn cho mọi phần tử
+    bấm được không phải widget AntD.
+  </p>
+</div>
+
+<h3>4.3 · Vùng chạm 44×44px — phép tính, không phải nguyện vọng</h3>
+
+<p>
+  00 §2.2 nêu tiền lệ: phả đồ từng mở ở mức phóng 0.21 khiến nút bung nhánh còn 5px. Tiền lệ đó
+  <b>đã được chữa</b> — <code>frontend/src/lib/tree/fit-view.ts</code> đặt
+  <code>MIN_INITIAL_ZOOM = 0.75</code> kèm một đoạn ghi chú giải thích cặn kẽ. Đó là công việc tốt.
+  Nhưng phép tính chưa xong:
+</p>
+
+<figure>
+<svg viewBox="0 0 940 250" role="img" aria-label="Kích thước nút bung nhánh ở các mức phóng khác nhau so với ngưỡng 44px">
+  <line x1="0" y1="150" x2="940" y2="150" class="wf-net"/>
+
+  <rect x="0" y="106" width="44" height="44" rx="22" fill="#eaf6ee" stroke="#15803d" stroke-width="2"/>
+  <text class="wf-phu" x="0" y="170" font-weight="600" fill="#15803d">44px</text>
+  <text class="wf-phu" x="0" y="186">Ngưỡng bắt buộc</text>
+  <text class="wf-phu" x="0" y="200">00 §2.2 · WCAG 2.5.5</text>
+
+  <rect x="150" y="126" width="24" height="24" rx="12" fill="#fdf6e7" stroke="#9c5a06" stroke-width="2"/>
+  <text class="wf-phu" x="150" y="170" font-weight="600" fill="#9c5a06">24px</text>
+  <text class="wf-phu" x="150" y="186">Nút bung nhánh ở mức phóng 1.0</text>
+  <text class="wf-phu" x="150" y="200">person-node.tsx: h-6 w-6</text>
+  <text class="wf-phu" x="150" y="214" fill="#b91c1c">= 55% ngưỡng</text>
+
+  <rect x="330" y="132" width="18" height="18" rx="9" fill="#fbeae9" stroke="#b91c1c" stroke-width="2"/>
+  <text class="wf-phu" x="330" y="170" font-weight="600" fill="#b91c1c">18px</text>
+  <text class="wf-phu" x="330" y="186">ở MỨC PHÓNG MỞ ĐẦU 0.75</text>
+  <text class="wf-phu" x="330" y="200">24 × 0,75 = 18</text>
+  <text class="wf-phu" x="330" y="214" fill="#b91c1c">dưới cả ngưỡng tối thiểu 24px của WCAG 2.5.8</text>
+
+  <rect x="560" y="145" width="5" height="5" rx="2.5" fill="#b91c1c"/>
+  <text class="wf-phu" x="560" y="170" font-weight="600" fill="#b91c1c">5px</text>
+  <text class="wf-phu" x="560" y="186">ở mức 0.21 — tiền lệ đã chữa</text>
+  <text class="wf-phu" x="560" y="200">nhưng nút “Thu toàn cây” vẫn</text>
+  <text class="wf-phu" x="560" y="214">đưa người dùng xuống tận 0.03</text>
+
+  <rect x="740" y="118" width="32" height="32" rx="8" fill="#f8f6f2" stroke="#cdbeaa" stroke-width="2"/>
+  <rect x="790" y="110" width="40" height="40" rx="8" fill="#f8f6f2" stroke="#cdbeaa" stroke-width="2"/>
+  <text class="wf-phu" x="740" y="170" font-weight="600">32px · 40px</text>
+  <text class="wf-phu" x="740" y="186">controlHeight mặc định của AntD</text>
+  <text class="wf-phu" x="740" y="200">và size="large" — cả hai đều</text>
+  <text class="wf-phu" x="740" y="214" fill="#b91c1c">vẫn dưới 44px</text>
+
+  <text class="wf-chu" x="0" y="20" font-weight="600">Cùng một nút, cùng một ngưỡng — bốn kích thước thật</text>
+  <text class="wf-phu" x="0" y="40">Các hình vẽ đúng tỉ lệ với nhau; SVG co giãn theo bề rộng trang nên không phải kích thước thật trên màn hình.</text>
+</svg>
+<figcaption><strong>Hình 9.</strong> Vòng tròn xanh là ngưỡng. Ba hình còn lại là kích thước thật của nút bung nhánh phả đồ ở ba mức phóng, đọc từ <code>person-node.tsx</code> (<code>h-6 w-6</code>) và <code>fit-view.ts</code>.</figcaption>
+</figure>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Nơi</th><th>Kích thước thật</th><th>So với 44px</th><th>Nguồn</th></tr></thead>
+  <tbody>
+    <tr><td>Nút bung/thu nhánh trên thẻ phả đồ (mức phóng 1.0)</td><td class="so">24 × 24</td><td class="xau">55%</td><td><code>person-node.tsx</code>, <code>h-6 w-6</code></td></tr>
+    <tr><td>Cùng nút đó ở mức phóng mở đầu</td><td class="so">18 × 18</td><td class="xau">41%</td><td>24 × <code>MIN_INITIAL_ZOOM</code> 0,75</td></tr>
+    <tr><td>Nút “Thu toàn cây”</td><td class="so">≥ 44 cao</td><td class="tot">Đạt</td><td><code>tree-toolbar.tsx</code>, <code>!min-h-11</code></td></tr>
+    <tr><td>Nút mở/thu chú giải phả đồ</td><td class="so">~20 cao</td><td class="xau">45%</td><td><code>tree-legend.tsx</code>, chữ 11px + <code>px-0.5</code></td></tr>
+    <tr><td>Nút chuyển ngôn ngữ</td><td class="so">24 cao</td><td class="xau">55%</td><td><code>language-switcher.tsx</code>, <code>size="small"</code></td></tr>
+    <tr><td>Nút “Sửa” trên đầu hồ sơ</td><td class="so">24 cao</td><td class="xau">55%</td><td><code>person-profile-header.tsx</code>, <code>size="small"</code></td></tr>
+    <tr><td>Mục thanh điều hướng đáy</td><td class="so">~56 cao × ~72 rộng</td><td class="tot">Đạt</td><td><code>mobile-nav.tsx</code>, <code>py-2</code> + biểu tượng + nhãn</td></tr>
+    <tr><td>Mọi nút/ô nhập cỡ mặc định của AntD</td><td class="so">32 cao</td><td class="xau">73%</td><td><code>controlHeight</code> không khai (mục 2.6)</td></tr>
+    <tr><td>Mọi <code>size="large"</code> của AntD</td><td class="so">40 cao</td><td class="xau">91%</td><td><code>controlHeightLG</code> suy ra</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Điều đáng lo nhất: “gần đạt” khó phát hiện hơn “sai hẳn”</p>
+  <p>
+    Con số 40px của <code>size="large"</code> là loại lỗi nguy hiểm nhất. Nó <em>trông</em> ổn,
+    nó qua được mọi lần xem mắt thường, nó chỉ hụt 4px — và <code>tree-toolbar.tsx</code> cho
+    thấy có người trong đội đã <b>nhận ra chính xác điều này</b>, vì họ viết
+    <code>size="large"</code> <em>cộng thêm</em> <code>!min-h-11</code> kèm bình luận giải thích
+    “40px chưa đủ, cần 44px”. Nhưng cách chữa đó chỉ áp cho <b>đúng một nút</b> trong toàn sản
+    phẩm.
+  </p>
+  <p>
+    Bài học đúng không phải là “đi thêm <code>!min-h-11</code> vào mọi nút” — đó là việc sẽ làm
+    được 80% rồi quên. Bài học là <b>sửa ở gốc</b>: đặt <code>controlHeight: 44</code> và
+    <code>controlHeightSM: 44</code> trong <code>antd-theme.ts</code> (mục 2.6), rồi xoá các bản
+    vá lẻ đi.
+  </p>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Nút bung nhánh: đề xuất cụ thể</p>
+  <p>
+    Nút này không thể chỉ phóng to lên 44px, vì ở mức phóng 0,75 nó vẫn chỉ còn 33px, và ở mức
+    “Thu toàn cây” thì còn vài điểm ảnh. Vấn đề gốc là <b>nó sống trong không gian canvas, nên nó
+    co theo phép phóng, trong khi ngón tay người dùng thì không co</b>.
+  </p>
+  <p>Ba hướng, kèm cái giá:</p>
+  <ol>
+    <li>
+      <b>Vùng chạm nghịch đảo phép phóng</b> <span class="chip should">đề xuất</span> — giữ hình
+      vẽ 24px nhưng đặt một vùng chạm trong suốt cỡ <code>44 / zoom</code> px quanh nó, để kích
+      thước <em>trên màn hình</em> luôn là 44px. <b>Giá:</b> ở mức phóng nhỏ, vùng chạm của các
+      nút liền kề sẽ chồng lên nhau và lên cả thẻ bên cạnh — phải kèm quy tắc “khi vùng chạm
+      chồng nhau thì tắt hết, chỉ cho bung nhánh bằng cách chạm vào thẻ”.
+    </li>
+    <li>
+      <b>Bung nhánh bằng cách chạm vào chính thẻ</b> — thẻ ở mức 0,75 là 156×72px, thừa ngưỡng.
+      <b>Giá:</b> mất phân biệt giữa “xem hồ sơ” và “bung nhánh”, mà cả hai đều là thao tác chính.
+      Phải chuyển “xem hồ sơ” sang chạm lâu hoặc chạm hai lần — cả hai đều là quy ước học được,
+      vi phạm 00 §2.3.
+    </li>
+    <li>
+      <b>Đặt sàn phóng cho <em>thao tác</em> chứ không cho <em>hiển thị</em></b> — dưới một mức
+      phóng nào đó thì canvas chuyển hẳn sang chế độ chỉ xem, và hiện một dải chữ nói rõ
+      “đang xem toàn cảnh — phóng to để chỉnh sửa”. <b>Giá:</b> thêm một khái niệm chế độ mà
+      người dùng phải hiểu.
+    </li>
+  </ol>
+  <p>
+    <b>Chỗ có thể sai:</b> tài liệu này nghiêng về hướng 1, nhưng cả ba đều chưa được thử trên
+    thiết bị thật. Đây là hạng mục phải <b>giao cho <code>qa-tester</code> đo trên máy thật</b>
+    trước khi chốt — số trong bảng trên là tính từ mã nguồn, không phải đo từ màn hình.
+  </p>
+</div>
+
+<h2>5. Ba mật độ hiển thị</h2>
+
+<p>
+  00 §2.1 cấm dứt khoát “chế độ người già”, nhưng cho phép tuỳ chọn <b>mật độ</b> đặt tên theo
+  mật độ: <b>Thoáng · Vừa · Gọn</b>. Đây là chỗ dễ làm sai theo hai hướng ngược nhau — hoặc biến
+  “Thoáng” thành chế độ người già trá hình, hoặc để “Gọn” phá sàn tiếp cận.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Luật gốc: sàn không đổi theo mật độ</p>
+  <p>Ba thứ sau <b>giống hệt nhau ở cả ba mật độ</b>, không có ngoại lệ:</p>
+  <ul>
+    <li><b>Cỡ chữ thân bài 16px</b> (T2). Gọn <em>không</em> được thu chữ.</li>
+    <li><b>Vùng chạm 44×44px.</b> Gọn <em>không</em> được thu nút.</li>
+    <li><b>Tương phản, vòng tiêu điểm, quy tắc hiển thị tên người.</b></li>
+  </ul>
+  <p>
+    Nếu ba thứ này không đổi thì mật độ <b>chỉ có thể</b> điều chỉnh khoảng trắng và số lượng
+    thông tin phụ. Đó chính là điều làm cho tuỳ chọn này an toàn — và cũng là điều làm cho nó
+    <em>kém hiệu lực hơn người ta tưởng</em> (xem “Cái giá” cuối mục).
+  </p>
+</div>
+
+<h3>5.1 · Bảng ba mật độ</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Thuộc tính</th><th>Thoáng</th><th><b>Vừa</b> (mặc định)</th><th>Gọn</th></tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="4"><b>Không đổi — sàn tiếp cận</b></td></tr>
+    <tr><td>Cỡ chữ thân bài (T2)</td><td class="so">16px</td><td class="so">16px</td><td class="so">16px</td></tr>
+    <tr><td>Cỡ nội dung chính (T1)</td><td class="so">17px</td><td class="so">17px</td><td class="so">17px</td></tr>
+    <tr><td>Vùng chạm tối thiểu</td><td class="so">44px</td><td class="so">44px</td><td class="so">44px</td></tr>
+    <tr><td>Khe tối thiểu giữa hai thứ bấm được</td><td class="so">8px</td><td class="so">8px</td><td class="so">8px</td></tr>
+    <tr><td>Thẻ nhân khẩu trên phả đồ</td><td class="so">240×112</td><td class="so">240×112</td><td class="so">240×112</td></tr>
+    <tr><td>Vòng tiêu điểm, tương phản, quy tắc tên</td><td colspan="3">Giống hệt nhau</td></tr>
+
+    <tr><td colspan="4"><b>Đổi — khoảng trắng</b></td></tr>
+    <tr><td>Đệm trong thẻ</td><td class="so">24px (k5)</td><td class="so">16px (k4)</td><td class="so">12px (k3)</td></tr>
+    <tr><td>Khe giữa hai thẻ trong danh sách</td><td class="so">16px (k4)</td><td class="so">12px (k3)</td><td class="so">8px (k2)</td></tr>
+    <tr><td>Chiều cao dòng thân bài</td><td class="so">1,7</td><td class="so">1,5</td><td class="so">1,45</td></tr>
+    <tr><td>Khe giữa hai mục của hồ sơ</td><td class="so">32px (k6)</td><td class="so">24px (k5)</td><td class="so">16px (k4)</td></tr>
+    <tr><td>Chiều cao điều khiển</td><td class="so">52px</td><td class="so">44px</td><td class="so">44px</td></tr>
+    <tr><td>Đường kính avatar (hồ sơ)</td><td class="so">88px</td><td class="so">72px</td><td class="so">56px</td></tr>
+
+    <tr><td colspan="4"><b>Đổi — lượng thông tin phụ</b></td></tr>
+    <tr><td>Ảnh chân dung trong danh sách</td><td>Có</td><td>Có</td><td>Không</td></tr>
+    <tr><td>Dòng phụ thứ hai trên thẻ kết quả (quê quán)</td><td>Có</td><td>Có</td><td>Không</td></tr>
+    <tr><td>Chú giải phả đồ</td><td>Mở sẵn 8 mục</td><td>Mở 4 mục, thu 4</td><td>Thu, chỉ còn nút mở</td></tr>
+    <tr><td>Gợi ý dưới ô nhập</td><td>Luôn hiện</td><td>Luôn hiện</td><td>Chỉ hiện khi ô có tiêu điểm</td></tr>
+  </tbody>
+</table>
+</div>
+
+<figure>
+<svg viewBox="0 0 940 300" role="img" aria-label="Cùng một thẻ kết quả tìm kiếm ở ba mật độ Thoáng, Vừa, Gọn">
+  <text class="wf-chu" x="0" y="14" font-weight="600">Thoáng</text>
+  <rect x="0" y="24" width="300" height="106" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <circle cx="34" cy="60" r="18" fill="#fbeee9"/>
+  <circle cx="286" cy="42" r="4" fill="#15803d"/>
+  <text x="64" y="56" font-family="Piazzolla, Georgia, serif" font-size="18" font-weight="600" fill="#2b2825">Nguyễn Thị Hường</text>
+  <text x="64" y="80" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Đời 7 · Chi Giáp</text>
+  <text x="64" y="104" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Nam Định · 1958–</text>
+  <rect x="0" y="146" width="300" height="106" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <circle cx="34" cy="182" r="18" fill="#fbeee9"/>
+  <text x="64" y="178" font-family="Piazzolla, Georgia, serif" font-size="18" font-weight="600" fill="#2b2825">Nguyễn Văn Cẩn</text>
+  <text x="64" y="202" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Đời 6 · Chi Giáp</text>
+  <text x="64" y="226" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Nam Định · 1921–1994</text>
+  <text class="wf-phu" x="0" y="274">đệm 24 · khe 16 · cao ~106px/thẻ</text>
+  <text class="wf-phu" x="0" y="290">2 thẻ trong 252px</text>
+
+  <text class="wf-chu" x="320" y="14" font-weight="600">Vừa — mặc định</text>
+  <rect x="320" y="24" width="300" height="88" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <circle cx="350" cy="54" r="15" fill="#fbeee9"/>
+  <circle cx="606" cy="40" r="4" fill="#15803d"/>
+  <text x="376" y="52" font-family="Piazzolla, Georgia, serif" font-size="18" font-weight="600" fill="#2b2825">Nguyễn Thị Hường</text>
+  <text x="376" y="74" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Đời 7 · Chi Giáp</text>
+  <text x="376" y="96" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Nam Định · 1958–</text>
+  <rect x="320" y="124" width="300" height="88" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <circle cx="350" cy="154" r="15" fill="#fbeee9"/>
+  <text x="376" y="152" font-family="Piazzolla, Georgia, serif" font-size="18" font-weight="600" fill="#2b2825">Nguyễn Văn Cẩn</text>
+  <text x="376" y="174" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Đời 6 · Chi Giáp</text>
+  <text x="376" y="196" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Nam Định · 1921–1994</text>
+  <text class="wf-phu" x="320" y="274">đệm 16 · khe 12 · cao ~88px/thẻ</text>
+  <text class="wf-phu" x="320" y="290">2 thẻ trong 212px</text>
+
+  <text class="wf-chu" x="640" y="14" font-weight="600">Gọn</text>
+  <rect x="640" y="24" width="300" height="62" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <circle cx="926" cy="38" r="4" fill="#15803d"/>
+  <text x="654" y="48" font-family="Piazzolla, Georgia, serif" font-size="18" font-weight="600" fill="#2b2825">Nguyễn Thị Hường</text>
+  <text x="654" y="72" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Đời 7 · Chi Giáp · 1958–</text>
+  <rect x="640" y="94" width="300" height="62" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <text x="654" y="118" font-family="Piazzolla, Georgia, serif" font-size="18" font-weight="600" fill="#2b2825">Nguyễn Văn Cẩn</text>
+  <text x="654" y="142" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Đời 6 · Chi Giáp · 1921–1994</text>
+  <rect x="640" y="164" width="300" height="62" rx="8" fill="#ffffff" stroke="#e6dfd5"/>
+  <text x="654" y="188" font-family="Piazzolla, Georgia, serif" font-size="18" font-weight="600" fill="#2b2825">Nguyễn Thị Vân</text>
+  <text x="654" y="212" font-family="Be Vietnam Pro" font-size="16" fill="#5e564d">Đời 7 · Chi Ất · 1963–</text>
+  <text class="wf-phu" x="640" y="274">đệm 12 · khe 8 · cao ~62px/thẻ</text>
+  <text class="wf-phu" x="640" y="290" font-weight="600">3 thẻ trong 226px — bỏ ảnh, gộp dòng phụ</text>
+</svg>
+<figcaption><strong>Hình 10.</strong> Chữ <b>không đổi cỡ</b> ở cả ba cột — chỉ khoảng trắng và số dòng phụ đổi. Đó là điều làm cho “Gọn” không trở thành “chữ bé”.</figcaption>
+</figure>
+
+<h3>5.2 · Mật độ ảnh hưởng tới phả đồ thế nào</h3>
+
+<p>
+  Phả đồ là chỗ mật độ <em>ít</em> tác dụng nhất, và cần nói rõ để không ai kỳ vọng sai:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Thứ</th><th>Có đổi theo mật độ không?</th><th>Vì sao</th></tr></thead>
+  <tbody>
+    <tr><td>Kích thước thẻ nhân khẩu</td><td><b>Không</b></td><td>Bị quyết định bởi sàn chữ 16px và luật không cắt tên, không phải bởi sở thích mật độ.</td></tr>
+    <tr><td><code>COUPLE_GAP</code> (48)</td><td><b>Không</b></td><td>Là hành lang cho đường nối. Thu lại là hỏng bố cục (mục 3.5).</td></tr>
+    <tr><td><code>FAMILY_GAP</code> · <code>FAMILY_RANK_SEP</code></td><td>Có, ±15%</td><td>Thuần khoảng trắng. Phải giữ tỉ lệ ≥2,5× so với khe anh em.</td></tr>
+    <tr><td>Badge trên thẻ</td><td>Có</td><td>Gọn: chỉ hiện badge quan trọng nhất; chạm vào thẻ để xem hết.</td></tr>
+    <tr><td>Chú giải</td><td>Có</td><td>Gọn: thu lại thành một nút.</td></tr>
+    <tr><td>Mức phóng mở đầu</td><td><b>Không</b></td><td><code>MIN_INITIAL_ZOOM</code> 0,75 là ràng buộc đọc được/bấm được, không phải mật độ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.3 · Tuỳ chọn này đặt ở đâu, gọi tên là gì</h3>
+
+<ul>
+  <li>
+    Nằm trong <b>Cài đặt → Hiển thị</b>, cạnh tuỳ chọn Sáng / Tối / Theo hệ thống. Không phải một
+    nút nổi trên thanh công cụ — nó là thứ chỉnh một lần rồi quên.
+  </li>
+  <li>
+    Nhãn: <b>“Mật độ hiển thị”</b>, ba lựa chọn <b>Thoáng · Vừa · Gọn</b>. Kèm một dòng mô tả cho
+    mỗi lựa chọn (“Nhiều khoảng trống hơn, dễ nhìn hơn” / “Cân bằng” / “Xem được nhiều người hơn
+    trong một màn hình”). <b>Không</b> có từ nào nhắc tới tuổi, mắt, hay khả năng.
+  </li>
+  <li>
+    Bản tiếng Anh: <b>Spacious · Standard · Compact</b>. Đây là từ vựng giao diện, không phải
+    thuật ngữ dòng họ, nên dịch bình thường (00 §2.6 chỉ giữ nguyên tiếng Việt cho thuật ngữ dòng
+    họ).
+  </li>
+  <li>
+    Mặc định là <b>Vừa</b>, và <b>không đánh dấu gì</b> — giống cách 00 §3 xử lý “theo hệ thống”
+    ở chế độ sáng/tối.
+  </li>
+</ul>
+
+<div class="khoi">
+  <p class="nhan">Cái giá — và một lời cảnh báo về kỳ vọng</p>
+  <p>
+    <b>1 · “Gọn” mua được ít hơn người ta tưởng.</b> Tính từ chính các số ở bảng 5.1: thẻ kết quả
+    tìm kiếm cao khoảng 88px ở Vừa và 62px ở Gọn, tức Gọn cho thêm <b>khoảng 40% số hàng</b> —
+    nhưng phần lớn con số đó đến từ việc <em>bỏ ảnh chân dung và gộp dòng phụ</em>, chứ không phải
+    từ việc siết khoảng cách. Nếu chỉ siết khoảng trắng mà giữ nguyên nội dung, chênh lệch chỉ
+    còn khoảng <b>12%</b>. Nói cách khác: <b>mật độ thật sự là tuỳ chọn về <em>lượng thông tin</em>,
+    không phải về khoảng trắng</b> — và nên được giải thích cho người dùng đúng như vậy.
+  </p>
+  <p>
+    <b>2 · Ba mật độ nhân ba số màn hình phải kiểm thử.</b> Cộng với hai chế độ sáng/tối và hai
+    ngôn ngữ, không gian tổ hợp là 12. Không đội nào kiểm thử hết 12. Biện pháp thực tế: kiểm thử
+    tự động chỉ chạy <b>Vừa + Sáng + Việt</b>, còn Thoáng và Gọn được bảo vệ bằng cách
+    <b>không cho phép chúng đổi bất cứ thứ gì ngoài các biến CSS đã liệt kê ở bảng 5.1</b>. Nếu
+    một màn hình cần logic riêng cho một mật độ thì màn hình đó thiết kế sai.
+  </p>
+  <p>
+    <b>3 · Chỗ có thể sai — nguy cơ tái sinh “chế độ người già”.</b> Nếu “Thoáng” trên thực tế
+    được người lớn tuổi bật và người trẻ không bật, thì nó <em>đã trở thành</em> chế độ người
+    già, chỉ khác cái tên. Điều ngăn được chuyện đó không phải cách đặt tên, mà là việc
+    <b>mặc định “Vừa” phải đủ rộng rãi để đa số người 70 tuổi không cần đổi gì cả</b>. Nếu số liệu
+    sử dụng sau này cho thấy phần lớn người dùng lớn tuổi phải chuyển sang Thoáng, thì kết luận
+    đúng là <b>mặc định đang quá chật</b> — phải sửa mặc định, không phải mừng vì tuỳ chọn có
+    người dùng.
+  </p>
+</div>
+
+<h2>6. Chuyển động và phản hồi</h2>
+
+<p>
+  Nguyên tắc duy nhất: <b>chuyển động giải thích thứ vừa xảy ra</b>. Nếu bỏ một hoạt ảnh đi mà
+  người dùng vẫn hiểu chuyện gì vừa diễn ra, thì hoạt ảnh đó là trang trí và phải bỏ.
+</p>
+
+<h3>6.1 · Thời lượng và tiết tấu</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bậc</th><th>Thời lượng</th><th>Tiết tấu</th><th>Dùng cho</th><th>Giải thích điều gì</th></tr></thead>
+  <tbody>
+    <tr><td><b>c1</b></td><td class="so">120ms</td><td><code>ease-out</code></td><td>Đổi màu khi di chuột, hiện vòng tiêu điểm</td><td>“Máy đã nhận ra con trỏ của bạn”</td></tr>
+    <tr><td><b>c2</b></td><td class="so">180ms</td><td><code>ease-out</code></td><td>Chip/tag bật tắt, ô chọn, nút chuyển trạng thái</td><td>“Lựa chọn của bạn đã được ghi nhận”</td></tr>
+    <tr><td><b>c3</b></td><td class="so">240ms</td><td><code>cubic-bezier(.2,0,0,1)</code></td><td>Bung/thu nhánh, mở khối gấp, hiện dòng lỗi</td><td>“Nội dung mới đến từ <em>chỗ này</em>, không phải từ hư không”</td></tr>
+    <tr><td><b>c4</b></td><td class="so">300ms</td><td><code>cubic-bezier(.2,0,0,1)</code></td><td>Ngăn kéo hồ sơ, hộp thoại, <b>canh khung mở đầu phả đồ</b></td><td>“Một lớp mới vừa phủ lên; lớp cũ vẫn còn ở dưới”</td></tr>
+    <tr><td><b>c5</b></td><td class="so">400ms</td><td><code>cubic-bezier(.2,0,0,1)</code></td><td><b>“Thu toàn cây”</b> — di chuyển máy ảnh quãng dài</td><td>“Bạn vẫn đang xem cùng một cây, chỉ là từ xa hơn”</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Hai bậc c4 và c5 <b>không phải đề xuất</b> — chúng là số đang chạy, khai trong
+  <code>frontend/src/lib/tree/fit-view.ts</code>: <code>INITIAL_FIT_VIEW_OPTIONS.duration = 300</code>
+  và <code>WHOLE_TREE_FIT_VIEW_OPTIONS.duration = 400</code>. Thang trên được dựng
+  <em>quanh</em> hai số đó thay vì áp một thang mới rồi bắt mã nguồn chạy theo.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Vì sao “Thu toàn cây” phải chậm hơn, không phải nhanh hơn</p>
+  <p>
+    Trực giác thông thường bảo di chuyển xa thì nên nhanh cho đỡ chờ. Ở đây thì ngược: hoạt ảnh
+    canh khung là thứ <b>duy nhất</b> giữ được mối liên hệ giữa cảnh trước và cảnh sau. Nhảy tức
+    thì từ một nhánh sang toàn cảnh cả dòng họ khiến người dùng mất phương hướng hoàn toàn — họ
+    không biết cụ tổ mình vừa nãy giờ nằm đâu trên màn hình. 400ms là cái giá rất rẻ cho việc
+    giữ được ngữ cảnh đó. <b>Chỗ có thể sai:</b> với cây hàng nghìn nút trên máy yếu, 400ms hoạt
+    ảnh có thể giật hình, và giật hình còn tệ hơn nhảy tức thì. Cần đo khung hình thật trước khi
+    khẳng định.
+  </p>
+</div>
+
+<h3>6.2 · <code>prefers-reduced-motion</code></h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Hiện trạng: không tồn tại</p>
+  <p>
+    Tìm toàn bộ <code>frontend/src/</code>: <b>0</b> lần xuất hiện <code>prefers-reduced-motion</code>,
+    <code>useReducedMotion</code> hay bất kỳ biến thể nào. Trong khi đó có hai hoạt ảnh di chuyển
+    máy ảnh 300ms và 400ms trên một canvas đầy nút, cộng hoạt ảnh mặc định của Ant Design ở mọi
+    hộp thoại và ngăn kéo.
+  </p>
+  <p>
+    Đây không phải chuyện thẩm mỹ. Với người bị rối loạn tiền đình, hoạt ảnh trượt/phóng toàn màn
+    hình gây <b>chóng mặt và buồn nôn thật sự</b>. Phả đồ — thứ phóng và trượt cả một mặt phẳng
+    lớn — thuộc đúng loại chuyển động gây triệu chứng nặng nhất.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Loại chuyển động</th><th>Bình thường</th><th>Khi bật giảm chuyển động</th></tr></thead>
+  <tbody>
+    <tr><td>Đổi màu, hiện vòng tiêu điểm (c1, c2)</td><td>120–180ms</td><td><b>Giữ nguyên.</b> Đổi màu không gây triệu chứng, và bỏ đi thì mất phản hồi.</td></tr>
+    <tr><td>Hiện/ẩn khối, bung nhánh (c3)</td><td>240ms trượt + mờ dần</td><td>Bỏ phần trượt, giữ mờ dần <b>rút còn 100ms</b>.</td></tr>
+    <tr><td>Ngăn kéo, hộp thoại (c4)</td><td>300ms trượt vào</td><td>Bỏ trượt, chỉ mờ dần 100ms.</td></tr>
+    <tr><td><b>Canh khung phả đồ (c4, c5)</b></td><td>300ms / 400ms trượt-phóng</td><td><b><code>duration: 0</code></b> — nhảy thẳng tới đích.</td></tr>
+    <tr><td>Vòng xoay “đang tải”</td><td>Xoay liên tục</td><td>Thay bằng thanh nhịp mờ dần, hoặc chỉ để chữ “Đang tải…”.</td></tr>
+    <tr><td>Khung xương (skeleton) nhấp nháy</td><td>Sóng chạy</td><td>Khối tĩnh, không sóng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Bỏ hoạt ảnh canh khung thì mất ngữ cảnh — bù bằng gì?</p>
+  <p>
+    Đặt <code>duration: 0</code> giải quyết được triệu chứng nhưng tạo ra đúng vấn đề đã nêu ở
+    mục 6.1: người dùng mất phương hướng. Bù bằng <b>một tín hiệu không phải chuyển động</b>
+    <span class="chip should">đề xuất</span>: sau khi nhảy, thẻ đích được viền
+    <code>accent</code> 3px trong <b>1,2 giây</b> rồi tắt dần — đây là đổi <em>màu</em>, không
+    phải đổi <em>vị trí</em>, nên không kích hoạt triệu chứng tiền đình.
+  </p>
+  <p>
+    <b>Ràng buộc bắt buộc:</b> hiệu ứng nhấn này chỉ được nháy <b>một lần</b>. Bất cứ thứ gì nhấp
+    nháy quá <b>3 lần mỗi giây</b> đều vi phạm WCAG 2.3.1 và có thể gây co giật. Một lần sáng rồi
+    tắt dần thì an toàn; “nháy ba cái cho dễ thấy” thì không.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> viền <code>accent</code> 3px trên thẻ đích chỉ đạt 3,19:1 so với nền
+    thẻ trắng và <b>2,73:1</b> trên nền giấy cũ (mục 1.2) — tức trên thẻ người đã khuất, chính
+    tín hiệu bù này lại là tín hiệu yếu nhất. Phải dùng <code>accentText #9c5a06</code> (4,64:1
+    trên giấy cũ) hoặc <code>primary</code> (7,18:1) thay vì <code>accent</code>.
+  </p>
+</div>
+
+<h3>6.3 · Ba thứ chuyển động không được làm</h3>
+
+<ul>
+  <li>
+    <b>Không hoạt ảnh cho thao tác khó thu hồi.</b> Hộp thoại xác nhận ngày mất
+    (<code>death-confirm-dialog.tsx</code>) hiện ra bằng mờ dần là được; nhưng <em>sau khi</em>
+    người dùng bấm xác nhận thì không được có hoạt ảnh ăn mừng, không có dấu tích bay lên. 00
+    §2.4 nói thao tác này phải nghiêm túc — nó vừa công khai hồ sơ một con người với cả khách và
+    sinh lịch nhắc giỗ. Phản hồi đúng là <b>một dòng chữ tĩnh xác nhận việc đã xảy ra và hệ quả
+    của nó</b>.
+  </li>
+  <li>
+    <b>Không hoạt ảnh khi nội dung đến từ máy chủ mà người dùng không yêu cầu.</b> Một thẻ mới
+    trượt vào giữa danh sách trong lúc người dùng đang đọc sẽ làm họ chạm nhầm. Nội dung mới đến
+    thì chèn tĩnh, hoặc gom lại sau một nút “Có 3 mục mới”.
+  </li>
+  <li>
+    <b>Không dùng chuyển động để che độ trễ.</b> Nếu phả đồ mất 2 giây để tải một nhánh, một hoạt
+    ảnh 2 giây không làm nó nhanh hơn — nó chỉ làm mất khả năng thao tác trong 2 giây đó. Hiện
+    khung xương ngay lập tức, để người dùng vẫn cuộn và bấm được chỗ khác.
+  </li>
+</ul>
+
+<h2>7. Tóm tắt việc phải làm</h2>
+
+<p>
+  Xếp theo mức độ: cột “Ảnh hưởng” nói việc không sửa thì hỏng cái gì, không nói việc sửa thì
+  đẹp thêm bao nhiêu.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Việc</th><th>Tệp</th><th>Ảnh hưởng nếu không sửa</th></tr></thead>
+  <tbody>
+    <tr><td><span class="chip must">1</span></td><td>Khai <code>fontSize: 16</code>, <code>controlHeight: 44</code>, <code>controlHeightSM: 44</code></td><td><code>styles/antd-theme.ts</code></td><td>Sàn 16px/44px của 00 §2.2 bị vi phạm trên <b>toàn bộ</b> lớp widget</td></tr>
+    <tr><td><span class="chip must">2</span></td><td>Bổ sung 7 token thiếu vào Tailwind</td><td><code>tailwind.config.ts</code></td><td>Phả đồ <b>không phân biệt được người còn sống và người đã khuất</b></td></tr>
+    <tr><td><span class="chip must">3</span></td><td><code>colorLinkHover</code>: <code>accent</code> → <code>primaryDark</code></td><td><code>styles/antd-theme.ts</code></td><td>Di chuột làm liên kết tụt từ 7,77:1 xuống 2,95:1</td></tr>
+    <tr><td><span class="chip must">4</span></td><td>Thêm <code>accentText #9c5a06</code>, dùng cho mọi chữ hổ phách</td><td><code>styles/tokens.ts</code> + <code>lib/tree/badges.ts</code> + <code>events/event-card.tsx</code></td><td>Badge <b>Đích tôn / Thừa tự / Kế tự</b> và thẻ “sắp tới” trượt AA</td></tr>
+    <tr><td><span class="chip must">5</span></td><td>Vòng tiêu điểm hai lớp, áp cho mọi thứ bấm được không phải widget AntD</td><td>lớp tiện ích dùng chung</td><td>Người dùng bàn phím mất dấu trên thẻ kết quả, thẻ sự kiện, thanh điều hướng đáy</td></tr>
+    <tr><td><span class="chip must">6</span></td><td>Xử lý <code>prefers-reduced-motion</code>, trước hết cho canh khung phả đồ</td><td><code>lib/tree/fit-view.ts</code></td><td>Gây chóng mặt thật cho người rối loạn tiền đình</td></tr>
+    <tr><td><span class="chip should">7</span></td><td>Bỏ <code>truncate</code> khỏi tên người, cho xuống 2 dòng; thẻ 208×96 → 240×112</td><td><code>tree/person-node.tsx</code>, <code>lib/tree/layout-constants.ts</code></td><td>Vi phạm 00 §3 “không cắt tên bằng dấu ba chấm”</td></tr>
+    <tr><td><span class="chip should">8</span></td><td>Vùng chạm nghịch đảo phép phóng cho nút bung nhánh</td><td><code>tree/person-node.tsx</code></td><td>Nút 18px ở mức phóng mở đầu — dưới cả ngưỡng 24px của WCAG 2.5.8</td></tr>
+    <tr><td><span class="chip should">9</span></td><td>Bộ màu tối + công tắc Sáng/Tối/Theo hệ thống; khai đủ 17 màu ở <code>:root</code></td><td><code>styles/tokens.ts</code>, <code>app/globals.css</code>, <code>app/providers.tsx</code></td><td>00 §3 chốt ba trạng thái; hiện chỉ có một</td></tr>
+    <tr><td><span class="chip should">10</span></td><td>Chuyển thang chữ sang <code>rem</code>; hộp chứa chữ chuyển sang <code>min-height</code></td><td>toàn bộ <code>components/</code></td><td>Cỡ chữ hệ điều hành bị vô hiệu hoá (có giới hạn — xem mục 2.7)</td></tr>
+    <tr><td><span class="chip should">11</span></td><td><code>borderInput #8a7a66</code> cho ô nhập</td><td><code>styles/tokens.ts</code></td><td>Viền ô nhập 1,32:1 — không nhận ra đâu là chỗ gõ</td></tr>
+    <tr><td><span class="chip could">12</span></td><td>Bỏ <code>bgDeceased</code> khỏi thẻ mức khẩn <code>LATER</code>/<code>PAST</code></td><td><code>events/event-card.tsx</code></td><td>Pha loãng nghĩa “giấy cũ = người đã khuất”</td></tr>
+    <tr><td><span class="chip should">13</span></td><td>Đưa Dâu/Rể vào <code>tokens.ts</code> và <b>kéo về hệ màu ấm</b> (mục 1.9)</td><td><code>lib/tree/badges.ts</code></td><td>Hai sắc lạnh duy nhất của sản phẩm đang rơi đúng vào hai badge “không thuộc huyết thống” — khung trong/ngoài mà 00 §1b cấm. Cần Hội đồng chốt trước.</td></tr>
+    <tr><td><span class="chip could">14</span></td><td>Khai đủ ba bậc bo góc; thẻ phả đồ 6px → 8px</td><td><code>tailwind.config.ts</code></td><td><code>rounded</code> và <code>rounded-lg</code> hiện giống hệt nhau</td></tr>
+    <tr><td><span class="chip could">15</span></td><td>Nạp phông CJK dự phòng cho dòng Hán-Nôm</td><td><code>app/[locale]/layout.tsx</code></td><td>Hán-Nôm ra ô vuông trên máy không cài phông Hán</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ba chỗ tài liệu này có thể sai, xếp theo mức độ nghiêm trọng</p>
+  <ol>
+    <li>
+      <b>Con số 14px/32px của Ant Design là suy luận, không phải đo.</b> Nó suy ra từ việc
+      <code>antd-theme.ts</code> không ghi đè hai token đó, cộng với giá trị hạt giống đã biết của
+      AntD v5. Toàn bộ việc số 1 — việc lớn nhất trong bảng — dựa trên suy luận này.
+      <b>Phải để <code>qa-tester</code> đo <code>getComputedStyle</code> trên một nút và một ô
+      nhập thật trước khi bắt đầu.</b>
+    </li>
+    <li>
+      <b>Kích thước thẻ 240×112 là ước tính.</b> Nó dựa trên giả định bề rộng ký tự trung bình
+      ≈0,5em với Be Vietnam Pro — chưa đo. Con số đúng phải tìm bằng tên dài nhất trong dữ liệu
+      <code>demo/</code>, và nó kéo theo cả <code>FAMILY_GAP</code>.
+    </li>
+    <li>
+      <b>Sắc giấy cũ có thể không đọc ra là “tôn kính”.</b> Đây là giả định văn hoá, không phải
+      kết luận kỹ thuật, và không có tỉ số tương phản nào kiểm chứng được nó.
+      <b>Phải hỏi Hội đồng Tộc biểu.</b>
+    </li>
+  </ol>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 02 · Hệ thống thiết kế. Xây trên <a href="../00-dinh-huong.html">00 · Định hướng
+    thiết kế</a>; chỗ nào mâu thuẫn thì 00 thắng. Mọi tỉ số tương phản trong tài liệu được tính
+    từ mã hex trong <code>frontend/src/styles/tokens.ts</code> theo công thức WCAG 2.x. Mọi số
+    có ghi đường dẫn tệp là hiện trạng đọc từ mã nguồn ngày 06/09/2026; mọi số đánh dấu
+    <span class="chip should">đề xuất</span> là đề xuất chưa được hiện thực.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

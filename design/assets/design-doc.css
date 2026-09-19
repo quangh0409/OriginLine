@@ -1,0 +1,222 @@
+/* ==========================================================================
+   Stylesheet dùng chung cho TOÀN BỘ tài liệu thiết kế trong design/.
+   Mọi trang trong thư mục này phải nạp nó bằng đường dẫn tương đối, ví dụ:
+     <link rel="stylesheet" href="../assets/design-doc.css">
+
+   Bảng màu chép nguyên từ frontend/src/styles/tokens.ts — vốn chép từ BA v2 /
+   TDD / plan §4 F1. KHÔNG phát minh màu mới ở đây: tài liệu thiết kế mà lệch
+   màu với sản phẩm thì chính nó là nguồn sai lệch đầu tiên.
+   ========================================================================== */
+
+:root {
+  --do-tram:    #8c2d19;
+  --do-sau:     #661e0f;
+  --do-nhat:    #fbeee9;
+  --ho-phach:   #d97706;
+  --lam:        #2c3e50;
+  --nen:        #f8f6f2;
+  --nen-the:    #ffffff;
+  --nen-giay:   #f2ede2;
+  --muc:        #2b2825;
+  --muc-nhat:   #5e564d;
+  --vien:       #e6dfd5;
+  --vien-dam:   #cdbeaa;
+  --xanh:       #15803d;
+  --xanh-nen:   #eaf6ee;
+  --do-loi:     #b91c1c;
+  --do-loi-nen: #fbeae9;
+  --vang-nen:   #fdf6e7;
+
+  --f-hien: "Piazzolla", "Iowan Old Style", Georgia, serif;
+  --f-than: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --f-may: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --do-tram: #e08a72; --do-sau: #f0a68f; --do-nhat: #33211c;
+    --ho-phach: #e9a83f; --lam: #8ba9c4;
+    --nen: #1a1614; --nen-the: #241f1c; --nen-giay: #2b2521;
+    --muc: #efe8df; --muc-nhat: #a99c8e; --vien: #3b312b; --vien-dam: #56483f;
+    --xanh: #74c68f; --xanh-nen: #1c2e22;
+    --do-loi: #ec8a80; --do-loi-nen: #33201e; --vang-nen: #2e2617;
+  }
+}
+:root[data-theme="dark"] {
+  --do-tram: #e08a72; --do-sau: #f0a68f; --do-nhat: #33211c;
+  --ho-phach: #e9a83f; --lam: #8ba9c4;
+  --nen: #1a1614; --nen-the: #241f1c; --nen-giay: #2b2521;
+  --muc: #efe8df; --muc-nhat: #a99c8e; --vien: #3b312b; --vien-dam: #56483f;
+  --xanh: #74c68f; --xanh-nen: #1c2e22;
+  --do-loi: #ec8a80; --do-loi-nen: #33201e; --vang-nen: #2e2617;
+}
+
+* { box-sizing: border-box; }
+
+/* 17px, không phải 16px: người đọc chính của tài liệu này gồm cả Hội đồng Tộc
+   biểu ở tuổi lão thị. Một tài liệu bàn về khả năng đọc mà chính nó khó đọc
+   thì đã tự bác bỏ mình. */
+body {
+  margin: 0;
+  background: var(--nen);
+  color: var(--muc);
+  font-family: var(--f-than);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.trang { max-width: 1040px; margin: 0 auto; padding: 40px 24px 96px; }
+
+/* ------------------------------- Đầu trang ------------------------------- */
+
+.dau { border-bottom: 2px solid var(--vien-dam); padding-bottom: 28px; margin-bottom: 40px; }
+
+.nhan-tren {
+  font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--do-tram); margin: 0 0 14px;
+}
+
+h1 {
+  font-family: var(--f-hien); font-weight: 700;
+  font-size: clamp(32px, 5vw, 48px); line-height: 1.1; letter-spacing: -0.015em;
+  margin: 0 0 16px; text-wrap: balance;
+}
+
+.tom-tat { font-size: 19px; line-height: 1.6; color: var(--muc-nhat); max-width: 64ch; margin: 0; }
+.tom-tat strong { color: var(--muc); font-weight: 600; }
+
+/* -------------------------------- Tiêu đề -------------------------------- */
+
+h2 {
+  font-family: var(--f-hien); font-size: clamp(24px, 3.4vw, 32px); font-weight: 700;
+  line-height: 1.2; letter-spacing: -0.01em; margin: 56px 0 14px;
+  border-top: 2px solid var(--muc); padding-top: 18px; text-wrap: balance;
+}
+h2:first-of-type { margin-top: 0; }
+
+h3 {
+  font-family: var(--f-hien); font-size: 21px; font-weight: 700;
+  margin: 34px 0 10px; text-wrap: balance;
+}
+
+h4 {
+  font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--muc-nhat); margin: 28px 0 10px;
+}
+
+p { max-width: 68ch; margin: 0 0 16px; }
+ul, ol { max-width: 68ch; margin: 0 0 16px; padding-left: 22px; }
+li { margin-bottom: 8px; }
+
+code {
+  font-family: var(--f-may); font-size: .87em;
+  background: var(--nen-giay); border: 1px solid var(--vien); border-radius: 3px; padding: 1px 5px;
+}
+
+/* --------------------------------- Bảng ---------------------------------- */
+
+.cuon { overflow-x: auto; margin: 20px 0; }
+table {
+  width: 100%; min-width: 560px; border-collapse: collapse; font-size: 15.5px;
+  background: var(--nen-the); border: 1px solid var(--vien);
+}
+th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muc-nhat);
+  padding: 11px 14px; border-bottom: 1px solid var(--vien-dam);
+}
+td { padding: 12px 14px; border-bottom: 1px solid var(--vien); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.so { font-family: var(--f-may); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tot  { color: var(--xanh);   font-weight: 500; }
+.xau  { color: var(--do-loi); font-weight: 500; }
+.canh { color: var(--ho-phach); font-weight: 500; }
+
+/* --------------------------------- Chip ---------------------------------- */
+
+.chip {
+  display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: .04em;
+  padding: 3px 9px; border-radius: 3px; white-space: nowrap;
+}
+.chip.must   { background: var(--do-loi-nen); color: var(--do-loi); }
+.chip.should { background: var(--vang-nen);   color: var(--ho-phach); }
+.chip.could  { background: var(--nen-giay);   color: var(--muc-nhat); }
+.chip.xong   { background: var(--xanh-nen);   color: var(--xanh); }
+.chip.gd1 { background: var(--do-nhat); color: var(--do-tram); }
+.chip.gd2 { background: var(--vang-nen); color: var(--ho-phach); }
+.chip.gd3 { background: var(--xanh-nen); color: var(--xanh); }
+.chip.gd4 { background: var(--nen-giay); color: var(--muc-nhat); }
+
+/* ------------------------------- Khối nhấn -------------------------------- */
+
+.khoi {
+  border-left: 3px solid var(--do-tram); background: var(--do-nhat);
+  border-radius: 0 4px 4px 0; padding: 18px 22px; margin: 26px 0;
+}
+.khoi > .nhan {
+  font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--do-tram); margin: 0 0 7px;
+}
+.khoi p:last-child { margin-bottom: 0; }
+
+.khoi.canh-bao { border-left-color: var(--ho-phach); background: var(--vang-nen); }
+.khoi.canh-bao > .nhan { color: var(--ho-phach); }
+.khoi.chot { border-left-color: var(--xanh); background: var(--xanh-nen); }
+.khoi.chot > .nhan { color: var(--xanh); }
+
+/* ------------------------------- Thẻ / lưới ------------------------------- */
+
+.luoi { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+
+.the {
+  background: var(--nen-the); border: 1px solid var(--vien); border-radius: 4px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 8px;
+}
+.the h3, .the h4 { margin-top: 0; }
+.the p { margin: 0; font-size: 15px; max-width: none; }
+.the .day {
+  margin-top: auto; padding-top: 12px; border-top: 1px solid var(--vien);
+  font-size: 14px; color: var(--muc-nhat);
+}
+
+/* -------------------------------- Hình vẽ -------------------------------- */
+
+figure {
+  margin: 26px 0; background: var(--nen-the); border: 1px solid var(--vien);
+  border-radius: 4px; padding: 22px 20px 16px; overflow-x: auto;
+}
+figure svg { display: block; width: 100%; max-width: 100%; height: auto; color: var(--muc-nhat); }
+figcaption {
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--vien);
+  font-size: 14.5px; line-height: 1.55; color: var(--muc-nhat); max-width: 74ch;
+}
+figcaption strong { color: var(--muc); font-weight: 600; }
+
+/* Lớp tiện dụng cho khung dây (wireframe) vẽ bằng SVG thuần */
+.wf-khung { fill: var(--nen-giay); stroke: var(--vien-dam); stroke-width: 1.5; }
+.wf-o     { fill: var(--nen-the);  stroke: var(--vien-dam); stroke-width: 1.25; }
+.wf-nhan  { fill: var(--do-tram);  stroke: none; }
+.wf-chu   { fill: var(--muc);      font-family: "Be Vietnam Pro", system-ui, sans-serif; font-size: 13px; }
+.wf-phu   { fill: var(--muc-nhat); font-family: "Be Vietnam Pro", system-ui, sans-serif; font-size: 11px; }
+.wf-net   { stroke: var(--muc-nhat); stroke-width: 1.5; fill: none; }
+
+/* -------------------------------- Điều hướng ------------------------------ */
+
+.dieu-huong {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  font-size: 14px; margin-bottom: 28px; color: var(--muc-nhat);
+}
+.dieu-huong a { color: var(--do-tram); }
+
+.chan-trang {
+  border-top: 1px solid var(--vien); margin-top: 56px; padding-top: 24px;
+  font-size: 14.5px; color: var(--muc-nhat); max-width: 74ch;
+}
+
+a { color: var(--do-tram); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--ho-phach); outline-offset: 2px; }
+
+@media (max-width: 620px) { .trang { padding: 28px 16px 64px; } }
+@media print { body { background: #fff; } .trang { max-width: none; } }

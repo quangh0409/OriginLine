@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Di sản, mộ phần, từ đường và tiện ích tâm linh — Tài liệu 05.01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Tài liệu 05 · Phần 01 · Giai đoạn 3</p>
+  <h1>Di sản, mộ phần, từ đường<br>và tiện ích tâm linh</h1>
+  <p class="tom-tat">
+    Bốn yêu cầu <strong>FR-3.1 → FR-3.4</strong>. Đây là phần kéo sản phẩm ra khỏi màn hình bàn giấy:
+    người dùng đang <strong>đứng trước ban thờ</strong>, đang <strong>đi bộ trong nghĩa trang dưới
+    nắng</strong>, hoặc đang nhìn một tấm bia chữ Hán mà họ không đọc được. Ba bối cảnh đó quyết định
+    thiết kế nhiều hơn bất cứ danh sách tính năng nào.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <a href="index.html">↩ 05 · Tổng quan</a>
+  <span>·</span>
+  <b>01 · Di sản, mộ phần, từ đường, văn khấn</b>
+  <span>·</span>
+  <a href="02-quy-ho-bao-cao-ban-tin.html">02 · Quỹ họ, báo cáo, bản tin</a>
+  <span>·</span>
+  <a href="03-nhap-lieu-va-tang-ai.html">03 · Nhập liệu, thông gia, tầng AI</a>
+</nav>
+
+<h2>1. FR-3.1 — Thư viện di sản</h2>
+
+<p>
+  <b>Phục vụ ai.</b> Ba nhóm rất khác nhau, và đây là lý do màn hình không thể chỉ có một dạng:
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Người đọc — đông nhất</h4>
+    <p>
+      Con cháu, phần lớn <b>không đọc được chữ Hán-Nôm</b>, thậm chí không quen từ Hán-Việt. Họ muốn
+      biết <em>tấm bia này nói gì</em>, không muốn học chữ.
+    </p>
+    <p class="day">Nếu mở ra thấy một khối chữ Hán, họ đóng ngay. Đây là rủi ro trải nghiệm số một của FR-3.1.</p>
+  </div>
+  <div class="the">
+    <h4>Người phiên âm — rất ít</h4>
+    <p>
+      Một hai cụ trong họ, hoặc người được thuê. Họ cần <b>ảnh gốc phóng rất sâu</b> đặt cạnh ô nhập,
+      và cần ghi được chỗ nào mình không chắc.
+    </p>
+    <p class="day">Họ là nút thắt cổ chai của cả giai đoạn 3. Công cụ khó dùng thì thư viện đứng yên.</p>
+  </div>
+  <div class="the">
+    <h4>Hội đồng Tộc biểu — người duyệt</h4>
+    <p>
+      Quyết định bản phiên âm nào là bản của dòng họ, ghi nhận dị bản, và quyết tư liệu nào công khai
+      tới đâu.
+    </p>
+    <p class="day">Đặc biệt với <b>di chúc</b> — xem cảnh báo cuối mục này.</p>
+  </div>
+</div>
+
+<h3>Mô hình nội dung: một tư liệu, bốn lớp</h3>
+
+<p>
+  Đề xuất coi mỗi tư liệu là <b>một ảnh gốc cộng ba lớp văn bản chồng lên</b>, thay vì một bản ghi
+  “ảnh + mô tả”. Mô hình này dùng chung được cho văn bia, hương ước, gia huấn, câu đối trong từ đường
+  (FR-3.3) và cả mộ chí (FR-3.2) — một trình đọc, bốn nơi dùng.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Lớp</th><th>Nội dung</th><th>Ai tạo</th><th>Bắt buộc?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>Lớp 0 — Ảnh gốc</b></td><td>Ảnh chụp bia, bản rập, trang giấy. Phóng sâu được.</td><td>Người đi chụp</td><td class="tot">Bắt buộc</td></tr>
+    <tr><td><b>Lớp 1 — Phiên âm</b></td><td>Âm Hán-Việt của từng dòng chữ Hán-Nôm.</td><td>Người phiên âm</td><td class="canh">Nên có</td></tr>
+    <tr><td><b>Lớp 2 — Dịch nghĩa</b></td><td>Tiếng Việt hiện đại, câu chữ đọc được với người 16 tuổi.</td><td>Người dịch</td><td class="tot">Bắt buộc nếu tư liệu là Hán-Nôm</td></tr>
+    <tr><td><b>Lớp 3 — Chú giải</b></td><td>Điển tích, tên đất, tên người, đối chiếu với phả.</td><td>Người am hiểu</td><td><span class="chip could">Tuỳ chọn</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Quyết định gây tranh cãi, nêu rõ để phản biện</p>
+  <p>
+    <b>Mặc định mở ở Lớp 2 — dịch nghĩa — chứ không phải ảnh gốc.</b> Lý do: đại đa số người mở tư
+    liệu là người không đọc được chữ Hán, và thứ họ cần là <em>nội dung</em>. Ảnh gốc luôn nằm cạnh
+    và luôn chạm được, nhưng nó không phải thứ đập vào mắt trước.
+  </p>
+  <p>
+    <b>Cái giá:</b> với người coi ảnh gốc là bản gốc thiêng liêng và bản dịch chỉ là diễn giải, mặc
+    định này có thể bị coi là hạ thấp tư liệu. Nếu Hội đồng thấy vậy thì đảo lại mặc định — nhưng
+    phải chấp nhận rằng phần lớn con cháu sẽ đóng trang ngay ở màn hình đầu tiên.
+  </p>
+</div>
+
+<figure id="kd-1">
+<svg viewBox="0 0 720 440" role="img" aria-label="Khung dây trình đọc tư liệu di sản trên màn hình rộng: ảnh gốc bên trái, ba lớp văn bản bên phải">
+  <rect class="wf-khung" x="8" y="8" width="704" height="424" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="52"/>
+  <text class="wf-chu" x="24" y="32" font-weight="600">Văn bia mộ Tổ đời thứ 3</text>
+  <text class="wf-phu" x="24" y="48">Từ đường họ Nguyễn · bia đá · đã đối chiếu thực địa 03/2026</text>
+  <rect class="wf-o" x="446" y="18" width="118" height="32" rx="4"/>
+  <text class="wf-chu" x="462" y="39">Tải ảnh gốc</text>
+  <rect class="wf-o" x="574" y="18" width="122" height="32" rx="4"/>
+  <text class="wf-chu" x="590" y="39">In bản dịch</text>
+
+  <text class="wf-phu" x="20" y="80">LỚP 0 · ẢNH GỐC</text>
+  <rect class="wf-o" x="20" y="88" width="320" height="236"/>
+  <g class="wf-net" stroke-width="1">
+    <rect x="46" y="104" width="18" height="18"/><rect x="46" y="130" width="18" height="18"/>
+    <rect x="46" y="156" width="18" height="18"/><rect x="46" y="182" width="18" height="18"/>
+    <rect x="46" y="208" width="18" height="18"/><rect x="46" y="234" width="18" height="18"/>
+    <rect x="106" y="104" width="18" height="18"/><rect x="106" y="130" width="18" height="18"/>
+    <rect x="106" y="156" width="18" height="18"/><rect x="106" y="182" width="18" height="18"/>
+    <rect x="106" y="208" width="18" height="18"/><rect x="106" y="234" width="18" height="18"/>
+    <rect x="166" y="104" width="18" height="18"/><rect x="166" y="130" width="18" height="18"/>
+    <rect x="166" y="156" width="18" height="18"/><rect x="166" y="182" width="18" height="18"/>
+    <rect x="226" y="104" width="18" height="18"/><rect x="226" y="130" width="18" height="18"/>
+    <rect x="226" y="156" width="18" height="18"/><rect x="226" y="182" width="18" height="18"/>
+    <rect x="286" y="104" width="18" height="18"/><rect x="286" y="130" width="18" height="18"/>
+    <rect x="286" y="156" width="18" height="18"/>
+  </g>
+  <rect class="wf-nhan" x="98" y="122" width="34" height="86" opacity="0.16"/>
+  <rect class="wf-net" x="98" y="122" width="34" height="86" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="140" y="170">← vùng ứng với câu 2</text>
+  <text class="wf-phu" x="20" y="342">Chạm một câu bên phải để ảnh cuộn tới đúng cột chữ</text>
+  <rect class="wf-o" x="20" y="352" width="100" height="44" rx="4"/>
+  <text class="wf-chu" x="46" y="379">Phóng to</text>
+  <rect class="wf-o" x="130" y="352" width="100" height="44" rx="4"/>
+  <text class="wf-chu" x="156" y="379">Thu nhỏ</text>
+  <rect class="wf-o" x="240" y="352" width="100" height="44" rx="4"/>
+  <text class="wf-chu" x="262" y="379">Vừa khung</text>
+
+  <text class="wf-phu" x="356" y="80">LỚP VĂN BẢN</text>
+  <rect class="wf-o" x="356" y="88" width="112" height="40" rx="4"/>
+  <text class="wf-chu" x="382" y="113">Phiên âm</text>
+  <rect class="wf-nhan" x="472" y="88" width="112" height="40" rx="4"/>
+  <text class="wf-chu" x="492" y="113" fill="var(--nen-the)">Dịch nghĩa</text>
+  <rect class="wf-o" x="588" y="88" width="112" height="40" rx="4"/>
+  <text class="wf-chu" x="616" y="113">Chú giải</text>
+
+  <rect class="wf-o" x="356" y="140" width="344" height="34"/>
+  <text class="wf-phu" x="366" y="161">1</text>
+  <text class="wf-chu" x="390" y="161">Bia dựng năm Tự Đức thứ chín, tháng trọng đông.</text>
+  <rect class="wf-nhan" x="356" y="180" width="344" height="34" opacity="0.13"/>
+  <rect class="wf-net" x="356" y="180" width="344" height="34"/>
+  <text class="wf-phu" x="366" y="201">2</text>
+  <text class="wf-chu" x="390" y="201">Ông người xã Đông Ngạc, huyện Từ Liêm.</text>
+  <rect class="wf-o" x="356" y="220" width="344" height="34"/>
+  <text class="wf-phu" x="366" y="241">3</text>
+  <text class="wf-chu" x="390" y="241">Có bốn con trai, hai con gái, đều nên người.</text>
+  <rect class="wf-o" x="356" y="260" width="344" height="34"/>
+  <text class="wf-phu" x="366" y="281">4</text>
+  <text class="wf-chu" x="390" y="281">Dòng chữ này mòn, chưa đọc được — bỏ trống.</text>
+
+  <rect class="wf-o" x="356" y="306" width="344" height="90"/>
+  <text class="wf-phu" x="368" y="326">AI LÀM BẢN NÀY</text>
+  <text class="wf-chu" x="368" y="346">Phiên âm: cụ Nguyễn Văn B · 12/2026</text>
+  <text class="wf-chu" x="368" y="366">Dịch nghĩa: bà Nguyễn Thị C · 01/2026</text>
+  <text class="wf-chu" x="368" y="386" fill="var(--ho-phach)">Chưa có người thứ hai đối chiếu</text>
+</svg>
+<figcaption>
+  <strong>KD-1 · Trình đọc tư liệu di sản, màn hình rộng.</strong>
+  Bốn quyết định nằm trong hình: (a) ảnh gốc và văn bản <strong>luôn cạnh nhau</strong>, không phải hai
+  trang khác nhau; (b) chạm một câu thì ảnh cuộn tới đúng cột chữ — <strong>neo theo dòng, không theo
+  từng chữ</strong>, vì neo từng chữ tốn công gấp bội mà lợi ích thêm rất mỏng; (c) câu chưa đọc được
+  thì <strong>ghi thẳng là chưa đọc được</strong>, không đoán và không bỏ lửng; (d) khối “ai làm bản
+  này” nằm ngay dưới văn bản chứ không nằm ở trang thông tin — bản dịch là ý kiến của một người, và
+  người đọc có quyền biết đó là ai. Ba nút phóng ở đáy cao 44px theo sàn của
+  <a href="../00-dinh-huong.html">định hướng §2</a>; cả ba đều có nhãn chữ, không có nút chỉ mang biểu tượng kính lúp.
+</figcaption>
+</figure>
+
+<h3>Trên điện thoại thì không đặt cạnh nhau được</h3>
+
+<p>
+  Màn hình điện thoại không đủ rộng cho hai cột. Chia đôi theo chiều dọc thì mỗi nửa còn quá hẹp để
+  đọc chữ Hán, chia đôi theo chiều ngang thì ảnh bị bóp dẹt. Đề xuất <b>ba chế độ, người dùng chọn,
+  mặc định là “Đọc”</b>.
+</p>
+
+<figure id="kd-2">
+<svg viewBox="0 0 720 450" role="img" aria-label="Khung dây trình đọc tư liệu trên điện thoại với ba chế độ Đọc, Ảnh gốc và So sánh">
+  <rect class="wf-khung" x="30" y="20" width="190" height="400" rx="14"/>
+  <rect class="wf-o" x="30" y="20" width="190" height="46" rx="14"/>
+  <text class="wf-chu" x="44" y="42" font-weight="600">Văn bia mộ Tổ</text>
+  <text class="wf-phu" x="44" y="58">đời thứ 3</text>
+  <rect class="wf-nhan" x="40" y="76" width="58" height="34" rx="4"/>
+  <text class="wf-phu" x="55" y="97" fill="var(--nen-the)">Đọc</text>
+  <rect class="wf-o" x="104" y="76" width="58" height="34" rx="4"/>
+  <text class="wf-phu" x="112" y="97">Ảnh gốc</text>
+  <rect class="wf-o" x="168" y="76" width="44" height="34" rx="4"/>
+  <text class="wf-phu" x="174" y="97">So sánh</text>
+  <rect class="wf-o" x="40" y="120" width="172" height="52"/>
+  <text class="wf-phu" x="50" y="140">Ảnh gốc — chạm để mở</text>
+  <g class="wf-net" stroke-width="1">
+    <rect x="52" y="146" width="10" height="10"/><rect x="68" y="146" width="10" height="10"/>
+    <rect x="84" y="146" width="10" height="10"/><rect x="100" y="146" width="10" height="10"/>
+    <rect x="116" y="146" width="10" height="10"/><rect x="132" y="146" width="10" height="10"/>
+  </g>
+  <text class="wf-chu" x="40" y="196">Bia dựng năm Tự Đức</text>
+  <text class="wf-chu" x="40" y="216">thứ chín, tháng trọng</text>
+  <text class="wf-chu" x="40" y="236">đông. Ông người xã</text>
+  <text class="wf-chu" x="40" y="256">Đông Ngạc, huyện Từ</text>
+  <text class="wf-chu" x="40" y="276">Liêm. Có bốn con trai,</text>
+  <text class="wf-chu" x="40" y="296">hai con gái…</text>
+  <rect class="wf-o" x="40" y="316" width="172" height="66"/>
+  <text class="wf-phu" x="50" y="336">Dịch nghĩa: bà Nguyễn</text>
+  <text class="wf-phu" x="50" y="352">Thị C · 01/2026</text>
+  <text class="wf-phu" x="50" y="372" fill="var(--ho-phach)">Chưa ai đối chiếu</text>
+  <text class="wf-phu" x="30" y="438">A · Chế độ “Đọc” — mặc định</text>
+
+  <rect class="wf-khung" x="265" y="20" width="190" height="400" rx="14"/>
+  <rect class="wf-o" x="265" y="20" width="190" height="46" rx="14"/>
+  <text class="wf-chu" x="279" y="42" font-weight="600">Văn bia mộ Tổ</text>
+  <text class="wf-phu" x="279" y="58">chụm hai ngón để phóng</text>
+  <rect class="wf-o" x="275" y="76" width="170" height="272"/>
+  <g class="wf-net" stroke-width="1">
+    <rect x="300" y="96" width="20" height="20"/><rect x="300" y="126" width="20" height="20"/>
+    <rect x="300" y="156" width="20" height="20"/><rect x="300" y="186" width="20" height="20"/>
+    <rect x="300" y="216" width="20" height="20"/><rect x="300" y="246" width="20" height="20"/>
+    <rect x="350" y="96" width="20" height="20"/><rect x="350" y="126" width="20" height="20"/>
+    <rect x="350" y="156" width="20" height="20"/><rect x="350" y="186" width="20" height="20"/>
+    <rect x="350" y="216" width="20" height="20"/><rect x="350" y="246" width="20" height="20"/>
+    <rect x="400" y="96" width="20" height="20"/><rect x="400" y="126" width="20" height="20"/>
+    <rect x="400" y="156" width="20" height="20"/><rect x="400" y="186" width="20" height="20"/>
+  </g>
+  <rect class="wf-o" x="275" y="360" width="170" height="44" rx="4"/>
+  <text class="wf-chu" x="300" y="387">Xem bản dịch</text>
+  <text class="wf-phu" x="265" y="438">B · Chế độ “Ảnh gốc”</text>
+
+  <rect class="wf-khung" x="500" y="20" width="190" height="400" rx="14"/>
+  <rect class="wf-o" x="500" y="20" width="190" height="46" rx="14"/>
+  <text class="wf-chu" x="514" y="42" font-weight="600">So sánh</text>
+  <text class="wf-phu" x="514" y="58">kéo thanh giữa để đổi tỉ lệ</text>
+  <rect class="wf-o" x="510" y="76" width="170" height="140"/>
+  <g class="wf-net" stroke-width="1">
+    <rect x="535" y="96" width="18" height="18"/><rect x="535" y="122" width="18" height="18"/>
+    <rect x="535" y="148" width="18" height="18"/><rect x="535" y="174" width="18" height="18"/>
+    <rect x="580" y="96" width="18" height="18"/><rect x="580" y="122" width="18" height="18"/>
+    <rect x="580" y="148" width="18" height="18"/><rect x="580" y="174" width="18" height="18"/>
+    <rect x="625" y="96" width="18" height="18"/><rect x="625" y="122" width="18" height="18"/>
+  </g>
+  <rect class="wf-nhan" x="510" y="222" width="170" height="14" rx="7" opacity="0.5"/>
+  <text class="wf-phu" x="556" y="233" fill="var(--nen-the)">kéo</text>
+  <rect class="wf-o" x="510" y="244" width="170" height="160"/>
+  <text class="wf-chu" x="522" y="268">Câu 1 · Bia dựng năm</text>
+  <text class="wf-chu" x="522" y="288">Tự Đức thứ chín…</text>
+  <rect class="wf-nhan" x="514" y="300" width="162" height="30" opacity="0.13"/>
+  <text class="wf-chu" x="522" y="320">Câu 2 · Ông người xã…</text>
+  <text class="wf-chu" x="522" y="352">Câu 3 · Có bốn con trai…</text>
+  <text class="wf-phu" x="522" y="380">Câu đang chọn được tô ở</text>
+  <text class="wf-phu" x="522" y="394">cả hai nửa màn hình</text>
+  <text class="wf-phu" x="500" y="438">C · Chế độ “So sánh”</text>
+</svg>
+<figcaption>
+  <strong>KD-2 · Ba chế độ trên điện thoại.</strong>
+  Mặc định là <strong>Đọc</strong>: bản dịch chiếm toàn màn hình, ảnh gốc thu về một dải nhỏ luôn nhìn
+  thấy ở đầu trang — đủ để người đọc biết bản gốc tồn tại và chạm được, không đủ để làm họ nản.
+  Chế độ <strong>So sánh</strong> là dành cho người phiên âm và người khó tính, không phải mặc định:
+  nó chia đôi màn hình theo chiều ngang với một thanh kéo được, và câu đang chọn được tô ở cả hai nửa.
+  <strong>Cái giá:</strong> ba chế độ nghĩa là ba đường mã cần bảo trì và một quyết định thêm cho người
+  dùng. Đổi lại, ép tất cả vào một chế độ thì hoặc là người đọc bỏ đi, hoặc là người phiên âm không
+  làm việc được — và cả hai đều đắt hơn.
+</figcaption>
+</figure>
+
+<h3>Rủi ro trải nghiệm của FR-3.1</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Biểu hiện</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="xau"><b>Thư viện toàn ảnh, không có chữ</b></td>
+      <td>Con cháu chụp bia bằng điện thoại rất nhanh; phiên âm thì mất nhiều tuần. Kết quả là một thư viện <b>không tìm kiếm được</b>, vì tìm kiếm chạy trên chữ chứ không chạy trên ảnh.</td>
+      <td>Bắt buộc mỗi tư liệu phải có <b>tối thiểu một dòng mô tả tiếng Việt</b> khi tải lên. Hiện công khai số tư liệu “chưa phiên âm” để việc còn dở nhìn thấy được, không bị quên.</td>
+    </tr>
+    <tr>
+      <td class="xau"><b>Ảnh không đọc được</b></td>
+      <td>Bia chụp nghiêng, ngược nắng, thiếu sáng — phóng to ra thì mờ, phiên âm không làm được, phải quay lại thực địa.</td>
+      <td>Một trang <b>hướng dẫn chụp</b> ngắn ngay trong luồng tải lên; và cho phép đánh dấu “ảnh cần chụp lại” để chuyến đi sau gom việc.</td>
+    </tr>
+    <tr>
+      <td class="canh"><b>Dịch sai được đọc như bản chính thức</b></td>
+      <td>Một bản dịch chưa ai đối chiếu, sau vài năm thành “bản của dòng họ” chỉ vì nó là bản duy nhất.</td>
+      <td>Trạng thái hiển thị rõ: <em>chưa đối chiếu</em> / <em>đã đối chiếu bởi …</em> / <em>Hội đồng công nhận</em>. Cho phép ghi <b>dị bản</b> song song thay vì ép chọn một.</td>
+    </tr>
+    <tr>
+      <td class="canh"><b>Chữ Hán hiển thị sai hoặc không hiện</b></td>
+      <td>Nhiều chữ Nôm nằm ngoài bộ chữ thông dụng; máy cũ hiện ô vuông rỗng.</td>
+      <td>Chấp nhận rằng lớp chữ Hán-Nôm là <b>tuỳ chọn</b>: khi không hiện được thì rơi về ảnh gốc và phiên âm, không để trang vỡ. Không đặt chữ Hán vào chỗ bắt buộc phải đọc được.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Di chúc không nên nằm trong thư viện này</p>
+  <p>
+    FR-3.1 liệt kê <b>di chúc</b> cạnh văn bia, hương ước, gia huấn, câu đối. Bốn thứ sau là di sản
+    của người đã khuất, công khai theo mục đích gia phả. Di chúc thì khác: nó có thể <b>còn hiệu lực
+    pháp lý</b>, nó nói về <b>tài sản</b>, và nó nêu tên <b>những người đang sống</b>. Đưa nó vào một
+    thư viện công khai là vừa vi phạm tinh thần Nghị định 13/2023, vừa có khả năng châm ngòi tranh
+    chấp thừa kế ngay trong họ.
+  </p>
+  <p>
+    <b>Đề xuất:</b> tách thành nhóm riêng, mặc định chỉ Hội đồng Tộc biểu xem, không hiện với khách,
+    không nằm trong kết quả tìm kiếm chung, và mọi lượt xem đều ghi nhật ký — cùng mức kiểm toán như
+    sổ quỹ. Cần Hội đồng và người có chuyên môn pháp lý xác nhận trước khi làm.
+  </p>
+</div>
+
+<h2>2. FR-3.2 — Mộ phần: bối cảnh khắc nghiệt nhất của cả sản phẩm</h2>
+
+<p>
+  Mọi màn hình khác trong sản phẩm được dùng bởi một người ngồi yên. Màn hình này được dùng bởi
+  một người <b>đang đi bộ</b>, giữa trưa, trong nghĩa trang, có thể đang <b>cầm đồ lễ ở tay kia</b>,
+  tay có thể ướt vì mưa hoặc bẩn vì đất, mắt chói vì nắng, máy còn ít pin, và <b>sóng chập chờn</b>
+  vì nghĩa trang thường ở rìa làng. Người đó thường trên 50 tuổi và đang đeo kính.
+</p>
+
+<p>
+  Mỗi điều kiện trên phủ định một giả định mặc định của giao diện web. Cộng lại, chúng buộc luồng
+  này phải được thiết kế <b>riêng</b>, không phải thu nhỏ luồng có sẵn.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Điều kiện thực địa</th><th>Điều nó phủ định</th><th>Yêu cầu thiết kế</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Nắng chói</td><td>Chế độ tối, chữ mảnh, màu nhạt trên nền nhạt</td><td>Màn hình dẫn đường <b>khoá ở nền sáng</b> kể cả khi máy đang ở chế độ tối; chữ đậm, tương phản tối đa</td></tr>
+    <tr><td>Sóng chập chờn</td><td>Mọi thứ tải khi cần</td><td>Toàn bộ khu mộ phải <b>tải sẵn về máy trước khi đi</b>; luồng chạy đủ khi máy ở chế độ máy bay</td></tr>
+    <tr><td>Đang đi bộ, một tay</td><td>Thao tác chính xác, nút nhỏ, nhập liệu</td><td>Một hành động chính trên mỗi màn hình; nút lớn ở nửa dưới màn hình, trong tầm ngón cái</td></tr>
+    <tr><td>Sai số GPS 5–10m dưới tán cây</td><td>“Bản đồ đưa bạn tới đúng chỗ”</td><td>GPS chỉ dẫn tới <b>khu</b>; sơ đồ hàng/lô và <b>ảnh mộ chí</b> mới xác nhận đúng <b>ngôi</b></td></tr>
+    <tr><td>Đi cả buổi, pin tụt</td><td>Bản đồ động, tải ảnh liên tục</td><td>Không chạy bản đồ nền; la bàn và khoảng cách tốn ít pin hơn nhiều</td></tr>
+    <tr><td>Phiên đăng nhập hết hạn giữa đồng</td><td>Đăng nhập lại khi cần</td><td>Phiên dài, và nội dung đã tải về <b>vẫn xem được</b> khi hết phiên; chỉ chặn thao tác ghi</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Một ngoại lệ có chủ ý, xin nêu để phản biện</p>
+  <p>
+    <a href="../00-dinh-huong.html">Định hướng §3</a> chốt rằng sản phẩm tôn trọng lựa chọn sáng/tối
+    của hệ điều hành. <b>Màn hình dẫn đường tới mộ đề xuất là ngoại lệ duy nhất</b>: nó luôn hiển thị
+    ở nền sáng. Lý do: chế độ tối ngoài nắng gắt là trường hợp tệ nhất về khả năng đọc, và người dùng
+    thường không nghĩ tới việc đổi cài đặt khi đang đứng giữa nghĩa trang.
+  </p>
+  <p>
+    <b>Cái giá:</b> phá tính nhất quán, và có thể gây chói mắt nếu ai đó mở màn hình này lúc chập tối.
+    Cách giảm: chỉ khoá nền sáng trong <em>màn hình dẫn đường</em>, không khoá cả mục mộ phần; và đặt
+    một nút có nhãn chữ rõ ràng để tắt.
+  </p>
+</div>
+
+<figure id="kd-3">
+<svg viewBox="0 0 720 470" role="img" aria-label="Khung dây ba bước dẫn đường tới mộ: tải trước khi đi, la bàn và khoảng cách, đối chiếu ảnh mộ chí">
+  <rect class="wf-khung" x="30" y="20" width="190" height="410" rx="14"/>
+  <rect class="wf-o" x="30" y="20" width="190" height="46" rx="14"/>
+  <text class="wf-chu" x="44" y="42" font-weight="600">Chuẩn bị đi tảo mộ</text>
+  <text class="wf-phu" x="44" y="58">Nghĩa trang Đồng Chùa</text>
+  <rect class="wf-o" x="40" y="80" width="170" height="96"/>
+  <text class="wf-phu" x="50" y="100">TẢI VỀ MÁY TRƯỚC KHI ĐI</text>
+  <text class="wf-chu" x="50" y="122">18 ngôi mộ của chi Hai</text>
+  <text class="wf-chu" x="50" y="142">Sơ đồ khu · ảnh mộ chí</text>
+  <text class="wf-phu" x="50" y="164">Khoảng 24 MB — số liệu minh hoạ</text>
+  <rect class="wf-nhan" x="40" y="188" width="170" height="48" rx="4"/>
+  <text class="wf-chu" x="62" y="217" fill="var(--nen-the)">Tải khu mộ về máy</text>
+  <text class="wf-phu" x="40" y="258">Sau khi tải, luồng tìm mộ chạy</text>
+  <text class="wf-phu" x="40" y="274">được khi máy không có sóng.</text>
+  <rect class="wf-o" x="40" y="292" width="170" height="70"/>
+  <text class="wf-phu" x="50" y="312">LỊCH TẢO MỘ</text>
+  <text class="wf-chu" x="50" y="332">Chạp mả: 20 tháng Chạp</text>
+  <text class="wf-phu" x="50" y="352">Bạn được phân công 4 ngôi</text>
+  <rect class="wf-o" x="40" y="374" width="170" height="44" rx="4"/>
+  <text class="wf-chu" x="60" y="401">Xem sơ đồ khu mộ</text>
+  <text class="wf-phu" x="30" y="450">A · Ở nhà, còn mạng</text>
+
+  <rect class="wf-khung" x="265" y="20" width="190" height="410" rx="14"/>
+  <rect class="wf-o" x="265" y="20" width="190" height="46" rx="14"/>
+  <text class="wf-chu" x="279" y="42" font-weight="600">Cụ Nguyễn Văn A</text>
+  <text class="wf-phu" x="279" y="58">Hàng 4 · Lô 12 · đời thứ 5</text>
+  <path class="wf-nhan" d="M360 100 L392 176 L360 158 L328 176 Z"/>
+  <text class="wf-chu" x="292" y="216" font-size="34" font-weight="700" fill="var(--do-tram)">còn 34 m</text>
+  <text class="wf-phu" x="292" y="238">theo hướng mũi tên · sai số ±8 m</text>
+  <rect class="wf-o" x="275" y="256" width="170" height="76"/>
+  <text class="wf-phu" x="285" y="276">MỐC DỄ NHẬN</text>
+  <text class="wf-chu" x="285" y="298">Đi qua cây đa lớn, rẽ</text>
+  <text class="wf-chu" x="285" y="318">phải ở lối thứ hai</text>
+  <rect class="wf-nhan" x="275" y="346" width="170" height="48" rx="4"/>
+  <text class="wf-chu" x="292" y="375" fill="var(--nen-the)">Tôi đã tới nơi</text>
+  <text class="wf-phu" x="275" y="414">Không có bản đồ nền — tiết kiệm pin</text>
+  <text class="wf-phu" x="265" y="450">B · Đang đi, nắng, không sóng</text>
+
+  <rect class="wf-khung" x="500" y="20" width="190" height="410" rx="14"/>
+  <rect class="wf-o" x="500" y="20" width="190" height="46" rx="14"/>
+  <text class="wf-chu" x="514" y="42" font-weight="600">Có đúng ngôi này?</text>
+  <text class="wf-phu" x="514" y="58">So ảnh với thực địa</text>
+  <rect class="wf-o" x="510" y="80" width="170" height="150"/>
+  <rect class="wf-net" x="530" y="100" width="130" height="110"/>
+  <text class="wf-phu" x="556" y="132">ảnh mộ chí</text>
+  <text class="wf-phu" x="548" y="152">chụp 03/2026</text>
+  <text class="wf-chu" x="554" y="186">Nguyễn Văn A</text>
+  <text class="wf-phu" x="510" y="252">Chữ trên bia: “Hiển khảo</text>
+  <text class="wf-phu" x="510" y="268">Nguyễn công húy A chi mộ”</text>
+  <rect class="wf-nhan" x="510" y="286" width="170" height="48" rx="4"/>
+  <text class="wf-chu" x="540" y="315" fill="var(--nen-the)">Đúng ngôi này</text>
+  <rect class="wf-o" x="510" y="344" width="170" height="48" rx="4"/>
+  <text class="wf-chu" x="528" y="373">Không phải — báo sai</text>
+  <text class="wf-phu" x="510" y="414">Báo sai sẽ vào hàng chờ Trưởng chi</text>
+  <text class="wf-phu" x="500" y="450">C · Tới nơi, xác nhận bằng mắt</text>
+</svg>
+<figcaption>
+  <strong>KD-3 · Ba bước tìm mộ.</strong> Điểm quan trọng nhất nằm ở bước C:
+  <strong>máy không khẳng định đây là đúng ngôi mộ — con người khẳng định</strong>, bằng cách so ảnh mộ
+  chí với tấm bia trước mặt. Sai số GPS dưới tán cây thường lớn hơn khoảng cách giữa hai ngôi mộ liền
+  kề, nên nếu hệ thống nói chắc chắn thì nó đang nói dối. Bước B cố tình <strong>không có bản đồ
+  nền</strong>: bản đồ thương mại không vẽ lối đi trong nghĩa trang, lại tốn pin và tốn sóng. Thay vào
+  đó là mũi tên hướng, khoảng cách còn lại ở cỡ chữ rất lớn, sai số ghi thẳng ra, và một câu mô tả mốc
+  dễ nhận do người trong họ tự viết — thứ mà không hệ thống bản đồ nào có. Số 34 m và 24 MB trong hình
+  là <strong>số minh hoạ</strong>, không phải số đo.
+</figcaption>
+</figure>
+
+<figure id="kd-4">
+<svg viewBox="0 0 720 430" role="img" aria-label="Khung dây sơ đồ khu mộ với điểm neo đặt trên ảnh, và hồ sơ một ngôi mộ bên phải">
+  <rect class="wf-khung" x="8" y="8" width="704" height="414" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Khu mộ chi Hai — nghĩa trang Đồng Chùa</text>
+  <text class="wf-phu" x="24" y="46">18 ngôi · 2 ngôi chưa xác định vị trí · cập nhật 03/2026</text>
+
+  <text class="wf-phu" x="20" y="76">SƠ ĐỒ — ĐIỂM NEO ĐẶT TRÊN ẢNH CHỤP TỪ TRÊN CAO</text>
+  <rect class="wf-o" x="20" y="86" width="400" height="264"/>
+  <path class="wf-net" d="M20 180 L420 168 M20 262 L420 254 M150 86 L162 350 M292 86 L300 350" stroke-dasharray="5 4"/>
+  <text class="wf-phu" x="30" y="104">Hàng 1</text>
+  <text class="wf-phu" x="30" y="196">Hàng 4</text>
+  <g class="wf-nhan">
+    <circle cx="60" cy="130" r="9"/><circle cx="100" cy="132" r="9"/><circle cx="200" cy="128" r="9"/>
+    <circle cx="240" cy="130" r="9"/><circle cx="340" cy="126" r="9"/>
+    <circle cx="70" cy="215" r="9"/><circle cx="110" cy="216" r="9"/><circle cx="210" cy="212" r="9"/>
+    <circle cx="250" cy="214" r="9"/><circle cx="350" cy="210" r="9"/>
+    <circle cx="80" cy="300" r="9"/><circle cx="120" cy="302" r="9"/><circle cx="220" cy="298" r="9"/>
+  </g>
+  <circle class="wf-nhan" cx="250" cy="214" r="16" opacity="0.25"/>
+  <text class="wf-phu" x="268" y="219">đang chọn</text>
+  <circle class="wf-net" cx="350" cy="300" r="9" stroke-dasharray="3 3"/>
+  <text class="wf-phu" x="366" y="304">vị trí phỏng đoán</text>
+  <rect class="wf-o" x="20" y="362" width="130" height="44" rx="4"/>
+  <text class="wf-chu" x="42" y="389">Đặt điểm neo</text>
+  <rect class="wf-o" x="160" y="362" width="150" height="44" rx="4"/>
+  <text class="wf-chu" x="176" y="389">Đổi ảnh nền khu mộ</text>
+  <rect class="wf-o" x="320" y="362" width="100" height="44" rx="4"/>
+  <text class="wf-chu" x="340" y="389">Tải về máy</text>
+
+  <rect class="wf-o" x="436" y="86" width="264" height="320"/>
+  <text class="wf-chu" x="450" y="112" font-weight="600">Cụ Nguyễn Văn A</text>
+  <text class="wf-phu" x="450" y="130">Đời thứ 5 · mất 12 tháng Giêng (âm)</text>
+  <rect class="wf-nhan" x="450" y="142" width="104" height="26" rx="3" opacity="0.16"/>
+  <text class="wf-phu" x="460" y="160" fill="var(--do-tram)">Đã cải táng 1998</text>
+  <rect class="wf-net" x="450" y="182" width="110" height="80"/>
+  <text class="wf-phu" x="474" y="226">ảnh mộ chí</text>
+  <text class="wf-phu" x="572" y="200">Hàng 4 · Lô 12</text>
+  <text class="wf-phu" x="572" y="220">Toạ độ: chỉ hiện với</text>
+  <text class="wf-phu" x="572" y="236">thành viên đã đăng nhập</text>
+  <rect class="wf-o" x="572" y="248" width="114" height="30" rx="4"/>
+  <text class="wf-phu" x="584" y="268">Ẩn toạ độ mộ này</text>
+  <text class="wf-phu" x="450" y="292">LỊCH SỬ</text>
+  <text class="wf-chu" x="450" y="314">1962 · an táng lần đầu, đồi Sim</text>
+  <text class="wf-chu" x="450" y="334">1998 · cải táng về Đồng Chùa</text>
+  <text class="wf-chu" x="450" y="354">2026 · sửa lại bia, chi Hai góp</text>
+  <rect class="wf-nhan" x="450" y="368" width="236" height="26" rx="3" opacity="0.12"/>
+  <text class="wf-phu" x="460" y="386">Người trông nom: ông Nguyễn Văn D (chi Hai)</text>
+</svg>
+<figcaption>
+  <strong>KD-4 · Sơ đồ khu mộ và hồ sơ một ngôi.</strong> Sơ đồ <strong>không phải hình vẽ do hệ thống
+  dựng</strong> mà là ảnh chụp thật của khu mộ, có các điểm neo đặt lên trên — cách này rẻ hơn nhiều lần
+  và <em>dễ đối chiếu tại chỗ hơn</em> một sơ đồ vẽ đẹp. Ba chi tiết đáng chú ý: điểm nét đứt là
+  <strong>vị trí phỏng đoán</strong>, một trạng thái buộc phải có vì nhiều mộ tổ đã mất dấu và ghi bừa
+  một toạ độ chắc chắn là cách chắc chắn nhất để đời sau tìm nhầm; trạng thái
+  <strong>cải táng</strong> nằm ở dòng đầu, vì đó là thông tin quyết định người đi tảo mộ có tới đúng
+  nghĩa trang hay không; và nút <strong>“Ẩn toạ độ mộ này”</strong> — với mộ người mới mất, thân nhân
+  có quyền không muốn công khai vị trí, và toạ độ chính xác công khai với cả khách là dữ liệu có thể
+  bị lạm dụng.
+</figcaption>
+</figure>
+
+<h3>Rủi ro trải nghiệm của FR-3.2</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Vì sao</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="xau"><b>Người dùng tin GPS hơn mắt mình</b></td><td>Màn hình nói “đã tới nơi” trong khi bia trước mặt là của họ khác. Với người lớn tuổi, việc thắp hương nhầm mộ là chuyện nặng nề.</td><td>Bước xác nhận bằng ảnh mộ chí là <b>bắt buộc</b>, không bỏ qua được. Sai số luôn hiện thành số, không giấu.</td></tr>
+    <tr><td class="xau"><b>Quên tải trước khi đi</b></td><td>Ra tới nơi mới biết không có sóng. Toàn bộ tính năng thành vô dụng đúng lúc cần nhất.</td><td>Nhắc tải kèm <b>ngay trong tin nhắn nhắc chạp mả</b> gửi qua Zalo — tận dụng kênh đã có ở giai đoạn 1, không cần người dùng nhớ.</td></tr>
+    <tr><td class="canh"><b>Ảnh mộ chí lỗi thời</b></td><td>Bia mới thay, cây mọc che, khu mộ được quy hoạch lại — ảnh cũ dẫn tới nhầm lẫn.</td><td>Hiện <b>ngày chụp</b> ngay dưới ảnh; nút “Cập nhật ảnh” ngay tại chỗ; ảnh quá cũ thì hiện cảnh báo mềm.</td></tr>
+    <tr><td class="canh"><b>Toạ độ bị lạm dụng</b></td><td>Công khai vị trí chính xác mộ phần có thể phục vụ phá hoại hoặc trộm cắp.</td><td>Khách chỉ thấy nghĩa trang cấp xã/huyện. Toạ độ chính xác chỉ cho thành viên đăng nhập, có công tắc ẩn theo từng ngôi.</td></tr>
+    <tr><td class="canh"><b>Không ai cập nhật</b></td><td>Việc trông nom mộ là việc ngoài đời; nếu hệ thống không gắn với việc đó thì dữ liệu đứng yên.</td><td>Gắn <b>phân công tảo mộ</b> vào lịch chạp mả và ghi nhận “đã thăm” — biến việc cập nhật thành hệ quả của việc vốn đã làm.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>3. FR-3.3 — Từ đường</h2>
+
+<p>
+  Từ đường có ba loại nội dung, và <b>hai trong ba đã có công cụ</b> nếu giai đoạn 3 chịu dùng lại
+  thay vì làm mới:
+</p>
+
+<ul>
+  <li><b>Hoành phi, câu đối, sắc phong</b> — đúng là tư liệu Hán-Nôm có ảnh và phiên âm. Dùng lại
+    nguyên trình đọc KD-1. Không có lý do nào để làm một trình đọc thứ hai.</li>
+  <li><b>Lịch tế lễ</b> — tế xuân, tế thu, giỗ Tổ. Đây là sự kiện theo ngày âm, tức là đúng thứ mà
+    module sự kiện của giai đoạn 1 đã làm. Việc còn lại chỉ là gắn sự kiện vào một địa điểm.</li>
+  <li><b>Sơ đồ bài vị</b> — đây mới là thứ mới, và là thứ thú vị nhất trong cả giai đoạn 3.</li>
+</ul>
+
+<h3>Sơ đồ bài vị: một lối vào phả đồ mà người lớn tuổi không cần học</h3>
+
+<p>
+  Phả đồ dạng cây là một quy ước đồ hoạ; nó cần học. <b>Ban thờ thì không cần học</b> — một cụ 70 tuổi
+  biết chính xác bài vị nào đặt ở đâu và vì sao, vì cụ đã đứng trước nó cả đời. Nếu sơ đồ bài vị chạm
+  được và mỗi bài vị mở ra hồ sơ người, thì đây là <b>lối vào gia phả tự nhiên nhất</b> mà sản phẩm có
+  thể có cho nhóm người dùng khó tiếp cận nhất.
+</p>
+
+<figure id="kd-5">
+<svg viewBox="0 0 720 400" role="img" aria-label="Khung dây sơ đồ bài vị trong từ đường, chạm vào một bài vị mở ra hồ sơ người">
+  <rect class="wf-khung" x="8" y="8" width="704" height="384" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Từ đường họ Nguyễn — sơ đồ bài vị</text>
+  <text class="wf-phu" x="24" y="46">Ảnh mặt bằng ban thờ chụp 02/2026 · 11 bài vị đã gắn hồ sơ, 2 chưa gắn</text>
+
+  <rect class="wf-o" x="20" y="70" width="420" height="252"/>
+  <text class="wf-phu" x="30" y="90">GIAN CHÍNH · nhìn từ ngoài vào</text>
+  <rect class="wf-net" x="150" y="100" width="160" height="30"/>
+  <text class="wf-phu" x="176" y="120">hoành phi — chạm để đọc</text>
+  <rect class="wf-nhan" x="196" y="146" width="68" height="46" rx="3"/>
+  <text class="wf-phu" x="206" y="166" fill="var(--nen-the)">Thủy tổ</text>
+  <text class="wf-phu" x="204" y="182" fill="var(--nen-the)">đời 1</text>
+  <rect class="wf-o" x="112" y="206" width="64" height="42" rx="3"/>
+  <text class="wf-phu" x="126" y="226">Đời 2</text>
+  <text class="wf-phu" x="120" y="242">cụ Trực</text>
+  <rect class="wf-o" x="184" y="206" width="64" height="42" rx="3"/>
+  <text class="wf-phu" x="198" y="226">Đời 2</text>
+  <text class="wf-phu" x="194" y="242">cụ Hoằng</text>
+  <rect class="wf-o" x="256" y="206" width="64" height="42" rx="3"/>
+  <text class="wf-phu" x="270" y="226">Đời 2</text>
+  <text class="wf-phu" x="268" y="242">cụ Bân</text>
+  <rect class="wf-o" x="76" y="262" width="60" height="40" rx="3"/>
+  <text class="wf-phu" x="90" y="286">Đời 3</text>
+  <rect class="wf-o" x="144" y="262" width="60" height="40" rx="3"/>
+  <text class="wf-phu" x="158" y="286">Đời 3</text>
+  <rect class="wf-o" x="212" y="262" width="60" height="40" rx="3"/>
+  <text class="wf-phu" x="226" y="286">Đời 3</text>
+  <rect class="wf-net" x="280" y="262" width="60" height="40" rx="3" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="288" y="280">chưa gắn</text>
+  <text class="wf-phu" x="292" y="296">hồ sơ</text>
+  <rect class="wf-net" x="352" y="146" width="72" height="156"/>
+  <text class="wf-phu" x="360" y="220">câu đối</text>
+  <text class="wf-phu" x="360" y="236">bên tả</text>
+  <rect class="wf-o" x="20" y="334" width="180" height="44" rx="4"/>
+  <text class="wf-chu" x="42" y="361">Gắn bài vị vào phả</text>
+  <rect class="wf-o" x="212" y="334" width="228" height="44" rx="4"/>
+  <text class="wf-chu" x="230" y="361">Đổi ảnh mặt bằng ban thờ</text>
+
+  <rect class="wf-o" x="456" y="70" width="244" height="308"/>
+  <text class="wf-phu" x="470" y="92">BÀI VỊ ĐANG CHỌN</text>
+  <text class="wf-chu" x="470" y="118" font-weight="600">Thủy tổ Nguyễn Quý công</text>
+  <text class="wf-phu" x="470" y="136">huý A · tự B · thụy C · đời thứ 1</text>
+  <text class="wf-phu" x="470" y="164">CHỮ TRÊN BÀI VỊ</text>
+  <rect class="wf-net" x="470" y="174" width="60" height="76"/>
+  <text class="wf-phu" x="542" y="196">Phiên âm và dịch</text>
+  <text class="wf-phu" x="542" y="214">nghĩa dùng chung</text>
+  <text class="wf-phu" x="542" y="232">trình đọc KD-1</text>
+  <rect class="wf-nhan" x="470" y="266" width="216" height="46" rx="4"/>
+  <text class="wf-chu" x="492" y="295" fill="var(--nen-the)">Mở trong phả đồ</text>
+  <rect class="wf-o" x="470" y="322" width="216" height="46" rx="4"/>
+  <text class="wf-chu" x="492" y="351">Xem mộ phần của cụ</text>
+</svg>
+<figcaption>
+  <strong>KD-5 · Sơ đồ bài vị.</strong> Nền là <strong>ảnh chụp thật ban thờ</strong>, các bài vị là
+  điểm neo đặt lên — cùng cơ chế với sơ đồ khu mộ ở KD-4, và cùng một công cụ. Không dựng hình ban thờ
+  bằng phần mềm: mỗi từ đường một cách bài trí, và một sơ đồ vẽ sẵn sẽ không khớp với cái mà người
+  đứng trước ban thờ nhìn thấy. Ô nét đứt là bài vị <strong>chưa gắn được vào ai trong phả</strong> —
+  đây là trạng thái bình thường và phải hiện ra, vì nó chính là danh sách việc cần làm cho Hội đồng.
+  Hai nút ở cột phải nối từ đường sang hai bối cảnh khác: phả đồ và mộ phần. Đó là chỗ ba tính năng
+  của giai đoạn 3 khoá vào nhau thay vì nằm rời.
+</figcaption>
+</figure>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Chỗ dễ sai về nghi lễ</p>
+  <p>
+    Vị trí bài vị trên ban thờ theo thứ tự thế thứ là chuyện <b>nghi lễ</b>, không phải chuyện bố cục.
+    Hệ thống <b>không được tự sắp lại</b> theo thuật toán vẽ cây, dù thuật toán có ra hình cân đối hơn.
+    Điểm neo phải đặt đúng chỗ bài vị thật đang đứng, kể cả khi trông lệch. Nếu vị trí thật khác với
+    thứ tự trong phả, đó là một <em>phát hiện</em> đáng báo cho Hội đồng, không phải một lỗi cần hệ
+    thống sửa lặng lẽ.
+  </p>
+</div>
+
+<h2>4. FR-3.4 — Văn khấn và sao hạn</h2>
+
+<p>
+  Đây là phần duy nhất trong cả sản phẩm chạm vào <b>tín ngưỡng</b>. Nó đòi hỏi một ranh giới mà các
+  phần khác không cần: hệ thống <b>trình bày tri thức có nguồn</b>, hệ thống <b>không phán về vận mệnh
+  của ai</b>. Ba luật cụ thể, đề xuất để Hội đồng phê chuẩn:
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Không câu tiên đoán</h4>
+    <p>
+      Không viết “năm nay bạn gặp hạn nặng, nên cúng giải”. Viết: “Theo cách tính trong <em>[tên
+      sách]</em>, người tuổi Nhâm Tuất trong năm Bính Ngọ ứng với sao Thái Bạch.” Chủ ngữ là cuốn sách,
+      không phải hệ thống.
+    </p>
+    <p class="day">Khác biệt nghe có vẻ nhỏ, nhưng nó là ranh giới giữa tra cứu và bói toán.</p>
+  </div>
+  <div class="the">
+    <h4>Luôn nêu dị bản</h4>
+    <p>
+      Cách tính sao hạn và Tam Tai khác nhau theo sách và theo vùng. Hiện đúng một kết quả là
+      <b>khẳng định thay người dùng</b> rằng một dị bản đúng còn các dị bản khác sai.
+    </p>
+    <p class="day">Nếu chỉ có một nguồn, phải ghi rõ “chỉ có một nguồn” chứ không im lặng.</p>
+  </div>
+  <div class="the">
+    <h4>Không thương mại, không đùa</h4>
+    <p>
+      Không gợi ý mua lễ vật, không liên kết dịch vụ cúng giải — BA v2 §2 đã loại thương mại vật phẩm
+      thờ cúng khỏi phạm vi. Không emoji, không giọng vui vẻ, không huy hiệu, không đếm điểm.
+    </p>
+    <p class="day">Phần này dùng nền “giấy cũ” <code>#f2ede2</code> và chữ đứng đắn, giống cách sản phẩm đối xử với người đã khuất.</p>
+  </div>
+</div>
+
+<figure id="kd-6">
+<svg viewBox="0 0 720 440" role="img" aria-label="Khung dây soạn văn khấn từ mẫu và chế độ đọc trước ban thờ">
+  <rect class="wf-khung" x="8" y="8" width="440" height="424" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="440" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Soạn văn khấn — giỗ thường</text>
+  <text class="wf-phu" x="24" y="46">Mẫu do Hội đồng Tộc biểu duyệt 11/2026 · nguồn: [tên sách]</text>
+  <text class="wf-phu" x="24" y="78">CÚNG AI</text>
+  <rect class="wf-o" x="24" y="88" width="404" height="44"/>
+  <text class="wf-chu" x="36" y="115">Cụ Nguyễn Văn A — đời thứ 5</text>
+  <text class="wf-phu" x="300" y="115">lấy từ phả</text>
+  <text class="wf-phu" x="24" y="154">NGÀY CÚNG</text>
+  <rect class="wf-o" x="24" y="164" width="198" height="44"/>
+  <text class="wf-chu" x="36" y="191">12 tháng Giêng (âm)</text>
+  <rect class="wf-o" x="230" y="164" width="198" height="44"/>
+  <text class="wf-chu" x="242" y="191">28/02/2027 (dương)</text>
+  <text class="wf-phu" x="24" y="230">GIA CHỦ — người đứng khấn</text>
+  <rect class="wf-o" x="24" y="240" width="404" height="44"/>
+  <text class="wf-chu" x="36" y="267">Nguyễn Văn D, cháu đời thứ 8</text>
+  <text class="wf-phu" x="24" y="306">ĐỊA CHỈ NƠI CÚNG</text>
+  <rect class="wf-o" x="24" y="316" width="404" height="44"/>
+  <text class="wf-chu" x="36" y="343">Từ đường họ Nguyễn, xã Đông Ngạc</text>
+  <rect class="wf-nhan" x="24" y="376" width="200" height="46" rx="4"/>
+  <text class="wf-chu" x="52" y="405" fill="var(--nen-the)">Xem bản đã điền</text>
+  <rect class="wf-o" x="234" y="376" width="194" height="46" rx="4"/>
+  <text class="wf-chu" x="262" y="405">In ra giấy</text>
+
+  <rect class="wf-khung" x="472" y="8" width="240" height="424" rx="14"/>
+  <rect class="wf-o" x="472" y="8" width="240" height="52" rx="14"/>
+  <text class="wf-chu" x="488" y="32" font-weight="600">Chế độ đọc trước ban thờ</text>
+  <text class="wf-phu" x="488" y="50">Màn hình không tự tắt · nền sáng</text>
+  <text class="wf-chu" x="486" y="96" font-size="19">Nam mô A Di Đà Phật</text>
+  <text class="wf-chu" x="486" y="126" font-size="19">Con lạy chín phương</text>
+  <text class="wf-chu" x="486" y="156" font-size="19">Trời, mười phương</text>
+  <text class="wf-chu" x="486" y="186" font-size="19">Chư Phật.</text>
+  <text class="wf-chu" x="486" y="222" font-size="19">Hôm nay ngày 12 tháng</text>
+  <text class="wf-chu" x="486" y="252" font-size="19">Giêng năm Đinh Mùi.</text>
+  <text class="wf-chu" x="486" y="288" font-size="19">Tín chủ con là Nguyễn</text>
+  <text class="wf-chu" x="486" y="318" font-size="19">Văn D, cháu đời thứ 8…</text>
+  <rect class="wf-o" x="484" y="356" width="216" height="30" rx="4"/>
+  <rect class="wf-nhan" x="484" y="356" width="86" height="30" rx="4" opacity="0.4"/>
+  <text class="wf-phu" x="496" y="376">đã đọc tới đây</text>
+  <rect class="wf-o" x="484" y="396" width="104" height="30" rx="4"/>
+  <text class="wf-phu" x="502" y="416">Chữ to hơn</text>
+  <rect class="wf-o" x="596" y="396" width="104" height="30" rx="4"/>
+  <text class="wf-phu" x="616" y="416">Chữ nhỏ hơn</text>
+</svg>
+<figcaption>
+  <strong>KD-6 · Soạn văn khấn và chế độ đọc trước ban thờ.</strong> Bên trái là điền chỗ trống, không
+  phải sinh văn: bốn trường, ba trong bốn lấy sẵn từ phả và từ lịch âm đã có ở giai đoạn 1. Bên phải là
+  chỗ dễ bị bỏ sót nhất của FR-3.4 — <strong>người đọc văn khấn đang đứng, cầm máy một tay, tay kia
+  cầm hương, giữa khói và ánh đèn dầu</strong>. Ba yêu cầu theo sau: chữ khoảng 21px trở lên (cao hơn
+  sàn 16px của <a href="../00-dinh-huong.html">định hướng §2</a> vì khoảng cách mắt xa hơn),
+  <strong>màn hình không tự tắt</strong>, và một vạch tiến độ để không mất dòng khi ngẩng lên. Không có
+  nút nào ở nửa trên màn hình vì tay đang ở dưới. In ra giấy vẫn là lựa chọn được đặt ngang hàng, không
+  phải một mục phụ giấu trong menu.
+</figcaption>
+</figure>
+
+<figure id="kd-7">
+<svg viewBox="0 0 720 380" role="img" aria-label="Khung dây tra sao hạn hiển thị nhiều dị bản kèm nguồn, không đưa ra kết luận">
+  <rect class="wf-khung" x="8" y="8" width="704" height="364" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Tra sao hạn &amp; Tam Tai</text>
+  <text class="wf-phu" x="24" y="46">Đây là mục tra cứu theo sách. Hệ thống không đưa ra kết luận về vận mệnh.</text>
+  <rect class="wf-o" x="20" y="70" width="220" height="44"/>
+  <text class="wf-chu" x="32" y="97">Năm sinh: 1982 (Nhâm Tuất)</text>
+  <rect class="wf-o" x="252" y="70" width="200" height="44"/>
+  <text class="wf-chu" x="264" y="97">Xem cho năm: 2027</text>
+  <rect class="wf-o" x="464" y="70" width="118" height="44"/>
+  <text class="wf-chu" x="484" y="97">Giới: Nam</text>
+  <rect class="wf-nhan" x="594" y="70" width="106" height="44" rx="4"/>
+  <text class="wf-chu" x="622" y="97" fill="var(--nen-the)">Tra cứu</text>
+
+  <text class="wf-phu" x="20" y="140">KẾT QUẢ THEO TỪNG NGUỒN — CÁC NGUỒN KHÔNG GIỐNG NHAU</text>
+  <rect class="wf-o" x="20" y="152" width="336" height="120"/>
+  <text class="wf-chu" x="34" y="176" font-weight="600">Nguồn A · [tên sách], bản in 19xx</text>
+  <text class="wf-chu" x="34" y="200">Sao chiếu mệnh: Thái Bạch</text>
+  <text class="wf-chu" x="34" y="222">Tam Tai: không</text>
+  <text class="wf-phu" x="34" y="246">Cách tính: theo tuổi âm và giới tính</text>
+  <text class="wf-phu" x="34" y="262">Hội đồng Tộc biểu chọn làm nguồn chính</text>
+  <rect class="wf-o" x="368" y="152" width="332" height="120"/>
+  <text class="wf-chu" x="382" y="176" font-weight="600">Nguồn B · lưu truyền tại quê</text>
+  <text class="wf-chu" x="382" y="200">Sao chiếu mệnh: Thái Bạch</text>
+  <text class="wf-chu" x="382" y="222" fill="var(--ho-phach)">Tam Tai: có (khác nguồn A)</text>
+  <text class="wf-phu" x="382" y="246">Cách tính: theo nhóm tam hợp</text>
+  <text class="wf-phu" x="382" y="262">Do cụ trưởng chi Ba cung cấp 2026</text>
+
+  <rect class="wf-o" x="20" y="288" width="680" height="66"/>
+  <text class="wf-phu" x="34" y="310">HAI NGUỒN KHÔNG THỐNG NHẤT VỀ TAM TAI</text>
+  <text class="wf-chu" x="34" y="332">Đây là sự khác biệt giữa các sách, không phải lỗi tính toán. Hệ thống</text>
+  <text class="wf-chu" x="34" y="350">nêu cả hai và không chọn hộ. Việc theo nguồn nào là quyết định của gia đình.</text>
+</svg>
+<figcaption>
+  <strong>KD-7 · Tra sao hạn có dị bản.</strong> Đây là màn hình mà thiết kế dễ sai nhất theo hướng
+  <em>tử tế quá hoá dở</em>: bản năng là gộp hai nguồn thành một kết quả gọn gàng, có lẽ kèm một dòng
+  lời khuyên. Làm vậy là hệ thống đã tự đặt mình vào vai người phán. Ở đây, <strong>sự bất đồng giữa
+  hai nguồn được hiển thị như một sự thật về tri thức, không phải như một lỗi cần che</strong>, và câu
+  cuối nói thẳng rằng quyết định thuộc về gia đình. Hội đồng Tộc biểu được chọn <em>nguồn chính</em>
+  của dòng họ, nhưng nguồn còn lại vẫn hiện. <strong>Cái giá:</strong> màn hình dài hơn và người dùng
+  phải tự kết luận — một số người sẽ thấy phiền vì họ muốn một câu trả lời. Đây là cái phiền đáng chịu.
+</figcaption>
+</figure>
+
+<h3>Rủi ro trải nghiệm của FR-3.4</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Vì sao nặng</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="xau"><b>Mẫu văn khấn sai hoặc thiếu</b></td><td>Với người lớn tuổi, khấn sai là chuyện xúc phạm tổ tiên, không phải chuyện lỗi phần mềm. Không sửa được bằng một bản vá.</td><td>Mọi mẫu phải có nguồn và phải được Hội đồng duyệt trước khi hiện. <b>Không cho người dùng tự đăng mẫu công khai.</b></td></tr>
+    <tr><td class="xau"><b>Hệ thống bị đọc như thầy bói</b></td><td>Một dòng chữ trong ứng dụng có sức nặng lạ thường với người ít dùng máy tính. Câu “năm nay bạn có hạn” có thể làm một cụ lo lắng thật.</td><td>Chủ ngữ luôn là cuốn sách. Không có câu nào ở thể khẳng định về tương lai của người dùng. Không có thông báo đẩy về sao hạn.</td></tr>
+    <tr><td class="canh"><b>Bị biến thành kênh bán hàng</b></td><td>Sao hạn là chỗ tự nhiên để cài quảng cáo lễ vật. Một lần cho phép là mất luôn tư cách của cả sản phẩm với Hội đồng.</td><td>Ghi thành luật trong tài liệu thiết kế: không quảng cáo, không liên kết thương mại trong mục này. BA v2 §2 đã đứng về phía này.</td></tr>
+    <tr><td class="canh"><b>Vòng đời nội dung không ai giữ</b></td><td>Mẫu văn khấn và nguồn tra cứu cần người trông; sau khi đội dự án rời đi thì không ai cập nhật.</td><td>Gắn mỗi mẫu với một người chịu trách nhiệm và một ngày rà lại; đưa vào phần bàn giao của giai đoạn 4.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Ba việc phải chốt trước khi bắt đầu giai đoạn 3</h2>
+
+<ol>
+  <li><b>Một trình đọc tư liệu, không phải bốn.</b> Văn bia, câu đối từ đường, mộ chí và bản tin đều là
+    ảnh kèm chữ. Nếu bốn nhóm việc làm bốn giao diện riêng thì sản phẩm mất tính nhất quán và chi phí
+    bảo trì nhân bốn. Quyết định này phải có trước dòng mã đầu tiên.</li>
+  <li><b>Một công cụ đặt điểm neo lên ảnh, không phải hai.</b> Sơ đồ khu mộ (KD-4) và sơ đồ bài vị
+    (KD-5) là cùng một bài toán: ảnh nền cộng các điểm chạm được có gắn hồ sơ.</li>
+  <li><b>Ai làm việc số hoá.</b> Giai đoạn 3 xây bốn cái kho rỗng. Nếu không có người chụp ảnh, phiên
+    âm, đo toạ độ và nhập lịch tế lễ thì sản phẩm sẽ có bốn màn hình đẹp và không có gì bên trong. Đây
+    là điều kiện tiên quyết, không phải việc chạy song song.</li>
+</ol>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 05 · Phần 01. Mọi con số trong các khung dây (34 m, 24 MB, 18 ngôi mộ, 11 bài vị) là
+    <b>số minh hoạ</b> — giai đoạn 3 chưa chạy nên chưa có số đo nào. Các đề xuất về di chúc, ngoại lệ
+    nền sáng, và nguồn tra cứu sao hạn đều cần <b>Hội đồng Tộc biểu quyết</b> trước khi thành thiết kế.
+    Quay lại <a href="index.html">tổng quan</a> · tiếp
+    <a href="02-quy-ho-bao-cao-ban-tin.html">02 · Quỹ họ, báo cáo, bản tin</a>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

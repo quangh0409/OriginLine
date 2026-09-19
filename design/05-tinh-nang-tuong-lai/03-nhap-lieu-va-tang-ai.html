@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nhập liệu hàng loạt, thông gia và tầng AI — Tài liệu 05.03</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Tài liệu 05 · Phần 03 · Giai đoạn 2 còn nợ + tầng AI</p>
+  <h1>Nhập liệu hàng loạt,<br>thông gia và tầng AI</h1>
+  <p class="tom-tat">
+    <strong>FR-1.7, FR-1.9, và tầng AI.</strong> Ba chủ đề này có chung một câu hỏi:
+    <strong>dữ liệu từ bên ngoài vào phả bằng cửa nào, và ai chịu trách nhiệm về nó.</strong>
+    Trong một cuốn gia phả, một câu bịa được ghi lại như sự thật là thiệt hại không sửa được — vài đời
+    sau không còn ai biết câu đó từ đâu ra. Phần lớn tài liệu này là về cách dựng cái cửa đó cho chắc.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <a href="index.html">↩ 05 · Tổng quan</a>
+  <span>·</span>
+  <a href="01-di-san-mo-phan.html">01 · Di sản, mộ phần, từ đường</a>
+  <span>·</span>
+  <a href="02-quy-ho-bao-cao-ban-tin.html">02 · Quỹ họ, báo cáo, bản tin</a>
+  <span>·</span>
+  <b>03 · Nhập liệu, thông gia, tầng AI</b>
+</nav>
+
+<h2>1. FR-1.7 — GEDCOM và ảnh scan gia phả giấy</h2>
+
+<p>
+  Nhập hàng loạt là <b>chỗ dễ hỏng dữ liệu nhất trong cả sản phẩm</b>. Một lần sửa tay hỏng một người;
+  một lần nhập hỏng có thể sinh ra hàng trăm người trùng, hàng trăm quan hệ sai, và vì tất cả đều là
+  xoá mềm nên chúng ở lại trong phả mãi mãi.
+</p>
+
+<h3>Nói thẳng về GEDCOM trước khi thiết kế màn hình</h3>
+
+<p>
+  GEDCOM là chuẩn trao đổi gia phả phương Tây. Nó <b>không có chỗ</b> cho phần lớn những gì làm nên
+  giá trị của cuốn phả Việt. Nếu không nói rõ điều này ngay từ giao diện, người dùng sẽ tưởng “xuất
+  GEDCOM” nghĩa là “sao lưu toàn bộ”, và đó là một hiểu lầm nguy hiểm.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Dữ liệu của hệ thống</th><th>GEDCOM chứa được?</th><th>Hệ quả</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Tên húy / tự / hiệu / thụy / thường gọi / pháp danh</td><td class="xau">Không, chỉ một trường tên</td><td>Xuất ra là mất các lớp tên; nhập vào phải chọn tên gốc rơi vào lớp nào</td></tr>
+    <tr><td>Ngày âm (nguồn sự thật của ngày giỗ)</td><td class="xau">Không</td><td>Xuất ra thì lịch giỗ không tái tạo được ở hệ thống khác</td></tr>
+    <tr><td>Chi / ngành / cành / nhánh</td><td class="xau">Không có khái niệm tương đương</td><td>Cấu trúc phân nhánh và phạm vi phân quyền bị mất</td></tr>
+    <tr><td>Đích tôn · thừa tự · kế tự · tuyệt tự</td><td class="xau">Không</td><td>Quan hệ kế thừa hương hoả biến mất</td></tr>
+    <tr><td>Thứ tự vợ/chồng khi đa thê</td><td class="canh">Một phần, tuỳ bản GEDCOM</td><td>Cần đối chiếu tay</td></tr>
+    <tr><td>Cha con ruột / nuôi, dâu / rể</td><td class="canh">Một phần</td><td>Cần đối chiếu tay</td></tr>
+    <tr><td>Tên, giới tính, ngày dương, quan hệ cha–con–vợ–chồng</td><td class="tot">Có</td><td>Đây là phần GEDCOM thực sự làm tốt</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Hệ quả thiết kế</p>
+  <p>
+    Nút xuất phải là <b>hai nút đặt cạnh nhau</b>, không phải một: “Xuất GEDCOM (để chuyển sang phần
+    mềm khác)” và “Xuất toàn bộ dữ liệu (bản đầy đủ của hệ thống)”. Nút GEDCOM kèm một dòng nói rõ
+    những gì sẽ mất. Đây cũng là cách phục vụ quyền lấy dữ liệu của chủ thể theo Nghị định 13/2023 —
+    xem <a href="index.html">tổng quan §6</a>.
+  </p>
+</div>
+
+<h3>Luồng nhập: bốn bước, và một vùng chờ</h3>
+
+<figure id="kd-12">
+<svg viewBox="0 0 720 330" role="img" aria-label="Sơ đồ luồng nhập GEDCOM bốn bước qua vùng chờ trước khi vào phả chính">
+  <rect class="wf-o" x="14" y="30" width="150" height="86" rx="4"/>
+  <text class="wf-phu" x="28" y="52">BƯỚC 1</text>
+  <text class="wf-chu" x="28" y="74" font-weight="600">Tải file lên</text>
+  <text class="wf-phu" x="28" y="94">Kiểm tra định dạng,</text>
+  <text class="wf-phu" x="28" y="108">đếm số người trong file</text>
+  <path class="wf-net" d="M164 73 L188 73 M180 67 L188 73 L180 79"/>
+  <rect class="wf-o" x="192" y="30" width="150" height="86" rx="4"/>
+  <text class="wf-phu" x="206" y="52">BƯỚC 2</text>
+  <text class="wf-chu" x="206" y="74" font-weight="600">Đối chiếu trường</text>
+  <text class="wf-phu" x="206" y="94">Trường nào của file</text>
+  <text class="wf-phu" x="206" y="108">ứng với trường nào ở đây</text>
+  <path class="wf-net" d="M342 73 L366 73 M358 67 L366 73 L358 79"/>
+  <rect class="wf-o" x="370" y="30" width="150" height="86" rx="4"/>
+  <text class="wf-phu" x="384" y="52">BƯỚC 3</text>
+  <text class="wf-chu" x="384" y="74" font-weight="600">Xem trước</text>
+  <text class="wf-phu" x="384" y="94">Phát hiện trùng, cảnh báo</text>
+  <text class="wf-phu" x="384" y="108">kỵ húy, lỗi ngày tháng</text>
+  <path class="wf-net" d="M520 73 L544 73 M536 67 L544 73 L536 79"/>
+  <rect class="wf-nhan" x="548" y="30" width="158" height="86" rx="4"/>
+  <text class="wf-phu" x="562" y="52" fill="var(--nen-the)">BƯỚC 4</text>
+  <text class="wf-chu" x="562" y="74" font-weight="600" fill="var(--nen-the)">Duyệt theo cụm</text>
+  <text class="wf-phu" x="562" y="94" fill="var(--nen-the)">Trưởng chi / Hội đồng</text>
+  <text class="wf-phu" x="562" y="108" fill="var(--nen-the)">duyệt từng nhánh một</text>
+
+  <rect class="wf-khung" x="14" y="140" width="500" height="120" rx="4"/>
+  <text class="wf-phu" x="30" y="164">VÙNG CHỜ — LÔ NHẬP #2026-014</text>
+  <text class="wf-chu" x="30" y="190">318 người · 402 quan hệ · 27 cặp nghi trùng · 4 lỗi ngày tháng</text>
+  <text class="wf-chu" x="30" y="212">Nằm ngoài phả chính. Không ai ngoài người duyệt nhìn thấy.</text>
+  <text class="wf-chu" x="30" y="234">Xem được cạnh cây thật để so trước khi quyết.</text>
+  <rect class="wf-o" x="30" y="242" width="140" height="10" rx="5"/>
+  <rect class="wf-nhan" x="30" y="242" width="52" height="10" rx="5"/>
+  <text class="wf-phu" x="182" y="251">đã duyệt 4 / 11 cụm</text>
+
+  <rect class="wf-o" x="530" y="140" width="176" height="120" rx="4"/>
+  <text class="wf-phu" x="544" y="164">LỐI THOÁT HIỂM</text>
+  <rect class="wf-o" x="544" y="176" width="148" height="44" rx="4"/>
+  <text class="wf-chu" x="558" y="203">Gỡ toàn bộ lô này</text>
+  <text class="wf-phu" x="544" y="236">Gỡ được kể cả sau khi đã</text>
+  <text class="wf-phu" x="544" y="250">duyệt vào phả, trong 30 ngày.</text>
+
+  <path class="wf-net" d="M264 116 L264 140 M258 132 L264 140 L270 132"/>
+  <path class="wf-net" d="M627 116 L627 128 L340 128 L340 140 M334 132 L340 140 L346 132" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="352" y="126">bước 4 lấy dữ liệu từ vùng chờ</text>
+  <text class="wf-phu" x="14" y="290">Không có mũi tên nào đi thẳng từ bước 1 vào phả chính. Đó là điểm chính của sơ đồ này.</text>
+  <text class="wf-phu" x="14" y="310">Các con số 318 / 402 / 27 / 30 ngày là minh hoạ và là đề xuất, không phải số đo.</text>
+</svg>
+<figcaption>
+  <strong>KD-12 · Luồng nhập bốn bước.</strong> Hai thứ trong sơ đồ này quan trọng hơn cả bốn bước:
+  <strong>vùng chờ</strong> và <strong>nút gỡ lô</strong>. Vùng chờ cho phép người duyệt xem cây nhập
+  cạnh cây thật trước khi quyết, và duyệt <em>theo cụm</em> chứ không phải duyệt cả file — vì một file
+  318 người thì không ai đọc hết trong một lần. Nút gỡ lô là thứ quyết định người ta có dám nhập lần
+  thứ hai hay không: thiếu nó, một file xấu là đủ để Hội đồng cấm hẳn tính năng. Thời hạn gỡ 30 ngày
+  là <strong>đề xuất</strong> — càng dài thì càng an toàn nhưng càng khó khi dữ liệu nhập đã bị sửa
+  tiếp bởi người khác.
+</figcaption>
+</figure>
+
+<figure id="kd-13">
+<svg viewBox="0 0 720 400" role="img" aria-label="Khung dây màn hình đối soát một cặp nghi trùng với ba lựa chọn cho người duyệt">
+  <rect class="wf-khung" x="8" y="8" width="704" height="384" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Cặp nghi trùng 3 / 27 — lô nhập #2026-014</text>
+  <text class="wf-phu" x="24" y="46">Hệ thống chỉ xếp thứ tự xem xét. Quyết định là của bạn.</text>
+
+  <rect class="wf-o" x="20" y="70" width="330" height="216"/>
+  <text class="wf-phu" x="34" y="92">ĐÃ CÓ TRONG PHẢ</text>
+  <text class="wf-chu" x="34" y="118" font-weight="600">Nguyễn Văn Trực</text>
+  <text class="wf-chu" x="34" y="142">Húy: Trực · Tự: Bá Nhân</text>
+  <text class="wf-chu" x="34" y="164">Sinh 1902 · mất 1971</text>
+  <text class="wf-chu" x="34" y="186">Đời thứ 6 · chi Hai</text>
+  <text class="wf-chu" x="34" y="208">Cha: Nguyễn Văn Hoằng</text>
+  <text class="wf-chu" x="34" y="230">Vợ: Trần Thị Lành (vợ cả)</text>
+  <text class="wf-phu" x="34" y="256">Do ông Nguyễn Văn D khai, 03/2026</text>
+  <text class="wf-phu" x="34" y="272">Đã được Trưởng chi Hai duyệt</text>
+
+  <rect class="wf-o" x="370" y="70" width="330" height="216"/>
+  <text class="wf-phu" x="384" y="92">TRONG FILE VỪA NHẬP</text>
+  <text class="wf-chu" x="384" y="118" font-weight="600">Nguyen Van Truc</text>
+  <text class="wf-chu" x="384" y="142" fill="var(--ho-phach)">Không có tên húy / tên tự</text>
+  <text class="wf-chu" x="384" y="164">Sinh 1902 · mất 1971</text>
+  <text class="wf-chu" x="384" y="186" fill="var(--ho-phach)">Không có đời, không có chi</text>
+  <text class="wf-chu" x="384" y="208">Cha: Nguyen Van Hoang</text>
+  <text class="wf-chu" x="384" y="230" fill="var(--ho-phach)">Vợ: Tran Thi Lanh — không ghi thứ tự</text>
+  <text class="wf-phu" x="384" y="256">Nguồn: file GEDCOM do chi Ba gửi</text>
+  <text class="wf-phu" x="384" y="272">Chưa ai trong họ xác nhận</text>
+
+  <rect class="wf-o" x="20" y="298" width="680" height="34"/>
+  <text class="wf-chu" x="34" y="320">Giống nhau: ngày sinh, ngày mất, tên cha. Khác: không dấu, thiếu lớp tên, thiếu chi.</text>
+
+  <rect class="wf-nhan" x="20" y="342" width="216" height="44" rx="4"/>
+  <text class="wf-chu" x="52" y="370" fill="var(--nen-the)">Là một người — hợp nhất</text>
+  <rect class="wf-o" x="248" y="342" width="216" height="44" rx="4"/>
+  <text class="wf-chu" x="270" y="370">Là hai người khác nhau</text>
+  <rect class="wf-o" x="476" y="342" width="224" height="44" rx="4"/>
+  <text class="wf-chu" x="510" y="370">Chưa rõ — để lại sau</text>
+</svg>
+<figcaption>
+  <strong>KD-13 · Đối soát một cặp nghi trùng.</strong> Nút thứ ba là nút quan trọng nhất.
+  <strong>Ép người duyệt chọn nhị phân sẽ tạo ra dữ liệu sai</strong>: khi không chắc, người ta bấm đại
+  cái nào cũng được để đi tiếp, và cái bấm đại đó thành sự thật trong phả. “Chưa rõ — để lại sau” cho
+  phép cụm đó nằm yên trong vùng chờ cho tới khi có người biết rõ hơn, hoặc cho tới khi hỏi được các
+  cụ trong họ. Cột phải cố tình <strong>bôi vàng những gì file thiếu</strong> thay vì để trống lặng lẽ:
+  hợp nhất một người có đủ lớp tên với một bản ghi chỉ có tên không dấu là cách nhanh nhất để mất tên
+  húy và tên tự. Cuối cùng, <strong>hệ thống chỉ xếp thứ tự xem xét</strong> — nó không tự hợp nhất cặp
+  nào, kể cả cặp giống nhau hoàn toàn.
+</figcaption>
+</figure>
+
+<h3>Ảnh scan gia phả giấy: nói rõ giai đoạn 2 làm được gì</h3>
+
+<p>
+  FR-1.7 ghi “nhập từ ảnh scan gia phả giấy”. Câu này rất dễ bị đọc thành “máy tự đọc chữ trong ảnh và
+  tạo ra người”. <b>Ở giai đoạn 2, máy không đọc gì cả</b> — nhận dạng chữ Hán-Nôm nằm ở tầng AI, sau
+  giai đoạn 4, và ngay cả khi đó cũng không đáng tin (xem mục 3).
+</p>
+
+<p>
+  Thứ giai đoạn 2 làm được, và làm được ngay, là <b>công cụ chép tay có trợ lực</b>: ảnh trang phả
+  đứng yên một bên, biểu mẫu nhập ở bên kia, và ảnh <b>không nhảy về đầu</b> khi chuyển sang người tiếp
+  theo. Nghe rất tầm thường, nhưng đây chính là thứ quyết định người số hoá nhập được 20 người một
+  buổi hay 200.
+</p>
+
+<figure id="kd-14">
+<svg viewBox="0 0 720 400" role="img" aria-label="Khung dây màn hình chép tay gia phả giấy với ảnh trang phả giữ nguyên vị trí bên trái">
+  <rect class="wf-khung" x="8" y="8" width="704" height="384" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Chép gia phả giấy — quyển Chi Hai, trang 14 / 62</text>
+  <text class="wf-phu" x="24" y="46">Đã chép 7 người ở trang này · lô nhập #2026-018</text>
+
+  <rect class="wf-o" x="20" y="70" width="330" height="252"/>
+  <g class="wf-net" stroke-width="1">
+    <rect x="44" y="90" width="14" height="14"/><rect x="44" y="112" width="14" height="14"/>
+    <rect x="44" y="134" width="14" height="14"/><rect x="44" y="156" width="14" height="14"/>
+    <rect x="90" y="90" width="14" height="14"/><rect x="90" y="112" width="14" height="14"/>
+    <rect x="90" y="134" width="14" height="14"/><rect x="90" y="156" width="14" height="14"/>
+    <rect x="136" y="90" width="14" height="14"/><rect x="136" y="112" width="14" height="14"/>
+    <rect x="136" y="134" width="14" height="14"/>
+    <rect x="182" y="90" width="14" height="14"/><rect x="182" y="112" width="14" height="14"/>
+    <rect x="182" y="134" width="14" height="14"/><rect x="182" y="156" width="14" height="14"/>
+    <rect x="228" y="90" width="14" height="14"/><rect x="228" y="112" width="14" height="14"/>
+    <rect x="274" y="90" width="14" height="14"/><rect x="274" y="112" width="14" height="14"/>
+    <rect x="274" y="134" width="14" height="14"/>
+  </g>
+  <rect class="wf-nhan" x="126" y="82" width="34" height="80" opacity="0.16"/>
+  <rect class="wf-net" x="126" y="82" width="34" height="80" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="168" y="180">đang chép cột này</text>
+  <text class="wf-phu" x="34" y="216">Ảnh giữ nguyên vị trí và mức phóng khi</text>
+  <text class="wf-phu" x="34" y="232">chuyển sang người tiếp theo.</text>
+  <rect class="wf-o" x="34" y="248" width="120" height="44" rx="4"/>
+  <text class="wf-chu" x="56" y="275">Cột kế bên</text>
+  <rect class="wf-o" x="166" y="248" width="120" height="44" rx="4"/>
+  <text class="wf-chu" x="184" y="275">Trang sau</text>
+  <text class="wf-phu" x="34" y="312">Ảnh trang phả này sẽ được gắn làm nguồn cho mọi người chép từ đây.</text>
+
+  <rect class="wf-o" x="370" y="70" width="330" height="252"/>
+  <text class="wf-phu" x="384" y="92">TÊN — CHÉP ĐÚNG NHƯ TRONG SÁCH</text>
+  <rect class="wf-o" x="384" y="102" width="300" height="38"/>
+  <text class="wf-chu" x="396" y="126">Nguyễn Văn Bân</text>
+  <rect class="wf-o" x="384" y="146" width="146" height="34"/>
+  <text class="wf-phu" x="394" y="168">Lớp tên: Húy</text>
+  <rect class="wf-o" x="538" y="146" width="146" height="34"/>
+  <text class="wf-phu" x="548" y="168">Đời: 6</text>
+  <text class="wf-phu" x="384" y="200">NGÀY — GHI ĐƯỢC BAO NHIÊU THÌ GHI</text>
+  <rect class="wf-o" x="384" y="210" width="146" height="38"/>
+  <text class="wf-chu" x="394" y="234">Mất: 3 tháng Tám (âm)</text>
+  <rect class="wf-o" x="538" y="210" width="146" height="38"/>
+  <text class="wf-phu" x="548" y="234">Năm: không rõ</text>
+  <text class="wf-phu" x="384" y="268">CHỖ TÔI KHÔNG ĐỌC ĐƯỢC</text>
+  <rect class="wf-o" x="384" y="278" width="300" height="34"/>
+  <text class="wf-chu" x="394" y="300">Chữ thứ hai của tên tự bị mờ</text>
+
+  <rect class="wf-nhan" x="370" y="334" width="220" height="44" rx="4"/>
+  <text class="wf-chu" x="386" y="362" fill="var(--nen-the)">Lưu và chép người tiếp theo</text>
+  <rect class="wf-o" x="602" y="334" width="98" height="44" rx="4"/>
+  <text class="wf-chu" x="628" y="362">Tạm dừng</text>
+  <text class="wf-phu" x="20" y="360">Người chép làm việc hàng giờ liền —</text>
+  <text class="wf-phu" x="20" y="376">một thao tác thừa mỗi người là hàng trăm thao tác thừa mỗi quyển.</text>
+</svg>
+<figcaption>
+  <strong>KD-14 · Chép gia phả giấy.</strong> Đây là màn hình mà một người sẽ ngồi trước nó nhiều giờ
+  liên tục, nên tiêu chí thiết kế khác hẳn các màn hình khác: không phải dễ hiểu ở lần đầu, mà
+  <strong>ít thao tác thừa ở lần thứ hai trăm</strong>. Ba chi tiết theo đó: ảnh
+  <strong>không nhảy về đầu</strong> giữa các lần lưu; “Lưu và chép người tiếp theo” là một nút chứ
+  không phải hai bước; và có sẵn một ô <strong>“chỗ tôi không đọc được”</strong> — vì ép người chép
+  phải điền đủ mọi trường sẽ khiến họ đoán, và một chữ đoán trong phả tệ hơn một chỗ để trống có ghi
+  chú. Ảnh trang phả được gắn làm <strong>nguồn</strong> cho mọi người chép từ trang đó, nên vài đời
+  sau vẫn tra ngược được về bản giấy.
+</figcaption>
+</figure>
+
+<h3>Rủi ro trải nghiệm của FR-1.7</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Vì sao</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="xau"><b>Một lần nhập hỏng cả phả</b></td><td>Vì xoá là xoá mềm, dữ liệu rác nhập vào sẽ nằm lại vĩnh viễn trong graph, làm hỏng cả LCA và danh xưng.</td><td>Vùng chờ + gỡ được cả lô (KD-12). Không có đường nào nhập thẳng.</td></tr>
+    <tr><td class="xau"><b>Mất lớp tên khi hợp nhất</b></td><td>Bản ghi trong file thường chỉ có một trường tên không dấu; hợp nhất cẩu thả sẽ ghi đè lên tên húy, tên tự đã có.</td><td>Hợp nhất <b>chỉ được thêm</b>, không được ghi đè trường đã có người trong họ xác nhận. Trường xung đột phải hỏi từng cái.</td></tr>
+    <tr><td class="canh"><b>Kỵ húy bị bỏ qua khi nhập hàng loạt</b></td><td>Cảnh báo kỵ húy (FR-1.6) thiết kế cho luồng nhập từng người. Nhập 318 người một lúc thì 318 hộp thoại là không dùng được.</td><td>Gom cảnh báo thành <b>một danh sách trong bước 3</b>, xem trước khi duyệt — dùng lại logic của <code>taboo-conflict-dialog.tsx</code> nhưng trình bày dạng danh sách.</td></tr>
+    <tr><td class="canh"><b>Xuất GEDCOM bị hiểu là sao lưu</b></td><td>Người dùng xuất GEDCOM, xoá dữ liệu, rồi phát hiện mất hết tên húy và ngày âm.</td><td>Hai nút xuất đặt cạnh nhau, nút GEDCOM ghi rõ những gì sẽ mất.</td></tr>
+    <tr><td class="canh"><b>Người chép bỏ cuộc</b></td><td>Số hoá một quyển phả giấy là hàng chục giờ. Công cụ chậm một chút là việc dừng lại.</td><td>Đo và tối ưu theo <b>số người chép được mỗi giờ</b>, không theo vẻ đẹp màn hình. Cho phép tạm dừng và quay lại đúng chỗ đang dở.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>2. FR-1.9 — Liên kết thông gia</h2>
+
+<p>
+  BA v2 xếp FR-1.9 là <b>COULD</b>, và đó là xếp đúng. Liên kết thật đòi hỏi một điều kiện gần như
+  không tồn tại ở giai đoạn đầu: <b>cả hai dòng họ đều dùng hệ thống này</b>. Nhưng đây không phải là
+  bài toán kỹ thuật khó — nó là bài toán <b>quản trị và quyền</b>, và chính vì thế mà nó đáng phác thảo
+  trước, để lúc làm không phải quyết vội.
+</p>
+
+<div class="khoi">
+  <p class="nhan">Ba câu hỏi phải trả lời trước khi viết dòng mã nào</p>
+  <p>
+    <b>Ai được đồng ý liên kết?</b> — Đề xuất: Hội đồng Tộc biểu hoặc Tộc trưởng của <em>cả hai</em>
+    bên, không phải cặp vợ chồng liên quan. Đây là việc giữa hai dòng họ.<br>
+    <b>Bên kia thấy được gì?</b> — Đề xuất mặc định hẹp nhất: chỉ <b>người đã khuất</b> và chỉ Tầng 1.
+    <b>Không bao giờ tự động chia sẻ dữ liệu người còn sống</b> qua ranh giới dòng họ, kể cả Tầng 1.<br>
+    <b>Gỡ được không?</b> — Bắt buộc phải gỡ được, đơn phương, bất cứ lúc nào. Quan hệ giữa hai dòng họ
+    có thể xấu đi vì ly hôn hoặc mâu thuẫn, và gỡ liên kết <b>không được xoá gì</b> ở bên mình.
+  </p>
+</div>
+
+<figure id="kd-15">
+<svg viewBox="0 0 720 380" role="img" aria-label="Khung dây lời mời liên kết thông gia và cách hiển thị phả họ khác trong khung riêng">
+  <rect class="wf-khung" x="8" y="8" width="330" height="364" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="330" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Lời mời liên kết thông gia</text>
+  <text class="wf-phu" x="24" y="46">Gửi tới Hội đồng Tộc biểu họ Trần</text>
+  <text class="wf-chu" x="24" y="80">Qua cuộc hôn nhân giữa</text>
+  <text class="wf-chu" x="24" y="102" font-weight="600">Nguyễn Văn G — Trần Thị H</text>
+  <text class="wf-phu" x="24" y="130">CHÚNG TÔI SẼ CHIA SẺ SANG BÊN ĐÓ</text>
+  <rect class="wf-o" x="24" y="140" width="298" height="76"/>
+  <text class="wf-chu" x="36" y="162">· Người đã khuất, Tầng 1</text>
+  <text class="wf-chu" x="36" y="184">· Tên, đời, quan hệ cha–con–vợ–chồng</text>
+  <text class="wf-chu" x="36" y="206" fill="var(--do-tram)">· Không chia sẻ người còn sống</text>
+  <text class="wf-phu" x="24" y="238">HỌ TRẦN SẼ CHIA SẺ SANG ĐÂY</text>
+  <rect class="wf-o" x="24" y="248" width="298" height="46"/>
+  <text class="wf-chu" x="36" y="272">Cùng mức — hai bên đối xứng</text>
+  <rect class="wf-nhan" x="24" y="308" width="180" height="44" rx="4"/>
+  <text class="wf-chu" x="46" y="336" fill="var(--nen-the)">Gửi lời mời</text>
+  <text class="wf-phu" x="216" y="330">Bên kia phải đồng ý</text>
+  <text class="wf-phu" x="216" y="346">thì liên kết mới có hiệu lực</text>
+
+  <rect class="wf-khung" x="358" y="8" width="354" height="364" rx="6"/>
+  <rect class="wf-o" x="358" y="8" width="354" height="46"/>
+  <text class="wf-chu" x="374" y="30" font-weight="600">Phả đồ — chỗ tiếp giáp hai dòng họ</text>
+  <text class="wf-phu" x="374" y="46">Người dùng luôn phải biết mình đang xem phả của ai</text>
+  <rect class="wf-o" x="374" y="70" width="150" height="238"/>
+  <text class="wf-phu" x="386" y="90">PHẢ HỌ NGUYỄN — ĐANG XEM</text>
+  <rect class="wf-o" x="392" y="104" width="112" height="40" rx="3"/>
+  <text class="wf-phu" x="406" y="128">Nguyễn Văn G</text>
+  <rect class="wf-o" x="392" y="160" width="112" height="40" rx="3"/>
+  <text class="wf-phu" x="410" y="184">con cái</text>
+  <rect class="wf-o" x="392" y="216" width="112" height="40" rx="3"/>
+  <text class="wf-phu" x="414" y="240">cháu</text>
+  <path class="wf-net" d="M448 144 L448 160 M448 200 L448 216"/>
+  <path class="wf-net" d="M524 124 L556 124" stroke-dasharray="5 4"/>
+  <text class="wf-phu" x="516" y="112">thông gia</text>
+  <rect class="wf-khung" x="556" y="70" width="140" height="238" stroke-dasharray="6 4"/>
+  <text class="wf-phu" x="566" y="90">PHẢ HỌ TRẦN — KHÁCH</text>
+  <rect class="wf-o" x="570" y="104" width="112" height="40" rx="3"/>
+  <text class="wf-phu" x="584" y="128">Trần Thị H</text>
+  <rect class="wf-net" x="570" y="160" width="112" height="40" rx="3" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="580" y="178">người còn sống</text>
+  <text class="wf-phu" x="592" y="194">không hiện</text>
+  <rect class="wf-o" x="570" y="216" width="112" height="40" rx="3"/>
+  <text class="wf-phu" x="580" y="234">cụ Trần Văn K</text>
+  <text class="wf-phu" x="592" y="250">đã khuất</text>
+  <text class="wf-phu" x="374" y="330">Hai phả không trộn vào một khung. Khung nét đứt và</text>
+  <text class="wf-phu" x="374" y="348">nhãn chữ nói rõ đây là dữ liệu của dòng họ khác.</text>
+  <rect class="wf-o" x="374" y="356" width="140" height="10" rx="5"/>
+</svg>
+<figcaption>
+  <strong>KD-15 · Liên kết thông gia.</strong> Điểm thiết kế cốt lõi ở cột phải:
+  <strong>hai phả không bao giờ trộn vào một canvas</strong>. Nếu trộn, người xem sẽ không phân biệt
+  được dữ liệu nào do họ mình chịu trách nhiệm và dữ liệu nào do họ khác cung cấp — mà đó chính là thứ
+  cần phân biệt nhất, vì hai Hội đồng có tiêu chuẩn nghiệm thu khác nhau. Khung nét đứt kèm
+  <strong>nhãn chữ đầy đủ</strong> (không phải một biểu tượng) là ranh giới đó. Ô nét đứt bên trong cho
+  thấy người còn sống của họ Trần <strong>không hiện</strong>, kể cả khi đã liên kết.
+  <strong>Cái giá:</strong> giao diện có hai khung đọc rối hơn một cây liền mạch, và người dùng có thể
+  thắc mắc vì sao không thấy đủ. Đó là cái giá đúng để trả.
+</figcaption>
+</figure>
+
+<p>
+  <b>Đề xuất hoãn.</b> Xem <a href="index.html">bảng cắt ở tổng quan</a>: tới khi có ít nhất hai dòng
+  họ thật cùng dùng hệ thống, phiên bản rẻ — ghi “thông gia với họ Trần, quê Đông Ngạc” dạng văn bản
+  kèm đường dẫn ngoài — đã phục vụ được gần hết nhu cầu với một phần rất nhỏ công sức và không mở ra
+  bài toán quyền nào.
+</p>
+
+<h2>3. Tầng AI — ngoài phạm vi bốn giai đoạn, nhưng phải để ngỏ đúng chỗ</h2>
+
+<p>
+  BA v2 §2 và §11 đặt tầng AI ra ngoài phạm vi bốn giai đoạn và yêu cầu “kiến trúc mở để tích hợp”.
+  Câu hỏi thiết kế không phải là <em>làm AI thế nào</em>, mà là: <b>để ngỏ chỗ nào thì sau này lắp
+  được, và chặn chỗ nào thì sau này không hối hận.</b>
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Thiệt hại đặc thù của dự án này</p>
+  <p>
+    Ở phần lớn sản phẩm, một câu do máy bịa ra là một phiền toái: người dùng đọc, thấy sai, bỏ qua.
+    Ở đây thì khác. Một câu bịa được ghi vào phả sẽ được con cháu đời sau <b>đọc như phả</b> — họ không
+    có cách nào biết dòng đó do máy đoán năm 2028 chứ không phải do cụ tổ chép năm 1887. Cuốn gia phả
+    là thứ càng lâu càng được tin, nên sai sót trong đó <b>tăng giá trị theo thời gian thay vì giảm</b>.
+    Đây là lý do mọi quy tắc dưới đây nghiêm hơn mức thông thường.
+  </p>
+</div>
+
+<h3>Bốn hàng rào, xếp từ sâu nhất ra ngoài</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>#</th><th>Hàng rào</th><th>Đặt ở đâu</th><th>Vì sao ở đó</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>1</b></td>
+      <td><b>Hai kho tách biệt.</b> Mọi đầu ra của máy lưu ở bảng riêng — đề xuất <code>ai_suggestion</code> — và <b>không bao giờ ghi vào</b> <code>person</code>, <code>relationship</code>, hay graph AGE. Dữ liệu chỉ chuyển kho khi có người xác nhận.</td>
+      <td class="tot">Tầng dữ liệu</td>
+      <td>Giao diện sẽ thay đổi nhiều lần trong mười năm tới; cấu trúc dữ liệu thì ở lại. Đặt ranh giới ở giao diện là đặt nó ở chỗ dễ mất nhất.</td>
+    </tr>
+    <tr>
+      <td><b>2</b></td>
+      <td><b>Nhãn nguồn theo từng trường, không theo hồ sơ.</b> Mỗi trường mang một trong ba trạng thái: <em>người trong họ khai</em> · <em>máy đề xuất, chưa ai xác nhận</em> · <em>máy đề xuất, đã được [tên người] xác nhận ngày [ngày]</em>.</td>
+      <td class="tot">Tầng dữ liệu + hiển thị</td>
+      <td>Một hồ sơ thật sẽ trộn nguồn: tên do con cháu khai, ngày mất do máy đọc từ văn bia. Nhãn ở mức hồ sơ không diễn tả được điều đó.</td>
+    </tr>
+    <tr>
+      <td><b>3</b></td>
+      <td><b>Máy không nói câu khẳng định.</b> “Theo văn bia trang 3, dòng thứ hai có thể đọc là …” chứ không phải “Ông mất năm 1887”. Với hỏi đáp danh xưng: nếu không tìm được đường quan hệ trong phả thì trả lời <b>không tìm thấy</b> — không đoán.</td>
+      <td class="canh">Tầng nội dung</td>
+      <td>Cách diễn đạt là thứ người dùng thực sự tiếp nhận. Một câu khẳng định của máy được chép tay vào sổ giấy là hết đường cứu.</td>
+    </tr>
+    <tr>
+      <td><b>4</b></td>
+      <td><b>Chưa xác nhận thì không xuất bản.</b> Văn bản do máy sinh không được vào bản tin, bản in PDF, hay bản xuất GEDCOM. Bản in phải ghi ở chân trang phần nào chưa được xác nhận.</td>
+      <td class="canh">Tầng xuất bản</td>
+      <td>Giấy in ra là bản không còn nhãn nguồn. Đó là chỗ dữ liệu chưa xác nhận thoát khỏi hệ thống và trở thành sự thật.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Điều tuyệt đối không làm</p>
+  <p>
+    <b>Không có ngưỡng tự động chấp nhận.</b> Không có cấu hình kiểu “độ tin cậy trên 95% thì tự ghi
+    vào phả”. Cám dỗ này sẽ xuất hiện — nó tiết kiệm rất nhiều công duyệt — và nó là cách chắc chắn
+    nhất để hàng rào số 1 sụp đổ. Nếu khối lượng duyệt quá lớn thì giải pháp là <em>giảm số đề
+    xuất</em>, không phải bỏ bước duyệt.
+  </p>
+</div>
+
+<h3>Bốn tính năng AI, xếp theo mức rủi ro</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Tính năng</th><th>Máy làm gì</th><th>Rủi ro bịa</th><th>Đề xuất</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Phát hiện trùng lặp</b><br>khi nhập hàng loạt</td>
+      <td>Xếp thứ tự các cặp nghi trùng để người duyệt xem cặp đáng ngờ nhất trước</td>
+      <td class="tot">Thấp — đầu ra là <em>thứ tự xem xét</em>, không phải quyết định</td>
+      <td><b>Làm trước.</b> Nó chỉ tăng tốc một việc mà con người vẫn quyết (KD-13), và có thể bắt đầu bằng luật đơn giản trước khi cần tới mô hình.</td>
+    </tr>
+    <tr>
+      <td><b>Hỏi đáp danh xưng</b><br>bằng ngôn ngữ tự nhiên</td>
+      <td>Chỉ <b>hiểu câu hỏi</b> và ánh xạ ra hai người trong phả. Câu trả lời do bộ luật danh xưng có sẵn tính.</td>
+      <td class="canh">Trung bình — rủi ro nằm ở việc nhận nhầm người, không ở việc bịa danh xưng</td>
+      <td><b>Làm sau.</b> Xem ràng buộc kiến trúc ngay dưới đây — đây là điểm quan trọng nhất của cả mục.</td>
+    </tr>
+    <tr>
+      <td><b>OCR Hán-Nôm</b></td>
+      <td>Đọc thử từng vùng chữ trên ảnh, kèm độ tin cậy, đưa cho người phiên âm sửa</td>
+      <td class="xau">Cao — chữ bia mòn, và <b>kỵ húy làm biến dạng nét chữ có chủ ý</b></td>
+      <td>Làm được, nhưng <b>chỉ như bản nháp cho người phiên âm</b> (KD-17). Không bao giờ lưu thẳng.</td>
+    </tr>
+    <tr>
+      <td><b>Sinh văn khấn</b></td>
+      <td>Viết văn khấn từ đầu</td>
+      <td class="xau">Cao, và hậu quả là chuyện xúc phạm chứ không phải lỗi kỹ thuật</td>
+      <td><b>Đề xuất cắt.</b> Thay bằng điền chỗ trống vào mẫu đã được Hội đồng duyệt — xem <a href="01-di-san-mo-phan.html#kd-6">KD-6</a>. Đây là chỗ AI dễ bị dùng thừa nhất.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Ràng buộc kiến trúc cho hỏi đáp danh xưng</p>
+  <p>
+    <b>Mô hình ngôn ngữ chỉ được làm lớp dịch câu hỏi, không được làm nguồn tri thức.</b> Câu “tôi gọi
+    ông này là gì?” được máy chuyển thành <em>hai định danh người trong phả</em>; từ đó trở đi,
+    <b>bộ luật danh xưng cấu hình được của FR-1.3a</b> tính ra câu trả lời, đúng như nó đang làm ở
+    giai đoạn 1.
+  </p>
+  <p>
+    Lý do không phải là kỹ thuật mà là quản trị: FR-1.3a đã chốt rằng quy tắc danh xưng là
+    <b>dữ liệu do Hội đồng Tộc biểu chỉnh</b>, khác nhau theo vùng Bắc/Trung/Nam và theo từng dòng họ.
+    Nếu để mô hình tự trả lời, quyền quyết định danh xưng lặng lẽ chuyển từ Hội đồng sang một mô hình
+    học từ dữ liệu ở đâu đó — và không ai sửa được nó. Ràng buộc này phải được ghi vào tài liệu kiến
+    trúc <b>ngay bây giờ</b>, khi tầng AI còn chưa tồn tại, vì lúc nó tồn tại rồi thì đã muộn.
+  </p>
+</div>
+
+<figure id="kd-16">
+<svg viewBox="0 0 720 420" role="img" aria-label="Khung dây hỏi đáp danh xưng bằng lời, có dẫn đường quan hệ và trường hợp không tìm thấy">
+  <rect class="wf-khung" x="40" y="10" width="290" height="400" rx="14"/>
+  <rect class="wf-o" x="40" y="10" width="290" height="46" rx="14"/>
+  <text class="wf-chu" x="56" y="32" font-weight="600">Hỏi về quan hệ</text>
+  <text class="wf-phu" x="56" y="48">Hỏi bằng lời thường cũng được</text>
+  <rect class="wf-o" x="54" y="70" width="262" height="44"/>
+  <text class="wf-chu" x="66" y="97">Tôi gọi ông Bân là gì?</text>
+  <rect class="wf-nhan" x="54" y="126" width="262" height="60" rx="4" opacity="0.12"/>
+  <text class="wf-chu" x="66" y="152" font-size="19" font-weight="700" fill="var(--do-tram)">Bạn gọi là: ông trẻ</text>
+  <text class="wf-phu" x="66" y="176">(em ruột của ông nội bạn)</text>
+  <text class="wf-phu" x="54" y="208">VÌ SAO — ĐƯỜNG QUAN HỆ TRONG PHẢ</text>
+  <rect class="wf-o" x="54" y="218" width="262" height="118"/>
+  <text class="wf-chu" x="66" y="240">Bạn — Nguyễn Văn M, đời 9</text>
+  <text class="wf-phu" x="66" y="258">↑ cha</text>
+  <text class="wf-chu" x="66" y="278">Nguyễn Văn D, đời 8</text>
+  <text class="wf-phu" x="66" y="296">↑ cha · ↓ em ruột</text>
+  <text class="wf-chu" x="66" y="316">Nguyễn Văn Bân, đời 7</text>
+  <text class="wf-phu" x="54" y="356">Tổ chung gần nhất: cụ Hoằng, đời 6</text>
+  <text class="wf-phu" x="54" y="374">Quy tắc áp dụng: bộ danh xưng miền Bắc,</text>
+  <text class="wf-phu" x="54" y="390">bản do Hội đồng họ Nguyễn chỉnh 09/2026</text>
+  <text class="wf-phu" x="40" y="410">Máy hiểu câu hỏi · bộ luật tính câu trả lời</text>
+
+  <rect class="wf-khung" x="390" y="10" width="290" height="400" rx="14"/>
+  <rect class="wf-o" x="390" y="10" width="290" height="46" rx="14"/>
+  <text class="wf-chu" x="406" y="32" font-weight="600">Hỏi về quan hệ</text>
+  <text class="wf-phu" x="406" y="48">Trường hợp không tìm được</text>
+  <rect class="wf-o" x="404" y="70" width="262" height="44"/>
+  <text class="wf-chu" x="416" y="97">Tôi gọi bà Lành là gì?</text>
+  <rect class="wf-o" x="404" y="126" width="262" height="86"/>
+  <text class="wf-chu" x="416" y="152" font-weight="600">Không tìm thấy quan hệ</text>
+  <text class="wf-chu" x="416" y="174">giữa bạn và bà Trần Thị Lành</text>
+  <text class="wf-chu" x="416" y="196">trong phả hiện có.</text>
+  <text class="wf-phu" x="404" y="234">HỆ THỐNG KHÔNG ĐOÁN. CÓ THỂ VÌ:</text>
+  <rect class="wf-o" x="404" y="244" width="262" height="102"/>
+  <text class="wf-chu" x="416" y="266">· Phả còn thiếu một mắt xích</text>
+  <text class="wf-chu" x="416" y="288">· Bà thuộc dòng họ khác (thông gia)</text>
+  <text class="wf-chu" x="416" y="310">· Có hai người trùng tên trong phả</text>
+  <text class="wf-chu" x="416" y="332">· Bạn chưa được gắn với hồ sơ nào</text>
+  <rect class="wf-o" x="404" y="356" width="262" height="44" rx="4"/>
+  <text class="wf-chu" x="426" y="383">Báo cho Trưởng chi bổ sung</text>
+</svg>
+<figcaption>
+  <strong>KD-16 · Hỏi đáp danh xưng.</strong> Câu trả lời không đứng một mình: dưới nó là
+  <strong>đường quan hệ trong phả</strong>, tổ chung gần nhất, và <strong>tên bộ quy tắc đã áp
+  dụng</strong> kèm ngày Hội đồng chỉnh lần cuối. Ba thứ đó biến câu trả lời từ một lời phán thành một
+  suy luận kiểm tra được — người dùng có thể tự đi lại đường đó và thấy máy đúng hay sai. Màn hình bên
+  phải mới là màn hình khó viết: khi không có đường quan hệ, hệ thống <strong>nói không tìm thấy và
+  nêu các khả năng</strong>, chứ không đưa ra một danh xưng gần đúng. Một danh xưng gần đúng nghe rất
+  hữu ích, và nó là đúng thứ sẽ được chép lại thành sai lầm.
+</figcaption>
+</figure>
+
+<figure id="kd-17">
+<svg viewBox="0 0 720 400" role="img" aria-label="Khung dây đối soát kết quả OCR Hán-Nôm với độ tin cậy từng chữ">
+  <rect class="wf-khung" x="8" y="8" width="704" height="384" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="46"/>
+  <text class="wf-chu" x="24" y="30" font-weight="600">Đối soát bản máy đọc — văn bia mộ Tổ đời 3</text>
+  <text class="wf-phu" x="24" y="46">Đây là bản nháp do máy đề xuất. Chưa có gì được lưu vào thư viện.</text>
+
+  <rect class="wf-o" x="20" y="70" width="300" height="248"/>
+  <g class="wf-net" stroke-width="1">
+    <rect x="60" y="92" width="20" height="20"/><rect x="60" y="122" width="20" height="20"/>
+    <rect x="60" y="152" width="20" height="20"/><rect x="60" y="182" width="20" height="20"/>
+    <rect x="120" y="92" width="20" height="20"/><rect x="120" y="152" width="20" height="20"/>
+    <rect x="120" y="182" width="20" height="20"/>
+    <rect x="180" y="92" width="20" height="20"/><rect x="180" y="122" width="20" height="20"/>
+    <rect x="180" y="152" width="20" height="20"/>
+    <rect x="240" y="92" width="20" height="20"/><rect x="240" y="122" width="20" height="20"/>
+  </g>
+  <rect class="wf-nhan" x="116" y="118" width="28" height="28" opacity="0.3"/>
+  <rect class="wf-net" x="116" y="118" width="28" height="28" stroke-dasharray="3 3"/>
+  <text class="wf-phu" x="152" y="136">chữ máy không chắc</text>
+  <text class="wf-phu" x="34" y="240">Chạm một ô chữ để phóng to vùng đó.</text>
+  <text class="wf-phu" x="34" y="258">Ô tô đậm là chỗ máy tự báo là không chắc —</text>
+  <text class="wf-phu" x="34" y="276">mắt người nên dừng ở đúng những chỗ này.</text>
+  <text class="wf-phu" x="34" y="302">Ảnh gốc không bao giờ bị thay đổi.</text>
+
+  <rect class="wf-o" x="336" y="70" width="364" height="248"/>
+  <text class="wf-phu" x="350" y="92">MÁY ĐỌC THỬ — SỬA TRỰC TIẾP TRÊN DÒNG</text>
+  <rect class="wf-o" x="350" y="104" width="336" height="36"/>
+  <text class="wf-chu" x="362" y="128">Câu 1 · Tự Đức cửu niên, trọng đông</text>
+  <text class="wf-phu" x="620" y="128" fill="var(--xanh)">máy chắc</text>
+  <rect class="wf-nhan" x="350" y="146" width="336" height="36" opacity="0.14"/>
+  <rect class="wf-net" x="350" y="146" width="336" height="36"/>
+  <text class="wf-chu" x="362" y="170">Câu 2 · Đông Ngạc xã, Từ Liêm huyện</text>
+  <text class="wf-phu" x="612" y="170" fill="var(--ho-phach)">1 chữ ngờ</text>
+  <rect class="wf-o" x="350" y="188" width="336" height="36"/>
+  <text class="wf-chu" x="362" y="212">Câu 3 · [ ba chữ máy không đọc được ]</text>
+  <text class="wf-phu" x="618" y="212" fill="var(--do-loi)">bỏ trống</text>
+  <text class="wf-phu" x="350" y="248">Máy không điền chữ nào vào chỗ nó không đọc được.</text>
+  <text class="wf-phu" x="350" y="266">Chỗ trống là thông tin đúng; chữ đoán là thông tin sai.</text>
+  <text class="wf-phu" x="350" y="292">Chú ý: kỵ húy khiến người xưa cố ý viết thiếu nét —</text>
+  <text class="wf-phu" x="350" y="310">máy sẽ đọc sai những chữ đó, và đó là chuyện bình thường.</text>
+
+  <rect class="wf-nhan" x="20" y="334" width="300" height="46" rx="4"/>
+  <text class="wf-chu" x="48" y="363" fill="var(--nen-the)">Tôi đã đọc lại — lưu thành bản của tôi</text>
+  <rect class="wf-o" x="336" y="334" width="180" height="46" rx="4"/>
+  <text class="wf-chu" x="360" y="363">Để lại, chưa xong</text>
+  <rect class="wf-o" x="530" y="334" width="170" height="46" rx="4"/>
+  <text class="wf-chu" x="548" y="363">Bỏ bản máy đọc</text>
+</svg>
+<figcaption>
+  <strong>KD-17 · Đối soát bản máy đọc.</strong> Không có nút “Chấp nhận toàn bộ”. Nút lưu ghi rõ
+  <strong>“lưu thành bản của tôi”</strong> — sau khi bấm, bản phiên âm mang tên người phiên âm chứ
+  không mang tên máy, vì người đó vừa nhận trách nhiệm về nó. Đó là toàn bộ ý nghĩa của bước này. Máy
+  <strong>để trống chỗ nó không đọc được</strong> thay vì đoán: một chỗ trống có ghi chú là dữ liệu
+  trung thực, một chữ đoán là dữ liệu sai đội lốt dữ liệu đúng. Ghi chú về <strong>kỵ húy</strong> nằm
+  ngay trên màn hình vì nó là nguyên nhân đọc sai đặc thù của tư liệu Việt: người xưa cố ý viết thiếu
+  nét để tránh phạm húy, và mô hình OCR nào cũng sẽ vấp chỗ đó.
+</figcaption>
+</figure>
+
+<figure id="kd-18">
+<svg viewBox="0 0 720 400" role="img" aria-label="Khung dây hồ sơ người với nhãn nguồn gắn theo từng trường dữ liệu">
+  <rect class="wf-khung" x="8" y="8" width="704" height="384" rx="6"/>
+  <rect class="wf-o" x="8" y="8" width="704" height="52"/>
+  <text class="wf-chu" x="24" y="32" font-weight="600">Nguyễn Văn Bân — đời thứ 7, chi Hai</text>
+  <text class="wf-phu" x="24" y="48">Đã khuất · hồ sơ công khai · 3 trường có nguồn khác nhau</text>
+
+  <rect class="wf-o" x="20" y="74" width="680" height="58"/>
+  <text class="wf-phu" x="34" y="96">TÊN HÚY</text>
+  <text class="wf-chu" x="34" y="120" font-size="17">Bân</text>
+  <text class="wf-phu" x="380" y="120">Do ông Nguyễn Văn D khai · 03/2026 · đã được duyệt</text>
+
+  <rect class="wf-o" x="20" y="142" width="680" height="58"/>
+  <text class="wf-phu" x="34" y="164">TÊN TỰ</text>
+  <text class="wf-chu" x="34" y="188" font-size="17">Trọng Nghĩa</text>
+  <path class="wf-net" d="M34 194 L150 194" stroke-dasharray="3 3"/>
+  <rect class="wf-nhan" x="380" y="156" width="150" height="24" rx="3" opacity="0.16"/>
+  <text class="wf-phu" x="390" y="173" fill="var(--do-tram)">Máy đề xuất · chưa duyệt</text>
+  <text class="wf-phu" x="380" y="194">Đọc từ văn bia mộ Tổ, câu 4 · độ tin cậy thấp</text>
+  <rect class="wf-nhan" x="546" y="152" width="70" height="36" rx="4"/>
+  <text class="wf-phu" x="558" y="175" fill="var(--nen-the)">Xác nhận</text>
+  <rect class="wf-o" x="624" y="152" width="62" height="36" rx="4"/>
+  <text class="wf-phu" x="640" y="175">Bỏ</text>
+
+  <rect class="wf-o" x="20" y="210" width="680" height="58"/>
+  <text class="wf-phu" x="34" y="232">NGÀY MẤT (ÂM)</text>
+  <text class="wf-chu" x="34" y="256" font-size="17">3 tháng Tám</text>
+  <text class="wf-phu" x="380" y="244">Máy đọc từ văn bia · đã được cụ Nguyễn Văn B</text>
+  <text class="wf-phu" x="380" y="260">xác nhận ngày 14/05/2028 — nay là dữ liệu của phả</text>
+
+  <rect class="wf-o" x="20" y="278" width="680" height="46"/>
+  <text class="wf-phu" x="34" y="300">QUÊ QUÁN</text>
+  <text class="wf-chu" x="34" y="318" font-size="17">Xã Đông Ngạc, huyện Từ Liêm</text>
+  <text class="wf-phu" x="380" y="310">Chép từ gia phả giấy, quyển Chi Hai trang 14 — xem ảnh</text>
+
+  <rect class="wf-o" x="20" y="336" width="680" height="46"/>
+  <text class="wf-phu" x="34" y="358">KHI IN RA GIẤY HOẶC XUẤT GEDCOM</text>
+  <text class="wf-chu" x="34" y="376">Trường “Tên tự” chưa được xác nhận nên sẽ không có trong bản in. Chân trang ghi rõ điều đó.</text>
+</svg>
+<figcaption>
+  <strong>KD-18 · Nhãn nguồn theo từng trường.</strong> Đây là hàng rào mà người dùng thực sự nhìn thấy,
+  và nó cũng là cách trả lời câu hỏi khó nhất của cả tầng AI: <em>làm sao con cháu đời sau biết dòng
+  này từ đâu ra</em>. Bốn trường trong hình có bốn nguồn khác nhau, và
+  <strong>nhãn nguồn nằm ngay cạnh giá trị</strong>, không nằm trong lịch sử thay đổi. Trường do máy
+  đề xuất được gạch chân <strong>nét đứt kèm nhãn chữ</strong> — không dùng riêng màu hay riêng biểu
+  tượng, theo <a href="../00-dinh-huong.html">định hướng §2 nguyên tắc 3</a>. Sau khi có người xác nhận,
+  nhãn <em>không biến mất</em> mà đổi thành “đã được [tên người] xác nhận ngày […]”: dấu vết máy từng
+  chạm vào ở lại vĩnh viễn, vì đó chính là thứ đời sau cần. Dòng cuối cùng là hàng rào số 4 — bản in
+  và bản xuất là chỗ dữ liệu rời khỏi hệ thống và mất hết nhãn.
+</figcaption>
+</figure>
+
+<h3>Rủi ro của tầng AI</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Rủi ro</th><th>Cách nó xảy ra trong thực tế</th><th>Cách giảm</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="xau"><b>Bịa được ghi lại thành phả</b></td><td>Không phải do người dùng cả tin, mà do <b>mệt</b>: duyệt 300 đề xuất thì tới cái thứ 200 người ta bấm xác nhận theo quán tính.</td><td>Giới hạn số đề xuất mỗi phiên; xếp cái đáng ngờ nhất lên trước; và giữ nhãn nguồn kể cả sau khi xác nhận, để sai sót còn lần ngược được.</td></tr>
+    <tr><td class="xau"><b>Nhãn nguồn rơi rụng khi dữ liệu đi ra ngoài</b></td><td>Xuất GEDCOM, in PDF, sao chép sang tài liệu Word — tất cả đều làm mất nhãn.</td><td>Không xuất trường chưa xác nhận. Bản in ghi chú ở chân trang. Đây là hàng rào số 4.</td></tr>
+    <tr><td class="xau"><b>Quyền quyết định danh xưng lặng lẽ chuyển sang mô hình</b></td><td>Ban đầu mô hình chỉ hiểu câu hỏi; rồi ai đó thấy nó tự trả lời cũng khá, và bộ luật của Hội đồng dần thành thừa.</td><td>Ghi ràng buộc kiến trúc từ bây giờ: <b>mô hình chỉ ánh xạ câu hỏi ra hai người; bộ luật FR-1.3a tính câu trả lời.</b></td></tr>
+    <tr><td class="canh"><b>Kỳ vọng vượt xa khả năng</b></td><td>Chữ “AI” trong tài liệu bán hàng khiến Hội đồng chờ đợi máy đọc được cả cuốn phả giấy.</td><td>Nói trước và nói rõ trong tài liệu nghiệm thu rằng OCR Hán-Nôm là <b>bản nháp cho người sửa</b>, không phải máy chép.</td></tr>
+    <tr><td class="canh"><b>Dữ liệu dòng họ rời khỏi tầm kiểm soát</b></td><td>Gọi mô hình bên ngoài đồng nghĩa với gửi tên, ngày sinh, quan hệ của người còn sống ra ngoài hệ thống — đúng thứ Nghị định 13/2023 quản.</td><td>Chỉ gửi dữ liệu <b>người đã khuất</b> hoặc dữ liệu đã ẩn danh ra ngoài; hoặc chạy mô hình tại chỗ. Quyết định này thuộc kiến trúc, phải chốt trước khi chọn nhà cung cấp.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Để ngỏ chỗ nào ngay từ bây giờ</h2>
+
+<p>
+  Ba việc dưới đây <b>không tốn công đáng kể ở giai đoạn 2–3</b> nhưng nếu bỏ qua thì tầng AI sau này
+  sẽ phải sửa ngược vào phần lõi — chỗ đắt nhất để sửa.
+</p>
+
+<ol>
+  <li><b>Trường nguồn trên từng trường dữ liệu, làm ngay ở giai đoạn 2.</b> Nó cần cho FR-1.7 trước
+    khi cần cho AI: dữ liệu nhập từ GEDCOM và dữ liệu chép từ gia phả giấy cũng cần nhãn nguồn. Thêm
+    lúc này là rẻ; thêm khi phả đã có hàng vạn người là một cuộc di trú dữ liệu.</li>
+  <li><b>Vùng chờ và cơ chế lô, làm ở giai đoạn 2 cho FR-1.7.</b> Tầng AI sau này dùng lại y nguyên:
+    đề xuất của máy là một lô, duyệt theo cụm, gỡ được cả lô.</li>
+  <li><b>Ranh giới “mô hình không tính danh xưng” ghi vào tài liệu kiến trúc ngay.</b> Không tốn dòng
+    mã nào, và là thứ duy nhất trong danh sách này mà sau đó không mua lại được bằng tiền.</li>
+</ol>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 05 · Phần 03. Các con số trong khung dây (318 người, 27 cặp nghi trùng, 30 ngày gỡ lô) là
+    <b>minh hoạ và đề xuất</b>, không phải số đo. Ba việc cần quyết trước khi làm: <b>thời hạn gỡ lô
+    nhập</b>, <b>phạm vi chia sẻ khi liên kết thông gia</b>, và <b>mô hình AI chạy tại chỗ hay gọi ra
+    ngoài</b> — câu cuối là câu có hệ quả pháp lý theo Nghị định 13/2023.
+    Quay lại <a href="index.html">tổng quan</a>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

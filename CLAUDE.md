@@ -4,9 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-**Phase 1 in progress.** Infrastructure, the Flyway schema, and the `genealogy` /
-`kinship` / `calendar` domain layers exist; the application and api layers are being
-filled in. See "Build commands" and "Implementation status" below.
+**Phase 1 code-complete; bulk onboarding and per-field privacy landed on top of it.**
+All backend workstreams and frontend screens are implemented and tested, plus the
+`dataimport` pipeline (Excel → staging → validation → commit → rollback) and the `V8`
+per-field privacy model. See "Implementation status" below for the measured numbers.
+
+Three things block progress and **none of them are code**: the Zalo Official Account
+needs a legal entity to register it; the 34-province catalogue needs the statutory text
+(a wrong code makes the population report wrong *silently*); and the Hội đồng Tộc biểu
+owes rulings — deletion rights for dâu/rể after divorce (**must be settled before a real
+clan's data is imported**, since changing the rule after 1,500 people are in is no longer
+a code change), the Dâu/Rể badge colours, whether the council may read a `PRIVATE`
+phone number, and whether a living person's Hán-Nôm name stays visible (today it is).
+The plan calls installing CI the fourth such item; that one is now done.
 
 The documentation set holds the full BA → design paper trail for
 **"Hệ Thống Quản Lý Gia Phả & Cổng Thông Tin Dòng Họ"** (a family-genealogy
@@ -189,13 +199,43 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
 - **Frontend F0–F9 implemented.** Shell, design tokens, phả đồ canvas, person profile,
   edit form with kỵ húy dialog, danh xưng lookup, search, events + notification centre,
   auth & guest mode, PWA.
-- **Test status.** Backend `mvn test` → **1785 tests, 0 failures, 3 skipped**, including
-  **40 Testcontainers integration tests** against real Postgres + AGE — among them the
-  AGE-edge/`relationship` same-transaction invariant (written together, and rolled back
-  together), `PrivacyTierService`, `TreeProjectionService`, and pinned native SQL
-  (`ltree[] @>`, `CAST(? AS inet)`). Frontend: **411 vitest**, `tsc` and `next lint`
-  clean, **44 Playwright E2E green** across desktop-chromium and Pixel 5.
-  The 3 skips are kinship rules blocked on Hội đồng Tộc biểu sign-off, not tech debt.
+- **`dataimport` (bulk Excel onboarding) is implemented end to end** — a clan cannot be
+  entered one person at a time, so this is what makes the system usable at all. Reader
+  (POI event API, `.xlsx` only, detected by file signature) → staging tables → 15 blocking
+  rules + 11 warning rules → duplicate/kỵ-húy scan reusing `genealogy`'s scorers → commit
+  into the phả in one all-or-nothing transaction (AGE edges and `relationship` rows
+  together, topologically ordered by đời) → rollback. Flyway now runs `V1..V13`.
+  Per-branch Excel templates are generated from the same `ImportColumn`/`MarriageColumn`
+  enums the reader consumes, so generator and reader cannot drift.
+- **Privacy is per-field-group (`V8`), not one enum per person.** Five groups
+  (`occupation`, `residenceProvince`, `residenceFull`, `contact`, `birthDetailAndPhoto`)
+  × three scopes (`PRIVATE`/`BRANCH`/`CLAN`) in one JSONB column, default-closed so a new
+  group needs no migration and has no exposure window. `PrivacyLevel` is gone from the
+  contract. `VisibleTier.atLeast()` is **deleted** and `tierFor()` is replaced by
+  `Optional<PersonVisibility>` — "guest looking at a living person" is no longer a
+  representable state, so the old unwritten "remember to call `canSee()` first" rule is
+  now held by the compiler. `meta.visibleTier` is a summary derived from the filter
+  result; never branch on it to predict which fields are present.
+- **Test status.** Backend `mvn test` → **2304 tests, 0 failures, 0 errors, 0 skipped**,
+  including Testcontainers integration tests against real Postgres + AGE — among them the
+  AGE-edge/`relationship` same-transaction invariant (written together, rolled back
+  together), the per-field privacy matrix (5 groups × 3 scopes × 4 viewer kinds), the
+  legacy-privacy migration proving it discloses nothing new, and the full import pipeline
+  driven **only through HTTP** (no test writes to a table to get past a gate).
+  Frontend: **1297 vitest** with **4 deliberate reds** (2 Dâu/Rể badge hexes and 2
+  `accent` contrast cases, all awaiting a Hội đồng ruling — CI pins this set exactly, so
+  an extra red *or* one of these turning green fails the gate), `tsc` and `next lint`
+  clean, `next build` green, **134 Playwright E2E** across desktop-chromium and Pixel 5.
+- **Cross-context calls go through named interfaces, per type, never per package.**
+  `genealogy` exposes exactly 11 types in 3 facades — `"do-trung"` (duplicate/taboo
+  screening), `"ghi-pha"` (bulk write), `"loc-rieng-tu"` (privacy-filtered disclosure) —
+  plus the `domain.event` package. `genealogy.application` itself is **not** a named
+  interface: `Person`, `PersonRepository` and `PrivacyTierService` stay inside. Widen this
+  surface only with a reason you can state; each widening is individually reasonable and
+  together they erase the boundary.
+- **CI exists** (`.github/workflows/ci.yml`): four gates — backend `mvn test`, frontend
+  static (`typecheck` + `lint` + vitest against a pinned expected-failure list),
+  **`next build` as its own gate**, and E2E as a 9-way matrix, one spec file per job.
 - **NFR-1 met.** Navigation → first person card, median of 7 runs on a production build:
   807 ms desktop / 750 ms Pixel 5, against a 2000 ms budget. Measure it on
   `next build && next start` only — a dev bundle reports 3000–4000 ms and means nothing.
@@ -203,6 +243,32 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   hold only `package-info.java`.
 
 ### Traps that cost real time here — read before debugging
+
+- **`git stash` cannot produce a baseline in this tree, and Docker cannot run beside
+  `next dev`.** Most of the recent work is *untracked*, so stashing tracked paths reverts
+  `messages/*.json` to HEAD while leaving the components that read those keys — the app
+  then fails to compile translations and Playwright dies on a `webServer` timeout rather
+  than on a test assertion. Use a separate worktree or a scratch checkout. Separately, the
+  dev box has ~14 GB and the Docker infra (5 containers) plus a `next dev` that grows to
+  ~2.9 GB do not fit together: `docker compose stop` before a long frontend run, and start
+  it again before `mvn test` (Testcontainers needs it).
+
+- **`next dev` is the only environment the E2E suite can run in, and it hides a
+  release-blocking class of bug.** The PWA service worker is disabled in dev but active
+  in a production build, where it claims the scope MSW needs — run the suite against
+  `next start` and 92 of 134 tests fail with no data, not because anything is broken.
+  So `next build` is never exercised by any test, and a missing `<Suspense>` around
+  `useSearchParams()` in a header component (present on *every* page) sat in main
+  undetected through several "all green" waves. `next build` must be its own required
+  gate even though no test runs on it; the error it prints names an innocent page
+  (`/vi/notifications`), never the component at fault.
+- **The full Playwright suite cannot run in one process on this machine.** `next dev`
+  grows to ~2.9 GB as it compiles routes across ~134 tests and the OS kills the run —
+  it is not flakiness and not contention. Run one spec file per invocation, killing
+  stray `node.exe` between them: all 9 files pass individually (134 total, exit 0 each).
+  Also kill stray node first — a leftover dev server holds port 3100 and Playwright
+  reports only `Process from config.webServer exited early`, and delete `.next` when
+  switching between a production build and dev, or `next dev` will not start.
 
 - **Testcontainers could not see Docker** on this machine for two stacked reasons: TC
   1.19.8 predates `docker context` (it only probes the default named pipe), and Docker

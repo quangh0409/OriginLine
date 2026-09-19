@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 03 · Trang 02 — fund, reporting, bản tin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 03 · Giai đoạn 3 · Trang 02</p>
+  <h1>Context <code>fund</code> và <code>reporting</code><br>cùng câu hỏi bản tin thuộc về đâu</h1>
+  <p class="tom-tat">
+    <strong>FR-4.2</strong> quỹ họ &amp; sổ vàng công đức · <strong>FR-4.3</strong> báo cáo dân số học ·
+    <strong>FR-2.4</strong> bản tin &amp; bảng vàng vinh danh. Hai context đầu mỗi cái hiện có
+    <strong>đúng 5 file <code>package-info.java</code></strong>. Trang này chốt mô hình miền, hệ quả
+    kiến trúc của <strong>sổ chỉ ghi thêm</strong>, và trả lời câu hỏi bản tin thuộc context nào.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <a href="index.html">↩ 00 · Tổng quan</a>
+  <span>·</span>
+  <a href="01-heritage.html">01 · heritage</a>
+  <span>·</span>
+  <b>02 · fund · reporting · bản tin</b>
+  <span>·</span>
+  <a href="03-rui-ro-lo-trinh.html">03 · Rủi ro, ước lượng, lộ trình</a>
+</nav>
+
+<h2>1. <code>fund</code> — FR-4.2 quỹ họ &amp; sổ vàng công đức</h2>
+
+<p>
+  Ràng buộc đã chốt và không đàm phán: <b>không nút Sửa, không nút Xoá, kể cả cho System Admin</b> —
+  ghi sai thì ghi một bút toán đảo và một bút toán đúng, cả ba dòng hiện vĩnh viễn. Và
+  <b>ẩn danh chỉ ẩn <em>ai</em>, không bao giờ ẩn <em>bao nhiêu</em></b>.
+</p>
+
+<p>
+  Ràng buộc thứ nhất <b>phá quy ước xoá mềm của cả sản phẩm</b>. Đó không phải một chi tiết giao diện;
+  nó lan ra bảy chỗ trong kiến trúc. Sáu chỗ đầu là hệ quả trực tiếp; chỗ thứ bảy là chỗ mà nếu không
+  nhìn ra từ bây giờ thì sẽ phải làm lại toàn bộ context.
+</p>
+
+<h3>1.1 Bảy hệ quả kiến trúc của “sổ chỉ ghi thêm”</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Hệ quả</th><th>Chi tiết</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><b><code>fund_entry</code> không có <code>is_deleted</code>, không có <code>updated_at</code>, không có <code>version</code></b></td>
+      <td>Đây là ngoại lệ thứ hai của quy ước “mọi bảng chịu mutation phải có <code>created_at</code>/<code>updated_at</code>/<code>version</code>”. Ngoại lệ thứ nhất đã tồn tại: <code>audit_log</code> trong <code>V5__membership_audit.sql</code>, kèm bình luận giải thích. <b>Đi theo đúng tiền lệ đó</b>, kể cả cách viết bình luận, để người đọc sau nhận ra ngay đây là cố ý.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><b>Trigger chặn cả <code>UPDATE</code> lẫn <code>DELETE</code></b></td>
+      <td><code>audit_log</code> chỉ chặn <code>UPDATE</code> và <b>cho phép <code>DELETE</code></b> để lưu trữ dữ liệu cũ. Sổ quỹ <b>không được nới thế</b>: chặn cả hai. Lưu trữ dài hạn làm bằng <b>chốt kỳ + xuất bảng tính</b>, không bằng xoá hàng.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><b>Domain không có setter</b></td>
+      <td><code>FundEntry</code> là <code>record</code>, không phải class có <code>mutate()</code>. Nghiệp vụ “sửa” chỉ tồn tại ở một chỗ: <code>ReverseEntryService</code>, và nó <b>ghi hàng mới</b> với <code>reverses_entry_id</code> trỏ về hàng cũ. Không có đường nào khác trong mã.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><b>Số dư là giá trị suy ra, không phải cột</b></td>
+      <td>Không có cột số dư nào cho người gõ tay. <code>fund_period</code> giữ <code>opening_balance</code> <b>đóng băng lúc mở kỳ</b>; dư cuối kỳ = <code>opening_balance + SUM(thu) − SUM(chi)</code> tính tại thời điểm đọc. Dòng “✓ Khớp” của KD-8 là so hai phép tính độc lập, và <b>lệch thì không cho chốt kỳ</b>.</td>
+    </tr>
+    <tr>
+      <td class="canh">5</td>
+      <td><b>Bắt buộc phải có khoá chống trùng gửi</b></td>
+      <td>Ở mọi nơi khác trong sản phẩm, người dùng bấm hai lần thì sửa lại là xong. Ở đây <b>không sửa được</b> — một cú bấm đúp tạo một khoản thu ma chỉ gỡ được bằng bút toán đảo, và nó nằm trong sổ công khai vĩnh viễn. Vì vậy: mỗi lần gửi mang một <code>submission_key</code> do máy khách sinh, có <b>unique index</b>. Đây là hệ quả không hiển nhiên nhưng bắt buộc.</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><b>Nháp nằm ở bảng khác</b></td>
+      <td><code>fund_entry_draft</code> — sửa thoải mái, xoá mềm được, không vào sổ, không vào số dư. Ranh giới bất biến bắt đầu <b>đúng ở nút gửi</b>, và câu chữ trên nút phải nói điều đó. Đây là câu trả lời cho rủi ro “thủ quỹ 65 tuổi không dám dùng”.</td>
+    </tr>
+    <tr>
+      <td class="xau">7</td>
+      <td><b>Sổ bất biến <em>không được</em> chứa dữ liệu cá nhân của người sống</b></td>
+      <td>Xem hộp bên dưới. Đây là chỗ dễ làm sai nhất của cả context.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Sổ bất biến đâm thẳng vào quyền xoá dữ liệu của Nghị định 13/2023</p>
+  <p>
+    Một người đóng góp đang sống có quyền yêu cầu xoá dữ liệu cá nhân. Sổ quỹ thì <b>không được phép
+    sửa</b>. Hai điều này không thể cùng đúng nếu tên người đóng góp nằm trên hàng bất biến.
+  </p>
+  <p>
+    <b>Cách gỡ — và nó quyết định cấu trúc bảng, nên phải quyết ngay từ migration đầu tiên:</b> danh
+    tính người đóng góp <b>không nằm trên <code>fund_entry</code></b>. Nó nằm ở một bảng riêng
+    <code>fund_donor_link</code> — <em>có</em> thể sửa, <em>có</em> xoá mềm, <em>có</em> ẩn danh hoá.
+    Hàng sổ giữ nguyên vĩnh viễn <b>ngày và số tiền</b>; liên kết danh tính thì gỡ được.
+  </p>
+  <p>
+    Đây chính là nguyên tắc “ẩn <em>ai</em>, không ẩn <em>bao nhiêu</em>” được đẩy tới tận tầng lưu
+    trữ — và đó là bằng chứng rằng nguyên tắc ấy đúng chứ không chỉ là một lựa chọn hiển thị:
+    <b>tổng thu vẫn đối chiếu được sau khi một người thực hiện quyền xoá dữ liệu</b>.
+  </p>
+</div>
+
+<h3>1.2 Mô hình miền <code>fund</code></h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Lớp domain (POJO thuần)</th><th>Vai trò</th><th>Điểm bắt buộc</th></tr></thead>
+  <tbody>
+    <tr><td><code>FundPeriod</code> <i>(aggregate root)</i></td><td>Một kỳ quỹ (thường một năm)</td><td><code>OPEN</code> → <code>CLOSED</code>. Đóng kỳ là <b>một chiều</b>. Không đóng được khi còn lệch cân đối.</td></tr>
+    <tr><td><code>FundEntry</code></td><td>Một bút toán — thu hoặc chi</td><td><code>record</code> bất biến. <code>direction</code> ∈ <code>THU</code>/<code>CHI</code>, <code>amount</code> kiểu <code>NUMERIC(15,0)</code> (đồng, <b>không dùng số thực</b>), <code>reversesEntryId</code> nullable, <code>reason</code> bắt buộc khi là bút toán đảo.</td></tr>
+    <tr><td><code>FundEntryDraft</code></td><td>Nháp trước khi gửi duyệt</td><td>Bảng riêng, sửa được, xoá mềm được. Không ảnh hưởng số dư.</td></tr>
+    <tr><td><code>DonorLink</code></td><td>Ai đóng góp cho bút toán nào</td><td>Bảng riêng. <code>displayMode</code> ∈ <code>FULL_NAME</code>/<code>PARTIAL</code>/<code>ANONYMOUS</code> do <b>người đóng góp tự chọn</b>. Ẩn danh hoá theo yêu cầu hợp pháp chỉ chạm vào bảng này.</td></tr>
+    <tr><td><code>Receipt</code></td><td>Chứng từ</td><td>Chỉ giữ <code>mediaAssetId</code>. <b>Thiếu chứng từ là trạng thái hợp lệ</b> và hiện công khai — không chặn ghi sổ, vì thực tế ở quê là như vậy.</td></tr>
+    <tr><td><code>Balance</code></td><td>Giá trị suy ra</td><td>Value object, không có bảng. Tính khi đọc.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>1.3 Vai thủ quỹ — một thay đổi chạm vào bảng của context khác</h3>
+
+<p>
+  Thiết kế đòi <b>tách vai thủ quỹ khỏi vai duyệt chi</b>. RBAC hiện tại không có vai đó:
+  <code>V5__membership_audit.sql</code> có ràng buộc
+  <code>ck_role_code CHECK (code IN ('ADMIN','COUNCIL','BRANCH_HEAD','MEMBER','GUEST'))</code> và năm
+  hàng seed tương ứng.
+</p>
+
+<ul>
+  <li>Migration của <code>fund</code> phải <b>gỡ và tạo lại</b> ràng buộc <code>ck_role_code</code> để
+    thêm <code>TREASURER</code>, rồi <code>INSERT ... ON CONFLICT (code) DO NOTHING</code> một hàng
+    mới. Đây là <b>migration của context này chạm vào bảng của context kia</b> — chấp nhận được vì
+    Flyway sở hữu toàn bộ schema, nhưng phải ghi bình luận nói rõ ai đổi và vì sao.</li>
+  <li><code>fund</code> <b>không gọi được</b> <code>membership/application/BranchScopeGuard</code>
+    (package con, nội bộ với Spring Modulith). Nó khai <code>FundAuthorizationPort</code> của riêng
+    mình, hiện thực bằng adapter JDBC read-only trên <code>branch_assignment</code> +
+    <code>role</code>. Cùng khuôn với <code>EventSubjectJdbcAdapter</code>.</li>
+  <li><b>Dòng họ nhỏ, một người kiêm cả hai vai:</b> hệ thống <b>vẫn đi qua hai bước</b> và hiện một
+    dòng công khai trên trang quỹ rằng người ghi và người duyệt là một. Hiện ra chứ không bỏ qua, và
+    <b>không</b> có cấu hình nào tắt được dòng cảnh báo đó.</li>
+</ul>
+
+<h3>1.4 Migration <code>Vxx__fund.sql</code></h3>
+
+<ul>
+  <li><code>fund_period</code>, <code>fund_entry</code>, <code>fund_entry_draft</code>,
+    <code>fund_donor_link</code>, <code>fund_receipt</code>.</li>
+  <li><code>CREATE FUNCTION fund_entry_immutable()</code> + trigger
+    <code>BEFORE UPDATE OR DELETE ON fund_entry</code> — sao chép khuôn của
+    <code>audit_log_immutable()</code> trong <code>V5</code>, khác một chỗ: thêm <code>OR DELETE</code>.</li>
+  <li><code>UNIQUE (submission_key)</code> trên <code>fund_entry</code>.</li>
+  <li><code>CHECK (amount &gt; 0)</code> — chiều tiền nằm ở <code>direction</code>, không nằm ở dấu
+    của số. Bút toán đảo là một hàng <code>direction</code> ngược lại, không phải một số âm.</li>
+  <li><code>CHECK (reverses_entry_id IS NULL OR btrim(reason) &lt;&gt; '')</code> — bút toán đảo bắt
+    buộc có lý do, và lý do hiện công khai.</li>
+  <li><code>CHECK</code> chặn ghi vào kỳ đã <code>CLOSED</code> — làm bằng trigger vì cần đọc bảng cha.</li>
+  <li>Nới <code>ck_role_code</code> (thêm <code>TREASURER</code>) và nới
+    <code>ck_audit_log_action</code> (thêm <code>POST_ENTRY</code>, <code>REVERSE_ENTRY</code>,
+    <code>CLOSE_PERIOD</code>).</li>
+</ul>
+
+<h3>1.5 Phạm vi hiển thị của sổ quỹ</h3>
+
+<ul>
+  <li>Sổ công đức và sổ chi chỉ hiện với <b>thành viên đã đăng nhập</b> — số tiền gắn với người sống
+    là dữ liệu cá nhân, không phải thông tin phả hệ của người đã khuất. <b>Khách không thấy gì.</b></li>
+  <li>Không có cột thứ hạng, không có tổng theo chi, không có phần trăm. Sổ xếp theo <b>thời gian</b>.
+    Đây là ràng buộc đã chốt ở <a href="../00-tong-the.html">bản chốt phạm vi mục 3</a>.</li>
+  <li>Không có thanh toán trực tuyến. Chỉ ghi nhận khoản đã nhận ngoài đời + ảnh biên nhận.</li>
+  <li><b>Tải toàn bộ sổ ra bảng tính</b> giữ nguyên — rẻ, và là thứ khiến người nghi ngờ tự kiểm được
+    mà không cần tin ai. Mỗi lần tải ghi một dòng <code>audit_log</code> action <code>EXPORT</code>
+    (giá trị đã có sẵn trong <code>V5</code>).</li>
+</ul>
+
+<div class="khoi chot">
+  <p class="nhan">Đề xuất cắt thêm trong <code>fund</code></p>
+  <p>
+    TDD §2 liệt kê <code>FundAccount</code> — hàm ý nhiều tài khoản quỹ. <b>Đề xuất Giai đoạn 3 chỉ
+    làm một quỹ, nhiều kỳ</b>, không làm quỹ con theo chi.
+  </p>
+  <p>
+    Lý do: quỹ con lập tức kéo theo chuyển khoản nội bộ giữa các quỹ, hợp nhất báo cáo, và câu hỏi
+    “quỹ chi Hai có phải công khai với chi Ba không” — ba bài toán mà không ai yêu cầu.
+    <b>Cái giá:</b> chi nào đang có quỹ riêng thì vẫn giữ sổ giấy của chi đó. Chấp nhận được, và nếu
+    sau này thật sự cần thì thêm một cột <code>branch_id</code> vào <code>fund_period</code> là đủ —
+    <b>không</b> phải làm lại mô hình.
+  </p>
+</div>
+
+<h3>1.6 Rủi ro riêng của <code>fund</code></h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Rủi ro</th><th>Vì sao</th><th>Cách giảm</th></tr></thead>
+  <tbody>
+    <tr><td class="xau"><b>Bấm đúp tạo bút toán ma</b></td><td>Không sửa được, chỉ đảo được, và cả ba dòng nằm trong sổ công khai vĩnh viễn. Người ghi sổ sẽ thấy xấu hổ vì một lỗi mạng.</td><td><code>submission_key</code> có unique index; máy khách vô hiệu hoá nút ngay khi gửi; test khẳng định gửi lại cùng khoá trả về <b>chính bút toán cũ</b>, không tạo hàng mới.</td></tr>
+    <tr><td class="xau"><b>Sổ giấy và sổ máy chạy song song rồi lệch</b></td><td>Thủ quỹ quen tay ghi giấy, nhập máy sau, có lúc quên. Từ đó không sổ nào tin được.</td><td>Chấp nhận độ trễ: có trường “đã nhập từ sổ giấy ngày …”. Và <b>mốc chốt kỳ</b> — sau khi Hội đồng chốt thì kỳ khoá lại, mọi ghi nhận muộn phải vào kỳ sau.</td></tr>
+    <tr><td class="xau"><b>Số dư trông đẹp nhưng chưa ai kiểm</b></td><td>Con số thẳng hàng trên màn hình tạo cảm giác đã được kiểm chứng. Một phần mềm minh bạch nửa vời còn tệ hơn cuốn sổ giấy.</td><td>Dòng cân đối tự tính, lệch thì đỏ và <b>không cho chốt kỳ</b>. Khối “khoản chi chưa có chứng từ” đặt ở chỗ dễ thấy, không nằm sâu trong báo cáo.</td></tr>
+    <tr><td class="canh"><b>Không ai đọc</b></td><td>Minh bạch mà không ai xem thì cũng như không; trang quỹ có thể chỉ được mở vài lần một năm.</td><td>Chốt kỳ ⇒ gửi <b>tóm tắt ba con số + một đường dẫn qua Zalo</b>, dùng lại đường ống của Giai đoạn 1. Minh bạch phải chủ động đi tới người đọc.</td></tr>
+    <tr><td class="canh"><b>Tiền lẻ và làm tròn</b></td><td>Dùng <code>DOUBLE</code>/<code>float</code> cho tiền là lỗi kinh điển, và ở đây nó <b>không sửa được</b> vì hàng đã ghi là bất biến.</td><td><code>NUMERIC(15,0)</code> đơn vị đồng ở CSDL, <code>BigDecimal</code> ở Java, <b>cấm kiểu số thực</b> trong cả chuỗi. Có test khẳng định.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>1.7 Tiêu chí nghiệm thu <code>fund</code></h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Khẳng định</th><th>Kiểu test</th></tr></thead>
+  <tbody>
+    <tr><td>F-1</td><td><code>UPDATE fund_entry SET amount = ...</code> ⇒ <b>ngoại lệ từ trigger</b>. <code>DELETE FROM fund_entry</code> ⇒ <b>ngoại lệ từ trigger</b>. Chạy với vai kết nối cao nhất mà ứng dụng dùng.</td><td>Testcontainers</td></tr>
+    <tr><td>F-2</td><td>Không có endpoint HTTP nào cho phép <code>PUT</code>/<code>PATCH</code>/<code>DELETE</code> lên <code>/api/v1/fund/entries/{id}</code> — quét bảng định tuyến, không phải đọc mã bằng mắt.</td><td>Đơn vị (Spring MVC)</td></tr>
+    <tr><td>F-3</td><td>Gửi hai lần cùng <code>submission_key</code> ⇒ đúng <b>một</b> hàng trong <code>fund_entry</code>, lần thứ hai trả về cùng <code>id</code>.</td><td>Testcontainers</td></tr>
+    <tr><td>F-4</td><td>Bút toán đảo thiếu <code>reason</code> ⇒ <b>vi phạm ràng buộc</b>.</td><td>Testcontainers</td></tr>
+    <tr><td>F-5</td><td>Ẩn danh hoá một người đóng góp ⇒ tên biến mất khỏi sổ, <b><code>SUM(amount)</code> của kỳ không đổi</b>, và <code>fund_entry</code> không có hàng nào bị chạm.</td><td>Testcontainers</td></tr>
+    <tr><td>F-6</td><td>Kỳ có cân đối lệch ⇒ <code>POST .../close</code> trả <b>409</b>, kỳ vẫn <code>OPEN</code>.</td><td>MockMvc</td></tr>
+    <tr><td>F-7</td><td>Ghi vào kỳ đã <code>CLOSED</code> ⇒ bị chặn ở tầng CSDL, không chỉ ở tầng ứng dụng.</td><td>Testcontainers</td></tr>
+    <tr><td>F-8</td><td>Danh tính <b>khách</b> gọi mọi endpoint của <code>fund</code> ⇒ <b>403</b>, không lộ cả số tổng.</td><td>MockMvc</td></tr>
+    <tr><td>F-9</td><td>Tài khoản chỉ có vai <code>TREASURER</code> ⇒ gửi được, <b>duyệt không được</b>. Người ghi và người duyệt trùng nhau ⇒ phản hồi kèm cờ cảnh báo công khai.</td><td>Testcontainers</td></tr>
+    <tr><td>F-10</td><td>Phản hồi sổ công đức <b>không chứa</b> trường thứ hạng nào, và thứ tự trả về là theo thời gian.</td><td>MockMvc</td></tr>
+    <tr><td>F-11</td><td>Không có kiểu <code>double</code>/<code>float</code> nào xuất hiện trong <code>vn.giapha.fund</code>.</td><td>ArchUnit</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>2. <code>reporting</code> — FR-4.3 báo cáo dân số học</h2>
+
+<h3>2.1 Đọc thẳng hay dựng projection riêng — <span class="tot">đọc thẳng</span></h3>
+
+<div class="khoi chot">
+  <p class="nhan">Khuyến nghị: <b>truy vấn gộp trực tiếp trên Postgres</b>, cache Redis TTL ngắn, không event-sourcing, không projection thường trú</p>
+  <ul>
+    <li><b>Quy mô không đòi hỏi.</b> Một dòng họ là hàng nghìn tới hàng chục nghìn người, không phải
+      hàng triệu. Một <code>GROUP BY</code> trên <code>person</code> với chỉ mục từng phần đã có sẵn
+      (<code>ix_person_generation</code>, <code>ix_person_is_alive</code>,
+      <code>ix_person_branch</code> trong <code>V2__core.sql</code>) chạy trong vài chục mili giây.
+      Dựng projection để tiết kiệm thời gian đó là mua một bài toán làm mới dữ liệu bằng một khoản
+      lãi không đo được.</li>
+    <li><b>Phần khó của FR-4.3 không phải tốc độ mà là <em>che nhóm nhỏ</em></b>, và việc che phải làm
+      <b>sau khi gộp</b> và <b>theo phạm vi của người đang xem</b>. Một projection thường trú sẽ phải
+      thực thể hoá cho từng phạm vi — nhân số lượng bảng lên, không giảm.</li>
+    <li><b>Tươi mới quan trọng hơn nhanh.</b> Hội đồng vừa sửa cây xong, mở báo cáo thấy số cũ, thì
+      niềm tin mất nhanh hơn nhiều so với việc chờ thêm 400 ms.</li>
+  </ul>
+  <p>
+    <b>Quy tắc leo thang, ghi rõ để khỏi tranh cãi về sau:</b> nếu một truy vấn báo cáo vượt
+    <b>p95 = 800 ms</b> trên bộ dữ liệu demo, <em>khi đó</em> mới thêm một
+    <code>MATERIALIZED VIEW</code> làm mới hằng đêm bằng <code>REFRESH ... CONCURRENTLY</code>. Không
+    tối ưu trước khi đo.
+  </p>
+</div>
+
+<p>
+  Hệ quả: <code>reporting</code> có thể <b>không có bảng nào của riêng nó</b>. Nó có
+  <code>DemographicQueryPort</code> khai ở domain, hiện thực bằng adapter JDBC read-only trên
+  <code>person</code>/<code>branch</code>, và các value object <code>AgeBand</code>,
+  <code>GenderSplit</code>, <code>GeoBucket</code>, <code>SuppressedCell</code>. Cập nhật thế nào?
+  <b>Không cập nhật gì cả — mỗi lần đọc là một lần tính, cache Redis 5–15 phút</b>, và trên màn hình
+  ghi rõ “tính đến HH:mm”.
+</p>
+
+<h3>2.2 Chỗ chặn thật sự: nơi ở là văn bản tự do</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Bản đồ phân bố hiện không dựng được, và cách gỡ nằm ở đợt B chứ không ở đây</p>
+  <p>
+    <code>person.native_place</code> và <code>person.current_place</code> là
+    <code>VARCHAR(255)</code> tự do (<code>V2__core.sql</code> dòng 106–107). Không có mã tỉnh, không
+    có mã quốc gia. “Hà Nội”, “TP Hà Nội”, “Ha Noi”, “Cầu Giấy, Hà Nội” là bốn giá trị khác nhau.
+  </p>
+  <p>
+    <b>Khuyến nghị:</b> thêm <code>current_province_code</code> và <code>current_country_code</code>
+    vào <code>person</code> — <b>ở đợt B</b>, cùng lúc với mẫu Excel và ô nhập của hồ sơ người, dưới
+    dạng danh sách chọn chứ không phải ô gõ tự do. Văn bản tự do vẫn giữ để hiển thị.
+    <code>reporting</code> chỉ đọc mã.
+  </p>
+  <p>
+    <b>Nếu đợt B đã chạy xong mà chưa có mã</b>, phương án vá là một bảng tra
+    <code>place_alias</code> đối chiếu văn bản đã bỏ dấu về mã — làm được nhưng luôn còn sót, nên báo
+    cáo <b>bắt buộc</b> có hàng “chưa xác định được nơi ở: N người”. Thà hiện phần không biết còn hơn
+    lặng lẽ bỏ ra ngoài rồi để tổng không khớp.
+  </p>
+</div>
+
+<h3>2.3 Che nhóm nhỏ</h3>
+
+<ul>
+  <li><code>SmallCellSuppressor</code> ở <code>reporting/domain</code> — POJO thuần, nhận danh sách ô
+    và một ngưỡng, trả về danh sách đã gộp <b>kèm số ô đã bị gộp</b>.</li>
+  <li>Ngưỡng là <b>cấu hình</b>, mặc định 5, và <b>Hội đồng Tộc biểu quyết con số cuối</b> — kế hoạch
+    này không quyết hộ.</li>
+  <li>Ô bị gộp <b>phải nói rõ nó bị gộp và vì sao</b>. Lặng lẽ bỏ đi thì tổng không khớp và người đọc
+    mất niềm tin vào cả báo cáo.</li>
+  <li>Chỉ áp cho <b>người còn sống</b>. Người đã khuất là công khai theo BA v2 §10, che họ đi là che
+    nhầm đối tượng và làm báo cáo lịch sử vô dụng.</li>
+  <li>Bản đồ chỉ tới <b>cấp tỉnh và cấp quốc gia</b>. Không bao giờ chấm toạ độ chỗ ở của người sống,
+    dù dữ liệu có sẵn.</li>
+</ul>
+
+<h3>2.4 Những gì không đưa vào báo cáo</h3>
+
+<p>
+  <b>Tỉ lệ tuyệt tự</b> và <b>tỉ lệ gia đình có con trai</b> đã bị cắt ở
+  <a href="../00-tong-the.html">bản chốt phạm vi mục 3</a> vì đi ngược FR-1.8. Kế hoạch này thực thi
+  điều đó ở mức mã: <b>không có tham số nào của API cho phép gộp nhóm theo
+  <code>lineage_status</code> hoặc theo giới tính của con</b>. Cấm bằng thiết kế API, không cấm bằng
+  cách ẩn nút — vì ẩn nút thì ai gõ thẳng URL cũng lấy được.
+</p>
+
+<h3>2.5 Tiêu chí nghiệm thu <code>reporting</code></h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Khẳng định</th><th>Kiểu test</th></tr></thead>
+  <tbody>
+    <tr><td>R-1</td><td>Một ô có 3 người ⇒ bị gộp; <b>tổng các hàng hiện ra cộng phần đã gộp bằng tổng thật</b>.</td><td>Đơn vị + Testcontainers</td></tr>
+    <tr><td>R-2</td><td>Đổi ngưỡng che trong cấu hình ⇒ kết quả đổi theo, không phải sửa mã.</td><td>Đơn vị</td></tr>
+    <tr><td>R-3</td><td>Người đã khuất <b>không</b> bị che dù nhóm nhỏ.</td><td>Đơn vị</td></tr>
+    <tr><td>R-4</td><td>Danh tính <b>khách</b> ⇒ không truy cập được báo cáo dân số học.</td><td>MockMvc</td></tr>
+    <tr><td>R-5</td><td>Trưởng chi chỉ nhận được số liệu trong phạm vi <code>ltree</code> của mình; toàn họ ⇒ 403.</td><td>Testcontainers</td></tr>
+    <tr><td>R-6</td><td>Không tham số API nào gộp nhóm theo <code>lineage_status</code>; gửi thử ⇒ <b>400</b>.</td><td>MockMvc</td></tr>
+    <tr><td>R-7</td><td>Người thiếu năm sinh / thiếu nơi ở hiện thành hàng “chưa xác định”, <b>không bị bỏ khỏi tổng</b>.</td><td>Testcontainers</td></tr>
+    <tr><td>R-8</td><td>p95 của mỗi truy vấn báo cáo trên bộ dữ liệu demo <b>&lt; 800 ms</b>; vượt thì mở lại quyết định projection.</td><td>Đo, ghi số vào báo cáo chạy</td></tr>
+    <tr><td>R-9</td><td>Mọi biểu đồ có bảng số đi kèm trong DOM (người đeo kính và trình đọc màn hình đọc bảng dễ hơn hình).</td><td>Playwright</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>3. FR-2.4 bản tin &amp; bảng vàng — thuộc context nào</h2>
+
+<div class="khoi chot">
+  <p class="nhan">Trả lời: một bounded context mới, <code>newsletter</code>, chứa <b>hai</b> aggregate</p>
+  <p>
+    Không phải <code>heritage</code>, không phải <code>notification</code>, không phải
+    <code>reporting</code>. Và <b>bảng vàng không phải một phần của bản tin</b> dù hai thứ chung một
+    mã yêu cầu.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phương án</th><th>Vì sao bác</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>heritage</code></td>
+      <td><code>heritage</code> là <b>tư liệu đã có sẵn của người đã khuất, được chép lại</b>: có ảnh gốc, có phiên âm, có dị bản, có câu hỏi “ai dịch bản này”. Bản tin là <b>văn bản sinh ra đã là số, do người sống viết mới</b>: có nháp, có duyệt, có ngày xuất bản, có bản rút gọn ba dòng gửi Zalo. Gộp lại thì aggregate tư liệu mọc thêm bốn trường luôn NULL và một luồng vòng đời thứ hai.</td>
+    </tr>
+    <tr>
+      <td><code>notification</code></td>
+      <td><code>notification</code> là <b>cái ống</b>: kênh, provider, retry, DLQ, nhật ký gửi — 69 file ở <code>backend/src/main/java/vn/giapha/notification/</code>. Bản tin là <b>nội dung đi qua ống</b>. Đặt nội dung vào ống thì ống phải biết trạng thái biên tập, và một context hạ tầng bắt đầu mang luật nghiệp vụ. Đó là hướng phụ thuộc sai.</td>
+    </tr>
+    <tr>
+      <td><code>reporting</code></td>
+      <td><code>reporting</code> chỉ đọc và không có trạng thái. Bản tin có luồng ghi và luồng duyệt.</td>
+    </tr>
+    <tr>
+      <td><code>genealogy</code> (cho riêng bảng vàng)</td>
+      <td>Nghe hợp lý vì bảng vàng gắn với người. Nhưng bảng vàng là <b>nội dung do Hội đồng biên tập, có trạng thái đồng ý</b> — <code>genealogy</code> là sự thật phả hệ, không phải nơi chứa lời ghi công.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Vì sao hai aggregate trong một context:</b> bản tin và bảng vàng khác nhau về nội dung nhưng
+  giống nhau ở ba điểm quyết định ranh giới — đều là <b>nội dung do Hội đồng biên tập</b>, đều có
+  <b>bước duyệt trước khi xuất bản</b>, đều <b>đi ra ngoài qua đúng đường ống Zalo và phân tầng riêng
+  tư của Giai đoạn 1</b>. Chúng cùng một ngôn ngữ chung, nên cùng một context.
+</p>
+
+<ul>
+  <li><code>NewsPost</code> — <code>DRAFT</code> → <code>PUBLISHED</code>, phân loại “việc sắp tới” /
+    “việc đã xong”, và <b><code>zaloSummary</code> ba dòng do người viết tự soạn</b>. Máy không tự
+    cắt: cắt máy làm hỏng giọng văn trang trọng của thông báo việc họ.</li>
+  <li><code>HonourEntry</code> — <code>personId</code>, hạng mục (khoa bảng / khuyến học / đóng góp),
+    năm, và <b><code>consentState</code></b>. Người còn sống được vinh danh phải <b>tự đồng ý</b>;
+    trẻ vị thành niên thì mặc định <b>ghi nhận việc, chưa hiện tên</b> cho tới khi có đồng ý của phụ
+    huynh, và kể cả khi đó cũng không hiện với khách.</li>
+  <li><b>Mục “đóng góp” của bảng vàng chỉ ghi <em>có</em> đóng góp, không ghi số tiền và không có thứ
+    hạng.</b> Số tiền nằm ở sổ quỹ, nơi cần kiểm tra. Bảng vàng dẫn sang sổ công đức, không nhắc lại
+    con số.</li>
+</ul>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Hai chú ý về lịch trình và về đặt tên</p>
+  <p>
+    <b>1 · FR-2.4 không thuộc đợt D.</b> <a href="../00-tong-the.html">Bản chốt phạm vi mục 2</a> xếp
+    “Trang chủ mới (bản tin · vinh danh · sự kiện làng)” vào <b>đợt C</b>, tức là <em>trước</em> Giai
+    đoạn 3. Bản chốt phạm vi thắng. Vì vậy trang này chỉ trả lời <em>câu hỏi context</em>; việc dựng
+    <code>newsletter</code> thuộc <b>tài liệu 04</b>. Giai đoạn 3 chỉ nợ <b>ba móc nối</b>: chốt kỳ
+    quỹ ⇒ gợi ý soạn một bài với ba con số điền sẵn (máy không tự đăng) · bài về chạp mả ⇒ kèm nút
+    chuẩn bị đi tảo mộ · mục đóng góp của bảng vàng ⇒ dẫn tới sổ công đức.
+  </p>
+  <p>
+    <b>2 · “sổ vàng công đức” và “bảng vàng vinh danh” là hai thứ khác nhau</b> và tên tiếng Việt của
+    chúng gần như trùng. Đây là nguồn lỗi chắc chắn xảy ra. Trong mã dùng hai tên tách hẳn:
+    <code>fund.DonationLedger</code> và <code>newsletter.HonourRoll</code>. Không bao giờ đặt lớp nào
+    tên <code>GoldenBook</code>.
+  </p>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Trang 02 của Kế hoạch 03. Trước: <a href="01-heritage.html">01 · heritage</a> · tiếp:
+    <a href="03-rui-ro-lo-trinh.html">03 · rủi ro, ước lượng, lộ trình</a>.
+  </p>
+  <p>
+    Ba việc cần Hội đồng Tộc biểu quyết trước khi dựng: <b>ngưỡng che nhóm nhỏ</b> ·
+    <b>chính sách vinh danh trẻ vị thành niên</b> · <b>có tách vai thủ quỹ khỏi vai duyệt chi không</b>
+    (nếu không tách thì hệ thống vẫn đi hai bước và hiện cảnh báo công khai — điều này không thương
+    lượng).
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

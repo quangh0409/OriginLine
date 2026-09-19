@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch 02 — Nhập liệu ban đầu · Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../design/assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<header class="dau">
+  <p class="nhan-tren">Cổng Thông Tin Dòng Họ · Kế hoạch 02 · Đợt B — Đưa dòng họ vào</p>
+  <h1>Nhập liệu ban đầu</h1>
+  <p class="tom-tat">
+    Đây là <strong>đường ống kỹ thuật lớn nhất còn lại</strong> và là thứ quyết định một dòng họ
+    có dùng được hệ thống hay không. Quy trình năm bước và mẫu Excel hai bảng
+    <strong>đã chốt</strong> — tài liệu này <strong>không thiết kế lại quy trình</strong>, nó lập
+    kế hoạch thực hiện: dựng gì, theo thứ tự nào, tốn bao nhiêu, và <strong>hỏng ở đâu</strong>.
+  </p>
+  <p class="tom-tat">
+    Ràng buộc trên tài liệu này là <code>plan/00-tong-the.html</code>. Chỗ nào ở đây mâu thuẫn với
+    tài liệu 00 thì tài liệu 00 thắng.
+  </p>
+</header>
+
+<nav class="dieu-huong">
+  <b>Mục lục:</b>
+  <a href="#s1">1 Ràng buộc</a> ·
+  <a href="#s2">2 Đường ống</a> ·
+  <a href="#s3">3 N1 Mẫu Excel</a> ·
+  <a href="#s4">4 N2 Đọc file</a> ·
+  <a href="#s5">5 N3 Khu vực chờ</a> ·
+  <a href="#s6">6 N4 Bộ kiểm</a> ·
+  <a href="#s7">7 N5 Bất biến khi tải lại</a> ·
+  <a href="#s8">8 N6 Ghi vào phả</a> ·
+  <a href="#s9">9 N7 Gộp trùng</a> ·
+  <a href="#s10">10 N8 Nhập lần hai</a> ·
+  <a href="#s11">11 N9 GEDCOM</a> ·
+  <a href="#s12">12 Ước lượng</a> ·
+  <a href="#s13">13 Sai sau ba tháng</a> ·
+  <a href="#s14">14 Mẫu Excel chưa tả nổi</a> ·
+  <a href="#s15">15 Nghiệm thu</a>
+</nav>
+
+<h2 id="s1">1. Ràng buộc và hiện trạng đo được</h2>
+
+<p>
+  Sáu ràng buộc dưới đây <b>không đàm phán</b>. Bốn cái đầu kế thừa từ tài liệu 00 và từ chính mã
+  nguồn; hai cái cuối là ràng buộc riêng của đợt nhập liệu.
+</p>
+
+<ol>
+  <li><b>Không ghi vào <code>person</code> / <code>relationship</code> / AGE trước khi người nhập
+  bấm duyệt.</b> Mọi dữ liệu tải lên nằm ở khu vực chờ cho tới đúng thời điểm đó.</li>
+  <li><b>Cạnh AGE và dòng <code>relationship</code> ghi trong cùng một transaction.</b> Bất biến
+  ghi ngay đầu <code>backend/src/main/resources/db/migration/V2__core.sql</code> (mục 2.4) và đã
+  được ghim bằng integration test
+  <code>backend/src/test/java/vn/giapha/integration/GraphRelationalConsistencyIT.java</code>.
+  Đường ống nhập liệu <b>không được</b> mở đường ghi riêng cho nhanh.</li>
+  <li><b>Xoá mềm, không bao giờ xoá cứng.</b> Kể cả khi gộp trùng, kể cả khi rút lại cả một lô.</li>
+  <li><b>Migration mới đánh số tiếp <code>V8</code></b>, không sửa <code>V1</code>–<code>V7</code>
+  đã chạy trên dữ liệu thật.</li>
+  <li><b>Người còn sống không nhập hộ</b> (ràng buộc 00 §5). Mẫu Excel <b>cố ý không có</b> cột số
+  điện thoại, email, địa chỉ, ảnh. Đây là quyết định, không phải thiếu sót — đừng "sửa" nó.</li>
+  <li><b>Tệp do người dùng gửi lên là đầu vào không tin cậy.</b> Trưởng chi không phải kẻ tấn công,
+  nhưng <code>.xlsx</code> là một kho nén chứa XML, và một tệp hỏng không được phép làm sập tiến
+  trình web hay ngốn hết bộ nhớ heap.</li>
+</ol>
+
+<h3>1.1 Những gì dùng lại được (đếm từ mã nguồn)</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Đã có sẵn</th><th>Đường dẫn</th></tr></thead>
+  <tbody>
+    <tr><td>Ghi cạnh đúng bất biến, đã kiểm quyền, đã ghi nhật ký</td>
+        <td><code>backend/src/main/java/vn/giapha/genealogy/application/LinkRelationshipService.java</code> — hàm <code>attach()</code> <b>cố ý không</b> mang <code>@Transactional</code> để chạy trong transaction của use case cha</td></tr>
+    <tr><td>Thêm nhân khẩu kèm nối cây, suy đời thứ, suy chi, suy thứ tự sinh</td>
+        <td><code>.../genealogy/application/AddPersonService.java</code></td></tr>
+    <tr><td>Cảnh báo kỵ húy (FR-1.6)</td>
+        <td><code>.../genealogy/application/TabooNameChecker.java</code> + <code>.../domain/port/TabooNamePort.java</code></td></tr>
+    <tr><td>Duyệt tổ tiên / hậu duệ / LCA bằng Cypher chạy trong Postgres</td>
+        <td><code>.../genealogy/domain/port/TreeGraphPort.java</code> — <code>ancestors()</code>, <code>isAncestorOf()</code></td></tr>
+    <tr><td>Kiểm một ngày âm có tồn tại không</td>
+        <td><code>.../calendar/domain/LunarConverter.java</code> (<code>lengthOfMonth</code>, <code>hasLeapMonth</code>, <code>leapMonthOf</code>) + <code>NoSuchLunarDateException.java</code></td></tr>
+    <tr><td>Tìm tên gần đúng, không dấu — nền cho phát hiện nghi trùng</td>
+        <td><code>V6__search.sql</code>: hàm <code>vn_unaccent()</code>, chỉ mục <code>ix_person_name_unaccented_trgm</code> (pg_trgm), <code>ix_person_name_huy_unaccented</code></td></tr>
+    <tr><td>Phạm vi chi/ngành theo <code>ltree</code></td>
+        <td><code>.../membership/application/BranchScopeGuard.java</code> · <code>.../genealogy/application/GenealogyAccessGuard.java</code></td></tr>
+    <tr><td>Nhật ký chỉ-ghi-thêm, có <code>before</code>/<code>after</code>/<code>changed_fields</code></td>
+        <td><code>V5__membership_audit.sql</code> mục 5.5 — bảng <code>audit_log</code>, có trigger chặn UPDATE</td></tr>
+    <tr><td>Kho đối tượng đã dựng, bucket private</td>
+        <td><code>infra/docker-compose.yml</code> dịch vụ <code>minio-init</code> — 4 bucket: <code>giapha-portraits giapha-stele giapha-graves giapha-documents</code></td></tr>
+    <tr><td>Ô ghi chú nguồn dữ liệu, đã có sẵn đúng ý đồ này</td>
+        <td><code>.../application/command/AddPersonCommand.java</code> — javadoc của <code>note</code> ghi nguyên văn ví dụ <i>"chép từ gia phả giấy 1998, trang 12"</i></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Bốn thứ tưởng có mà chưa có — kiểm lại trước khi lập lịch</p>
+  <ul>
+    <li><b>Không có thư viện đọc/ghi Excel nào trong <code>backend/pom.xml</code>.</b> Không POI,
+    không fastexcel. Phải thêm phụ thuộc mới.</li>
+    <li><b>Không có SDK MinIO/S3 nào trong backend.</b> Tìm <code>MinioClient</code>,
+    <code>S3Client</code>, <code>software.amazon</code> trên <code>backend/src</code> trả 0 kết
+    quả. Hạ tầng có MinIO, mã nguồn thì chưa nối vào. Lưu tệp gốc đã tải lên cần việc này.</li>
+    <li><b><code>confirmDuplicateOverride</code> đang bị nuốt im lặng.</b> Cờ này có ở
+    <code>genealogy/api/rest/dto/CreatePersonRequest.java:42</code>, được ánh xạ ở
+    <code>genealogy/api/rest/PersonRequestMapper.java:61</code>, khai báo ở
+    <code>genealogy/application/command/AddPersonCommand.java:40</code> — và <b>không chỗ nào đọc
+    nó</b>. <code>AddPersonService.add()</code> có gọi <code>tabooNames.check(...)</code> nhưng
+    không có bất kỳ phép dò trùng nào. Nghĩa là <b>phát hiện nghi trùng phải dựng mới từ đầu</b>,
+    không phải nối vào cái sẵn có. Ước lượng ở §6 đã tính theo hiện thực này.</li>
+    <li><b><code>ChangeRequestApprovedEvent</code> chưa có ai nghe.</b> Tìm cả cây nguồn chỉ ra ba
+    chỗ: nơi khai báo, nơi phát, và một test. Duyệt xong <b>không áp dụng gì cả</b> — đúng như tài
+    liệu 00 đã xếp "bộ áp dụng yêu cầu đính chính" vào đợt A. <b>Bước 5 của quy trình (mời người
+    sống tự nhận hồ sơ) phụ thuộc trực tiếp vào việc này</b>; nếu đợt A trượt, bước 5 trượt theo,
+    dù N1–N9 xong hết.</li>
+  </ul>
+</div>
+
+<h2 id="s2">2. Đường ống: năm bước nghiệp vụ ↦ chín hạng mục kỹ thuật</h2>
+
+<p>
+  Quy trình năm bước là <b>quy trình của dòng họ</b>. Chín hạng mục N1–N9 là <b>việc của đội kỹ
+  thuật</b>. Chúng không ánh xạ một–một, và chỗ lệch nhau chính là chỗ hay quên khi lập lịch.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bước nghiệp vụ (đã chốt)</th><th>Hạng mục kỹ thuật đỡ bước đó</th><th>Ai làm</th></tr></thead>
+  <tbody>
+    <tr><td><b>1.</b> Hội đồng chốt bản phả gốc</td>
+        <td><i>Không có phần mềm nào ở đây.</i> Đầu ra là một bản giấy có chữ ký, và nó là mốc so sánh cho mọi lần đối soát về sau.</td>
+        <td>Hội đồng Tộc biểu</td></tr>
+    <tr><td><b>2.</b> Khai khung chi/ngành</td>
+        <td>Màn khai <code>branch</code> (bảng đã có, <code>V2__core.sql</code> mục 2.1) · sinh <code>slug</code> qua <code>vn_slugify</code> · gán <code>branch_assignment</code> cho từng Trưởng chi</td>
+        <td>Hội đồng + Admin</td></tr>
+    <tr><td><b>3.</b> Mỗi Trưởng chi nhập chi mình bằng Excel, bốn chi song song</td>
+        <td><span class="chip must">N1</span> sinh mẫu · <span class="chip must">N2</span> đọc file · <span class="chip must">N3</span> khu vực chờ</td>
+        <td>Trưởng chi nhập · đội kỹ thuật dựng</td></tr>
+    <tr><td><b>4.</b> Đối soát, sửa file, tải lại, lặp tới khi sạch</td>
+        <td><span class="chip must">N4</span> bộ kiểm · <span class="chip must">N5</span> bất biến khi tải lại · <span class="chip must">N6</span> ghi vào phả · <span class="chip should">N7</span> gộp trùng · <b>phiếu đối chiếu in giấy</b> (§13)</td>
+        <td>Trưởng chi + một bậc cao niên</td></tr>
+    <tr><td><b>5.</b> Mời người còn sống tự nhận hồ sơ qua Zalo</td>
+        <td>Thiếp mời Zalo (provider dựng ở đợt A) · <b>bộ áp dụng <code>change_request</code></b> · màn hồ sơ tự khai</td>
+        <td>Đợt A + tài liệu 04</td></tr>
+    <tr><td colspan="2"><b>Ngoài năm bước:</b> <span class="chip should">N8</span> nhập lần hai trở đi · <span class="chip could">N9</span> GEDCOM</td>
+        <td>N8 ở đợt B · N9 ở đợt C</td></tr>
+  </tbody>
+</table>
+</div>
+
+<figure>
+<svg viewBox="0 0 940 300" role="img" aria-label="Máy trạng thái của một lô nhập liệu, từ DRAFT tới COMMITTED">
+  <rect class="wf-khung" x="8" y="8" width="924" height="284" rx="6"/>
+  <text class="wf-chu" x="24" y="34" font-weight="600">Máy trạng thái của một lô — import_batch.status</text>
+
+  <rect class="wf-o" x="24" y="56" width="120" height="46" rx="4"/>
+  <text class="wf-chu" x="40" y="78">DRAFT</text>
+  <text class="wf-phu" x="40" y="94">tệp đã vào MinIO</text>
+
+  <rect class="wf-o" x="180" y="56" width="120" height="46" rx="4"/>
+  <text class="wf-chu" x="196" y="78">PARSED</text>
+  <text class="wf-phu" x="196" y="94">đã thành dòng</text>
+
+  <rect class="wf-o" x="336" y="56" width="140" height="46" rx="4"/>
+  <text class="wf-chu" x="352" y="78">VALIDATED</text>
+  <text class="wf-phu" x="352" y="94">0 lỗi chặn</text>
+
+  <rect class="wf-o" x="512" y="56" width="150" height="46" rx="4"/>
+  <text class="wf-chu" x="528" y="78">COMMITTING</text>
+  <text class="wf-phu" x="528" y="94">đúng 1 transaction</text>
+
+  <rect class="wf-o" x="698" y="56" width="150" height="46" rx="4"/>
+  <text class="wf-chu" x="714" y="78">COMMITTED</text>
+  <text class="wf-phu" x="714" y="94">đã vào phả</text>
+
+  <path class="wf-net" d="M144 79 H176"/><path class="wf-net" d="M300 79 H332"/>
+  <path class="wf-net" d="M476 79 H508"/><path class="wf-net" d="M662 79 H694"/>
+  <circle class="wf-nhan" cx="176" cy="79" r="3"/><circle class="wf-nhan" cx="332" cy="79" r="3"/>
+  <circle class="wf-nhan" cx="508" cy="79" r="3"/><circle class="wf-nhan" cx="694" cy="79" r="3"/>
+
+  <rect class="wf-o" x="336" y="168" width="140" height="46" rx="4"/>
+  <text class="wf-chu" x="352" y="190">FAILED</text>
+  <text class="wf-phu" x="352" y="206">còn lỗi chặn</text>
+
+  <rect class="wf-o" x="512" y="168" width="150" height="46" rx="4"/>
+  <text class="wf-chu" x="528" y="190">SUPERSEDED</text>
+  <text class="wf-phu" x="528" y="206">đã có lô mới hơn</text>
+
+  <path class="wf-net" d="M406 102 V164"/>
+  <path class="wf-net" d="M406 214 C 406 258, 84 258, 84 106"/>
+  <text class="wf-phu" x="150" y="252">sửa file → tải lại — bước 4 lặp ở đây</text>
+  <path class="wf-net" d="M587 102 V164"/>
+  <text class="wf-phu" x="600" y="140">tiến trình chết → transaction tự cuộn lại</text>
+
+  <path class="wf-net" d="M694 118 V152" stroke-dasharray="3 3"/>
+  <text class="wf-phu" x="700" y="136">ranh giới ghi duy nhất:</text>
+  <text class="wf-phu" x="700" y="152">person · relationship · AGE</text>
+</svg>
+<figcaption>
+  <strong>Ranh giới ghi nằm ở đúng một mũi tên.</strong> Mọi trạng thái bên trái
+  <code>COMMITTING</code> chỉ chạm bảng <code>import_*</code>. Đây là thứ được kiểm bằng
+  integration test đếm số dòng <code>person</code> trước và sau, không phải bằng lời hứa — xem §15.
+</figcaption>
+</figure>
+
+<h2 id="s3">3. N1 — Sinh mẫu Excel</h2>
+
+<h3>3.1 Phạm vi</h3>
+
+<p>
+  Một endpoint sinh tệp <code>.xlsx</code> <b>riêng cho từng chi</b>, tải về từ màn quản trị:
+  <code>GET /api/v1/admin/branches/{branchId}/import-template.xlsx</code>. Tệp gồm năm trang:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trang</th><th>Nội dung</th><th>Ghi chú kỹ thuật</th></tr></thead>
+  <tbody>
+    <tr><td><b>Hướng dẫn</b></td>
+        <td>Cách đánh <code>Mã</code> từ số thứ tự trong sổ giấy · một ví dụ đã điền đủ 6 dòng của một gia đình ba đời · danh sách việc <b>không</b> điền (điện thoại, email, địa chỉ người sống) · cách xử lý khi không rõ</td>
+        <td>Trang đầu tiên, mở tệp là thấy. Chữ tối thiểu 12pt trong Excel — sàn tiếp cận ở 00 §5 áp cho cả tệp phát ra.</td></tr>
+    <tr><td><b>Nhân khẩu</b></td>
+        <td>11 cột đã chốt: <code>Mã</code>, <code>Họ tên</code>, <code>Tên huý</code>, <code>Giới</code>, <code>Đời</code>, <code>Mã cha</code>, <code>Mã mẹ</code>, <code>Quan hệ</code>, <code>Còn sống</code>, <code>Năm sinh</code>, <code>Ngày mất âm</code></td>
+        <td>Tiêu đề ở dòng 1, khoá cuộn. Cột <code>Mã</code> điền sẵn tiền tố của chi.</td></tr>
+    <tr><td><b>Hôn phối</b></td>
+        <td>Theo mẫu đã chốt, cộng ba cột đề nghị thêm ở §14: <code>Bậc</code> (vợ cả/vợ hai…), <code>Từ năm</code>, <code>Đến năm / lý do</code></td>
+        <td>Ba cột thêm là <b>đề nghị</b>, cần Hội đồng chốt; không có chúng thì tái hôn và ly hôn không nhập được.</td></tr>
+    <tr><td><b>Danh mục</b></td>
+        <td>Nguồn cho mọi danh sách chọn: Giới · Còn sống · Quan hệ · Bậc hôn phối</td>
+        <td>Trang ẩn (<code>hidden</code>, không <code>veryHidden</code> — để người dùng còn mở ra xem được nếu cần).</td></tr>
+    <tr><td><b>Đã có</b></td>
+        <td>Người của chi này <b>đã nằm trong hệ thống</b>, kèm đúng <code>Mã</code> cũ</td>
+        <td>Lần 1 thì rỗng. Từ lần 2 trở đi đây là thứ giữ cho <code>Mã</code> ổn định — xem §10.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3.2 Xác thực ô — và giới hạn thật của nó</h3>
+
+<ul>
+  <li><b>Danh sách chọn</b> (data validation kiểu <code>list</code>) cho <code>Giới</code>,
+  <code>Còn sống</code>, <code>Quan hệ</code>, trỏ vào dải đặt tên trên trang <b>Danh mục</b>.</li>
+  <li><b>Số nguyên có chặn</b> cho <code>Đời</code> (1–40) và <code>Năm sinh</code>
+  (1000–năm hiện tại).</li>
+  <li><b><code>Mã cha</code> / <code>Mã mẹ</code></b> trỏ vào dải đặt tên phủ cột <code>Mã</code>
+  của chính trang Nhân khẩu, nên Excel gợi ý được mã đã có. Nó <b>không</b> chặn được mã chưa gõ
+  tới — dòng cha thường nằm phía dưới dòng con nếu người nhập đi theo thứ tự sổ.</li>
+  <li><b><code>Ngày mất âm</code> phải định dạng ô là văn bản (<code>@</code>)</b>, kèm gợi ý
+  <i>"gõ dạng 15/8 hoặc 15/8 nhuận"</i>. Đây là cái bẫy tốn thời gian nhất của cả trang: để định
+  dạng mặc định thì Excel tự nuốt <code>15/8</code> thành một ngày <b>dương lịch</b> của năm hiện
+  tại, và cái đến tay server là một số sê-ri, không phải chuỗi.</li>
+  <li><b><code>Mã</code></b>: xác thực theo công thức độ dài + vị trí dấu gạch, kèm tiền tố chi đã
+  điền sẵn. Excel không có regex nên đây chỉ là hàng rào thô.</li>
+  <li><b>Bảo vệ trang</b> cho dòng tiêu đề và trang Danh mục, không đặt mật khẩu.</li>
+</ul>
+
+<div class="khoi">
+  <p class="nhan">Xác thực trong Excel là trải nghiệm, không phải bảo mật</p>
+  <p>
+    Dán (Ctrl+V) đè lên một ô <b>bỏ qua toàn bộ data validation</b>, và bảo vệ trang không mật khẩu
+    thì gỡ trong ba giây. Vì vậy: <b>server kiểm lại từ đầu 100% số ô</b>, và
+    <b>ghép cột theo tên tiêu đề chứ không theo vị trí</b> — người nhập chèn thêm một cột ghi chú
+    ở giữa là chuyện chắc chắn sẽ xảy ra.
+  </p>
+</div>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>Thêm phụ thuộc Apache POI <code>poi-ooxml</code> vào <code>backend/pom.xml</code> (hiện chưa có). Cần bảng <code>branch</code> đã khai xong (bước 2) để biết tiền tố mã và tên chi.</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Trưởng chi mở tệp bằng WPS Office hoặc Google Sheets — hai công cụ này giữ được danh sách chọn nhưng <b>hay làm mất định dạng văn bản của cột ngày âm</b>. Phải thử thật trên cả ba công cụ, không chỉ Excel.</p>
+    <p class="day">Rủi ro thật là <b>người nhập không đọc trang Hướng dẫn</b>. Giảm bằng cách điền sẵn một gia đình mẫu ngay trên trang Nhân khẩu, dòng 2–7, tô nền khác và ghi rõ "xoá các dòng ví dụ trước khi nộp".</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>Test sinh mẫu cho một chi rồi <b>đọc lại bằng chính bộ đọc N2</b>: 0 lỗi chặn, đúng 5 trang, đúng 11 tiêu đề cột trên trang Nhân khẩu, cột <code>Ngày mất âm</code> có <code>CellType.STRING</code>, và số ô có data validation ≥ 5.</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>4 ngày-người</b> — <i>ước lượng</i>, không đo. Gồm 1 ngày cho trang Hướng dẫn viết cho các cụ đọc, thứ hay bị coi là việc phụ và luôn tốn hơn dự tính.</p>
+  </div>
+</div>
+
+<h2 id="s4">4. N2 — Đọc file</h2>
+
+<h3>4.1 Thư viện và định dạng nhận</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Quyết định</th><th>Chọn</th><th>Vì sao</th></tr></thead>
+  <tbody>
+    <tr><td>Sinh tệp</td><td><b>Apache POI</b> (<code>XSSFWorkbook</code>)</td>
+        <td>Là thư viện JVM duy nhất viết được đầy đủ data validation + dải đặt tên + bảo vệ trang. Không có lựa chọn thay thế thật.</td></tr>
+    <tr><td>Đọc tệp</td><td><b>Apache POI, API sự kiện</b> (<code>XSSFReader</code> + SAX + <code>ReadOnlySharedStringsTable</code>)</td>
+        <td>Cùng họ thư viện với phần sinh, đỡ một phụ thuộc. Đọc theo dòng nên <b>bộ nhớ không phụ thuộc kích thước tệp</b>. Nạp cả workbook bằng <code>WorkbookFactory</code> tốn bộ nhớ gấp 5–10 lần kích thước tệp và là cách chắc chắn để một tệp 20 MB làm sập tiến trình web.</td></tr>
+    <tr><td>Định dạng nhận</td><td><b>Chỉ <code>.xlsx</code></b></td>
+        <td>Từ chối <code>.xls</code> (BIFF, phân tích phức tạp hơn hẳn) và <code>.xlsm</code> (có macro). Nhận diện bằng <b>chữ ký tệp</b>: 4 byte đầu <code>PK</code> + có mục <code>[Content_Types].xml</code> đúng kiểu — <b>không tin đuôi tệp, không tin <code>Content-Type</code> của client</b>.</td></tr>
+    <tr><td>CSV</td><td><b>Không nhận ở đợt B</b></td>
+        <td>Xem 4.2. Nếu Hội đồng nhất định cần thì mở ở đợt sau, có bộ đoán mã ký tự riêng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>4.2 Mã hoá ký tự — tên tiếng Việt có dấu là chỗ hay hỏng</h3>
+
+<p>
+  Bên trong <code>.xlsx</code> là XML UTF-8, nên <b>tai nạn "Nguyễn" thành "Nguyá»…n" không xảy ra
+  với xlsx</b> — nó xảy ra với CSV, và đó là lý do chính để không nhận CSV: Excel bản tiếng Việt
+  xuất CSV mặc định theo bảng mã hệ thống (Windows-1258/1252), không có BOM, và <b>không có cách
+  nào đoán đúng 100%</b>. Một họ tên gõ sai bảng mã sẽ đi thẳng vào <code>person_name</code>, sinh
+  ra cột <code>name_unaccented</code> rác, và hỏng luôn tìm kiếm lẫn cảnh báo kỵ húy.
+</p>
+
+<p>Ba phép chuẩn hoá <b>bắt buộc</b> chạy trên mọi ô chữ ngay khi đọc, trước mọi phép so sánh:</p>
+
+<ol>
+  <li><b>Chuẩn hoá Unicode về NFC</b> (<code>java.text.Normalizer</code>). macOS và một số bộ gõ
+  sinh NFD: chữ "ễ" là "e" cộng hai dấu tổ hợp. Hai chuỗi <b>trông giống hệt nhau</b> nhưng
+  <code>equals()</code> trả <code>false</code>, <code>unaccent</code> ra kết quả khác, và
+  <code>Mã cha</code> trỏ trượt. Đây là lỗi khó chịu nhất trong nhóm này vì <b>mắt người không
+  nhìn ra</b>.</li>
+  <li><b>Dọn khoảng trắng</b>: cắt hai đầu, gộp khoảng trắng liên tiếp, đổi
+  <code>U+00A0</code> (khoảng trắng cứng, sinh ra khi dán từ Word) thành khoảng trắng thường,
+  loại <code>U+200B</code>/<code>U+FEFF</code>.</li>
+  <li><b>Chữ hoa/thường của <code>Mã</code></b>: nâng hoa toàn bộ và bỏ khoảng trắng, để
+  <code>at-02-001</code> và <code>AT-02-001</code> là một.</li>
+</ol>
+
+<h3>4.3 Giới hạn và phòng thủ</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Giới hạn</th><th>Giá trị đề nghị</th><th>Căn cứ</th></tr></thead>
+  <tbody>
+    <tr><td class="so">Kích thước tệp</td><td>10 MB</td><td><code>spring.servlet.multipart.max-file-size</code>. Một chi 400 người xuất ra khoảng vài trăm KB.</td></tr>
+    <tr><td class="so">Số dòng Nhân khẩu</td><td>5.000</td><td>Tài liệu 00 §4 ghi mỗi Trưởng chi nhập <b>350–400 người</b>. 5.000 là hơn 12 lần dư. Quá ngưỡng thì bắt tách tệp, không phải vì máy không chịu nổi mà vì <b>không ai đối soát nổi một tệp 5.000 dòng</b>.</td></tr>
+    <tr><td class="so">Số dòng Hôn phối</td><td>2.000</td><td>Cùng lý do.</td></tr>
+    <tr><td class="so">Thời gian phân tích</td><td>60 giây</td><td>Cắt ngang, đánh <code>FAILED</code>, giữ nguyên tệp gốc để soi.</td></tr>
+    <tr><td class="so">Tỉ lệ giải nén</td><td><code>ZipSecureFile.setMinInflateRatio(0.01)</code></td><td>Chặn zip bomb — một tệp 1 MB bung ra 4 GB XML.</td></tr>
+    <tr><td class="so">Bộ nhớ một ô</td><td><code>IOUtils.setByteArrayMaxOverride</code></td><td>Chặn ô văn bản khổng lồ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Ba quy tắc nữa cho "đầu vào không tin cậy", đều rẻ và đều có lý do cụ thể:</p>
+
+<ul>
+  <li><b>Không bao giờ tính lại công thức.</b> Gặp ô <code>FORMULA</code> thì lấy <b>giá trị đã
+  lưu sẵn</b>. Chạy <code>FormulaEvaluator</code> trên tệp lạ là mở cửa cho tham chiếu ngoài, hàm
+  <code>WEBSERVICE</code>, và vòng lặp tính vô tận.</li>
+  <li><b>Chặn thực thể ngoài XML (XXE).</b> POI đã đặt mặc định an toàn ở các bản gần đây, nhưng
+  phải <b>có một test ghim</b> nạp tệp chứa DOCTYPE và khẳng định nó bị từ chối — mặc định thư
+  viện thay đổi theo phiên bản.</li>
+  <li><b>Chống chèn công thức khi xuất báo lỗi ra Excel.</b> Chuỗi người dùng gõ bắt đầu bằng
+  <code>=</code> <code>+</code> <code>-</code> <code>@</code> phải được thêm dấu nháy đầu khi ghi
+  vào tệp báo lỗi trả về, nếu không ta gửi lại cho chính họ một tệp có công thức chạy được.</li>
+</ul>
+
+<p>
+  Tệp gốc lưu vào bucket MinIO mới <code>giapha-imports</code> (bổ sung vào biến
+  <code>MINIO_BUCKETS</code> ở <code>infra/docker-compose.yml</code>), <b>không</b> lưu vào cơ sở
+  dữ liệu — ràng buộc 00 §5. Việc này kéo theo phải thêm SDK MinIO cho backend, hiện chưa có.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>POI · SDK MinIO · bucket mới · N3 (có bảng chờ mới ghi được kết quả đọc).</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>WPS Office ghi <code>.xlsx</code> hơi khác chuẩn ở phần dải đặt tên và định dạng số. Phải có
+    <b>tệp cố định (fixture) xuất từ WPS</b> trong bộ test, không chỉ từ Excel.</p>
+    <p class="day">Quét vi-rút tệp tải lên <b>ngoài phạm vi</b> đợt B. Nêu ra để Hội đồng biết mình đang chấp nhận gì.</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>Bộ fixture: tệp NFD → mọi tên sau khi đọc thoả <code>Normalizer.isNormalized(s, NFC)</code> · tệp <code>.xls</code> đổi đuôi thành <code>.xlsx</code> → từ chối bằng mã lỗi <code>IMP_BAD_FORMAT</code> · tệp 5.001 dòng → <code>IMP_TOO_MANY_ROWS</code> · zip bomb → từ chối trong &lt; 5 giây · tệp có DOCTYPE → từ chối · đọc tệp 5.000 dòng với heap giới hạn 256 MB không <code>OutOfMemoryError</code>.</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>5 ngày-người</b> — <i>ước lượng</i>. API sự kiện của POI là thứ tốn thời gian hơn người ta nghĩ, khoảng một nửa số ngày nằm ở đó.</p>
+  </div>
+</div>
+
+<h2 id="s5">5. N3 — Khu vực chờ</h2>
+
+<h3>5.1 Quyết định: bảng riêng, cùng lược đồ, migration V8</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phương án</th><th>Đánh giá</th></tr></thead>
+  <tbody>
+    <tr><td><b>Lược đồ Postgres riêng</b> (<code>staging.*</code>)</td>
+        <td><span class="xau">Bác.</span> <code>search_path</code> ở dự án này <b>đã là một cái bẫy có tên</b> — README §4 nói về việc phải đặt <code>LOAD 'age'</code> và <code>search_path</code> đúng cho mọi phiên dùng Cypher, và <code>V7__graph.sql</code> phải tự tay trả <code>search_path</code> về cuối tệp. Thêm một lược đồ nữa vào cuộc giằng co đó để đổi lấy sự gọn mắt là đánh đổi tồi.</td></tr>
+    <tr><td><b>Cơ sở dữ liệu riêng</b></td>
+        <td><span class="xau">Bác.</span> Bước ghi cần <b>một transaction</b> phủ cả bảng chờ lẫn <code>person</code>/AGE. Hai CSDL thì mất tính chất đó ngay, và ta quay về đúng vấn đề mà BA v2 §12 đã bác Neo4j để tránh.</td></tr>
+    <tr><td><b>JSONB trong một bảng duy nhất</b></td>
+        <td><span class="xau">Bác.</span> Bộ kiểm cần lọc, đếm, nối theo <code>Mã cha</code>; làm việc đó trên JSONB là tự trói tay.</td></tr>
+    <tr><td><b>Bảng riêng, cùng lược đồ <code>public</code>, tiền tố <code>import_</code></b></td>
+        <td><span class="tot">Chọn.</span> Có khoá ngoại tới <code>branch</code>/<code>app_user</code>, có <code>ltree</code>, cùng transaction với bước ghi, và một câu <code>\dt import_*</code> là thấy hết.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.2 Năm bảng ở <code>V8__import.sql</code></h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Bảng</th><th>Giữ gì</th><th>Điểm cần chú ý</th></tr></thead>
+  <tbody>
+    <tr><td><code>import_batch</code></td>
+        <td>Một lần tải lên: chi đích, người tải, <code>source_kind</code> (<code>EXCEL</code>/<code>GEDCOM</code>), khoá đối tượng MinIO, <code>file_sha256</code>, tên tệp gốc, <code>status</code>, số dòng, <code>created_at</code>/<code>version</code></td>
+        <td><code>source_kind</code> <b>phải có từ ngày đầu</b> dù đợt B chỉ dùng <code>EXCEL</code> — đó là toàn bộ lý do §11 rẻ.</td></tr>
+    <tr><td><code>import_person_row</code></td>
+        <td>Một dòng Nhân khẩu: <code>row_no</code>, <code>external_code</code>, <code>raw</code> (jsonb, <b>nguyên văn ô gốc</b>), <code>normalized</code> (jsonb), các trường đã tách, <code>resolved_person_id</code>, <code>planned_action</code> (<code>CREATE</code>/<code>UPDATE</code>/<code>SKIP</code>)</td>
+        <td>Giữ <b>cả</b> <code>raw</code> lẫn <code>normalized</code>. Khi tranh cãi "tôi gõ đúng mà" thì <code>raw</code> là bằng chứng. <code>UNIQUE (batch_id, external_code)</code>.</td></tr>
+    <tr><td><code>import_marriage_row</code></td>
+        <td>Một dòng Hôn phối: hai mã, bậc, từ năm, đến năm, lý do kết thúc, <code>raw</code></td><td>—</td></tr>
+    <tr><td><code>import_issue</code></td>
+        <td><code>severity</code> (<code>BLOCKING</code>/<code>WARNING</code>), <code>code</code>, <code>message</code>, <code>row_no</code>, <code>field</code>, <code>context</code> jsonb, <code>resolution</code></td>
+        <td>Sinh lại toàn bộ mỗi lần kiểm; <b>không</b> tích luỹ qua các lần.</td></tr>
+    <tr><td><code>person_external_ref</code></td>
+        <td><code>(code_system, branch_id, external_code) → person_id</code>, kèm <code>first_batch_id</code></td>
+        <td><b>Không thuộc về một lô.</b> Nó sống lâu hơn mọi lô và là khoá của toàn bộ §7 và §13. Đây là bảng quan trọng nhất trong năm bảng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.3 Ranh giới context</h3>
+
+<p>
+  Bounded context mới, tên gói <code>vn.giapha.dataimport</code>. <b>Không đặt tên
+  <code>vn.giapha.import</code></b> — <code>import</code> là từ khoá Java, gói sẽ không biên dịch
+  được. Nghe buồn cười nhưng đây là thứ ăn nửa buổi của người phát hiện ra muộn.
+</p>
+
+<p>Nó theo đúng kiến trúc hiện có (ràng buộc 00 §5):</p>
+
+<ul>
+  <li><code>api → application → domain</code>, domain là POJO thuần.</li>
+  <li>Ghi vào phả <b>chỉ qua application service công khai</b> của <code>genealogy</code>
+  (<code>AddPersonService</code>, <code>LinkRelationshipService</code>) — <b>không</b> chạm
+  <code>PersonRepository</code>, <b>không</b> chạm <code>TreeGraphPort</code>. Ngoại lệ duy nhất
+  được phép: <b>đọc</b> qua <code>TreeGraphPort.ancestors()</code> để dò vòng lặp, và ngay cả nó
+  cũng nên đi qua một application service của <code>genealogy</code> để
+  <code>ModularityTests</code> khỏi đỏ.</li>
+  <li><code>ModularityTests</code> phải xanh sau khi thêm module.</li>
+</ul>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p><code>V8__import.sql</code> · bảng <code>branch</code>, <code>app_user</code> đã có · quyết định của §8 về ranh giới transaction (nó định hình cột <code>status</code>).</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Lô cũ tích lại: bốn chi × mươi lần tải lại × 400 dòng là vài chục nghìn dòng chờ, không đáng lo. Nhưng phải có <b>công việc dọn định kỳ</b> xoá lô <code>SUPERSEDED</code>/<code>FAILED</code> quá 90 ngày, kèm tệp gốc trong MinIO thì <b>giữ lại</b> — xem §13.</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>IT: tải lên tệp 400 dòng, chạy kiểm, rồi khẳng định <code>SELECT count(*) FROM person</code> và số đỉnh <code>Person</code> trong AGE <b>không đổi</b> so với trước. Đây là bài kiểm trực tiếp cho ràng buộc §1.1. Cộng một luật ArchUnit: gói <code>dataimport</code> không được tham chiếu bất kỳ lớp nào trong <code>genealogy.domain.port</code> hay <code>*.infrastructure.*</code>.</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>4 ngày-người</b> — <i>ước lượng</i>. Migration + entity JPA + repository + khung context.</p>
+  </div>
+</div>
+
+<h2 id="s6">6. N4 — Bộ kiểm</h2>
+
+<p>
+  Hai nhóm <b>tách bạch hoàn toàn</b>, khác nhau ở đúng một điểm: <b>lỗi chặn thì không cho bấm
+  duyệt, cảnh báo thì cho — sau khi người nhập tick "tôi đã xem"</b>. Không có nhóm thứ ba, và
+  không có cảnh báo nào âm thầm tự sửa dữ liệu. Nguyên tắc: <b>máy không tự sửa con số của
+  người</b>.
+</p>
+
+<h3>6.1 Lỗi chặn</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Mã</th><th>Bắt cái gì</th><th>Vì sao là lỗi chặn</th></tr></thead>
+  <tbody>
+    <tr><td><code>IMP_PARENT_NOT_FOUND</code></td>
+        <td><code>Mã cha</code>/<code>Mã mẹ</code> không có trong tệp, cũng không có trong <code>person_external_ref</code> của chi</td>
+        <td>Ghi vào sẽ tạo ra người treo ngoài cây, không hiện trên phả đồ — đúng như javadoc <code>AddPersonCommand</code> cảnh báo.</td></tr>
+    <tr><td><code>IMP_CYCLE</code></td>
+        <td>Vòng lặp tổ tiên</td>
+        <td>Mọi phép duyệt (LCA, danh xưng, phả đồ) chạy vô tận. <code>LinkRelationshipService.validate()</code> đã chặn ở mức từng cạnh, nhưng lô 400 dòng cần bắt <b>trước</b>, không phải giữa transaction ghi.</td></tr>
+    <tr><td><code>IMP_CHILD_BEFORE_PARENT</code></td>
+        <td><code>Năm sinh</code> con &lt; <code>Năm sinh</code> cha/mẹ</td>
+        <td>Chắc chắn là chép nhầm dòng hoặc nhầm mã. Rẻ để sửa, đắt để phát hiện sau.</td></tr>
+    <tr><td><code>IMP_LUNAR_DATE_NOT_EXIST</code></td>
+        <td><code>Ngày mất âm</code> không tồn tại: ngày 30 của một tháng thiếu, tháng nhuận của năm không có tháng nhuận đó, ngày &gt; 30, tháng ngoài 1–12</td>
+        <td>Ngày giỗ sai thì <b>nhắc giỗ sai</b> — mà nhắc giỗ là lý do dòng họ mở ứng dụng.</td></tr>
+    <tr><td><code>IMP_DUP_CODE</code></td>
+        <td>Hai dòng cùng <code>Mã</code> trong một tệp</td>
+        <td>Phá vỡ khoá bất biến của §7. Không có cách đoán đúng dòng nào.</td></tr>
+    <tr><td><code>IMP_BAD_CODE_FORMAT</code></td>
+        <td>Mã sai dạng, hoặc tiền tố <b>không thuộc chi đang nhập</b></td>
+        <td>Vừa là lỗi dữ liệu vừa là <b>ranh giới phân quyền</b>: Trưởng chi Ất nộp tệp chứa mã của chi Giáp là đang ghi sang chi khác.</td></tr>
+    <tr><td><code>IMP_ALIVE_WITH_DEATH</code></td>
+        <td><code>Còn sống</code> = Có nhưng có <code>Ngày mất âm</code></td>
+        <td>Trùng đúng ràng buộc <code>ck_person_alive_vs_death</code> ở <code>V2__core.sql</code>. Bắt ở đây để người nhập thấy một câu tiếng Việt, thay vì nhận một <code>SQLException</code> giữa lúc ghi 400 dòng.</td></tr>
+    <tr><td><code>IMP_GENERATION_MISMATCH</code></td>
+        <td><code>Đời</code> khai ≠ <code>Đời</code> của cha + 1</td>
+        <td>Hệ thống <b>tự suy</b> đời thứ từ liên kết (<code>AddPersonService.resolvePlacement()</code>). Nếu lặng lẽ lấy số suy ra và bỏ số người nhập khai, ta <b>tước mất khả năng đối chiếu với sổ giấy</b> của Trưởng chi. Bắt họ hoà giải hai con số là đúng.</td></tr>
+    <tr><td><code>IMP_SPOUSE_ORDER_CONFLICT</code></td>
+        <td>Hai người vợ cùng <code>Bậc</code> trên cùng một người chồng</td>
+        <td>Trùng chỉ mục <code>ux_relationship_spouse_order</code> ở <code>V2__core.sql</code>.</td></tr>
+    <tr><td><code>IMP_MASS_CREATE_GUARD</code></td>
+        <td>Tải lại cho một chi <b>đã có dữ liệu</b> mà &gt; 30% số dòng ra hành động <code>CREATE</code></td>
+        <td>Dấu hiệu của việc <b>sổ giấy bị đánh số lại</b>. Xem §7.4 — đây là lưới an toàn cuối cùng trước khi nhân đôi cả một chi.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6.2 Cảnh báo</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Mã</th><th>Bắt cái gì</th><th>Vì sao chỉ là cảnh báo</th></tr></thead>
+  <tbody>
+    <tr><td><code>IMP_SUSPECT_DUPLICATE</code></td><td>Nghi trùng người (§6.4)</td>
+        <td>Máy <b>chỉ nghi ngờ</b>. Anh em ruột trùng tên đệm theo đời là chuyện thường của dòng họ Việt.</td></tr>
+    <tr><td><code>IMP_TABOO_COLLISION</code></td><td>Trùng <b>tên huý</b> của bậc trên (FR-1.6)</td>
+        <td>BA đã chốt kỵ húy là <b>cảnh báo cho phép ghi đè có xác nhận</b>, không phải lệnh cấm. Dùng lại <code>TabooNameChecker</code>, và ghi đè phải vào <code>audit_log</code>.</td></tr>
+    <tr><td><code>IMP_MISSING_GIO</code></td><td>Người đã mất mà trống <code>Ngày mất âm</code></td>
+        <td><b>Cảnh báo đáng giá nhất trong bảng này.</b> Người đó sẽ nằm trong phả đồ nhưng <b>không bao giờ được nhắc giỗ</b>. Bảng đếm số người thiếu giỗ nên hiện ngay đầu báo cáo đối soát.</td></tr>
+    <tr><td><code>IMP_GIO_DAY_30</code></td><td>Ngày mất âm là 30 mà không rõ năm</td>
+        <td>Tháng thiếu không có ngày 30; năm nào tháng đó thiếu thì giỗ trôi về 29. Cần dòng họ chốt tục lệ, không phải máy chốt.</td></tr>
+    <tr><td><code>IMP_LONE_NODE</code></td><td>Không cha, không mẹ, không vợ/chồng</td>
+        <td>Hợp lệ với thuỷ tổ; sai với mọi người khác.</td></tr>
+    <tr><td><code>IMP_UNKNOWN_GENDER</code> · <code>IMP_MISSING_MOTHER</code></td><td>Thiếu giới, thiếu mẹ</td>
+        <td>Thiếu mẹ là chuyện rất thường trong sổ cũ. Ghi nhận để đo được <b>độ đầy đủ của bên ngoại</b> — FR-1.8 chốt con gái và bên ngoại ghi ngang bằng, và con số này là cách duy nhất biết mình có làm được không.</td></tr>
+    <tr><td><code>IMP_LIVING_EXTRA_FIELD</code></td><td>Tệp có dữ liệu người còn sống vượt Tầng 1</td>
+        <td>Trường thừa <b>bị tước bỏ</b>, không ghi. Có cảnh báo để người nhập biết vì sao dữ liệu mình gõ không thấy đâu.</td></tr>
+    <tr><td><code>IMP_ROW_DISAPPEARED</code></td><td>Người có trong lần nhập trước, mất khỏi tệp lần này</td>
+        <td><b>Không xoá gì cả.</b> Xem §7.3.</td></tr>
+    <tr><td><code>IMP_STALE_OVERWRITE</code></td><td>Tệp định đè lên trường mà người trong họ đã tự sửa trong ứng dụng</td>
+        <td>Xem §10.2 — đây là cảnh báo quan trọng nhất từ lần nhập thứ hai trở đi.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6.3 Thuật toán phát hiện vòng lặp</h3>
+
+<p>
+  <b>Không</b> gọi <code>TreeGraphPort.isAncestorOf()</code> cho từng dòng. Hai lý do: 400 dòng là
+  400 lượt duyệt Cypher, và quan trọng hơn — <b>cạnh trong tệp chưa tồn tại trong đồ thị</b>, nên
+  câu hỏi đó không trả lời được vòng lặp nằm trọn trong tệp.
+</p>
+
+<ol>
+  <li><b>Dựng đồ thị trong bộ nhớ.</b> Đỉnh = các dòng trong tệp <b>hợp</b> các người đã có mà tệp
+  tham chiếu tới. Cạnh = con → cha và con → mẹ.</li>
+  <li><b>Gieo tổ tiên của các mỏ neo.</b> Mỗi người đã có mà tệp trỏ tới (thường là cụ tổ của chi,
+  thực tế 1–5 người một tệp) được lấy chuỗi tổ tiên bằng <b>một</b> lệnh
+  <code>TreeGraphPort.ancestors(personId, maxDepth)</code>. Đây là thứ bắt được vòng lặp
+  <i>xuyên biên</i>: dòng trong tệp khai cha là một người đã có, mà người đã có ấy lại là hậu duệ
+  của một người khác trong tệp.</li>
+  <li><b>Duyệt sâu ba màu</b> (trắng / xám / đen) bằng ngăn xếp tường minh
+  (<code>ArrayDeque</code>), <b>không đệ quy</b>. Gặp lại đỉnh xám tức là có vòng lặp.</li>
+  <li><b>Báo ra đường đi thật</b>, cắt từ ngăn xếp xám:
+  <code>AT-05-012 → AT-04-003 → AT-05-012</code>. Một thông báo "có vòng lặp" trơ trọi trên tệp 400
+  dòng là vô dụng; Trưởng chi cần biết ba cái mã để mở sổ ra tra.</li>
+</ol>
+
+<p>
+  Độ phức tạp O(V+E), V ≤ số dòng + số tổ tiên của các mỏ neo. Lý do dùng ngăn xếp thay vì đệ quy:
+  cùng một mã sẽ chạy cho tệp GEDCOM ở §11, nơi 50.000 dòng là bình thường, và một chuỗi trực hệ
+  dài trong luồng web thì đệ quy là rủi ro không cần chuốc.
+</p>
+
+<h3>6.4 Thuật toán phát hiện nghi trùng</h3>
+
+<p>
+  Chia hai thì: <b>sinh ứng viên</b> (rẻ, có chỉ mục đỡ) rồi <b>chấm điểm</b> (đắt, ít ứng viên).
+  Nhắc lại phát hiện ở §1.1: <b>hiện chưa có mã nào làm việc này</b>, phải viết mới.
+</p>
+
+<p><b>Thì 1 — sinh ứng viên.</b> Với mỗi dòng, lấy tối đa 20 ứng viên thoả cả ba:</p>
+<ul>
+  <li>tương đồng trigram trên <code>person_name.name_unaccented</code> ≥ <b>0,45</b> — dùng chỉ mục
+  <code>ix_person_name_unaccented_trgm</code> đã có ở <code>V6__search.sql</code>;</li>
+  <li>nằm trong phạm vi <code>ltree</code> của chi đang nhập (và chi anh em, vì người chuyển chi
+  là có thật);</li>
+  <li><code>Đời</code> lệch không quá 1.</li>
+</ul>
+
+<p><b>Thì 2 — chấm điểm</b>, thang 0–100, cộng dồn:</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Dấu hiệu</th><th>Điểm</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Trùng họ tên chính (đã bỏ dấu)</td><td class="so">40</td><td>Một mình nó <b>không đủ</b> — xem dưới.</td></tr>
+    <tr><td>Trùng <b>tên huý</b></td><td class="so">25</td><td>Mạnh hơn tên thường gọi rất nhiều: tên huý ít trùng ngẫu nhiên.</td></tr>
+    <tr><td>Trùng cha đã xác định</td><td class="so">20</td><td>Dấu hiệu cấu trúc, mạnh nhất trong nhóm.</td></tr>
+    <tr><td>Trùng <b>ngày giỗ</b> (ngày + tháng âm)</td><td class="so">15</td><td>Xác suất trùng ngẫu nhiên ~1/354.</td></tr>
+    <tr><td>Trùng năm sinh (lệch ≤ 1 năm thì 8)</td><td class="so">15</td><td>—</td></tr>
+    <tr><td>Trùng đời</td><td class="so">10</td><td>—</td></tr>
+    <tr><td>Trùng nguyên quán</td><td class="so">5</td><td>—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Ngưỡng: <b>≥ 60 sinh cảnh báo</b>; <b>≥ 85</b> vẫn chỉ là cảnh báo nhưng giao diện chọn sẵn
+  "gộp". <b>Không có ngưỡng nào tự gộp.</b>
+</p>
+
+<div class="khoi">
+  <p class="nhan">Bộ điểm này được đặt để chịu được đúng hai tập quán của dòng họ Việt</p>
+  <p>
+    <b>Tên đệm theo đời.</b> Cả một đời trong chi mang chung một chữ đệm, nên "trùng tên + trùng
+    đời" là chuyện rất thường. Cộng lại chỉ 40 + 10 = 50 &lt; 60, <b>không</b> sinh cảnh báo. Nếu
+    đặt ngưỡng 50 thì một chi 400 người sẽ đẻ ra hàng trăm cảnh báo và người ta sẽ bỏ đọc toàn bộ
+    danh sách — cảnh báo bị bỏ qua còn tệ hơn không có cảnh báo.
+  </p>
+  <p>
+    <b>Đặt tên con theo tên người anh/chị đã mất.</b> Hai người thật, cùng cha, cùng tên: 40 + 20 +
+    10 = 70, vượt ngưỡng và sẽ bị nghi. <b>Đây là dương tính giả đã biết trước và chấp nhận</b> —
+    ta thà để người đọc bác bỏ một cảnh báo còn hơn để hai người thành một.
+  </p>
+  <p>
+    <b>Bảy con số này là điểm khởi đầu, không phải kết quả đo.</b> Chúng phải nằm trong tệp cấu
+    hình để chỉnh mà không phải biên dịch lại, và phải được hiệu chỉnh trên <b>tệp thật của chi đầu
+    tiên</b>. Ai đó sẽ phải ngồi đọc 50 cảnh báo và đánh dấu đúng/sai một lần.
+  </p>
+</div>
+
+<p>
+  Cùng bộ chấm điểm chạy thêm một lượt <b>trong nội bộ tệp</b> (dòng với dòng), để bắt trường hợp
+  cùng một người được ghi hai lần với hai mã khác nhau — chuyện rất hay xảy ra khi một người đàn
+  ông xuất hiện ở cả trang đời cha lẫn trang đời con trong sổ.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>N2, N3 · <code>LunarConverter</code> · <code>TabooNameChecker</code> · <code>TreeGraphPort.ancestors()</code> · chỉ mục trigram ở <code>V6__search.sql</code>.</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Bộ kiểm quá nghiêm thì Trưởng chi bỏ cuộc ở lần tải thứ ba; quá lỏng thì rác vào phả. <b>Không có cách nào biết mình chỉnh đúng chưa nếu không chạy trên tệp thật.</b> Vì thế: chi đầu tiên là chi <b>hiệu chỉnh</b>, và phải xếp lịch riêng cho một vòng chỉnh ngưỡng sau chi đó.</p>
+    <p class="day">Rủi ro thứ hai: 400 dòng × 20 ứng viên = 8.000 lượt chấm điểm, mỗi lượt cần dữ liệu người ứng viên. Phải <b>nạp theo lô</b>, không N+1.</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>Fixture vòng lặp → đúng 1 lỗi <code>IMP_CYCLE</code> có chuỗi mã đúng · fixture 30/2 âm → <code>IMP_LUNAR_DATE_NOT_EXIST</code> · fixture "hai anh em cùng tên cùng đời khác cha" → <b>0</b> cảnh báo trùng · fixture "cùng cha cùng tên" → đúng 1 cảnh báo · chạy lại cùng một tệp hai lần cho <b>danh sách lỗi giống hệt nhau từng byte</b> (sắp theo <code>row_no</code> rồi <code>code</code>) · tệp 400 dòng kiểm xong dưới 10 giây.</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>8 ngày-người</b> — <i>ước lượng</i>, hạng mục lớn nhất. Trong đó dò trùng 3 ngày, dò vòng lặp 1,5 ngày, 18 luật còn lại 2,5 ngày, fixture 1 ngày.</p>
+  </div>
+</div>
+
+<h2 id="s7">7. N5 — Tính bất biến khi tải lại</h2>
+
+<h3>7.1 Cơ chế: <code>person_external_ref</code>, không phải mã băm tệp</h3>
+
+<p>
+  Cột <code>Mã</code> là khoá. Cơ chế cụ thể:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th colspan="2"><code>person_external_ref</code> — khoá bất biến của cả đường ống</th></tr></thead>
+  <tbody>
+    <tr><td><code>code_system</code></td><td><code>'EXCEL_MA'</code> | <code>'GEDCOM_XREF'</code></td></tr>
+    <tr><td><code>branch_id</code></td><td>khoá ngoại tới <code>branch(id)</code> — <b>bắt buộc nằm trong khoá duy nhất</b></td></tr>
+    <tr><td><code>external_code</code></td><td>cột <code>Mã</code>, ví dụ <code>AT-02-001</code></td></tr>
+    <tr><td><code>person_id</code></td><td>khoá ngoại tới <code>person(id)</code></td></tr>
+    <tr><td><code>first_batch_id</code></td><td>khoá ngoại tới <code>import_batch(id)</code> — xem §13.2</td></tr>
+    <tr><td colspan="2"><code>UNIQUE (code_system, branch_id, external_code)</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Dòng này được ghi <b>trong cùng transaction</b> với lệnh tạo <code>person</code> ở bước ghi. Từ
+  đó về sau, mỗi lần kiểm: tra <code>external_code</code> → có thì hành động là
+  <code>UPDATE</code>, không có thì <code>CREATE</code>. Tải lại nguyên tệp cũ ra 400 dòng
+  <code>UPDATE</code> không đổi gì, <b>không sinh một người nào</b>.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Vì sao khoá phải kèm <code>branch_id</code></p>
+  <p>
+    <code>Mã</code> chỉ duy nhất <b>trong một chi</b>. <code>AT-02-001</code> và
+    <code>GI-02-001</code> là hai người khác nhau, và không có gì bảo đảm hai chi không cùng dùng
+    một cách đánh số. Bỏ <code>branch_id</code> khỏi khoá thì bốn chi nhập song song (bước 3) sẽ
+    đè lên nhau — <b>và lỗi đó không lộ ra cho tới khi chi thứ hai nộp bài</b>.
+  </p>
+  <p>
+    Người sau này chuyển chi thì <code>person_external_ref</code> <b>giữ nguyên chi cũ</b>. Nó là
+    <b>toạ độ trong tài liệu gốc</b>, không phải trạng thái hiện tại của người ấy. Đừng "sửa" nó
+    khi ai đó đổi chi.
+  </p>
+</div>
+
+<h3>7.2 <code>file_sha256</code> làm gì</h3>
+
+<p>
+  Chỉ một việc: chặn bấm hai lần. Nếu mã băm trùng một lô đã <code>COMMITTED</code> của cùng chi,
+  từ chối kèm câu "tệp này đã nhập rồi", trừ khi có <code>force=true</code>. <b>Tính đúng đắn
+  không đến từ mã băm</b> — sửa một ô cũng đổi mã băm, mà việc sửa một ô rồi tải lại chính là
+  bước 4 của quy trình.
+</p>
+
+<h3>7.3 Dòng biến mất khỏi tệp</h3>
+
+<p>
+  <b>Không xoá gì cả.</b> Ghi cảnh báo <code>IMP_ROW_DISAPPEARED</code> và đi tiếp. Xoá theo kiểu
+  "vắng mặt là xoá" là cách một chi biến mất vì ai đó tải lên một trang đã lọc, hoặc đã sắp xếp và
+  cắt bớt để dễ nhìn. Điều này <b>trái với xoá mềm</b> ở tầng nguyên tắc chứ không chỉ tầng kỹ
+  thuật.
+</p>
+
+<h3>7.4 Khi sổ giấy bị đánh số lại — mối nguy thật của cơ chế này</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đây là chỗ cơ chế mã-làm-khoá gãy, và nó gãy im lặng</p>
+  <p>
+    Hội đồng biên tập lại bản phả gốc, đánh số lại, và <code>AT-02-001</code> giờ là người khác.
+    Tải lên: <b>không mã nào khớp</b>, 400 dòng đều thành <code>CREATE</code>, và chi đó có 800
+    người. Không một lỗi chặn nào ở §6.1 bắt được chuyện này, vì <b>từng dòng một đều hợp lệ</b>.
+  </p>
+  <p>Ba lớp chặn, theo thứ tự:</p>
+  <ul>
+    <li><b><code>IMP_MASS_CREATE_GUARD</code></b> — chi đã có dữ liệu mà &gt; 30% số dòng ra
+    <code>CREATE</code> thì <b>chặn</b>, đòi xác nhận tường minh của Hội đồng. Rẻ, hiệu quả.</li>
+    <li><b>Bộ dò trùng</b> sẽ đẻ ra hàng trăm cảnh báo cùng lúc — một tín hiệu rất ồn, khó bỏ
+    qua.</li>
+    <li><b>Quy tắc cho Hội đồng:</b> đánh số lại sổ thì <b>báo trước</b>, và đội kỹ thuật chạy một
+    lệnh ánh xạ mã cũ → mã mới trên <code>person_external_ref</code>. Đây là việc của người, phần
+    mềm chỉ đỡ được phần sau.</li>
+  </ul>
+</div>
+
+<h3>7.5 Hai người cùng tải lên một lúc</h3>
+
+<p>
+  Bốn chi nhập song song nên chuyện hai người cùng động vào một chi là có thật (Trưởng chi và một
+  người phụ giúp). Hai lớp:
+</p>
+<ul>
+  <li><code>pg_advisory_xact_lock(hashtext('import:' || branch_id))</code> giữ trong suốt transaction ghi
+  — hai lô của cùng một chi không bao giờ ghi chồng nhau;</li>
+  <li>khoá lạc quan <code>person.version</code> cho các dòng <code>UPDATE</code> (đã có sẵn nhờ
+  <code>@Version</code>). Xung đột thì lô đó cuộn lại toàn bộ và báo rõ ai vừa sửa người nào.</li>
+</ul>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>N3 (bảng <code>person_external_ref</code>) · N6 (ghi trong cùng transaction).</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Ngưỡng 30% ở <code>IMP_MASS_CREATE_GUARD</code> là <b>con số phán đoán, không phải đo</b>. Lần nhập bổ sung thật ở năm thứ hai có thể có 40% dòng mới nếu chi đó vừa được khai thêm hai đời. Phải là tham số cấu hình, và thông báo phải nói rõ "nếu đây là bổ sung lớn thì xác nhận".</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>IT: ghi tệp 400 dòng, tải lại <b>nguyên tệp đó</b>, ghi tiếp → <code>count(person)</code> lệch <b>0</b>, <code>count(relationship)</code> lệch <b>0</b>, số đỉnh AGE lệch <b>0</b>. IT: đổi một ô họ tên rồi tải lại → đúng 1 dòng <code>UPDATE</code>, 399 dòng không đổi. IT: đổi hết mã → chặn bởi <code>IMP_MASS_CREATE_GUARD</code>.</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>4 ngày-người</b> — <i>ước lượng</i>.</p>
+  </div>
+</div>
+
+<h2 id="s8">8. N6 — Ghi vào phả</h2>
+
+<p>Chỗ khó nhất của cả tài liệu, và là chỗ một quyết định sai không hiện ra cho tới khi có dữ liệu thật.</p>
+
+<h3>8.1 Ba phương án cho 400 người</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phương án</th><th>Được</th><th>Mất</th></tr></thead>
+  <tbody>
+    <tr><td><b>A. Một transaction cho cả lô</b><br>tất-cả-hoặc-không</td>
+        <td>Cuộn lại là sạch tuyệt đối, kể cả đỉnh AGE (AGE ghi bằng chính Postgres nên nằm trong cùng transaction — đúng điều <code>GraphRelationalConsistencyIT</code> đang ghim). Chỉ có hai trạng thái: chưa vào, hoặc vào hết.</td>
+        <td>Transaction dài vài giây tới vài chục giây. Không xem được tiến độ từ phiên khác. Một dòng hỏng là hỏng cả lô.</td></tr>
+    <tr><td><b>B. Chia khối</b><br>ví dụ 50 dòng một transaction, chạy tiếp được</td>
+        <td>Transaction ngắn, có tiến độ thật, lô rất lớn vẫn chạy.</td>
+        <td><b>Cây nửa vời.</b> Khối 3 hỏng thì hai khối đầu đã vào phả: một số người có cha, một số treo lơ lửng, vợ chồng nối một nửa. Trưởng chi <b>không có cách nào biết cái gì đã vào</b>, và cách sửa là dò tay.</td></tr>
+    <tr><td><b>C. Mỗi dòng một transaction</b></td>
+        <td>Đơn giản nhất để viết.</td>
+        <td>Tệ nhất: cạnh cha–con cần cả hai người tồn tại, nên thứ tự dòng quyết định thành bại, và hỏng giữa chừng để lại đúng cái mớ của B nhưng vụn hơn.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Chọn A — một transaction, tất-cả-hoặc-không, trần cứng 5.000 dòng</p>
+  <p>
+    Lý do không nằm ở hiệu năng mà ở <b>khả năng phục hồi của con người</b>. Sau một lần ghi hỏng,
+    câu hỏi duy nhất Trưởng chi cần trả lời được là <i>"vào chưa?"</i>. Với A, câu trả lời là
+    <b>rồi</b> hoặc <b>chưa</b>. Với B, câu trả lời là <i>"vào 137 người, mời anh dò xem thiếu
+    ai"</i> — và đó là một buổi chiều mất trắng, lặp lại mỗi lần thử.
+  </p>
+  <p>
+    Cái giá phải trả, nói thẳng: một transaction ôm ~400 lần chèn <code>person</code> + ~400 đỉnh
+    AGE + ~700 cạnh (mỗi cạnh là <b>hai</b> lệnh ghi: cạnh AGE và dòng bản chiếu). Nó giữ khoá lâu,
+    làm phình bảng, và nếu hỏng ở dòng 399 thì mất toàn bộ công của lần chạy đó. Chấp nhận được vì
+    <b>việc này xảy ra chừng bốn lần cho cả dòng họ</b>, không phải bốn lần một phút.
+  </p>
+</div>
+
+<h3>8.2 Thứ tự bên trong transaction</h3>
+
+<ol>
+  <li>Lấy khoá tư vấn theo chi (§7.5).</li>
+  <li><b>Tạo toàn bộ nhân khẩu trước</b>, cả 400, chưa nối cạnh nào. Xong bước này thì mọi
+  <code>Mã</code> đều phân giải được, nên bước sau không còn "không tìm thấy cha".</li>
+  <li>Ghi <code>person_external_ref</code> cho từng người mới.</li>
+  <li>Nối cạnh <code>PARENT</code> — theo <b>thứ tự đời tăng dần</b>, để phép dò vòng lặp trong
+  <code>LinkRelationshipService.validate()</code> gặp đồ thị đã có phần trên.</li>
+  <li>Nối <code>SPOUSE</code>, rồi <code>HEIR</code>.</li>
+  <li>Xoá cache cây <b>đúng một lần</b>, ở cuối.</li>
+</ol>
+
+<h3>8.3 Dùng lại <code>AddPersonService</code>, đừng viết đường ghi thứ hai</h3>
+
+<p>
+  <code>AddPersonService.add()</code> mang <code>@Transactional</code> mặc định
+  (<code>REQUIRED</code>) nên nó <b>nhập vào</b> transaction của lô, không mở transaction mới —
+  hành vi đúng. Nó có hai chỗ phí khi gọi 400 lần: <code>treeCache.evictAll()</code> mỗi dòng, và
+  nạp lại <code>BranchDirectory</code> mỗi dòng.
+</p>
+
+<div class="khoi">
+  <p class="nhan">Đề nghị: bản đầu tiên cứ dùng nguyên xi, đo rồi hãy tối ưu</p>
+  <p>
+    <code>evictAll()</code> trên Redis là một lệnh; 400 lệnh Redis là vài chục mili-giây. Nhìn thì
+    xấu, đo thì không đáng kể — và dù sao cache cũng phải dựng lại một lần ở cuối.
+  </p>
+  <p>
+    Nếu đo xong thấy thật sự đau: bọc <code>TreeCachePort</code> bằng một lớp trang trí
+    <b>không-làm-gì</b> chỉ sống trong transaction nhập liệu, rồi xoá một lần khi commit. <b>Tuyệt
+    đối không</b> tách một đường ghi riêng cho nhập liệu. Đường ghi thứ hai chính là cách bất biến
+    "AGE và <code>relationship</code> cùng transaction" bị vi phạm sáu tháng sau, bởi một người
+    không đọc <code>V2__core.sql</code> mục 2.4.
+  </p>
+</div>
+
+<h3>8.4 Chạy nền, và chuyện tiến độ</h3>
+
+<ul>
+  <li>API trả <b>202</b> kèm mã lô; việc ghi chạy ở luồng nền
+  (<code>TaskExecutor</code> + <code>@Async</code>). Luồng web không bao giờ chờ — ràng buộc kiến
+  trúc chung của dự án.</li>
+  <li><b>Không dùng RabbitMQ cho bước này</b>, dù dự án đã có. RabbitMQ ở đây gắn với ngữ nghĩa
+  thử lại + hàng chết, mà <b>thử lại một lệnh ghi phả là việc sai</b>: lần chạy trước đã cuộn lại,
+  lần sau phải do người bấm sau khi xem lỗi. Đây là chỗ mà "đã có sẵn thì dùng" là câu trả lời
+  sai.</li>
+  <li><b>Tiến độ không ghi vào <code>import_batch</code>.</b> Ghi trong transaction thì phiên khác
+  không đọc được cho tới khi commit — vô nghĩa. Đếm tiến độ để ở Redis hoặc bộ nhớ tiến trình, và
+  giao diện hiển thị nó như <b>ước lượng</b>, đúng bản chất.</li>
+  <li><b>Phục hồi sau khi tiến trình chết:</b> lô đang <code>COMMITTING</code> mà không có dòng
+  <code>person_external_ref</code> nào mang <code>first_batch_id</code> của nó thì transaction đã
+  cuộn lại — đưa về <code>VALIDATED</code>. Vì ghi là tất-cả-hoặc-không, câu hỏi "vào được một
+  phần chưa?" chỉ có hai đáp án, và <b>một câu truy vấn đếm là đủ để biết</b>. Đây là món quà trực
+  tiếp của phương án A.</li>
+  <li><code>@Transactional(timeout = 300)</code> đặt tường minh; thời gian chờ câu lệnh nới riêng
+  cho kết nối này.</li>
+</ul>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>N3, N4, N5 · <code>AddPersonService</code> · <code>LinkRelationshipService.attach()</code> · <code>GenealogyAccessGuard</code>.</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Transaction dài chạm giới hạn <code>statement_timeout</code> hoặc <code>idle_in_transaction_session_timeout</code> của Postgres và <b>chết ở dòng 380</b>, lặp lại mỗi lần. Phải đo trên tệp 400 dòng thật <b>sớm</b>, không để tới lúc Trưởng chi ngồi chờ.</p>
+    <p class="day">Rủi ro thứ hai: giữ khoá lâu trên <code>branch</code>/<code>person</code> làm nghẽn người dùng khác. Giảm bằng cách <b>hẹn giờ ghi ngoài giờ cao điểm</b> cho lô đầu tiên của mỗi chi.</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>IT: ghi 400 dòng → <code>count(person)</code> +400, số đỉnh AGE +400, và <b>với mọi dòng <code>relationship</code> có <code>is_deleted = false</code> phải tồn tại đúng một cạnh AGE tương ứng</b> (dùng lại cách khẳng định của <code>GraphRelationalConsistencyIT</code>). IT: cấy một dòng gây lỗi ở vị trí 399 → sau khi hỏng, <code>count(person)</code> lệch <b>0</b> <b>và</b> số đỉnh AGE lệch <b>0</b>. IT hiệu năng: ghi 400 dòng dưới 30 giây (biên rộng, và <b>ghi con số đo thật vào log</b> — khẳng định thời gian trong CI là thứ hay chớp nháy, con số trong log mới dùng được).</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>6 ngày-người</b> — <i>ước lượng</i>. Gồm 1,5 ngày cho riêng phần phục hồi sau sự cố và các IT cuộn-lại.</p>
+  </div>
+</div>
+
+<h2 id="s9">9. N7 — Gộp người trùng</h2>
+
+<h3>9.1 Nguyên tắc</h3>
+
+<p>
+  <b>Máy chỉ nghi ngờ, người quyết định.</b> Không có gộp tự động ở bất kỳ ngưỡng điểm nào. Người
+  dùng chọn <b>người ở lại</b> (giữ nguyên <code>person.id</code>) và <b>người nhường</b>.
+</p>
+
+<h3>9.2 Gộp làm gì, trong một transaction</h3>
+
+<ol>
+  <li><b>Chuyển cạnh.</b> Mọi dòng <code>relationship</code> có người nhường ở một đầu được trỏ
+  sang người ở lại — <b>và mỗi lần chuyển là gỡ cạnh AGE cũ, nối cạnh AGE mới</b>, cùng transaction.
+  Bỏ qua cạnh nào sẽ vi phạm <code>ux_relationship_parent</code> (tức là người ở lại đã có cạnh
+  đó).</li>
+  <li><b>Chuyển tên.</b> Các dòng <code>person_name</code> mà người ở lại chưa có được đưa sang.
+  Đây thường là <b>giá trị lớn nhất của việc gộp</b>: hai bản ghi hoá ra là <b>tên huý</b> và
+  <b>tên thường gọi</b> của cùng một cụ, và gộp lại thì hồ sơ đầy đủ hơn cả hai bản ghi cũ.</li>
+  <li><b>Chuyển <code>person_external_ref</code></b> của người nhường sang người ở lại. <b>Bước
+  không được quên:</b> nhờ nó, lần tải lại sau <b>cả hai mã đều rơi vào một người</b>, và cái trùng
+  không mọc lại. Bỏ bước này thì gộp xong lần sau nhập lại là hỏng y như cũ.</li>
+  <li><b>Chuyển tham chiếu ngoài:</b> <code>app_user.person_id</code>, <code>event.person_id</code>,
+  <code>branch.head_person_id</code>, <code>change_request.person_id</code>.</li>
+  <li><b>Xoá mềm người nhường</b> và <b>gỡ hết cạnh AGE còn lại của người ấy</b>. Bước gỡ cạnh là
+  bắt buộc: <code>V7__graph.sql</code> ghi rõ node xoá mềm <b>vẫn được đi xuyên qua</b> để không
+  đứt đường nối các đời — nên nếu để nguyên cạnh, người nhường thành một <b>cha ma</b> vẫn ảnh
+  hưởng tới danh xưng và LCA.</li>
+  <li>Ghi một dòng <code>person_merge</code> kèm <b>ảnh chụp trước khi gộp</b> của mọi dòng đã
+  đụng vào, và ghi <code>audit_log</code>.</li>
+</ol>
+
+<p>
+  Bảng mới <code>person_merge</code> (ở <code>V8</code>): <code>survivor_id</code>,
+  <code>loser_id</code>, <code>merged_by</code>, <code>merged_at</code>,
+  <code>survivor_version_at_merge</code>, <code>loser_version_at_merge</code>,
+  <code>undo_snapshot</code> jsonb, <code>undone_at</code>. Cố ý <b>không</b> thêm cột
+  <code>merged_into</code> vào <code>person</code>: giữ bảng lõi sạch, và ảnh chụp hoàn tác cần một
+  chỗ ở riêng.
+</p>
+
+<h3>9.3 Hoàn tác — có, nhưng có điều kiện, và nói rõ điều kiện</h3>
+
+<div class="khoi chot">
+  <p class="nhan">Hoàn tác được khi và chỉ khi cả hai điều sau đúng</p>
+  <ol>
+    <li><b>Chưa ai sửa</b> người ở lại lẫn người nhường kể từ lúc gộp — so
+    <code>person.version</code> hiện tại với giá trị đã ghi lúc gộp.</li>
+    <li>Trong hạn <b>30 ngày</b> (đề nghị; Hội đồng chốt lại được).</li>
+  </ol>
+  <p>
+    Điều kiện 1 mới là điều kiện thật. Nếu sau khi gộp có người bổ sung ảnh, sửa ngày giỗ, thêm một
+    lớp tên — thì khôi phục ảnh chụp cũ sẽ <b>âm thầm nuốt mất những sửa đổi đó</b>. Một nút hoàn
+    tác làm mất dữ liệu còn tệ hơn không có nút hoàn tác, vì nó tạo cảm giác an toàn giả.
+  </p>
+  <p>
+    Quá hạn hoặc đã có sửa đổi: hệ thống <b>từ chối</b> và đưa ra <b>danh sách việc phải làm tay</b>
+    dựng từ <code>undo_snapshot</code> + <code>audit_log</code>. Nói thật với người dùng rằng đây là
+    việc tay, thay vì giả vờ tự động rồi hỏng.
+  </p>
+</div>
+
+<h3>9.4 Ai được gộp</h3>
+
+<ul>
+  <li>Hai người <b>trong cùng phạm vi chi</b> của người thao tác: Trưởng chi gộp được.</li>
+  <li>Hai người <b>ở hai chi khác nhau</b> (rất hay gặp: một cụ được cả hai chi chép vào sổ):
+  <b>chỉ Hội đồng Tộc biểu / Admin</b>, vì thao tác này sửa dữ liệu của chi bên kia. Kiểm bằng
+  <code>GenealogyAccessGuard.requireWriteAccess()</code> trên <b>cả hai</b> người, đúng như
+  <code>LinkRelationshipService.link()</code> đang làm cho hai đầu một cạnh.</li>
+</ul>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>N4 (danh sách nghi trùng) · N3 (<code>person_external_ref</code>) · màn gộp ở tài liệu 04.</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Gộp nhầm hai người <b>thật sự khác nhau</b> là loại hỏng nặng nhất trong tài liệu này: nó <b>hợp nhất hai nhánh con cháu</b>. Hoàn tác cứu được trong 30 ngày; sau đó thì không. Giảm rủi ro bằng cách bắt buộc <b>xem trước hậu quả</b>: màn gộp phải hiện số con, số cháu, số cạnh sẽ chuyển <b>trước khi</b> bấm.</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>IT: gộp hai người mỗi bên 3 con → người ở lại có 6 con, <b>ở cả bảng <code>relationship</code> lẫn AGE</b>, người nhường <code>is_deleted = true</code> và <b>0 cạnh AGE</b>. IT: gộp rồi hoàn tác ngay → mọi bảng trở về đúng trạng thái trước (so từng dòng). IT: gộp → sửa người ở lại → hoàn tác <b>bị từ chối</b> với mã lỗi rõ ràng. IT: gộp xong tải lại tệp cũ → <code>count(person)</code> lệch <b>0</b> (đây là bài kiểm cho bước 3 ở §9.2).</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>6 ngày-người</b> — <i>ước lượng</i>: gộp 4, hoàn tác 2.</p>
+  </div>
+</div>
+
+<h2 id="s10">10. N8 — Nhập lần hai trở đi</h2>
+
+<h3>10.1 Cơ chế chính: xuất lại mẫu đã điền sẵn</h3>
+
+<p>
+  Sau một năm, dòng họ bổ sung. Cách <b>không</b> nên làm: đưa họ một mẫu trắng. Họ sẽ đánh mã lại
+  từ đầu và ta rơi thẳng vào §7.4.
+</p>
+
+<p>
+  Cách làm: cùng endpoint mẫu, nhưng trang <b>Nhân khẩu điền sẵn toàn bộ người của chi kèm đúng
+  <code>Mã</code> cũ</b>. Trưởng chi <b>sửa trên chính tài liệu đó</b>: thêm dòng cho người mới
+  sinh, đổi <code>Còn sống</code> của người vừa mất và điền <code>Ngày mất âm</code>. Mã giữ nguyên
+  vì họ không có lý do gì đụng vào. <b>Đây là biện pháp hiệu quả nhất cho lần nhập thứ hai, và nó
+  phải nằm trong đợt B</b> — hoãn sang sau tức là năm sau mới phát hiện mình cần nó.
+</p>
+
+<h3>10.2 Xung đột với dữ liệu người trong họ tự khai</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đến năm thứ hai, ứng dụng đã biết những thứ mà tệp Excel không biết</p>
+  <p>
+    Bước 5 của quy trình mời người còn sống <b>tự nhận hồ sơ</b>. Sau một năm, hồ sơ của họ có nghề
+    nghiệp, nơi ở, ảnh — do <b>chính họ</b> khai. Nếu để tệp Excel của Trưởng chi thắng vô điều
+    kiện, một lần tải lên sẽ <b>xoá sạch công tự khai của cả trăm người</b>, và không ai hiểu vì
+    sao.
+  </p>
+  <p>Quy tắc phân xử, theo trường:</p>
+  <ul>
+    <li><b>Tệp thắng</b> ở các trường mà tệp là nguồn: <code>Đời</code>, <code>Mã cha</code>,
+    <code>Mã mẹ</code>, <code>Quan hệ</code>, <code>Ngày mất âm</code>, <code>Tên huý</code>.</li>
+    <li><b>Người tự khai thắng</b> ở mọi trường mà chính họ đã sửa. Có cảnh báo
+    <code>IMP_STALE_OVERWRITE</code> liệt kê từng trường để người nhập chọn tay nếu muốn khác.</li>
+    <li><b>Trường Tầng 3 của người còn sống</b> (điện thoại, email, địa chỉ đầy đủ, ảnh)
+    <b>không bao giờ</b> lấy từ tệp. Mẫu vốn không có các cột ấy — nếu có ai chèn tay thì tước bỏ,
+    kèm <code>IMP_LIVING_EXTRA_FIELD</code>.</li>
+  </ul>
+</div>
+
+<h3>10.3 Thay đổi phổ biến nhất: có người mất</h3>
+
+<p>
+  <code>Còn sống</code> lật Có → Không kèm <code>Ngày mất âm</code>. Đường này phải <b>sạch và có
+  test riêng</b>, vì nó là thay đổi thường gặp nhất và nó kéo theo hai hệ quả: sinh sự kiện giỗ ở
+  context <code>events</code>, và <b>đổi tầng riêng tư</b> (người đã khuất là công khai). Trong mã
+  nguồn đã có sẵn một IT tên <code>DeathPatchConsequencesIT.java</code> phủ đúng vùng này — dùng
+  lại cách khẳng định của nó.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>N1 (thêm trang điền sẵn) · N5 · bộ áp dụng <code>change_request</code> của đợt A (không có nó thì không có dữ liệu tự khai nào để mà xung đột — nhưng cũng có nghĩa bước 5 chưa chạy).</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Trưởng chi tải mẫu điền sẵn về <b>từ tháng trước</b>, trong lúc đó có người sửa trong ứng dụng, rồi mới nộp. Bản điền sẵn đã cũ. Vì thế mẫu xuất ra phải <b>nhúng dấu thời gian và mã lô</b> vào một ô ẩn, và bộ kiểm cảnh báo khi mẫu cũ hơn 30 ngày.</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>IT: ghi lô 1 → xuất mẫu điền sẵn → thêm 5 dòng → ghi lô 2 → <code>count(person)</code> đúng +5, không dòng cũ nào đổi <code>updated_at</code>. IT: người trong họ sửa nghề nghiệp → tải mẫu cũ có nghề nghiệp khác → sinh <code>IMP_STALE_OVERWRITE</code> và <b>giá trị người tự khai được giữ</b>.</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>5 ngày-người</b> — <i>ước lượng</i>.</p>
+  </div>
+</div>
+
+<h2 id="s11">11. N9 — GEDCOM</h2>
+
+<p>
+  Tài liệu 00 §2 xếp GEDCOM ở <b>đợt C</b>. Nó có mặt ở đây vì một lý do: <b>nếu đường ống được
+  dựng đúng ngay từ đợt B thì đợt C chỉ phải viết một bộ phân tích, không phải viết lại đường
+  ống.</b>
+</p>
+
+<h3>11.1 Dùng chung được bao nhiêu</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Dùng lại</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>N1 sinh mẫu Excel</td><td class="xau">0%</td><td>Không liên quan.</td></tr>
+    <tr><td>N2 đọc file</td><td class="canh">~20%</td><td>Chỉ dùng lại phần khung: kiểm kích thước, lưu MinIO, chuẩn hoá NFC. Bộ phân tích viết mới hoàn toàn.</td></tr>
+    <tr><td>N3 khu vực chờ</td><td class="tot">100%</td><td>Nhờ có <code>source_kind</code> từ đầu. INDI đổ vào <code>import_person_row</code>, FAM đổ vào <code>import_marriage_row</code>.</td></tr>
+    <tr><td>N4 bộ kiểm</td><td class="tot">~95%</td><td>Toàn bộ luật dùng nguyên. Vòng lặp, ngày âm, dò trùng, kỵ húy — không sửa gì. Thêm vài mã lỗi riêng của GEDCOM.</td></tr>
+    <tr><td>N5 bất biến khi tải lại</td><td class="tot">100%</td><td><code>code_system = 'GEDCOM_XREF'</code>, <code>external_code</code> = con trỏ <code>@I123@</code>.</td></tr>
+    <tr><td>N6 ghi vào phả</td><td class="tot">100%</td><td>Không sửa một dòng.</td></tr>
+    <tr><td>N7 gộp trùng</td><td class="tot">100%</td><td>Và <b>cần hơn hẳn</b>: GEDCOM hay được nhập chồng lên dữ liệu đã có.</td></tr>
+    <tr><td>Giao diện lỗi, đối soát, báo cáo</td><td class="tot">~90%</td><td>Cùng màn hình, khác nhãn.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Việc mới của đợt C: <b>một bộ phân tích GEDCOM 5.5.1</b> (đọc theo dòng có mức, xử lý
+  <code>CONT</code>/<code>CONC</code>) và <b>một bộ ánh xạ bản ghi</b>.
+</p>
+
+<h3>11.2 Hai chỗ GEDCOM đau riêng cho tiếng Việt</h3>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Mã ký tự còn tệ hơn CSV</h4>
+    <p>GEDCOM 5.5.1 chuẩn dùng <b>ANSEL</b>, một bảng mã gần như tuyệt chủng. Bản xuất từ phần mềm
+    Việt thường là UTF-8 <b>không BOM</b>, đôi khi Windows-1258. Thứ tự dò: BOM → thẻ
+    <code>CHAR</code> trong header → mặc định UTF-8 kèm cảnh báo.</p>
+    <p class="day"><b>ANSEL nằm ngoài phạm vi.</b> Gặp thì từ chối bằng một câu rõ ràng và hướng dẫn
+    xuất lại ở UTF-8. Đỡ hơn nhiều so với âm thầm nhập vào 3.000 cái tên rác.</p>
+  </div>
+  <div class="the">
+    <h4>GEDCOM không có ngày âm</h4>
+    <p><code>DEAT.DATE</code> là ngày <b>dương</b>. Nghĩa là <b>mọi người đã khuất nhập từ GEDCOM
+    đều không có ngày giỗ</b> — tức là không được nhắc giỗ, tức là mất đúng cái lý do dòng họ dùng
+    hệ thống.</p>
+    <p class="day">Có thể quy đổi bằng <code>LunarConverter.toLunar()</code>, nhưng phải cảnh báo
+    <code>IMP_GIO_DERIVED</code>: nếu phần mềm cũ vốn đã quy từ âm sang dương, ta đang quy ngược lần
+    thứ hai và <b>sai số chồng lên nhau</b>. Ngày giỗ suy ra phải được đánh dấu là <b>suy ra</b>,
+    và Trưởng chi phải xác nhận từng người.</p>
+  </div>
+</div>
+
+<h3>11.3 GEDCOM chở được cấu trúc, không chở được văn hoá</h3>
+
+<p>Những thứ có trong lược đồ của ta mà GEDCOM không có ô nào để đựng:</p>
+
+<ul>
+  <li><b>Tên đa lớp.</b> <code>V2__core.sql</code> có 6 loại tên
+  (<code>HUY, TU, HIEU, THUY, THUONG_GOI, PHAP_DANH</code>); GEDCOM có <code>NAME</code> và vài biến
+  thể. Tên huý và thuỵ hiệu thường bị nhét vào <code>NOTE</code> — phải dò kiểu đoán mò, và phải
+  nói rõ là đoán.</li>
+  <li><b><code>spouse_order</code>.</b> Thứ tự các bản ghi FAM <b>không phải</b> vợ cả / vợ hai.
+  Đích thân người dùng phải khai lại.</li>
+  <li><b><code>HEIR</code></b> — đích tôn / thừa tự / kế tự. Không có khái niệm tương đương.</li>
+  <li><b>Chi / ngành.</b> GEDCOM không biết <code>branch</code>. Người nhập phải chọn <b>một</b>
+  chi đích cho cả tệp, rồi Hội đồng chia tay về sau.</li>
+</ul>
+
+<p>
+  Nói thẳng với dòng họ: <b>nhập từ GEDCOM cho ra một cây đúng về cấu trúc nhưng mỏng về văn
+  hoá.</b> Nó tiết kiệm việc gõ, không tiết kiệm việc tra sổ.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Phụ thuộc</h4>
+    <p>Toàn bộ N3–N7 phải xong và có <code>source_kind</code>. Nếu đợt B bỏ cột đó đi cho gọn thì đợt C phải làm lại migration trên dữ liệu thật.</p>
+  </div>
+  <div class="the">
+    <h4>Rủi ro</h4>
+    <p>Tệp GEDCOM thật hay lớn hơn tệp Excel một bậc (chục nghìn INDI). Trần 5.000 dòng ở §4.3 sẽ chặn chúng. Phải nâng trần riêng cho GEDCOM <b>và</b> đo lại §8 với quy mô đó — phương án "một transaction" cần kiểm lại ở 20.000 người, đây là <b>giả định chưa được kiểm chứng</b> của tài liệu này.</p>
+  </div>
+  <div class="the">
+    <h4>Nghiệm thu kiểm được bằng máy</h4>
+    <p>Fixture GEDCOM 5.5.1 UTF-8 → đúng số INDI thành dòng chờ · fixture ANSEL → từ chối có mã lỗi · fixture có vòng lặp → <b>cùng mã lỗi <code>IMP_CYCLE</code></b> như đường Excel (bằng chứng bộ kiểm thật sự dùng chung) · nhập cùng một tệp hai lần → <code>count(person)</code> lệch 0.</p>
+  </div>
+  <div class="the">
+    <h4>Ước lượng</h4>
+    <p><b>7 ngày-người</b> — <i>ước lượng</i>, thuộc đợt C. Sẽ là 20+ nếu đường ống không được dựng chung từ đợt B.</p>
+  </div>
+</div>
+
+<h2 id="s12">12. Ước lượng công sức</h2>
+
+<div class="khoi">
+  <p class="nhan">Đọc kỹ trước khi dùng các con số này</p>
+  <p>
+    Tất cả là <b>ước lượng, không phải đo</b>. Đơn vị là <b>ngày-người làm việc tập trung</b>, giả
+    định <b>một kỹ sư đã quen mã nguồn này</b>. Người mới: nhân 1,4. <b>Không</b> bao gồm thời gian
+    chờ Hội đồng, <b>không</b> bao gồm 3–6 tuần Trưởng chi ngồi nhập (tài liệu 00 §4 đã ước lượng
+    riêng), <b>không</b> bao gồm giao diện — giao diện thuộc tài liệu 04.
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Hạng mục</th><th>Ngày-người</th><th>Đợt</th><th>Chặn cái gì</th></tr></thead>
+  <tbody>
+    <tr><td>N1 sinh mẫu Excel</td><td class="so">4</td><td><span class="chip must">B</span></td><td>Bước 3 không bắt đầu được</td></tr>
+    <tr><td>N2 đọc file</td><td class="so">5</td><td><span class="chip must">B</span></td><td>N4, N6</td></tr>
+    <tr><td>N3 khu vực chờ</td><td class="so">4</td><td><span class="chip must">B</span></td><td>Tất cả</td></tr>
+    <tr><td>N4 bộ kiểm</td><td class="so">8</td><td><span class="chip must">B</span></td><td>Bước 4</td></tr>
+    <tr><td>N5 bất biến khi tải lại</td><td class="so">4</td><td><span class="chip must">B</span></td><td>Bước 4 lặp lại được</td></tr>
+    <tr><td>N6 ghi vào phả</td><td class="so">6</td><td><span class="chip must">B</span></td><td>Toàn bộ đợt B</td></tr>
+    <tr><td>N7 gộp trùng + hoàn tác</td><td class="so">6</td><td><span class="chip should">B</span></td><td>Chất lượng dữ liệu</td></tr>
+    <tr><td>N8 nhập lần hai</td><td class="so">5</td><td><span class="chip should">B</span></td><td>Năm thứ hai</td></tr>
+    <tr><td><b>Phiếu đối chiếu in giấy</b> (§13)</td><td class="so">3</td><td><span class="chip must">B</span></td><td>Chất lượng thật của dữ liệu</td></tr>
+    <tr><td>Rút lại cả lô (§13)</td><td class="so">3</td><td><span class="chip should">B</span></td><td>Khả năng chữa cháy</td></tr>
+    <tr><td>Nối SDK MinIO + bucket <code>giapha-imports</code></td><td class="so">2</td><td><span class="chip must">B</span></td><td>N2</td></tr>
+    <tr><td>Hợp đồng OpenAPI + 10 endpoint quản trị</td><td class="so">3</td><td><span class="chip must">B</span></td><td>Giao diện ở tài liệu 04</td></tr>
+    <tr><td><b>Tổng đợt B</b></td><td class="so"><b>53</b></td><td></td><td></td></tr>
+    <tr><td>N9 GEDCOM</td><td class="so">7</td><td><span class="chip could">C</span></td><td>—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>53 ngày-người</b> cho phần backend của đợt B. Một kỹ sư: khoảng <b>11 tuần</b>. Hai kỹ sư chia
+  theo N1/N2/N3 và N4/N5/N6: khoảng <b>6–7 tuần</b>, với điều kiện lược đồ <code>V8</code> được
+  chốt <b>trước</b>, vì cả hai nhánh đều dựa vào nó.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Việc phải khởi động ngay hôm nay, song song với mã</p>
+  <p>
+    <b>N1 xong sớm nhất có thể và giao mẫu cho Trưởng chi ngay</b>, kể cả khi N2–N6 chưa xong. Tài
+    liệu 00 §4 đã chỉ ra: mỗi Trưởng chi cần <b>6–10 buổi</b> để nhập, bốn chi song song là
+    <b>3–6 tuần</b>. Nếu đợi cả đường ống xong mới đưa mẫu, ta cộng thẳng 3–6 tuần đó vào cuối lịch
+    thay vì để nó chạy chồng lên. <b>Mẫu Excel là đường găng, không phải bộ kiểm.</b>
+  </p>
+</div>
+
+<h2 id="s13">13. Cái giá, và chuyện gì xảy ra nếu ba tháng sau mới phát hiện sai</h2>
+
+<h3>13.1 Ba tháng sau, cái sai đã bám vào những đâu</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ bị lây</th><th>Hậu quả cụ thể</th><th>Gỡ được không</th></tr></thead>
+  <tbody>
+    <tr><td>Nhắc giỗ đã gửi</td><td>Ngày âm sai → cả họ đã cúng sai ngày, có thể vài lần</td><td><span class="xau">Không gỡ được.</span> Tin đã gửi rồi. <code>notification_log</code> ở <code>V4__events.sql</code> giữ bằng chứng đã gửi gì cho ai.</td></tr>
+    <tr><td>Người trong họ đã nhận hồ sơ</td><td><code>app_user.person_id</code> trỏ <b>nhầm người</b></td><td><span class="canh">Gỡ tay được</span>, nhưng phải liên hệ từng người.</td></tr>
+    <tr><td>Yêu cầu đính chính đã duyệt</td><td>Sửa đổi <b>chồng lên</b> dữ liệu sai</td><td><span class="canh">Có <code>audit_log</code></span> nên dựng lại được từng trường.</td></tr>
+    <tr><td>Đã gộp trùng</td><td>Quá 30 ngày, hết hoàn tác</td><td><span class="xau">Việc tay.</span></td></tr>
+    <tr><td>Danh xưng, LCA, phả đồ</td><td>Sai theo, ở khắp nơi</td><td><span class="tot">Tự đúng lại</span> khi dữ liệu gốc được sửa — chúng là suy ra, không lưu.</td></tr>
+    <tr><td>Dữ liệu bị mất</td><td><b>Không có.</b></td><td><span class="tot">Xoá mềm bắt buộc.</span> Không lượng nào xoá cứng một <code>person</code>. Thứ mất là <b>lòng tin</b>, không phải byte.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>13.2 Bốn thứ rẻ làm bây giờ, đắt gấp bội khi cần mà không có</h3>
+
+<ol>
+  <li><b><code>first_batch_id</code> trên <code>person_external_ref</code>.</b> Giá: một cột. Giá
+  trị: câu hỏi <i>"cho tôi mọi người sinh ra từ lô X"</i> là <b>một truy vấn có chỉ mục</b>, thay
+  vì một buổi chiều đoán mò. Đây là mục quan trọng nhất trong bốn mục.</li>
+  <li><b>Giữ tệp gốc trong MinIO vĩnh viễn</b> (<code>giapha-imports</code>, bật versioning). Giá:
+  vài MB. Giá trị: đây là <b>bằng chứng duy nhất</b> về việc Trưởng chi thật sự đã gõ gì — phân biệt
+  được "họ chép sai sổ" với "ta phân tích sai tệp", hai chuyện có cách chữa hoàn toàn khác nhau.</li>
+  <li><b>Ghi nguồn vào từng người.</b> <code>AddPersonCommand.note</code> <b>đã có sẵn và javadoc
+  của nó viết đúng ý đồ này</b>. Điền tự động: mã lô + số dòng + tên tệp gốc. Ba tháng sau, mở hồ
+  sơ một cụ là biết ngay dòng nào của tệp nào đã sinh ra nó.</li>
+  <li><b>Rút lại cả lô</b> — xoá mềm mọi người do lô đó sinh ra và gỡ cạnh của họ, <b>chỉ khi</b>
+  không ai khác đã động vào (dò <code>audit_log</code> tìm <code>actor_user_id</code> khác). Ước
+  lượng 3 ngày-người. <b>Nói thẳng: sau ba tháng, lệnh này gần như chắc chắn sẽ từ chối</b> — vì
+  người trong họ đã động vào. Và <b>từ chối là hành vi đúng</b>: rút lại một lô ba tháng tuổi là
+  tai hoạ thứ hai chồng lên tai hoạ thứ nhất. Giá trị thật của nó nằm ở <b>tuần đầu</b>, khi mới
+  nhập xong và chưa ai đụng tới.</li>
+</ol>
+
+<h3>13.3 Cái sai đắt nhất là cái bộ kiểm không bắt được</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Phải đọc phần này trước khi tin vào 30 mã lỗi ở §6</p>
+  <p>
+    Mọi luật ở §6 bắt <b>lỗi mâu thuẫn nội tại</b>: vòng lặp, con sinh trước cha, ngày âm không tồn
+    tại. Nhưng cái sai đắt nhất trong nhập liệu gia phả là <b>gán nhầm cha cho một người, một cách
+    hoàn toàn hợp lệ</b> — gắn một người con sang ông bác thay vì ông chú. Không lỗi chặn nào, không
+    cảnh báo nào, không thuật toán nào bắt được, vì <b>dữ liệu hoàn toàn nhất quán</b>. Nó chỉ sai
+    so với sự thật.
+  </p>
+  <p>
+    Hậu quả không dừng ở một dòng: <b>toàn bộ con cháu của người đó chuyển sang nhánh khác</b>, danh
+    xưng của cả một cành tính sai, và giỗ được nhắc cho nhầm nhóm người. Ba tháng sau, một cụ cao
+    niên nhìn phả đồ và nói "sai rồi" — đó mới là lúc phát hiện.
+  </p>
+</div>
+
+<p>
+  Vì thế bước 4 (đối soát) <b>không thể</b> chỉ là "0 lỗi chặn thì bấm duyệt". Nó phải có
+  <b>phiếu đối chiếu in ra giấy</b>:
+</p>
+
+<ul>
+  <li>Xuất chi vừa nhập ra <b>PDF/Excel xếp đúng thứ tự sổ giấy</b> — theo đời, theo thứ tự sinh,
+  mỗi người một dòng kèm cha, mẹ, năm sinh, ngày giỗ.</li>
+  <li>Trưởng chi <b>và một bậc cao niên</b> đọc dò với cuốn sổ đặt cạnh.</li>
+  <li>Ký xác nhận, chụp lại, đính vào lô. Lô chuyển sang trạng thái <b>đã đối chiếu</b>.</li>
+</ul>
+
+<p>
+  Ước lượng <b>3 ngày-người</b> và đây là <b>hạng mục có đòn bẩy cao nhất trong toàn tài liệu</b>:
+  nó là thứ duy nhất bắt được loại sai đắt nhất, và nó rẻ hơn mọi thuật toán ở §6. Nó là yêu cầu
+  sản phẩm, không phải tuỳ chọn.
+</p>
+
+<h2 id="s14">14. Những ca dữ liệu gia phả Việt mẫu Excel hai bảng chưa diễn tả được</h2>
+
+<p>
+  Đối chiếu 11 cột của bảng Nhân khẩu với lược đồ thật: bảng <code>person</code> có <b>22 cột</b>,
+  bảng <code>relationship</code> có <b>16 cột</b>, <code>person_name</code> nhận <b>6 loại tên</b>
+  (đếm từ <code>backend/src/main/resources/db/migration/V2__core.sql</code>). Mẫu Excel hiện tại
+  cấp dữ liệu cho <b>5</b> cột của <code>person</code> và <b>2</b> trong 6 loại tên. Dưới đây là
+  những gì rơi ra ngoài — <b>không phải để mở rộng mẫu vô hạn</b>, mà để Hội đồng biết mình đang
+  quyết định bỏ gì.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Ca dữ liệu</th><th>Lược đồ đã đỡ được</th><th>Đề nghị</th></tr></thead>
+  <tbody>
+    <tr><td class="so">1</td>
+        <td><b>Đích tôn / thừa tự / kế tự.</b> Một cụ <b>tuyệt tự</b> được lập người kế tự từ nhà em — chuyện dòng họ coi trọng bậc nhất.</td>
+        <td><code>relationship.rel_type = 'HEIR'</code>, <code>heir_type</code> ∈ {<code>DICH_TON</code>, <code>THUA_TU</code>, <code>KE_TU</code>}, và <code>person.lineage_status</code> ∈ {<code>NORMAL</code>, <code>TUYET_TU</code>, <code>KE_TU</code>}. <b>Đỡ được đầy đủ.</b></td>
+        <td class="xau"><b>Mẫu không có cột nào.</b> Thêm hai cột <code>Kế tự cho ai (Mã)</code> + <code>Loại</code>. Đây là thiếu sót nặng nhất trong danh sách.</td></tr>
+    <tr><td class="so">2</td>
+        <td><b>Dâu / rể.</b> Người vợ lấy về từ họ khác cần một <code>Mã</code> ở bảng Nhân khẩu, nhưng <code>Mã cha</code> trống và <code>Đời</code> thì mơ hồ: đời của chồng, hay đời trong họ gốc của bà?</td>
+        <td>Lược đồ không quy định — nó nhận số nào cũng được.</td>
+        <td class="xau"><b>Đây là chỗ mơ hồ dễ sinh rác nhất.</b> Bốn chi sẽ trả lời bốn kiểu, và không cách nào hoà giải về sau. <b>Trang Hướng dẫn phải chốt một cách và nói thẳng</b> (đề nghị: ghi đời của chồng).</td></tr>
+    <tr><td class="so">3</td>
+        <td><b>Tái hôn, ly hôn, goá rồi lấy tiếp.</b></td>
+        <td><code>relationship.valid_from</code>, <code>valid_to</code>, <code>end_reason</code> ∈ {<code>DIVORCE</code>, <code>DEATH</code>, <code>ANNULLED</code>, <code>OTHER</code>}, và chỉ mục cho phép nhiều dòng SPOUSE cùng cặp.</td>
+        <td class="canh">Bảng Hôn phối như mô tả <b>không có cột từ năm / đến năm / lý do</b>. Mọi cuộc hôn nhân sập thành một quan hệ vô thời hạn. Thêm 3 cột — <b>đã đưa vào §3.1</b>.</td></tr>
+    <tr><td class="so">4</td>
+        <td><b>Vợ lẽ, vợ kế, thứ tự vợ.</b> Vợ hai vì đa thê khác hẳn vợ kế vì goá.</td>
+        <td><code>relationship.spouse_order</code> + <code>valid_from</code> phân biệt được.</td>
+        <td class="canh">Bảng Hôn phối cần cột <code>Bậc</code>. Không có nó thì <code>ux_relationship_spouse_order</code> không có dữ liệu và danh xưng con của các bà không tính đúng.</td></tr>
+    <tr><td class="so">5</td>
+        <td><b>Con nuôi từ trong họ.</b> Đứa trẻ có <b>cha ruột</b> ở chi bên cạnh và <b>cha nuôi</b> ở chi này — cả hai đều thật, cả hai đều cần ghi.</td>
+        <td>Lược đồ đỡ tốt: hai cạnh <code>PARENT_BIO</code> và <code>PARENT_ADOPT</code> cùng tồn tại, và <code>V7__graph.sql</code> ghi rõ cạnh con nuôi <b>vẫn tính vào đường đi phả hệ</b>.</td>
+        <td class="xau">Mẫu chỉ có <b>một</b> cặp <code>Mã cha</code>/<code>Mã mẹ</code> và một cột <code>Quan hệ</code>. <b>Chỉ ghi được một trong hai người cha.</b></td></tr>
+    <tr><td class="so">6</td>
+        <td><b>Tên đa lớp.</b> Thuỵ hiệu và pháp danh — chính là chữ khắc trên bài vị và đọc trong lễ giỗ.</td>
+        <td>6 loại: <code>HUY, TU, HIEU, THUY, THUONG_GOI, PHAP_DANH</code>.</td>
+        <td class="canh">Mẫu có 2/6 (<code>Họ tên</code> → <code>THUONG_GOI</code>, <code>Tên huý</code> → <code>HUY</code>). Thêm hai cột <code>Tự/Hiệu</code> và <code>Thuỵ hiệu</code> là đủ cho phần lớn dòng họ.</td></tr>
+    <tr><td class="so">7</td>
+        <td><b>Chữ Hán-Nôm.</b> Tài liệu 00 §4 nói rõ có chi giữ sổ Hán-Nôm.</td>
+        <td><code>person_name.name_hannom</code> đã có cột.</td>
+        <td class="canh">Không có cột trong mẫu. Chi có sổ Hán-Nôm <b>không có chỗ để gõ</b>, đúng lúc họ là chi cần nhất.</td></tr>
+    <tr><td class="so">8</td>
+        <td><b>Ngày giỗ không rõ năm, hoặc rơi vào tháng nhuận.</b> "Mất năm Bính Tý, không rõ ngày" là chuyện thường trong sổ cũ.</td>
+        <td><code>person.death_lunar</code> là JSONB <code>{year, month, day, leap}</code>, chỉ bắt buộc có <code>day</code> + <code>month</code>. <code>LifeDate</code> + <code>DatePrecision</code> mô tả được độ chính xác.</td>
+        <td class="canh">Một ô <code>Ngày mất âm</code> không tải nổi cờ <code>leap</code> lẫn "chỉ biết năm". Giải quyết bằng <b>quy ước gõ</b> ghi trong trang Hướng dẫn ("15/8 nhuận") thay vì thêm cột — rẻ hơn và ít cột hơn.</td></tr>
+    <tr><td class="so">9</td>
+        <td><b>Không rõ sống hay đã mất.</b> Người tha hương, đi Nam 1954, mất liên lạc — có thật ở gần như mọi dòng họ.</td>
+        <td class="xau"><b>Lược đồ cũng không đỡ.</b> <code>person.is_alive</code> là <code>BOOLEAN NOT NULL</code>. <code>gender</code> có <code>UNKNOWN</code>, tình trạng sống thì không.</td>
+        <td>Không sửa lược đồ (ràng buộc <code>V8</code> trở lên, và đây là cột lõi). Quy ước: ghi <code>Còn sống = Có</code> + đánh dấu trong <code>person.attributes</code>, và <b>không bao giờ sinh giỗ</b> cho người này. Trang Hướng dẫn phải nói rõ.</td></tr>
+    <tr><td class="so">10</td>
+        <td><b>Số thứ tự trong sổ giấy không có tiền tố chi.</b> Sổ thường đánh số lại từ 1 ở mỗi đời, không có "AT".</td>
+        <td>—</td>
+        <td class="canh">Dạng <code>AT-02-001</code> buộc người nhập <b>tự nghĩ ra tiền tố</b>. Nếu hai chi cùng tự nhận là "Ất" ở hai lần tách khác nhau thì đụng nhau. <b>Tiền tố phải do hệ thống cấp khi khai chi ở bước 2</b> và điền sẵn vào mẫu — không để người nhập tự đặt.</td></tr>
+    <tr><td class="so">11</td>
+        <td><b>Mộ phần, nguyên quán, chức sắc, khoa bảng.</b></td>
+        <td>Có <code>person.native_place</code>, <code>attributes</code> jsonb; mộ phần thuộc <code>heritage</code> — <b>Giai đoạn 3</b>.</td>
+        <td class="tot">Cố ý bỏ, đúng phạm vi. Nhưng <b>phải nói ra</b>, nếu không người nhập sẽ gõ vào một cột ghi chú tự chế rồi mất trắng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Đề nghị gọn nhất: thêm 7 cột, không thêm bảng</p>
+  <p>
+    Nhân khẩu <b>+4</b>: <code>Kế tự cho ai (Mã)</code>, <code>Loại kế tự</code>,
+    <code>Thuỵ hiệu</code>, <code>Tên chữ Hán</code>. Hôn phối <b>+3</b>: <code>Bậc</code>,
+    <code>Từ năm</code>, <code>Đến năm / lý do</code>. Còn lại giải quyết bằng <b>quy ước gõ</b>
+    trong trang Hướng dẫn.
+  </p>
+  <p>
+    Ba ca <b>không</b> đề nghị sửa mẫu: con nuôi hai cha (ca 5), dâu/rể (ca 2), không rõ sống chết
+    (ca 9) — chúng cần <b>quyết định của Hội đồng</b> trước, không cần thêm cột. Thêm cột trước khi
+    có quyết định thì ta thu về bốn cách trả lời khác nhau từ bốn chi.
+  </p>
+</div>
+
+<h2 id="s15">15. Tiêu chí nghiệm thu tổng — kiểm được bằng máy</h2>
+
+<p>
+  Tập hợp từ các mục trên. Mỗi dòng phải là một lệnh chạy được hoặc một test, <b>không phải một
+  nhận xét</b>. Chưa đủ cả bảng thì đợt B chưa xong, bất kể giao diện trông thế nào.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Tiêu chí</th><th>Kiểm bằng</th></tr></thead>
+  <tbody>
+    <tr><td class="so">1</td><td>Biên dịch và kiến trúc còn nguyên</td><td><code>./mvnw -o compile</code> xanh · <code>ModularityTests</code> xanh với module <code>dataimport</code> · luật ArchUnit: <code>dataimport</code> không chạm <code>genealogy.domain.port</code> hay <code>*.infrastructure.*</code></td></tr>
+    <tr><td class="so">2</td><td><b>Khu vực chờ không rò rỉ</b></td><td>IT: tải lên + kiểm 400 dòng → <code>count(person)</code>, <code>count(relationship)</code>, số đỉnh AGE <b>đều lệch 0</b></td></tr>
+    <tr><td class="so">3</td><td><b>Bất biến AGE ↔ <code>relationship</code></b></td><td>IT sau khi ghi: mọi dòng <code>relationship</code> chưa xoá có đúng một cạnh AGE tương ứng, và ngược lại (theo cách của <code>GraphRelationalConsistencyIT</code>)</td></tr>
+    <tr><td class="so">4</td><td><b>Ghi là tất-cả-hoặc-không</b></td><td>IT: cấy lỗi ở dòng 399 → <code>count(person)</code> <b>và</b> số đỉnh AGE đều lệch 0</td></tr>
+    <tr><td class="so">5</td><td><b>Tải lại không sinh trùng</b></td><td>IT: ghi tệp → ghi lại nguyên tệp → cả ba con số lệch 0</td></tr>
+    <tr><td class="so">6</td><td>Bộ kiểm cho kết quả tất định</td><td>Chạy cùng tệp hai lần → danh sách lỗi <b>giống hệt từng byte</b> khi sắp theo <code>(row_no, code)</code></td></tr>
+    <tr><td class="so">7</td><td>Vòng lặp bị bắt kèm đường đi</td><td>Fixture → đúng 1 <code>IMP_CYCLE</code>, thông điệp chứa đủ chuỗi mã</td></tr>
+    <tr><td class="so">8</td><td>Ngày âm không tồn tại bị bắt</td><td>Fixture 30/2 → <code>IMP_LUNAR_DATE_NOT_EXIST</code>; fixture 30/12 của năm có tháng 12 đủ → <b>0</b> lỗi</td></tr>
+    <tr><td class="so">9</td><td>Dò trùng không kêu bừa</td><td>Fixture "hai anh em cùng tên cùng đời khác cha" → <b>0</b> cảnh báo; "cùng cha cùng tên" → đúng 1</td></tr>
+    <tr><td class="so">10</td><td>Chuẩn hoá NFC</td><td>Fixture NFD → mọi tên sau khi đọc thoả <code>Normalizer.isNormalized(s, NFC)</code></td></tr>
+    <tr><td class="so">11</td><td>Chống tệp độc</td><td>zip bomb, XXE, <code>.xls</code> đổi đuôi, 5.001 dòng → đều bị từ chối có mã lỗi, không <code>OutOfMemoryError</code>, heap 256 MB</td></tr>
+    <tr><td class="so">12</td><td>Gộp đúng và hoàn tác an toàn</td><td>IT gộp → cạnh chuyển đủ ở cả hai nơi, người nhường <b>0</b> cạnh AGE · IT hoàn tác ngay → khôi phục từng dòng · IT sửa rồi hoàn tác → <b>bị từ chối</b></td></tr>
+    <tr><td class="so">13</td><td>Phân quyền theo chi</td><td>IT: Trưởng chi Ất tải tệp chứa mã chi Giáp → <code>IMP_BAD_CODE_FORMAT</code> · gọi ghi cho chi khác → <b>403</b></td></tr>
+    <tr><td class="so">14</td><td>Truy được nguồn</td><td>IT: sau khi ghi, <code>GET /api/v1/admin/imports/{id}/persons</code> trả đúng 400 người, và <code>note</code> của mỗi người chứa mã lô + số dòng</td></tr>
+    <tr><td class="so">15</td><td>Luồng web không bị chặn</td><td>IT: <code>POST .../commit</code> trả <b>202</b> trong dưới 500 ms trên tệp 400 dòng</td></tr>
+    <tr><td class="so">16</td><td>Hợp đồng khớp mã</td><td>Các đường dẫn <code>/admin/imports*</code> có trong <code>contracts/openapi.yaml</code> (hiện có 17 đường dẫn) và test hợp đồng xanh</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>15.1 Bề mặt API đề nghị (đưa vào <code>contracts/openapi.yaml</code>)</h3>
+
+<p>
+  Tất cả dưới <code>/api/v1</code>, tất cả kiểm phạm vi chi, lỗi trả theo RFC 7807 với trường
+  <code>code</code> máy đọc được — đúng quy ước ghi ở đầu <code>contracts/openapi.yaml</code>.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Phương thức + đường dẫn</th><th>Việc</th></tr></thead>
+  <tbody>
+    <tr><td><code>GET /admin/branches/{branchId}/import-template.xlsx</code></td><td>Tải mẫu của chi (lần 2 trở đi có trang Đã có điền sẵn)</td></tr>
+    <tr><td><code>POST /admin/imports</code></td><td>Tải tệp lên (multipart) → <b>201</b> kèm mã lô</td></tr>
+    <tr><td><code>POST /admin/imports/{id}/validate</code></td><td>Chạy bộ kiểm → <b>202</b></td></tr>
+    <tr><td><code>GET /admin/imports/{id}</code></td><td>Trạng thái lô + số đếm tóm tắt</td></tr>
+    <tr><td><code>GET /admin/imports/{id}/issues?severity=</code></td><td>Danh sách lỗi/cảnh báo, có phân trang</td></tr>
+    <tr><td><code>GET /admin/imports/{id}/rows?action=</code></td><td>Xem trước từng dòng: sẽ tạo, sẽ sửa gì</td></tr>
+    <tr><td><code>GET /admin/imports/{id}/report.xlsx</code></td><td><b>Trả về tệp đúng bố cục đã nộp, thêm một cột lỗi.</b> Đây là thứ làm bước 4 chạy được: người nhập sửa <b>tại chỗ</b> rồi nộp lại, không phải dò số dòng trên màn hình</td></tr>
+    <tr><td><code>GET /admin/imports/{id}/proof-sheet.pdf</code></td><td>Phiếu đối chiếu in giấy (§13.3)</td></tr>
+    <tr><td><code>POST /admin/imports/{id}/commit</code></td><td>Ghi vào phả → <b>202</b></td></tr>
+    <tr><td><code>POST /admin/imports/{id}/rollback</code></td><td>Rút lại cả lô, có điều kiện (§13.2)</td></tr>
+    <tr><td><code>POST /admin/merges</code> · <code>DELETE /admin/merges/{id}</code></td><td>Gộp · hoàn tác gộp</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    <b>Quyết định kỹ thuật lớn nhất của tài liệu này:</b> khu vực chờ tách rời hoàn toàn, ghi vào
+    phả bằng <b>một transaction tất-cả-hoặc-không</b>, và khoá bất biến là
+    <code>person_external_ref</code> chứ không phải mã băm tệp. Lý do không phải hiệu năng mà là
+    <b>khả năng trả lời câu hỏi "vào chưa?" bằng một từ</b>.
+  </p>
+  <p>
+    <b>Ba câu hỏi tài liệu này không tự trả lời được, cần Hội đồng Tộc biểu chốt trước khi N1 đóng
+    băng mẫu:</b> dâu/rể ghi <code>Đời</code> theo chồng hay theo họ gốc · con nuôi trong họ ghi cả
+    hai người cha hay chỉ cha nuôi · người mất liên lạc ghi là còn sống hay để trống.
+  </p>
+  <p>
+    Thứ tự ưu tiên khi mâu thuẫn: <b>BA v2 → design/00-dinh-huong.html → plan/00-tong-the.html →
+    tài liệu này</b>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

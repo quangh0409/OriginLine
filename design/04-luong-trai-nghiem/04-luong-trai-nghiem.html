@@ -1,0 +1,2482 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luồng trải nghiệm lõi — Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<nav class="dieu-huong">
+  <a href="../00-dinh-huong.html">00 · Định hướng thiết kế</a>
+  <span>›</span>
+  <span>04 · Luồng trải nghiệm lõi</span>
+</nav>
+
+<header class="dau">
+  <p class="nhan-tren">Hệ thống Quản lý Gia phả &amp; Cổng thông tin Dòng họ · Tài liệu 04</p>
+  <h1>Luồng trải nghiệm lõi</h1>
+  <p class="tom-tat">
+    Bảy luồng mà sản phẩm này <strong>sống hay chết</strong> vì chúng. Mỗi luồng: ai làm, trên
+    thiết bị gì, đi qua những bước nào, khung dây cho bước then chốt, và — phần quan trọng nhất —
+    <strong>chỗ luồng có thể gãy</strong> cùng cái giá phải trả khi vá.
+    Tài liệu này khảo sát <em>sản phẩm đang chạy thật</em> trong <code>frontend/src/</code>, không
+    thiết kế trên giấy trắng: chỗ nào đã dựng thì ghi đường dẫn tệp, chỗ nào là đề xuất thì nói rõ
+    là đề xuất.
+  </p>
+</header>
+
+<h2>0. Cách đọc tài liệu này</h2>
+
+<h3>Ba nhãn trạng thái</h3>
+
+<p>Mỗi bước, mỗi thành phần trong khung dây đều mang một trong ba nhãn:</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4><span class="chip xong">Đã dựng</span></h4>
+    <p>Có mã nguồn đang chạy. Đường dẫn tệp ghi kèm. Tài liệu mô tả nó <em>như nó đang là</em>, kể cả khi nó sai.</p>
+  </div>
+  <div class="the">
+    <h4><span class="chip should">Đề xuất</span></h4>
+    <p>Chưa có mã. Là thiết kế mới của tài liệu này. Mọi đề xuất đều kèm <b>cái giá</b> và <b>chỗ nó có thể sai</b>.</p>
+  </div>
+  <div class="the">
+    <h4><span class="chip must">Đang gãy</span></h4>
+    <p>Có mã, nhưng luồng dẫn người dùng vào ngõ cụt hoặc nói dối họ. Liệt kê đủ ở <a href="#that-bai">§9</a>.</p>
+  </div>
+</div>
+
+<h3>Quy ước đo trong khung dây</h3>
+
+<div class="khoi">
+  <p class="nhan">Đọc con số trong hình thế nào</p>
+  <p>
+    <b>Một đơn vị trong khung dây = một pixel thật trên thiết bị.</b> Khung điện thoại luôn vẽ ở
+    <b>390 đơn vị</b> chiều ngang (xấp xỉ Pixel 5 — 393px — chính là máy mà mã nguồn phả đồ lấy
+    làm mốc); khung máy tính vẽ ở <b>1280 đơn vị</b>. Trình duyệt co hình cho vừa bề ngang trang
+    (khung máy tính hiện ra khoảng 78% cỡ thật), nên <b>đo bằng đơn vị trong hình, đừng đo bằng
+    thước trên màn hình</b>.
+  </p>
+  <p>
+    Hệ quả bắt buộc: mọi vùng chạm trong mọi khung dây ở đây đều <b>≥ 44×44 đơn vị</b>. Chỗ nào
+    có ô nét đứt kèm chữ <em>44</em> là chỗ tôi đang tự kiểm chính mình. Chữ trong hình có hai
+    loại — <b>chữ sản phẩm</b> đặt đúng cỡ thật (≥16, nội dung chính 17–18) và <b>chữ chú thích
+    tài liệu</b> (màu mực nhạt, đặt ngoài khung máy) vốn không phải giao diện nên không chịu sàn
+    cỡ chữ.
+  </p>
+</div>
+
+<h3>Hai người dùng, không phải một</h3>
+
+<p>
+  Theo <a href="../00-dinh-huong.html">tài liệu 00 §1</a>, mọi luồng dưới đây phải đọc được ở
+  <b>cả hai đầu</b> dải tuổi. Trong bảy luồng này, chúng chia việc rất rõ và <em>không đối
+  xứng</em>:
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th>Luồng</th><th>Người dùng chính</th><th>Thiết bị chính</th><th>Vai của đầu kia</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1 · Xem phả đồ</td><td>Cả hai, ngang nhau</td><td>Điện thoại <em>và</em> màn lớn</td><td>Đây là luồng duy nhất không được ưu tiên bên nào</td></tr>
+    <tr><td>2 · Đọc hồ sơ</td><td>Thành viên trẻ, kiều bào</td><td>Điện thoại</td><td>Cụ cao tuổi đọc để kiểm chứng dữ liệu mình đã khai</td></tr>
+    <tr><td>3 · Tra danh xưng</td><td>Người mới về làm dâu/rể, người trẻ</td><td>Điện thoại, giữa cuộc họp họ</td><td>Hội đồng dùng để <em>soát luật</em>, không phải để tra</td></tr>
+    <tr><td>4 · Thêm/sửa nhân khẩu</td><td>Trưởng chi 45–60</td><td>Máy tính bảng / màn lớn, ngồi yên</td><td>Người trẻ hầu như không chạm tới</td></tr>
+    <tr><td>5 · Yêu cầu đính chính</td><td><b>Hai phía tách hẳn:</b> thành viên gửi · Trưởng chi duyệt</td><td>Điện thoại · Màn lớn</td><td>Hai giao diện khác nhau hoàn toàn</td></tr>
+    <tr><td>6 · Nhắc giỗ</td><td>Cả họ</td><td>Điện thoại (đẩy) + màn lớn (lịch năm)</td><td>Người cao tuổi là người <em>quan tâm</em> nhất, người trẻ là người <em>nhận</em> nhiều nhất</td></tr>
+    <tr><td>7 · Tìm kiếm</td><td>Thành viên trẻ</td><td>Điện thoại</td><td>Trưởng chi dùng nó làm cửa vào phả đồ</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="pha-do">1. Xem phả đồ</h2>
+
+<p>
+  <span class="chip xong">Đã dựng</span>
+  <code>frontend/src/app/[locale]/tree/page.tsx</code> ·
+  <code>frontend/src/components/tree/</code> ·
+  <code>frontend/src/hooks/use-tree-canvas.ts</code> ·
+  <code>frontend/src/lib/tree/</code>
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chiều</th><th>Nội dung</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ai</b></td><td>Mọi vai. Khách chưa đăng nhập nhận <code>401</code> và <b>không thấy người còn sống nào</b> (BA v2 §10).</td></tr>
+    <tr><td><b>Thiết bị</b></td><td>Cả hai, và đây là luồng khác nhau nhiều nhất giữa hai bối cảnh.</td></tr>
+    <tr><td><b>Điểm vào</b></td><td><code>/tree</code> (gốc mặc định) · <code>/tree?rootId=…</code> từ ô tìm kiếm hoặc từ hồ sơ · thanh điều hướng dưới cùng trên điện thoại.</td></tr>
+    <tr><td><b>Điểm ra</b></td><td>Mở ngăn hồ sơ một người · nhảy sang tra danh xưng · đặt người đang chọn làm gốc mới.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>1.1 Từng bước</h3>
+
+<ol>
+  <li><b>Mở ra.</b> Nạp <code>rootId</code>, gọi <code>/tree</code> với <code>depth=2</code>,
+    <code>maxNodes=300</code>. Chỉ <em>một</em> nút ở trạng thái mở (chính gốc); đời thứ hai đã
+    nằm sẵn trong bộ nhớ đệm React Query nên lần bung nhánh đầu tiên <b>không tốn một vòng
+    mạng nào</b> (<code>use-tree-canvas.ts</code>).</li>
+  <li><b>Canh khung.</b> <code>fitView</code> có <b>sàn phóng 0,75</b>
+    (<code>lib/tree/fit-view.ts</code>) — sàn này tồn tại vì trước đó phả đồ mở ra ở mức 0,21,
+    tên người còn cỡ chữ 3px.</li>
+  <li><b>Đọc cây.</b> Chế độ Phân cấp dựng theo <b>đơn vị gia đình</b>: vợ chồng cạnh nhau, thanh
+    hôn phối nằm trong khe 48px giữa hai thẻ, con treo xuống từ thanh anh em
+    (<code>lib/tree/layout-family.ts</code>). Quan hệ không vừa khuôn — tái hôn, cha mẹ từ chi
+    khác, kế tự — đi ra <code>auxiliaryLinks</code>, <b>không cạnh nào bị đánh rơi</b>.</li>
+  <li><b>Bung / thu nhánh.</b> Bấm nút tròn dưới đáy thẻ. Nếu nhánh đã tải sẵn thì mở tức thì;
+    nếu <code>hasMoreDescendants</code> còn đúng thì phát <b>đúng một</b> lệnh
+    <code>/tree?rootId=&lt;nút đó&gt;</code>. Cây <b>không bao giờ</b> được tải trọn.</li>
+  <li><b>Đổi chế độ xem.</b> Toả tròn / Ma trận đời giữ nguyên <code>expandedIds</code> và giữ
+    nguyên máy quay — chỉ đổi thuật toán xếp chỗ.</li>
+</ol>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Sự thật phải nói ra về hai chế độ còn lại</p>
+  <p>
+    <b>Toả tròn và Ma trận đời chưa được dựng lại theo đơn vị gia đình.</b> Chúng vẫn nối
+    người–người (<code>tree-canvas-inner.tsx</code>), nên vợ chồng <em>không</em> đứng cạnh nhau
+    và không có thanh hôn phối. Người dùng bấm sang chế độ khác sẽ thấy <b>cùng một dòng họ được
+    kể bằng hai ngữ pháp khác nhau</b> mà không ai báo cho họ biết.
+    <b>Đề xuất:</b> khi chuyển sang hai chế độ chưa dựng lại, hiện một dòng chú thích cố định
+    ngay dưới thanh công cụ — “Chế độ này vẽ theo từng người, chưa gộp vợ chồng thành một khối.”
+    <b>Cái giá:</b> một dòng thừa vĩnh viễn trên màn hình hẹp, và nó thú nhận sản phẩm chưa xong.
+    Đổi lại, nó ngăn người dùng kết luận rằng <em>dữ liệu</em> sai — kết luận đó đắt hơn nhiều.
+  </p>
+</div>
+
+<h3>1.2 Khung dây — điện thoại</h3>
+
+<figure>
+<svg viewBox="0 0 1040 880" role="img" aria-label="Khung dây phả đồ trên điện thoại 390 pixel">
+  <!-- khung máy -->
+  <rect class="wf-khung" x="40" y="20" width="390" height="840" rx="10"/>
+
+  <!-- thanh đầu trang -->
+  <rect class="wf-o" x="40" y="20" width="390" height="56"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="56" y="54">Gia phả họ Nguyễn</text>
+  <rect class="wf-o" x="330" y="26" width="92" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="346" y="54">Tài khoản</text>
+
+  <!-- thanh công cụ, cuộn ngang -->
+  <rect class="wf-o" x="40" y="76" width="390" height="56"/>
+  <rect class="wf-o" x="48" y="82" width="176" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="60" y="110">Phân cấp ▾</text>
+  <rect class="wf-o" x="232" y="82" width="158" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="244" y="110">Hậu duệ ▾</text>
+  <rect class="wf-o" x="398" y="82" width="60" height="44" rx="4"/>
+  <text class="wf-phu" x="404" y="110">Thu…</text>
+  <line class="wf-net" x1="430" y1="76" x2="430" y2="132" stroke-dasharray="3 3"/>
+
+  <!-- canvas -->
+  <rect class="wf-o" x="40" y="132" width="390" height="616" style="fill:none"/>
+
+  <!-- cặp vợ chồng, mức phóng 0,75 -> thẻ 156x72 -->
+  <rect class="wf-o" x="56" y="160" width="156" height="72" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="66" y="186">Nguyễn Văn Đức</text>
+  <text class="wf-phu" x="66" y="205">Đời 4 · Chi Nhất</text>
+  <circle class="wf-nhan" cx="196" cy="176" r="4"/>
+  <rect class="wf-o" x="248" y="160" width="156" height="72" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="258" y="186">Trần Thị Lan</text>
+  <text class="wf-phu" x="258" y="205">Đời 4 · dâu</text>
+
+  <!-- thanh hôn phối trong khe 36 (48 x 0,75) -->
+  <line class="wf-net" x1="212" y1="196" x2="248" y2="196" style="stroke-width:2.5"/>
+  <line class="wf-net" x1="230" y1="196" x2="230" y2="256"/>
+  <line class="wf-net" x1="104" y1="256" x2="330" y2="256"/>
+  <line class="wf-net" x1="104" y1="256" x2="104" y2="288"/>
+  <line class="wf-net" x1="330" y1="256" x2="330" y2="288"/>
+
+  <rect class="wf-o" x="26" y="288" width="156" height="72" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="36" y="314">Nguyễn Văn An</text>
+  <text class="wf-phu" x="36" y="333">Đời 5</text>
+  <rect class="wf-o" x="252" y="288" width="156" height="72" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="262" y="314">Nguyễn Thị Mai</text>
+  <text class="wf-phu" x="262" y="333">Đời 5</text>
+
+  <!-- nút bung nhánh: 44x44 BẤT BIẾN THEO MỨC PHÓNG (đề xuất) -->
+  <circle class="wf-o" cx="104" cy="382" r="22"/>
+  <text class="wf-chu" style="font-size:15px;font-weight:600" x="93" y="388">+12</text>
+  <rect x="82" y="360" width="44" height="44" style="fill:none;stroke:var(--ho-phach);stroke-width:1;stroke-dasharray:3 3"/>
+  <text class="wf-phu" x="132" y="388">44</text>
+
+  <!-- điều khiển phóng: 44x44 mỗi nút -->
+  <rect class="wf-o" x="370" y="148" width="44" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:18px" x="387" y="177">+</text>
+  <rect class="wf-o" x="370" y="196" width="44" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:18px" x="388" y="225">−</text>
+
+  <!-- ngăn dưới (bottom sheet) khi chạm vào một thẻ -->
+  <rect class="wf-khung" x="40" y="508" width="390" height="240" rx="10" style="fill:var(--nen-the)"/>
+  <rect x="205" y="518" width="60" height="5" rx="2.5" style="fill:var(--vien-dam)"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="56" y="552">Nguyễn Văn An</text>
+  <text class="wf-phu" x="56" y="572">Đời 5 · Chi Nhất · Còn sống</text>
+  <rect class="wf-o" x="56" y="586" width="358" height="48" rx="4" style="fill:var(--do-nhat);stroke:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="70" y="616">Mở rộng nhánh · 12 người</text>
+  <rect class="wf-o" x="56" y="642" width="358" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="70" y="672">Xem hồ sơ đầy đủ</text>
+  <rect class="wf-o" x="56" y="698" width="358" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="70" y="726">Tra danh xưng với tôi</text>
+
+  <!-- thanh điều hướng dưới cùng -->
+  <rect class="wf-o" x="40" y="748" width="390" height="56"/>
+  <line class="wf-net" x1="40" y1="748" x2="430" y2="748"/>
+  <text class="wf-phu" x="52" y="782">Trang chủ</text>
+  <text class="wf-phu" style="fill:var(--do-tram);font-weight:700" x="132" y="782">Phả đồ</text>
+  <text class="wf-phu" x="204" y="782">Tìm</text>
+  <text class="wf-phu" x="258" y="782">Giỗ</text>
+  <text class="wf-phu" x="318" y="782">Thông báo</text>
+  <line class="wf-net" x1="118" y1="748" x2="118" y2="804" stroke-dasharray="2 3"/>
+  <line class="wf-net" x1="196" y1="748" x2="196" y2="804" stroke-dasharray="2 3"/>
+  <line class="wf-net" x1="274" y1="748" x2="274" y2="804" stroke-dasharray="2 3"/>
+  <line class="wf-net" x1="352" y1="748" x2="352" y2="804" stroke-dasharray="2 3"/>
+
+  <!-- chú thích -->
+  <line class="wf-net" x1="404" y1="196" x2="470" y2="196" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="478" y="180">Một cặp vợ chồng ở mức phóng 0,75 rộng đúng</text>
+  <text class="wf-phu" x="478" y="196" style="font-weight:700;fill:var(--do-loi)">(208+48+208) × 0,75 = 348 đơn vị</text>
+  <text class="wf-phu" x="478" y="212">trên màn 390. Không bao giờ nhìn được hai đời</text>
+  <text class="wf-phu" x="478" y="228">cùng lúc trên điện thoại — đó là sự thật hình học,</text>
+  <text class="wf-phu" x="478" y="244">không phải lỗi cài đặt.</text>
+
+  <line class="wf-net" x1="126" y1="382" x2="470" y2="382" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="478" y="368" style="font-weight:700">ĐỀ XUẤT · nút bung nhánh bất biến theo mức phóng</text>
+  <text class="wf-phu" x="478" y="384">Hôm nay nút là <tspan style="font-family:var(--f-may)">h-6 w-6</tspan> = 24 đơn vị, và còn</text>
+  <text class="wf-phu" x="478" y="400">co theo mức phóng: ở 0,75 chỉ còn 18. Không đạt 44.</text>
+  <text class="wf-phu" x="478" y="416">Vẽ nó ở lớp phủ không theo phép co của canvas.</text>
+
+  <line class="wf-net" x1="414" y1="610" x2="470" y2="610" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="478" y="596" style="font-weight:700">Lối bung nhánh THỨ HAI, cỡ đầy đủ</text>
+  <text class="wf-phu" x="478" y="612">Chạm thẻ → ngăn dưới → nút 48 đơn vị có nhãn chữ</text>
+  <text class="wf-phu" x="478" y="628">kèm số người sẽ hiện ra. Nút tròn trên thẻ trở thành</text>
+  <text class="wf-phu" x="478" y="644">chỉ báo trạng thái, không còn là lối đi duy nhất.</text>
+
+  <text class="wf-phu" x="478" y="90" style="font-weight:700">Thanh công cụ cuộn ngang, MỘT hàng</text>
+  <text class="wf-phu" x="478" y="106">Hôm nay hai cụm chọn + nút + thẻ đếm nằm trong</text>
+  <text class="wf-phu" x="478" y="122">một <tspan style="font-family:var(--f-may)">flex-wrap</tspan>; ở 390 chúng xuống ba hàng và</text>
+  <text class="wf-phu" x="478" y="138">ăn mất ~130 đơn vị chiều cao canvas.</text>
+</svg>
+<figcaption>
+  <strong>Phả đồ trên điện thoại.</strong> Ba quyết định đáng bàn: (1) thanh công cụ ép về một
+  hàng cuộn ngang thay vì để nó tự xuống dòng; (2) nút bung nhánh được nhân đôi — một chỉ báo nhỏ
+  trên thẻ và một nút cỡ đầy đủ trong ngăn dưới; (3) chấp nhận rằng <b>một màn hình điện thoại
+  chỉ chứa vừa một cặp vợ chồng</b> ở mức phóng đọc được, nên phải thiết kế cho việc <em>đi</em>
+  trong cây chứ không phải cho việc <em>ngắm</em> cây.
+</figcaption>
+</figure>
+
+<h3>1.3 Khung dây — máy tính</h3>
+
+<figure>
+<svg viewBox="0 0 1280 700" role="img" aria-label="Khung dây phả đồ trên màn hình 1280 pixel">
+  <rect class="wf-khung" x="0" y="0" width="1280" height="700"/>
+
+  <rect class="wf-o" x="0" y="0" width="1280" height="64"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="20" y="40">Gia phả họ Nguyễn</text>
+  <text class="wf-chu" style="font-size:16px" x="300" y="40">Phả đồ</text>
+  <text class="wf-chu" style="font-size:16px" x="380" y="40">Danh xưng</text>
+  <text class="wf-chu" style="font-size:16px" x="490" y="40">Tìm kiếm</text>
+  <text class="wf-chu" style="font-size:16px" x="580" y="40">Giỗ</text>
+  <rect class="wf-o" x="1060" y="10" width="100" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="1072" y="38">Thông báo</text>
+  <rect class="wf-o" x="1168" y="10" width="96" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="1180" y="38">Cài đặt</text>
+
+  <!-- thanh công cụ -->
+  <rect class="wf-o" x="0" y="64" width="1280" height="56"/>
+  <rect class="wf-o" x="16" y="70" width="120" height="44" rx="4" style="fill:var(--do-nhat)"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram);font-weight:600" x="42" y="98">Phân cấp</text>
+  <rect class="wf-o" x="136" y="70" width="120" height="44"/>
+  <text class="wf-chu" style="font-size:16px" x="158" y="98">Toả tròn</text>
+  <rect class="wf-o" x="256" y="70" width="140" height="44"/>
+  <text class="wf-chu" style="font-size:16px" x="272" y="98">Ma trận đời</text>
+  <rect class="wf-o" x="428" y="70" width="110" height="44"/>
+  <text class="wf-chu" style="font-size:16px" x="448" y="98">Hậu duệ</text>
+  <rect class="wf-o" x="538" y="70" width="110" height="44"/>
+  <text class="wf-chu" style="font-size:16px" x="556" y="98">Tổ tiên</text>
+  <rect class="wf-o" x="648" y="70" width="130" height="44"/>
+  <text class="wf-chu" style="font-size:16px" x="664" y="98">Cả hai chiều</text>
+  <rect class="wf-o" x="820" y="70" width="160" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="838" y="98">Thu toàn cây</text>
+  <text class="wf-chu" style="font-size:16px" x="1000" y="98">1 506 nhân khẩu <tspan style="font-weight:700">đã tải</tspan></text>
+
+  <!-- canvas -->
+  <rect class="wf-o" x="0" y="120" width="1280" height="580" style="fill:none"/>
+
+  <rect class="wf-o" x="356" y="170" width="208" height="96" rx="4"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="370" y="200">Nguyễn Văn Đức</text>
+  <text class="wf-phu" x="370" y="222">Đời 4 · Chi Nhất</text>
+  <text class="wf-phu" x="370" y="242">1902 – 1978</text>
+  <rect class="wf-o" x="612" y="170" width="208" height="96" rx="4"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="626" y="200">Trần Thị Lan</text>
+  <text class="wf-phu" x="626" y="222">Đời 4 · dâu · vợ cả</text>
+
+  <line class="wf-net" x1="564" y1="218" x2="612" y2="218" style="stroke-width:2.5"/>
+  <line class="wf-net" x1="588" y1="218" x2="588" y2="300"/>
+  <line class="wf-net" x1="332" y1="300" x2="844" y2="300"/>
+  <line class="wf-net" x1="332" y1="300" x2="332" y2="340"/>
+  <line class="wf-net" x1="588" y1="300" x2="588" y2="340"/>
+  <line class="wf-net" x1="844" y1="300" x2="844" y2="340"/>
+
+  <rect class="wf-o" x="228" y="340" width="208" height="96" rx="4"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="242" y="370">Nguyễn Văn An</text>
+  <text class="wf-phu" x="242" y="392">Đời 5 · Chi Nhất</text>
+  <rect class="wf-o" x="242" y="400" width="70" height="22" rx="3" style="fill:var(--vang-nen);stroke:none"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:600" x="252" y="416">Đích tôn</text>
+
+  <rect class="wf-o" x="484" y="340" width="208" height="96" rx="4"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="498" y="370">Nguyễn Thị Mai</text>
+  <text class="wf-phu" x="498" y="392">Đời 5 · Chi Nhất</text>
+
+  <rect class="wf-o" x="740" y="340" width="208" height="96" rx="4" style="fill:var(--nen-giay)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="754" y="370">Nguyễn Văn Bảo</text>
+  <text class="wf-phu" x="754" y="392">Đời 5 · 1938 – 1944</text>
+  <line class="wf-net" x1="800" y1="446" x2="888" y2="446" style="stroke-width:3"/>
+
+  <circle class="wf-o" cx="332" cy="458" r="22"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="322" y="464">+7</text>
+  <rect x="310" y="436" width="44" height="44" style="fill:none;stroke:var(--ho-phach);stroke-dasharray:3 3"/>
+
+  <!-- điều khiển góc trên phải -->
+  <rect class="wf-o" x="1220" y="136" width="44" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:18px" x="1237" y="165">+</text>
+  <rect class="wf-o" x="1220" y="184" width="44" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:18px" x="1238" y="213">−</text>
+  <rect class="wf-o" x="1220" y="232" width="44" height="44" rx="4"/>
+  <text class="wf-phu" x="1231" y="260">vừa</text>
+
+  <!-- chú giải góc dưới trái -->
+  <rect class="wf-o" x="16" y="510" width="236" height="160" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="30" y="536">Chú giải</text>
+  <line class="wf-net" x1="30" y1="558" x2="56" y2="558"/>
+  <text class="wf-phu" x="66" y="563">Con đẻ</text>
+  <line class="wf-net" x1="30" y1="582" x2="56" y2="582" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="66" y="587">Con nuôi</text>
+  <line class="wf-net" x1="30" y1="606" x2="56" y2="606" style="stroke-width:2.5"/>
+  <text class="wf-phu" x="66" y="611">Vợ chồng</text>
+  <line class="wf-net" x1="38" y1="630" x2="48" y2="630" style="stroke-width:3"/>
+  <text class="wf-phu" x="66" y="635">Tuyệt tự</text>
+  <rect class="wf-o" x="30" y="644" width="130" height="18" rx="3"/>
+  <text class="wf-phu" x="38" y="657">Xem đủ quy ước ▾</text>
+
+  <!-- bản đồ thu nhỏ -->
+  <rect class="wf-o" x="1064" y="520" width="200" height="150" rx="4"/>
+  <text class="wf-phu" x="1076" y="540">Bản đồ thu nhỏ</text>
+
+  <!-- ngăn hồ sơ -->
+  <rect x="820" y="120" width="460" height="580" style="fill:none;stroke:var(--do-loi);stroke-dasharray:6 4"/>
+  <text class="wf-phu" style="fill:var(--do-loi);font-weight:700" x="836" y="146">Ngăn hồ sơ mở ra ở đây — che 36% bề ngang canvas</text>
+  <text class="wf-phu" style="fill:var(--do-loi)" x="836" y="164">và phủ luôn bản đồ thu nhỏ. Xem §1.4, chỗ dễ hỏng số 4.</text>
+</svg>
+<figcaption>
+  <strong>Phả đồ trên màn lớn.</strong> Bốn lớp phủ nằm ở bốn chỗ khác nhau — điều khiển phóng
+  trên-phải, bản đồ thu nhỏ dưới-phải, chú giải dưới-trái, thanh công cụ trên cùng — vì đã có
+  tiền lệ chú giải phủ kín điều khiển phóng khiến người dùng cảm ứng mất hẳn đường thu/phóng
+  (<code>tree-canvas-inner.tsx</code> ghi lại nguyên vụ này). Khối nét đỏ là ngăn hồ sơ: nó
+  <em>không</em> phải lớp phủ thứ năm, nó đẩy nội dung — nhưng nó vẫn che bản đồ thu nhỏ.
+</figcaption>
+</figure>
+
+<h3>1.4 Chỗ dễ hỏng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ hỏng</th><th>Vì sao</th><th>Cách chữa và cái giá</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Nút bung nhánh 24 đơn vị</b> <span class="chip must">Đang gãy</span></td>
+      <td><code>person-node.tsx</code> vẽ nút <code>h-6 w-6</code>. Ở mức phóng mặc định 0,75 nó còn <b>18 đơn vị</b>. Sàn 44 của tài liệu 00 §2.2 bị vi phạm ngay ở thao tác chính của màn hình chính.</td>
+      <td>Nút bất biến theo mức phóng (lớp phủ riêng) — <b>giá:</b> phải tính lại vị trí mỗi lần trượt/phóng, có nguy cơ tụt khung hình trên cây lớn. Hoặc rẻ hơn: nhân đôi lối đi qua ngăn dưới — <b>giá:</b> thêm một lần chạm.</td>
+    </tr>
+    <tr>
+      <td><b>Thẻ đếm nói sai</b> <span class="chip must">Đang gãy</span></td>
+      <td>Nhãn tiếng Việt là “{count} nhân khẩu <b>đang hiển thị</b>” nhưng giá trị truyền vào là <code>loadedCount = merged.nodesById.size</code> — số đã <em>tải</em>. Thu một nhánh lại, số không đổi, còn màn hình thì ít người đi.</td>
+      <td>Đổi nhãn thành “đã tải” (một dòng dịch), hoặc truyền <code>visible.nodes.length</code>. <b>Giá:</b> gần bằng không. Đây là lỗi nên sửa trước mọi việc khác trong luồng này.</td>
+    </tr>
+    <tr>
+      <td><b>Cây rỗng vì phóng quá xa</b></td>
+      <td>Nút “Thu toàn cây” cố ý bỏ sàn phóng, xuống tới 0,03. Ở đó thẻ nhân khẩu là một chấm. Đúng ý đồ khi chiếu lên màn hình ngày giỗ Tổ, nhưng người dùng bấm nhầm thì tưởng mất dữ liệu.</td>
+      <td>Sau khi thu toàn cây, hiện một nút “Về mức đọc được” tồn tại chừng nào mức phóng còn dưới 0,5. <b>Giá:</b> thêm một lớp phủ — đúng thứ màn này đã quá tải.</td>
+    </tr>
+    <tr>
+      <td><b>Ngăn hồ sơ nuốt canvas</b></td>
+      <td>Ngăn rộng 460 trên màn 1280 = 36%. Trên điện thoại là ngăn dưới cao 82vh — che gần hết cây.</td>
+      <td>Trên điện thoại: mở ngăn ở mức “peek” khoảng 240 đơn vị trước, kéo lên mới toàn phần (đúng như khung dây §1.2). <b>Giá:</b> thêm một trạng thái ngăn phải nuôi.</td>
+    </tr>
+    <tr>
+      <td><b>Gốc không tìm thấy</b></td>
+      <td><code>rootNotFound</code> hiện một ô <em>Empty</em> rỗng. Với khách, cùng một màn hình ấy nghĩa là “người này còn sống nên bạn không được thấy” — <b>đúng luật</b>, nhưng là ngõ cụt tuyệt đối: không có nút nào để đi tiếp.</td>
+      <td>Giữ nguyên chữ (không được nói lý do), <b>thêm lối ra</b>: “Về gốc dòng họ” và “Tìm người khác”. <b>Giá:</b> không có. Đây là thiếu sót thuần tuý.</td>
+    </tr>
+    <tr>
+      <td><b>Cắt theo dung lượng ≠ cắt theo quyền</b></td>
+      <td>Dải băng “cây chưa đầy đủ” chỉ bật cho <code>meta.truncated</code> (ngưỡng <code>maxNodes</code>), <b>không bao giờ</b> cho lọc riêng tư — đúng, vì nếu không nó sẽ chỉ đúng chỗ có người sống bị giấu.</td>
+      <td>Không chữa. Ghi vào tài liệu để đời sau không “sửa” nó thành một dải băng chung. Chỗ này dễ bị hiểu là bỏ sót.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>1.5 Trạng thái rỗng · đang tải · lỗi</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Màn hình</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Đang tải lần đầu</td><td>Vòng quay + “Đang dựng cây phả đồ…”</td><td><span class="chip xong">Đã dựng</span> Chiếm cả khung 70vh. <b>Đề xuất:</b> thay bằng khung xương ba thẻ để người dùng đoán trước hình dạng.</td></tr>
+    <tr><td>Đang bung một nhánh</td><td>Biểu tượng quay <em>trong</em> nút bung của đúng thẻ đó</td><td><span class="chip xong">Đã dựng</span> Đúng chỗ: người dùng nhìn vào ngón tay mình vừa chạm.</td></tr>
+    <tr><td>Khách chưa đăng nhập</td><td>Khối hổ phách “Xin đăng nhập để xem phả đồ” + nút Đăng nhập</td><td><span class="chip xong">Đã dựng</span> Cố ý <b>không</b> dùng màu đỏ lỗi — đây là luật chạy đúng, không phải sự cố.</td></tr>
+    <tr><td>Gốc không thấy</td><td>Ô rỗng “Không tìm thấy nhân khẩu gốc của cây”</td><td><span class="chip must">Đang gãy</span> Thiếu lối ra. Xem §1.4.</td></tr>
+    <tr><td>Lỗi mạng</td><td>Dải đỏ “Không tải được cây phả đồ”</td><td><span class="chip should">Đề xuất</span> Thêm nút “Thử lại” — hiện tại người dùng phải tự tải lại trang.</td></tr>
+    <tr><td>Cây bị cắt</td><td>Dải hổ phách đếm số nhánh còn người chưa tải</td><td><span class="chip xong">Đã dựng</span> Đóng được. Không bao giờ nhắc tới quyền riêng tư.</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+<h3>1.6 Giới hạn cứng: người dâu/rể không có đường vào cây</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đây là lỗi cấu trúc, không phải lỗi giao diện</p>
+  <p>
+    Theo <a href="../00-dinh-huong.html">tài liệu 00 §1b</a>: <code>TreeProjectionService.traverse()</code>
+    chỉ duyệt theo hai chiều <b>thuần huyết thống</b> — <code>descendants()</code> và
+    <code>ancestors()</code>. Cạnh vợ/chồng <b>không phải chiều duyệt</b>; nó chỉ được gắn vào ở
+    tầng cạnh, sau khi các node đã thu thập xong.
+  </p>
+  <p>
+    Hai hệ quả không thể thiết kế vòng qua:
+  </p>
+  <ul>
+    <li>Người con dâu <b>chỉ tồn tại trong cây khi chồng cô đã được duyệt trước</b>. Cô không bao
+      giờ là hạt giống duyệt.</li>
+    <li>Đặt cô làm <code>rootId</code> là vô nghĩa: <code>ancestors()</code> trả về gia đình ruột
+      của chính cô — những người không có trong dữ liệu họ nhà chồng. <b>Cây cụt phía trên.</b></li>
+  </ul>
+  <p>
+    Nói cách khác: nút “Xem trên phả đồ” trên hồ sơ một người dâu <b>đưa cô tới một cái cây không
+    nói gì về cô cả</b>. Không có nút bấm nào vá được chuyện này, và tài liệu này không giả vờ có.
+  </p>
+</div>
+
+<p>
+  Phần thiết kế phả đồ vì vậy phải chấp nhận ba điều:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Điều phải chấp nhận</th><th>Hệ quả cho khung dây §1.2 / §1.3</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Phả đồ là <b>cấu trúc huyết thống</b>, không phải danh bạ dòng họ.</td>
+      <td>Thẻ người dâu/rể trên cây luôn là thẻ <em>đính kèm</em> bên cạnh bạn đời, không bao giờ có nút bung nhánh riêng. Khung dây §1.2 vẽ đúng như vậy: thẻ “Trần Thị Lan · dâu” không mang nút <em>+n</em>.</td>
+    </tr>
+    <tr>
+      <td>Điểm neo tự nhiên của người dâu/rể là <b>bạn đời</b>, không phải thuỷ tổ.</td>
+      <td><span class="chip should">Đề xuất</span> Khi người đang đăng nhập là dâu/rể, gốc mặc định của <code>/tree</code> phải là <b>bạn đời</b> của họ, không phải <code>NEXT_PUBLIC_DEFAULT_ROOT_ID</code>. Hôm nay gốc là một hằng số dùng chung cho mọi người. <b>Giá:</b> cần máy chủ trả về “gốc gợi ý cho người dùng này” — chưa có trong hợp đồng Giai đoạn 1.</td>
+    </tr>
+    <tr>
+      <td>Tra danh xưng <b>không được</b> lấy cây làm lối vào.</td>
+      <td>Toàn bộ §3 được thiết kế lại theo hướng này. Xem ngay dưới đây.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="ho-so">2. Đọc hồ sơ một người</h2>
+
+<p>
+  <span class="chip xong">Đã dựng</span>
+  <code>frontend/src/app/[locale]/persons/[id]/page.tsx</code> ·
+  <code>frontend/src/components/person/</code> ·
+  <code>frontend/src/lib/privacy/present.ts</code>
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chiều</th><th>Nội dung</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ai</b></td><td>Khách (chỉ người đã khuất) · Thành viên · Trưởng chi · Chính chủ.</td></tr>
+    <tr><td><b>Thiết bị</b></td><td>Điện thoại là chính. Trên phả đồ, hồ sơ mở ra dạng <b>ngăn</b> chứ không đổi trang, để không mất khung nhìn và nhánh đã tải.</td></tr>
+    <tr><td><b>Điểm vào</b></td><td>Chạm thẻ trên phả đồ · kết quả tìm kiếm · liên kết từ một thông báo giỗ · liên kết từ kết quả tra danh xưng.</td></tr>
+    <tr><td><b>Điểm ra</b></td><td>Xem người này trên phả đồ · tra danh xưng với người này · <b>báo sai sót</b> (§5) · sửa (nếu có quyền).</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>2.1 Bốn lớp nội dung, xếp theo thứ tự người đọc cần</h3>
+
+<ol>
+  <li><b>Nhận diện.</b> Tên chính, Hán-Nôm, đời, chi/ngành, còn sống hay đã khuất, huy hiệu
+    (<code>đích tôn · thừa tự · kế tự · con nuôi · dâu · rể · tuyệt tự · trưởng chi</code>).
+    Người đã khuất dùng nền <b>giấy cũ</b> <code>#f2ede2</code> và viền đỏ trầm — đọc như sự tôn
+    kính, không như trạng thái bị vô hiệu hoá.</li>
+  <li><b>Đa lớp tên.</b> Húy · Tự · Hiệu · Thụy · Thường gọi · Pháp danh, mỗi lớp một hàng kèm
+    Hán-Nôm riêng (<code>person-name-layers.tsx</code>). <b>Danh sách này co lại theo tầng</b> —
+    ở T1 máy chủ chỉ trả lớp tên chính, vì tên húy và tên thụy là thứ nhạy cảm về nghi lễ.</li>
+  <li><b>Quan hệ.</b> Cha · Mẹ · Vợ/chồng (kèm <em>thứ bậc</em> khi đa thê) · Con (đẻ / nuôi) ·
+    người kế tự. <span class="chip must">Đang gãy</span> <b>Phần này chưa được dựng.</b>
+    <code>PersonDto.relationships</code> có trong hợp đồng API và trong
+    <code>types/api.ts</code>, nhưng <code>person-profile.tsx</code> không dựng nó ra màn hình.
+    Hồ sơ hôm nay là một người <em>không có ai xung quanh</em> — trong một sản phẩm gia phả, đó
+    là thiếu sót nặng nhất của màn hình này. Nó cũng chính là thứ khiến hồ sơ một người dâu/rể
+    trở thành trang trống rỗng nhất trong cả sản phẩm.</li>
+  <li><b>Đời sống.</b> Ngày sinh/mất song lịch, quê quán, nghề nghiệp, nơi ở, liên hệ, tiểu sử —
+    tất cả đều <em>có thể vắng mặt hợp lệ</em>.</li>
+</ol>
+
+<h3>2.2 Bài toán khó nhất: cho thấy tầng mà không lộ thứ đang giấu</h3>
+
+<p>
+  Sản phẩm hiện tại giải nửa bài toán rất tốt và bỏ hẳn nửa còn lại.
+</p>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Nửa đã giải đúng</h4>
+    <p>
+      <code>lib/privacy/present.ts</code> và <code>&lt;OptionalField&gt;</code> đặt một luật duy
+      nhất: trường bị lọc thì <b>biến mất hoàn toàn</b> — không nhãn rỗng, không gạch ngang,
+      không dấu ba chấm, không ổ khoá. Cả tiêu đề mục cũng biến mất khi mọi hàng bên trong vắng
+      (<code>person-section.tsx</code>).
+    </p>
+    <p class="day">Vì sao bắt buộc: một nhãn rỗng là lời tuyên bố “ở đây có dữ liệu bạn không được xem”. Khách đọc các khoảng trống là dựng được bản đồ người còn sống.</p>
+  </div>
+  <div class="the">
+    <h4>Nửa chưa giải</h4>
+    <p>
+      <code>meta.visibleTier</code> (<code>PUBLIC | T1 | T2 | T3</code>) được máy chủ trả về
+      trong <b>mọi</b> phản hồi hồ sơ — và <b>không một dòng giao diện nào đọc nó</b>. Tôi đã
+      soát toàn bộ <code>frontend/src</code>: nó chỉ xuất hiện trong dữ liệu giả lập.
+    </p>
+    <p class="day">Hệ quả: người dùng thấy một trang ngắn và không có cách nào biết đó là “chưa ai ghi” hay “bạn không được xem”. Nguyên tắc 7 của tài liệu 00 — quyền riêng tư phải <em>nhìn thấy được</em> — chưa được thực hiện.</p>
+  </div>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Lối thoát: nói về QUYỀN CỦA BẠN, đừng nói về NỘI DUNG CỦA HỒ SƠ</p>
+  <p>
+    Mọi câu nói về <em>hồ sơ này</em> đều rò rỉ. “Có 3 trường bị ẩn” rò rỉ. “Người này có số điện
+    thoại nhưng bạn không được xem” rò rỉ. Ngay cả việc <b>chỉ hiện khối giải thích khi thật sự
+    có thứ bị giấu</b> cũng rò rỉ — chính sự xuất hiện của khối đó trở thành đèn báo.
+  </p>
+  <p>
+    Nhưng một câu nói về <em>mức xem của bạn</em> thì không rò rỉ gì cả, vì nó chỉ suy ra từ hai
+    thứ người dùng <b>đã biết sẵn</b>: vai của chính họ, và việc người kia còn sống hay đã khuất
+    (điều này hiển thị công khai ngay ở đầu trang). Câu ấy <b>giống hệt nhau</b> trên hồ sơ của
+    một người ghi đầy đủ và một người chưa ghi gì.
+  </p>
+  <p>
+    <b>Luật bắt buộc:</b> khối này hiện trên <b>mọi</b> hồ sơ người còn sống, không có ngoại lệ,
+    không phụ thuộc vào việc có trường nào bị lọc hay không. Nếu một ngày ai đó “tối ưu” nó thành
+    hiện-có-điều-kiện, tính năng này lập tức trở thành công cụ dò dữ liệu.
+  </p>
+</div>
+
+<figure>
+<svg viewBox="0 0 1040 380" role="img" aria-label="Hai biến thể của khối giải thích mức xem">
+  <text class="wf-phu" style="font-weight:700" x="0" y="16">A · Thành viên (T1) xem một người CÒN SỐNG khác chi</text>
+  <rect class="wf-o" x="0" y="28" width="500" height="180" rx="4" style="fill:var(--nen-giay)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="18" y="56">Vì sao trang này ngắn</text>
+  <text class="wf-chu" style="font-size:16px" x="18" y="82">Bạn đang xem ở mức <tspan style="font-weight:700">Thành viên (T1)</tspan>.</text>
+  <text class="wf-chu" style="font-size:16px" x="18" y="104">Với mọi người còn sống, mức này chỉ hiện tên, đời,</text>
+  <text class="wf-chu" style="font-size:16px" x="18" y="126">chi/ngành và quan hệ cha–mẹ–vợ–chồng–con.</text>
+  <text class="wf-chu" style="font-size:16px" x="18" y="148">Năm sinh, nghề nghiệp, nơi ở, liên hệ và ảnh</text>
+  <text class="wf-chu" style="font-size:16px" x="18" y="170">không hiện ở mức này — <tspan style="font-weight:700">với mọi hồ sơ, dù hồ</tspan></text>
+  <text class="wf-chu" style="font-size:16px;font-weight:700" x="18" y="192">sơ đó có ghi hay không.</text>
+
+  <rect class="wf-o" x="0" y="220" width="500" height="60" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram);font-weight:600" x="18" y="256">Tôi cùng chi với người này →</text>
+  <text class="wf-phu" x="0" y="304">Bấm vào mở hướng dẫn xin Trưởng chi ghép tài khoản vào</text>
+  <text class="wf-phu" x="0" y="320">đúng chi/ngành. Không hứa hẹn sẽ thấy thêm gì cụ thể.</text>
+  <text class="wf-phu" x="0" y="344" style="fill:var(--do-loi);font-weight:700">Câu chữ trong khối A là HẰNG SỐ theo (vai × còn sống),</text>
+  <text class="wf-phu" x="0" y="360" style="fill:var(--do-loi);font-weight:700">không bao giờ phụ thuộc vào nội dung hồ sơ đang mở.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="540" y="16">B · Chính chủ xem hồ sơ của mình</text>
+  <rect class="wf-o" x="540" y="28" width="500" height="252" rx="4" style="fill:var(--do-nhat)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="558" y="56">Ai xem được gì về tôi</text>
+  <text class="wf-chu" style="font-size:16px" x="558" y="84">Khách chưa đăng nhập</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="870" y="84">không thấy gì</text>
+  <line class="wf-net" x1="558" y1="96" x2="1022" y2="96"/>
+  <text class="wf-chu" style="font-size:16px" x="558" y="120">Thành viên trong họ</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="870" y="120">tên, đời, chi</text>
+  <line class="wf-net" x1="558" y1="132" x2="1022" y2="132"/>
+  <text class="wf-chu" style="font-size:16px" x="558" y="156">Người cùng chi Nhất</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="870" y="156">+ năm sinh, nghề</text>
+  <line class="wf-net" x1="558" y1="168" x2="1022" y2="168"/>
+  <text class="wf-chu" style="font-size:16px" x="558" y="192">Trưởng chi &amp; Quản trị</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="870" y="192">+ liên hệ</text>
+  <rect class="wf-o" x="558" y="212" width="464" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="576" y="242">Đổi mức chia sẻ của tôi</text>
+  <text class="wf-phu" x="540" y="304">Đây là chỗ BA v2 §10 đòi “chủ thể tự kiểm soát”. Hôm nay ô</text>
+  <text class="wf-phu" x="540" y="320">privacyLevel chỉ nằm trong biểu mẫu sửa nhân khẩu, mà thành</text>
+  <text class="wf-phu" x="540" y="336">viên thường không mở được biểu mẫu đó — nên trên thực tế</text>
+  <text class="wf-phu" x="540" y="352" style="fill:var(--do-loi);font-weight:700">không ai tự chỉnh được mức chia sẻ của chính mình.</text>
+</svg>
+<figcaption>
+  <strong>Khối A</strong> <span class="chip should">Đề xuất</span> nói về quyền của người xem, cố định theo cặp
+  (vai × còn sống). <strong>Khối B</strong> <span class="chip should">Đề xuất</span> chỉ hiện khi
+  <code>meta.isSelf</code> — đây là bảng duy nhất trong sản phẩm được phép nói cụ thể về dữ liệu
+  của một người, vì người đọc chính là chủ thể. <b>Cái giá của khối B:</b> nó cần máy chủ trả về
+  bản xem thử theo từng vai; nếu dựng phía trình duyệt bằng cách lấy dữ liệu đầy đủ rồi che bớt
+  thì chính nó thành lỗ hổng.
+</figcaption>
+</figure>
+
+<h3>2.3 Khung dây — hồ sơ trên điện thoại</h3>
+
+<figure>
+<svg viewBox="0 0 1040 1000" role="img" aria-label="Khung dây hồ sơ nhân khẩu trên điện thoại">
+  <rect class="wf-khung" x="40" y="20" width="390" height="960" rx="10"/>
+
+  <rect class="wf-o" x="40" y="20" width="390" height="56"/>
+  <text class="wf-chu" style="font-size:17px" x="56" y="54">‹ Phả đồ</text>
+
+  <rect class="wf-o" x="52" y="88" width="366" height="150" rx="6" style="fill:var(--nen-the)"/>
+  <rect x="52" y="88" width="366" height="4" style="fill:var(--ho-phach)"/>
+  <circle class="wf-o" cx="92" cy="132" r="26"/>
+  <text class="wf-chu" style="font-size:20px;font-weight:700" x="130" y="128">Nguyễn Văn An</text>
+  <text class="wf-chu" style="font-size:16px" x="130" y="152">阮文安</text>
+  <circle style="fill:var(--xanh)" cx="136" cy="172" r="4"/>
+  <text class="wf-phu" x="146" y="177">Còn sống · Đời thứ 5 · Chi Nhất</text>
+  <rect x="66" y="192" width="86" height="26" rx="3" style="fill:var(--vang-nen)"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:700" x="78" y="210">Đích tôn</text>
+  <rect x="160" y="192" width="104" height="26" rx="3" style="fill:var(--do-nhat)"/>
+  <text class="wf-phu" style="fill:var(--do-tram);font-weight:700" x="172" y="210">Trưởng chi</text>
+
+  <rect class="wf-o" x="52" y="250" width="366" height="120" rx="6"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="66" y="278">Các lớp tên</text>
+  <text class="wf-phu" x="66" y="302">Tên thường gọi</text>
+  <text class="wf-chu" style="font-size:16px" x="210" y="302">Anh</text>
+  <line class="wf-net" x1="66" y1="314" x2="404" y2="314"/>
+  <text class="wf-phu" x="66" y="336">Tên tự</text>
+  <text class="wf-chu" style="font-size:16px" x="210" y="336">Minh Đạo 明道</text>
+  <text class="wf-phu" style="fill:var(--do-loi)" x="66" y="360">— danh sách này ngắn hay dài tuỳ mức xem của bạn —</text>
+
+  <rect class="wf-o" x="52" y="382" width="366" height="242" rx="6" style="stroke:var(--ho-phach);stroke-dasharray:5 3"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="66" y="410">Quan hệ</text>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:700" x="308" y="410">ĐỀ XUẤT</text>
+  <rect class="wf-o" x="66" y="422" width="338" height="46" rx="4"/>
+  <text class="wf-phu" x="78" y="440">Cha</text>
+  <text class="wf-chu" style="font-size:16px" x="78" y="460">Nguyễn Văn Đức · đời 4 · đã khuất</text>
+  <rect class="wf-o" x="66" y="474" width="338" height="46" rx="4"/>
+  <text class="wf-phu" x="78" y="492">Mẹ</text>
+  <text class="wf-chu" style="font-size:16px" x="78" y="512">Trần Thị Lan · đời 4 · đã khuất</text>
+  <rect class="wf-o" x="66" y="526" width="338" height="46" rx="4"/>
+  <text class="wf-phu" x="78" y="544">Vợ · vợ cả</text>
+  <text class="wf-chu" style="font-size:16px" x="78" y="564">Lê Thị Hoa · đời 5 · còn sống</text>
+  <rect class="wf-o" x="66" y="578" width="338" height="34" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="78" y="600">Xem đủ 4 người con ▾</text>
+
+  <rect class="wf-o" x="52" y="636" width="366" height="176" rx="6" style="fill:var(--nen-giay)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="66" y="664">Vì sao trang này ngắn</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="690">Bạn đang xem ở mức Thành viên (T1).</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="712">Với mọi người còn sống, mức này chỉ hiện</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="734">tên, đời, chi/ngành và quan hệ gần.</text>
+  <rect class="wf-o" x="66" y="750" width="338" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram);font-weight:600" x="80" y="780">Tôi cùng chi với người này →</text>
+
+  <rect class="wf-o" x="52" y="826" width="366" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="66" y="856">Xem trên phả đồ</text>
+  <rect class="wf-o" x="52" y="882" width="366" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="66" y="912">Tôi phải gọi người này là gì?</text>
+  <rect class="wf-o" x="52" y="938" width="366" height="48" rx="4" style="fill:var(--do-nhat);stroke:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="66" y="968">Báo sai sót ở hồ sơ này</text>
+
+  <line class="wf-net" x1="418" y1="163" x2="470" y2="163" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="478" y="140" style="font-weight:700">Huy hiệu do máy chủ tính</text>
+  <text class="wf-phu" x="478" y="158">TreeNode.badges. Giao diện KHÔNG BAO GIỜ tự suy ra</text>
+  <text class="wf-phu" x="478" y="174">“đích tôn” từ thứ tự sinh — đó là luật của dòng họ,</text>
+  <text class="wf-phu" x="478" y="190">không phải phép đếm.</text>
+
+  <line class="wf-net" x1="418" y1="500" x2="470" y2="500" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="478" y="478" style="font-weight:700">Mục Quan hệ: chưa có trong sản phẩm</text>
+  <text class="wf-phu" x="478" y="496">Mỗi hàng cao 46 đơn vị, là một liên kết sang hồ sơ</text>
+  <text class="wf-phu" x="478" y="512">người đó. Nhãn ở đây là quan hệ CẤU TRÚC (cha/mẹ/vợ/</text>
+  <text class="wf-phu" x="478" y="528">con), KHÔNG phải danh xưng — danh xưng phụ thuộc</text>
+  <text class="wf-phu" x="478" y="544">vào NGƯỜI ĐANG XEM và phải hỏi bộ luật ở §3.</text>
+
+  <line class="wf-net" x1="418" y1="720" x2="470" y2="720" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="478" y="698" style="font-weight:700">Khối mức xem đặt ở CUỐI, không phải đầu</text>
+  <text class="wf-phu" x="478" y="716">Đặt trên đầu thì mọi hồ sơ người sống mở ra bằng một</text>
+  <text class="wf-phu" x="478" y="732">lời cảnh báo — biến quyền riêng tư thành phiền toái.</text>
+  <text class="wf-phu" x="478" y="748">Đặt cuối thì nó trả lời đúng lúc câu hỏi vừa nảy ra:</text>
+  <text class="wf-phu" x="478" y="764">“sao có bấy nhiêu thôi?”.</text>
+
+  <line class="wf-net" x1="418" y1="906" x2="470" y2="906" stroke-dasharray="4 3"/>
+  <text class="wf-phu" x="478" y="884" style="font-weight:700">Nhãn viết bằng câu hỏi, không bằng tên tính năng</text>
+  <text class="wf-phu" x="478" y="902">“Tôi phải gọi người này là gì?” — người dâu mới về</text>
+  <text class="wf-phu" x="478" y="918">không biết cụm từ “tra cứu danh xưng” nghĩa là gì,</text>
+  <text class="wf-phu" x="478" y="934">nhưng biết chính xác mình đang thiếu điều gì.</text>
+  <text class="wf-phu" x="478" y="958">Nút dưới cùng là cửa vào luồng §5 và phải hiện với</text>
+  <text class="wf-phu" x="478" y="974">MỌI thành viên đăng nhập, kể cả người không có quyền</text>
+  <text class="wf-phu" x="478" y="990">sửa. Hôm nay không có nút nào ở đây cả.</text>
+</svg>
+<figcaption>
+  <strong>Hồ sơ trên điện thoại.</strong> Thứ tự có chủ ý: nhận diện → tên → quan hệ → mức xem →
+  hành động. Người dùng đọc xong phần có nội dung rồi mới gặp lời giải thích vì sao hết nội dung.
+  Trên màn lớn bố cục này giữ nguyên thứ tự, chỉ chuyển thành hai cột — sự khác biệt giữa hai
+  thiết bị ở luồng này là <b>bề rộng, không phải cấu trúc</b>, nên tài liệu không vẽ lại bản
+  máy tính.
+</figcaption>
+</figure>
+
+<h3>2.4 Chỗ dễ hỏng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ hỏng</th><th>Vì sao</th><th>Cách chữa và cái giá</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Không có mục Quan hệ</b> <span class="chip must">Đang gãy</span></td>
+      <td><code>person-profile.tsx</code> dựng 5 mục, không mục nào là quan hệ, dù dữ liệu có sẵn trong <code>PersonDto.relationships</code>.</td>
+      <td>Dựng mục Quan hệ. <b>Giá:</b> tên người liên quan cũng phải qua lọc riêng tư, và <b>khoảng trống trong danh sách con là một kênh rò rỉ</b>. Cách an toàn: máy chủ trả danh sách quan hệ <em>đã lọc</em>; giao diện đếm đúng những gì nhận được, không bao giờ hiện “4 người con” rồi liệt kê 2.</td>
+    </tr>
+    <tr>
+      <td><b>Hồ sơ dâu/rể là trang trống nhất sản phẩm</b> <span class="chip must">Đang gãy</span></td>
+      <td>Người dâu thường chỉ có tên + huy hiệu “Dâu”. Không mục quan hệ nghĩa là không thấy cả chồng mình. Nút “Xem trên phả đồ” lại dẫn tới cây cụt (§1.6).</td>
+      <td>Mục Quan hệ giải quyết phần lớn: chồng, con, cha mẹ chồng đều hiện ra. <b>Giá:</b> phải quyết định hiển thị quan hệ <em>qua hôn nhân</em> tới bao xa — hiện tới cha mẹ chồng thì hữu ích, hiện tới cả họ nhà chồng thì thành một cây thứ hai.</td>
+    </tr>
+    <tr>
+      <td><b>Không ai biết mình ở tầng nào</b> <span class="chip must">Đang gãy</span></td>
+      <td><code>meta.visibleTier</code> không được dùng ở bất kỳ đâu trong giao diện.</td>
+      <td>Khối A ở §2.2. <b>Giá:</b> thêm chữ trên mọi hồ sơ người sống; câu chữ phải được Hội đồng duyệt vì nó là lời hứa pháp lý (Nghị định 13/2023).</td>
+    </tr>
+    <tr>
+      <td><b>Chính chủ không tự chỉnh được mức chia sẻ</b> <span class="chip must">Đang gãy</span></td>
+      <td><code>privacyLevel</code> chỉ có trong biểu mẫu sửa; <code>/settings</code> chỉ có cài đặt thông báo.</td>
+      <td>Khối B vào hồ sơ của chính mình và vào <code>/settings</code>. <b>Giá:</b> phải đặt tên bốn mức (<code>DEFAULT · BRANCH_OPT_IN · CLAN_OPT_IN · RESTRICTED</code>) bằng tiếng của dòng họ, không bằng tên hằng số.</td>
+    </tr>
+    <tr>
+      <td><b>404 là ngõ cụt</b></td>
+      <td>Hồ sơ người sống bị ẩn trả <code>404</code> chứ không <code>403</code> — <b>cố ý</b>, để hai trường hợp không phân biệt được. Nhưng màn hình 404 không có lối đi tiếp.</td>
+      <td>Thêm “Về phả đồ” và “Tìm người khác”. <b>Tuyệt đối không</b> thêm gợi ý “có thể bạn không đủ quyền” — câu đó xoá sạch lý do tồn tại của cái 404.</td>
+    </tr>
+    <tr>
+      <td><b>Nút Sửa biến mất trong ngăn</b></td>
+      <td><code>compact</code> tắt nút sửa để đổi trang không làm mất canvas — hợp lý, nhưng Trưởng chi mở hồ sơ từ phả đồ sẽ không thấy đường sửa và tưởng mình mất quyền.</td>
+      <td>Giữ nút, mở biểu mẫu trong ngăn thứ hai chồng lên. <b>Giá:</b> hai ngăn chồng nhau trên điện thoại là mô hình khó, dễ lạc; hoặc chấp nhận rời canvas rồi quay lại đúng chỗ nhờ lưu <code>rootId</code> + khung nhìn.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>2.5 Trạng thái rỗng · đang tải · lỗi</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Màn hình</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Đang tải</td><td>Khung xương: một khối đại diện + hai đoạn văn</td><td><span class="chip xong">Đã dựng</span> Đúng hình dạng trang thật nên không nhảy bố cục.</td></tr>
+    <tr><td>Hồ sơ hầu như trống</td><td>Chỉ có khối nhận diện + khối mức xem</td><td><b>Đây là trạng thái bình thường</b>, không phải trạng thái rỗng. Không được hiện chữ “chưa có dữ liệu”.</td></tr>
+    <tr><td>Không tìm thấy / bị ẩn</td><td>Ô rỗng “Không tìm thấy nhân khẩu”</td><td><span class="chip xong">Đã dựng</span> Giống hệt nhau cho hai nguyên nhân. Thiếu lối ra.</td></tr>
+    <tr><td>Lỗi khác</td><td>Dải đỏ “Không tải được hồ sơ”</td><td><span class="chip xong">Đã dựng</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="danh-xung">3. Tra danh xưng</h2>
+
+<p>
+  <span class="chip xong">Đã dựng</span>
+  <code>frontend/src/app/[locale]/kinship/page.tsx</code> ·
+  <code>frontend/src/components/kinship/</code> ·
+  <code>frontend/src/hooks/use-kinship.ts</code>
+  &nbsp;·&nbsp;
+  <span class="chip must">Đang gãy</span> lối vào và giá trị mặc định của ô “từ”.
+</p>
+
+<div class="khoi">
+  <p class="nhan">Ràng buộc gốc của luồng này</p>
+  <p>
+    <a href="../00-dinh-huong.html">Tài liệu 00 §1b</a> chốt: <b>tra danh xưng phải độc lập với
+    phả đồ</b>. Cây là cấu trúc <em>huyết thống</em>; danh xưng là quan hệ <em>xã hội</em>. Buộc
+    danh xưng vào cây là loại bỏ đúng nhóm cần nó nhất — người dâu, người rể, con nuôi, người
+    nhập họ qua kế tự.
+  </p>
+  <p>
+    Cùng tài liệu ghi quy mô: bộ luật có <b>157 luật</b>, trong đó <b>30 luật nhóm J6</b> được
+    Hội đồng duyệt riêng cho chiều dâu/rể. (Tôi kiểm chứng được rằng nhóm mã <code>J6</code> có
+    thật trong <code>backend/src/main/resources/db/migration/R__seed_kinship_rules_default.sql</code>;
+    hai con số 157 và 30 tôi lấy nguyên từ tài liệu 00, <b>không tự đếm lại</b> vì tệp seed dùng
+    nhiều khối <code>VALUES</code> nên phép đếm cơ học cho ra số khác.)
+  </p>
+</div>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chiều</th><th>Nội dung</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ai</b></td><td><b>Ca chính: người con dâu / con rể mới về.</b> Kế đó là người trẻ trong họ. Hội đồng Tộc biểu dùng cùng màn hình này nhưng để <em>soát luật</em>, không phải để tra.</td></tr>
+    <tr><td><b>Thiết bị</b></td><td>Điện thoại, thường là <b>đang đứng giữa một đám giỗ</b> và cần câu trả lời trong mười giây. Đây là ràng buộc thiết kế mạnh nhất của luồng.</td></tr>
+    <tr><td><b>Điểm vào</b></td><td>Mục “Danh xưng” trên thanh điều hướng · nút “Tôi phải gọi người này là gì?” trên hồ sơ · liên kết chia sẻ <code>?from=&amp;to=</code>. <b>Không có lối vào nào bắt buộc đi qua cây.</b></td></tr>
+    <tr><td><b>Điểm ra</b></td><td>Kết quả (đọc và đóng) · lưu vào sổ tay · mở hồ sơ người kia · báo cho Hội đồng khi bộ luật chưa phủ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3.1 Đưa bài toán từ hai ẩn xuống một ẩn</h3>
+
+<p>
+  Màn hình hiện tại có <b>hai ô trống</b>: “Người xưng hô (tôi là…)” và “Người được gọi”. Với
+  người dâu mới về, đó là hai câu hỏi khó chứ không phải một — cô chưa chắc tìm ra <em>chính
+  mình</em> trong danh sách, vì hồ sơ của cô mới lập, tên có thể ghi khác cách cô tự gọi, và cô
+  không biết mình được xếp vào chi nào.
+</p>
+
+<div class="khoi chot">
+  <p class="nhan">Quyết định</p>
+  <p>
+    Ô “tôi là…” <b>khoá sẵn theo tài khoản đang đăng nhập</b>. Người dùng chỉ còn một việc: gõ
+    tên người kia. Đây là đường <b>duy nhất chạy được ngay hôm nay mà không cần backend đổi</b> —
+    ghép <code>keycloak_sub → app_user → person</code> đã có trong thiết kế
+    <code>membership</code>.
+  </p>
+  <p>
+    <b>Cái giá:</b> tài khoản chưa được ghép với nhân khẩu nào thì ô này trống, và luồng lại về
+    hai ẩn. Trường hợp đó <b>đã tồn tại thật</b> — trung tâm thông báo có sẵn mã lỗi
+    <code>ACCOUNT_NOT_LINKED</code> và một lời hướng dẫn. Màn hình danh xưng phải dùng
+    <b>đúng câu chữ đó</b>, không viết lại lần hai bằng lời khác.
+  </p>
+  <p>
+    <b>Chỗ có thể sai:</b> khoá ô “tôi” làm hỏng ca <em>Hội đồng soát luật</em> — họ cần tra hộ
+    hai người khác. Nên nút “Đổi người xưng hô” phải luôn nhìn thấy, không giấu sau biểu tượng
+    bút chì.
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗi ngược chiều đang có trong mã</p>
+  <p>
+    <code>person-profile.tsx</code> nối sang danh xưng bằng
+    <code>/kinship?from=${person.id}</code> — tức là đặt <b>người đang được xem</b> vào ô
+    “<em>tôi là…</em>”. Mở từ hồ sơ bác Đức, sản phẩm đang hỏi người dùng: “bác Đức gọi ai là
+    gì?”. Đó là ngược đúng 180° so với câu hỏi mà người dùng vừa nghĩ trong đầu.
+    <b>Phải đổi thành <code>?to=${person.id}</code></b>, còn <code>from</code> lấy từ tài khoản.
+  </p>
+</div>
+
+<h3>3.2 Khung dây — ca con dâu tra họ nhà chồng, điện thoại</h3>
+
+<figure>
+<svg viewBox="0 0 1040 980" role="img" aria-label="Khung dây tra danh xưng cho người con dâu trên điện thoại">
+  <rect class="wf-khung" x="40" y="20" width="390" height="940" rx="10"/>
+
+  <rect class="wf-o" x="40" y="20" width="390" height="56"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="56" y="54">Danh xưng</text>
+
+  <!-- ô TÔI, khoá sẵn -->
+  <rect class="wf-o" x="52" y="88" width="366" height="72" rx="6" style="fill:var(--nen-giay)"/>
+  <text class="wf-phu" x="66" y="110">Tôi là</text>
+  <text class="wf-chu" style="font-size:18px;font-weight:600" x="66" y="136">Trần Thị Lan</text>
+  <text class="wf-phu" x="66" y="152">Dâu · chi Nhất · tài khoản của bạn</text>
+  <rect class="wf-o" x="300" y="104" width="104" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:15px" x="312" y="132">Đổi người</text>
+
+  <!-- ô NGƯỜI KIA -->
+  <text class="wf-phu" x="52" y="188">Tôi phải gọi người này là gì?</text>
+  <rect class="wf-o" x="52" y="196" width="366" height="52" rx="6"/>
+  <text class="wf-chu" style="font-size:17px" x="66" y="228">Nguyễn Văn Đức</text>
+  <text class="wf-phu" x="330" y="228">✕</text>
+  <rect x="318" y="200" width="44" height="44" style="fill:none;stroke:var(--ho-phach);stroke-dasharray:3 3"/>
+
+  <!-- KẾT QUẢ -->
+  <rect class="wf-o" x="52" y="264" width="366" height="150" rx="6" style="fill:var(--do-nhat);stroke:var(--do-tram)"/>
+  <rect x="52" y="264" width="366" height="4" style="fill:var(--do-tram)"/>
+  <text class="wf-phu" x="66" y="292">Trần Thị Lan gọi Nguyễn Văn Đức là</text>
+  <text class="wf-chu" style="font-size:40px;font-weight:700;fill:var(--do-tram);font-family:var(--f-hien)" x="66" y="344">Bác</text>
+  <text class="wf-chu" style="font-size:17px" x="66" y="376">và xưng là <tspan style="font-weight:700;font-size:20px;fill:var(--do-sau)">cháu</tspan></text>
+  <text class="wf-phu" x="66" y="400">Elder paternal uncle (by marriage)</text>
+
+  <!-- VÌ SAO — khối quan trọng nhất -->
+  <rect class="wf-o" x="52" y="430" width="366" height="200" rx="6"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="66" y="458">Vì sao gọi thế</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="484">Bạn là <tspan style="font-weight:700">dâu</tspan> của dòng họ. Quan hệ này đi</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="506">qua <tspan style="font-weight:700">chồng bạn — Nguyễn Văn An</tspan>.</text>
+  <line class="wf-net" x1="66" y1="518" x2="404" y2="518"/>
+  <text class="wf-chu" style="font-size:16px" x="66" y="542">Anh An và ông Đức chung tổ là</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:700" x="66" y="564">cụ Nguyễn Văn Trọng (đời 3).</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="586">Ông Đức <tspan style="font-weight:700">trên anh An một đời</tspan> và là</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="608">anh của cha anh An → <tspan style="font-weight:700">bác ruột</tspan>.</text>
+
+  <!-- ĐƯỜNG QUAN HỆ -->
+  <rect class="wf-o" x="52" y="646" width="366" height="230" rx="6"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="66" y="674">Đường quan hệ</text>
+
+  <circle class="wf-o" cx="86" cy="702" r="13"/>
+  <text class="wf-phu" x="82" y="707">•</text>
+  <text class="wf-chu" style="font-size:16px" x="110" y="700">Trần Thị Lan</text>
+  <text class="wf-phu" x="110" y="716">điểm xuất phát</text>
+  <line class="wf-net" x1="86" y1="715" x2="86" y2="737"/>
+
+  <circle cx="86" cy="750" r="13" style="fill:var(--ho-phach)"/>
+  <text class="wf-chu" style="font-size:13px;fill:#fff;font-weight:700" x="81" y="755">↔</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:600" x="110" y="748">Nguyễn Văn An</text>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:700" x="110" y="764">sang ngang qua hôn nhân — CHỒNG BẠN</text>
+  <line class="wf-net" x1="86" y1="763" x2="86" y2="785"/>
+
+  <circle class="wf-o" cx="86" cy="798" r="13"/>
+  <text class="wf-phu" x="82" y="803">↑</text>
+  <text class="wf-chu" style="font-size:16px" x="110" y="796">Nguyễn Văn Bình · đời 4</text>
+  <text class="wf-phu" x="110" y="812">lên một đời</text>
+  <line class="wf-net" x1="86" y1="811" x2="86" y2="833"/>
+
+  <circle cx="86" cy="846" r="13" style="fill:var(--do-tram)"/>
+  <text class="wf-phu" style="fill:#fff" x="82" y="851">↑</text>
+  <text class="wf-chu" style="font-size:16px" x="110" y="844">Nguyễn Văn Trọng · đời 3</text>
+  <text class="wf-phu" style="fill:var(--do-tram);font-weight:700" x="110" y="860">TỔ CHUNG</text>
+
+  <!-- hành động -->
+  <rect class="wf-o" x="52" y="894" width="178" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="64" y="924">Lưu vào sổ tay</text>
+  <rect class="wf-o" x="240" y="894" width="178" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="252" y="924">Xem hồ sơ ông</text>
+
+  <!-- chú thích -->
+  <text class="wf-phu" x="478" y="114" style="font-weight:700">Một ẩn, không phải hai</text>
+  <text class="wf-phu" x="478" y="132">Ô “Tôi là” khoá theo tài khoản. Người dâu không</text>
+  <text class="wf-phu" x="478" y="148">phải tự tìm mình trong danh sách — việc mà cô</text>
+  <text class="wf-phu" x="478" y="164">thường làm không nổi vì hồ sơ mình mới lập.</text>
+  <line class="wf-net" x1="418" y1="124" x2="470" y2="124" stroke-dasharray="4 3"/>
+
+  <text class="wf-phu" x="478" y="300" style="font-weight:700">Danh xưng luôn là tiếng Việt</text>
+  <text class="wf-phu" x="478" y="318">Kể cả trong giao diện tiếng Anh. Dòng gloss tiếng</text>
+  <text class="wf-phu" x="478" y="334">Anh đặt bên dưới, cỡ nhỏ, và KHÔNG BAO GIỜ thay</text>
+  <text class="wf-phu" x="478" y="350">chỗ chữ “Bác” — “uncle” xoá mất phân biệt chú/bác/cậu.</text>
+  <line class="wf-net" x1="418" y1="330" x2="470" y2="330" stroke-dasharray="4 3"/>
+
+  <text class="wf-phu" x="478" y="470" style="font-weight:700;fill:var(--do-tram)">KHỐI QUAN TRỌNG NHẤT CỦA CẢ LUỒNG</text>
+  <text class="wf-phu" x="478" y="488">Người dâu đang HỌC, không chỉ tra. Một chữ “Bác”</text>
+  <text class="wf-phu" x="478" y="504">ném ra trần trụi giúp cô đúng một lần; câu giải</text>
+  <text class="wf-phu" x="478" y="520">thích “qua ai, cách mấy đời” giúp cô suy ra được</text>
+  <text class="wf-phu" x="478" y="536">cả một nhánh họ nhà chồng.</text>
+  <text class="wf-phu" x="478" y="560">Ba câu, theo đúng thứ tự người ta nghĩ: (1) tôi là</text>
+  <text class="wf-phu" x="478" y="576">dâu, đi qua ai — (2) hai người trong họ chung tổ</text>
+  <text class="wf-phu" x="478" y="592">nào — (3) chênh mấy đời, vai trên hay vai dưới.</text>
+  <line class="wf-net" x1="418" y1="530" x2="470" y2="530" stroke-dasharray="4 3"/>
+
+  <text class="wf-phu" x="478" y="740" style="font-weight:700">Nấc “sang ngang” được tô nổi</text>
+  <text class="wf-phu" x="478" y="758">Đây là nấc duy nhất khiến cô có mặt trong bức</text>
+  <text class="wf-phu" x="478" y="774">tranh. Bốn nấc còn lại là huyết thống. Nấc này</text>
+  <text class="wf-phu" x="478" y="790">phải nhìn ra ngay — nó là câu trả lời cho “tôi</text>
+  <text class="wf-phu" x="478" y="806">liên quan gì tới những người này”.</text>
+  <text class="wf-phu" x="478" y="830" style="fill:var(--do-loi)">Nấc nào là người còn sống bị ẩn thì máy chủ trả về</text>
+  <text class="wf-phu" x="478" y="846" style="fill:var(--do-loi)">nhãn chung — nhưng NẤC VẪN CÒN. Bỏ nấc đi là nói</text>
+  <text class="wf-phu" x="478" y="862" style="fill:var(--do-loi)">sai khoảng cách đời.</text>
+  <line class="wf-net" x1="418" y1="760" x2="470" y2="760" stroke-dasharray="4 3"/>
+</svg>
+<figcaption>
+  <strong>Ca con dâu.</strong> Bốn khối theo thứ tự: <em>tôi là ai</em> (khoá sẵn) → <em>hỏi ai</em>
+  → <em>câu trả lời</em> → <em>vì sao</em>. Khối “Vì sao gọi thế” là khối mà tài liệu này coi là
+  bắt buộc: nó biến một lần tra thành một lần học. <b>Cái giá:</b> nó dài, đẩy “Đường quan hệ”
+  xuống dưới màn hình đầu tiên; đổi lại, cái thang đường quan hệ vốn là <em>bằng chứng</em> chứ
+  không phải <em>lời giải thích</em>, nên nằm dưới là đúng chỗ.
+</figcaption>
+</figure>
+
+<h3>3.3 Câu “vì sao” được dựng từ đâu</h3>
+
+<p>
+  Tuyệt đối không suy quan hệ ở phía trình duyệt. Ba câu trong khối “Vì sao gọi thế” chỉ là
+  <b>phép ghép chữ từ những trường máy chủ đã trả về</b>:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Câu</th><th>Lấy từ trường nào</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>“Bạn là <b>dâu</b>… đi qua <b>chồng bạn — Nguyễn Văn An</b>”</td>
+      <td><code>facts.side = IN_LAW</code> · <code>facts.throughMarriage = true</code> · nấc <code>direction = "ACROSS"</code> trong <code>path</code> (tên người ở nấc đó)</td>
+      <td>Tên người ở nấc ACROSS chính là bạn đời. Không tự đoán từ danh sách quan hệ.</td>
+    </tr>
+    <tr>
+      <td>“chung tổ là <b>cụ … (đời 3)</b>”</td>
+      <td><code>lca.displayName</code> · <code>lca.generation</code></td>
+      <td>Nếu tổ chung là người sống bị ẩn, máy chủ trả nhãn chung — câu văn vẫn chạy, chỉ mất tên.</td>
+    </tr>
+    <tr>
+      <td>“<b>trên … một đời</b>, và là <b>anh</b> của cha → <b>bác ruột</b>”</td>
+      <td><code>facts.genDelta</code> · <code>facts.isElder</code> · <code>facts.collateralDegree</code></td>
+      <td><code>collateralDegree</code> là thứ duy nhất phân biệt <b>bác ruột</b> với <b>bác họ</b>. Đây là chỗ cụ cao tuổi soi để bắt lỗi.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Một đề xuất đổi hợp đồng, kèm cái giá</p>
+  <p>
+    <code>KinshipRuleDto</code> có trường <code>note</code> — lời chú của chính luật, do Hội đồng
+    viết. Nhưng <code>KinshipResult</code> chỉ trả <code>ruleId</code>, <b>không trả</b>
+    <code>note</code>. Nghĩa là câu “vì sao” hiện phải do người viết giao diện đặt lời, trong khi
+    người có thẩm quyền đặt lời là Hội đồng.
+  </p>
+  <p>
+    <b>Đề xuất:</b> thêm <code>ruleNote</code> vào <code>KinshipResult</code>; giao diện in
+    nguyên văn khi có, và rơi về ba câu ghép ở trên khi không.
+    <b>Giá:</b> đổi hợp đồng thì phải báo cả hai bên và Hội đồng phải soạn lời cho tới 157 luật —
+    một khối lượng biên tập thật, không phải một dòng mã. <b>Chỗ có thể sai:</b> lời chú của luật
+    viết cho người soạn luật đọc, không chắc đọc lọt tai người dâu 28 tuổi; phải có người biên
+    tập lại, nếu không thì thêm trường mà chất lượng còn kém câu ghép máy.
+  </p>
+</div>
+
+<h3>3.4 Khung dây — bản máy tính, ca Hội đồng soát luật</h3>
+
+<figure>
+<svg viewBox="0 0 1280 470" role="img" aria-label="Khung dây tra danh xưng trên màn hình lớn">
+  <rect class="wf-khung" x="0" y="0" width="1280" height="470"/>
+  <rect class="wf-o" x="0" y="0" width="1280" height="64"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="20" y="40">Tra cứu danh xưng</text>
+
+  <rect class="wf-o" x="24" y="88" width="470" height="80" rx="6"/>
+  <text class="wf-phu" x="40" y="112">Người xưng hô (tôi là…)</text>
+  <text class="wf-chu" style="font-size:17px" x="40" y="142">Trần Thị Lan</text>
+  <rect class="wf-o" x="518" y="106" width="44" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="534" y="134">⇄</text>
+  <rect class="wf-o" x="586" y="88" width="470" height="80" rx="6"/>
+  <text class="wf-phu" x="602" y="112">Người được gọi</text>
+  <text class="wf-chu" style="font-size:17px" x="602" y="142">Nguyễn Văn Đức</text>
+
+  <rect class="wf-o" x="24" y="188" width="620" height="150" rx="6" style="fill:var(--do-nhat);stroke:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:44px;font-weight:700;fill:var(--do-tram);font-family:var(--f-hien)" x="44" y="252">Bác</text>
+  <text class="wf-chu" style="font-size:17px" x="44" y="286">và xưng là <tspan style="font-weight:700;font-size:20px">cháu</tspan></text>
+  <text class="wf-phu" x="44" y="312">Elder paternal uncle (by marriage)</text>
+
+  <rect class="wf-o" x="664" y="188" width="592" height="150" rx="6"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="684" y="216">Dữ kiện máy chủ đã dùng</text>
+  <text class="wf-phu" x="684" y="242">Chênh lệch đời</text>
+  <text class="wf-chu" style="font-size:16px" x="684" y="262">Trên 1 đời</text>
+  <text class="wf-phu" x="880" y="242">Bên</text>
+  <text class="wf-chu" style="font-size:16px" x="880" y="262">Bên thông gia</text>
+  <text class="wf-phu" x="1064" y="242">Bậc bàng hệ</text>
+  <text class="wf-chu" style="font-size:16px" x="1064" y="262">Ruột</text>
+  <text class="wf-phu" x="684" y="292">Vai vế cùng đời</text>
+  <text class="wf-chu" style="font-size:16px" x="684" y="312">Vai trên</text>
+  <text class="wf-phu" x="880" y="292">Đi qua</text>
+  <text class="wf-chu" style="font-size:16px" x="880" y="312">Hôn nhân</text>
+  <text class="wf-phu" x="1064" y="292">Bộ luật áp dụng</text>
+  <text class="wf-chu" style="font-size:16px;font-weight:700" x="1064" y="312">Riêng dòng họ</text>
+
+  <rect class="wf-o" x="24" y="360" width="1232" height="86" rx="6" style="fill:var(--vang-nen);stroke:var(--ho-phach)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--ho-phach)" x="44" y="388">Dành cho Hội đồng Tộc biểu</text>
+  <text class="wf-chu" style="font-size:16px" x="44" y="414">Danh xưng này do luật <tspan style="font-family:var(--f-may);font-size:15px">J6-14</tspan> của bộ luật riêng dòng họ quyết định.</text>
+  <rect class="wf-o" x="920" y="378" width="150" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="936" y="408">Xem luật</text>
+  <rect class="wf-o" x="1086" y="378" width="150" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="1102" y="408">Báo sai lệ</text>
+</svg>
+<figcaption>
+  <strong>Bản máy tính.</strong> Cùng dữ liệu, khác trọng tâm: câu “vì sao” dành cho người học
+  thu về một khối bên trái, còn <em>dữ kiện thô</em> — chênh lệch đời, bên, bậc bàng hệ, bộ luật
+  áp dụng — bày ra thành lưới để người có thẩm quyền soi. Dải hổ phách dưới cùng
+  <span class="chip should">Đề xuất</span> chỉ hiện với vai Hội đồng / Tộc trưởng: nó nêu đích
+  danh mã luật đã quyết, biến “tôi thấy nó gọi sai” thành “sửa luật <code>J6-14</code>”.
+  <b>Giá:</b> lộ mã luật ra giao diện là ràng buộc thêm cho backend (phải giữ mã ổn định) và là
+  một chi tiết kỹ thuật lọt vào màn hình của người không kỹ thuật — nên nó bị giới hạn theo vai,
+  chứ không hiện cho mọi người.
+</figcaption>
+</figure>
+
+<h3>3.5 Chỗ dễ hỏng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ hỏng</th><th>Vì sao</th><th>Cách chữa và cái giá</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Không có lối vào trên điện thoại</b> <span class="chip must">Đang gãy</span></td>
+      <td>Thanh điều hướng dưới cùng (<code>mobile-nav.tsx</code>) có 5 mục: Trang chủ · Phả đồ · Tìm · Giỗ · Thông báo. <b>Không có Danh xưng.</b> Trên máy tính thì có (<code>header.tsx</code>). Người dùng chính của tính năng này dùng điện thoại.</td>
+      <td>Thay một mục. <b>Giá:</b> năm mục đã kín; ứng viên bỏ là “Trang chủ” (trùng với logo) — nhưng bỏ Trang chủ là bỏ lối về quen thuộc của người ít dùng ứng dụng. Đây là một đánh đổi thật, cần Hội đồng chọn.</td>
+    </tr>
+    <tr>
+      <td><b>Liên kết từ hồ sơ đặt ngược vai</b> <span class="chip must">Đang gãy</span></td>
+      <td><code>?from=${person.id}</code> — xem §3.1.</td>
+      <td>Đổi thành <code>?to=</code> và lấy <code>from</code> từ tài khoản. <b>Giá:</b> gần bằng không, nhưng phải xử lý ca tài khoản chưa ghép.</td>
+    </tr>
+    <tr>
+      <td><b>Tài khoản chưa ghép nhân khẩu</b></td>
+      <td>Không có <code>from</code> mặc định. Luồng về lại hai ẩn, đúng lúc người dùng mới nhất cần nó nhất.</td>
+      <td>Dùng nguyên câu của <code>ACCOUNT_NOT_LINKED</code>: “xin liên hệ Hội đồng hoặc Trưởng chi để ghép tài khoản”. <b>Giá:</b> trải nghiệm đầu tiên của người mới là một lời từ chối — nên phải kèm nút liên hệ thật, không chỉ một câu.</td>
+    </tr>
+    <tr>
+      <td><b>“Chưa có luật” đọc như lỗi</b></td>
+      <td><code>NO_MATCHING_RULE</code> hiện dải hổ phách. Đúng tông, nhưng với người dâu thì kết quả vẫn là <em>không có câu trả lời</em> vào đúng lúc cô cần.</td>
+      <td>Kèm nút “Báo Hội đồng bổ sung luật” gửi thẳng dữ kiện đang hiển thị. <b>Giá:</b> mở thêm một hàng đợi phải có người trực; hàng đợi không ai xử lý còn tệ hơn không có.</td>
+    </tr>
+    <tr>
+      <td><b>Không có tổ chung là câu trả lời hợp lệ</b></td>
+      <td><code>NO_COMMON_ANCESTOR</code> đúng với người rể chưa được nối, và cũng đúng với dữ liệu còn thiếu. Hai thứ khác hẳn nhau nhưng nhìn giống nhau.</td>
+      <td>Giữ nguyên chữ (không đoán hộ máy chủ), thêm lối “Báo thiếu quan hệ” dẫn sang §5. <b>Giá:</b> không.</td>
+    </tr>
+    <tr>
+      <td><b>Ô chọn người là <code>&lt;Select&gt;</code> tìm kiếm</b></td>
+      <td>Danh sách bung ra là một lớp phủ; trên điện thoại nó che cả màn. Người ít dùng ứng dụng dễ mất phương hướng khi bàn phím + lớp phủ cùng bật.</td>
+      <td>Trên điện thoại chuyển thành <b>trang chọn người toàn màn hình</b> có nút “Xong”. <b>Giá:</b> thêm một bước điều hướng cho người thạo.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3.6 Trạng thái rỗng · đang tải · lỗi</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Màn hình</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Chưa chọn đủ hai người</td><td>Ô rỗng “Chọn đủ hai người để xem danh xưng”</td><td><span class="chip xong">Đã dựng</span> Với ô “tôi” khoá sẵn thì trạng thái này gần như biến mất — đó chính là mục đích.</td></tr>
+    <tr><td>Đang tra</td><td>Khung xương ba dòng ngay chỗ kết quả sẽ hiện</td><td><span class="chip xong">Đã dựng</span></td></tr>
+    <tr><td>Hai ô cùng một người</td><td>Dải xanh thông tin “Hai ô đang chọn cùng một người”</td><td><span class="chip xong">Đã dựng</span> Là <b>câu trả lời</b>, không phải lỗi.</td></tr>
+    <tr><td>Không có tổ chung</td><td>Dải xanh thông tin, kèm lời giải thích có thể do quan hệ qua bên ngoại/hôn nhân chưa ghi</td><td><span class="chip xong">Đã dựng</span></td></tr>
+    <tr><td>Chưa có luật phủ</td><td>Dải hổ phách + <b>vẫn giữ dữ kiện và đường quan hệ trên màn hình</b></td><td><span class="chip xong">Đã dựng</span> Quyết định tốt: đó đúng là thứ Hội đồng cần để viết luật còn thiếu.</td></tr>
+    <tr><td>Một trong hai người không thấy</td><td>Dải xanh “Không tìm thấy một trong hai người”</td><td><span class="chip xong">Đã dựng</span> Cũng là câu trả lời cho ca người sống bị ẩn — không được nói rõ ai và vì sao.</td></tr>
+    <tr><td>Lỗi mạng</td><td>Dải đỏ “Không tra được danh xưng”</td><td><span class="chip xong">Đã dựng</span> Đây là ca <em>duy nhất</em> trong luồng này được dùng màu đỏ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="bieu-mau">4. Thêm / sửa nhân khẩu</h2>
+
+<p>
+  <span class="chip xong">Đã dựng</span>
+  <code>frontend/src/components/person-form/</code> ·
+  <code>frontend/src/hooks/use-person-submit.ts</code> ·
+  <code>person-form-schema.ts</code>
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chiều</th><th>Nội dung</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ai</b></td><td><b>Trưởng chi 45–60</b>, trong phạm vi chi mình. Hội đồng / Tộc trưởng cho cả họ. Thành viên thường <b>không vào được luồng này</b> — họ đi §5.</td></tr>
+    <tr><td><b>Thiết bị</b></td><td>Máy tính bảng hoặc màn lớn, ngồi yên, thường có quyển gia phả giấy mở bên cạnh. <b>Không</b> phải luồng cho điện thoại một tay, dù vẫn phải chạy được.</td></tr>
+    <tr><td><b>Điểm vào</b></td><td>Nút “Sửa” trên hồ sơ (chỉ hiện khi <code>meta.canEdit</code>) · “Thêm người vào phả” từ trang chi.</td></tr>
+    <tr><td><b>Điểm ra</b></td><td>Lưu xong → về hồ sơ vừa sửa. Huỷ → quay lại. Hoặc rơi vào một trong hai hộp thoại chặn.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>4.1 Hình dạng biểu mẫu</h3>
+
+<p>
+  Bảy mục, một trang dài, nút lưu dính đáy: <b>Các lớp tên</b> · <b>Nhận dạng</b> (giới, còn
+  sống/đã khuất) · <b>Ngày tháng</b> (song lịch) · <b>Quê quán &amp; nơi ở</b> · <b>Liên hệ</b>
+  (kèm mức chia sẻ) · <b>Tiểu sử</b> · <b>Ghi chú</b>; khi thêm mới có thêm mục <b>Nối quan
+  hệ</b>.
+</p>
+
+<div class="khoi">
+  <p class="nhan">Ba quyết định đã có trong mã, đáng giữ</p>
+  <ul>
+    <li><b>Ngày âm và ngày dương nhập tách rời, không suy ra nhau.</b> Quy đổi là việc của máy
+      chủ (thuật toán Hồ Ngọc Đức, GMT+7, tháng nhuận). Tự điền hộ ở trình duyệt sẽ sai nguyên
+      một tháng quanh tháng nhuận — <em>và sai không báo lỗi</em>. Gia phả giấy rất thường chỉ
+      ghi ngày âm, nên hai nửa đều để trống được.</li>
+    <li><b>Ô ngày mất không bị khoá theo công tắc “còn sống”.</b> Hội đồng đã chốt: nhập ngày mất
+      tức là người đó đã mất. Khoá ô lại thì chính quyết định ấy không bao giờ dùng được. Chốt
+      chặn đặt ở hộp thoại lúc gửi, không phải ở một ô xám.</li>
+    <li><b>Trường bị ẩn theo tầng thì để nguyên, không bị xoá.</b> <code>toUpdateRequest</code>
+      so với bản gốc trước khi sửa, nên một Trưởng chi không thấy số điện thoại của ai đó sẽ
+      không vô tình xoá mất nó khi lưu.</li>
+  </ul>
+</div>
+
+<h3>4.2 Khung dây — biểu mẫu trên màn lớn</h3>
+
+<figure>
+<svg viewBox="0 0 1280 700" role="img" aria-label="Khung dây biểu mẫu thêm sửa nhân khẩu trên màn hình lớn">
+  <rect class="wf-khung" x="0" y="0" width="1280" height="700"/>
+  <rect class="wf-o" x="0" y="0" width="1280" height="64"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="20" y="40">Sửa hồ sơ · Nguyễn Văn An</text>
+  <text class="wf-phu" x="1040" y="40">Bản lưu lúc 09:12 · phiên bản 7</text>
+
+  <!-- cột mục lục -->
+  <rect class="wf-o" x="24" y="88" width="240" height="470" rx="6"/>
+  <text class="wf-phu" style="font-weight:700" x="40" y="112">Các mục</text>
+  <rect x="32" y="124" width="224" height="44" rx="4" style="fill:var(--do-nhat)"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram);font-weight:600" x="48" y="152">Các lớp tên</text>
+  <text class="wf-chu" style="font-size:16px" x="48" y="196">Nhận dạng</text>
+  <text class="wf-chu" style="font-size:16px" x="48" y="240">Ngày tháng</text>
+  <text class="wf-chu" style="font-size:16px" x="48" y="284">Quê quán &amp; nơi ở</text>
+  <text class="wf-chu" style="font-size:16px" x="48" y="328">Liên hệ</text>
+  <text class="wf-chu" style="font-size:16px" x="48" y="372">Tiểu sử</text>
+  <text class="wf-chu" style="font-size:16px" x="48" y="416">Ghi chú</text>
+  <line class="wf-net" x1="32" y1="440" x2="256" y2="440"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:700" x="48" y="466">3 mục có thay đổi chưa lưu</text>
+  <rect class="wf-o" x="32" y="484" width="224" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="48" y="514">Xem lại thay đổi</text>
+
+  <!-- thân biểu mẫu -->
+  <rect class="wf-o" x="288" y="88" width="968" height="120" rx="6"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:600;fill:var(--do-tram)" x="308" y="118">Các lớp tên</text>
+  <text class="wf-phu" x="308" y="140">Tên húy</text>
+  <rect class="wf-o" x="308" y="148" width="420" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="322" y="178">Nguyễn Văn An</text>
+  <text class="wf-phu" x="756" y="140">Hán-Nôm</text>
+  <rect class="wf-o" x="756" y="148" width="220" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="770" y="178">阮文安</text>
+  <rect class="wf-o" x="1000" y="148" width="236" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram)" x="1016" y="178">+ Thêm lớp tên khác</text>
+
+  <rect class="wf-o" x="288" y="224" width="968" height="130" rx="6"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:600;fill:var(--do-tram)" x="308" y="254">Ngày tháng</text>
+  <text class="wf-phu" x="308" y="278">Ngày sinh · dương</text>
+  <rect class="wf-o" x="308" y="286" width="260" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="322" y="316">12 / 03 / 1951</text>
+  <text class="wf-phu" x="596" y="278">Ngày sinh · âm</text>
+  <rect class="wf-o" x="596" y="286" width="360" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="610" y="316">05 tháng 2 · Tân Mão</text>
+  <text class="wf-phu" x="984" y="278">Độ chính xác</text>
+  <rect class="wf-o" x="984" y="286" width="252" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="998" y="316">Đủ ngày tháng năm ▾</text>
+
+  <rect class="wf-o" x="288" y="370" width="968" height="130" rx="6" style="stroke:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:600;fill:var(--do-tram)" x="308" y="400">Ngày mất</text>
+  <text class="wf-phu" x="308" y="424">Ngày mất · dương</text>
+  <rect class="wf-o" x="308" y="432" width="260" height="48" rx="4" style="fill:var(--vang-nen);stroke:var(--ho-phach)"/>
+  <text class="wf-chu" style="font-size:17px" x="322" y="462">04 / 11 / 2025</text>
+  <text class="wf-phu" x="596" y="424">Ngày mất · âm</text>
+  <rect class="wf-o" x="596" y="432" width="360" height="48" rx="4"/>
+  <text class="wf-phu" x="610" y="462">chưa nhập</text>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:700" x="984" y="446">Nhập ngày mất sẽ hỏi lại</text>
+  <text class="wf-phu" style="fill:var(--ho-phach)" x="984" y="464">trước khi lưu. Xem §4.3.</text>
+
+  <!-- thanh lưu dính đáy -->
+  <rect class="wf-o" x="0" y="596" width="1280" height="104" style="fill:var(--nen-the)"/>
+  <line class="wf-net" x1="0" y1="596" x2="1280" y2="596"/>
+  <rect class="wf-o" x="24" y="620" width="180" height="56" rx="4" style="fill:var(--do-tram);stroke:var(--do-sau)"/>
+  <text class="wf-chu" style="font-size:18px;fill:#fff;font-weight:600" x="60" y="656">Lưu vào phả</text>
+  <rect class="wf-o" x="220" y="620" width="140" height="56" rx="4"/>
+  <text class="wf-chu" style="font-size:18px" x="262" y="656">Huỷ</text>
+  <text class="wf-chu" style="font-size:16px;fill:var(--ho-phach)" x="392" y="656">Có thay đổi chưa lưu</text>
+  <rect class="wf-o" x="1060" y="620" width="196" height="56" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="1076" y="656">Lưu nháp, sửa tiếp sau</text>
+
+  <text class="wf-phu" x="288" y="530" style="font-weight:700">Vì sao có cột mục lục bên trái</text>
+  <text class="wf-phu" x="288" y="548">Bảy mục trên một trang dài là đúng với người có quyển gia phả giấy mở bên cạnh — họ nhập theo</text>
+  <text class="wf-phu" x="288" y="566">thứ tự sách chép, không theo thứ tự phần mềm. Nhưng một trang dài không có mốc thì người dùng</text>
+  <text class="wf-phu" x="288" y="584">mất dấu chỗ mình đang ở. Cột này là mốc, đồng thời là chỗ đếm “3 mục có thay đổi chưa lưu”.</text>
+</svg>
+<figcaption>
+  <strong>Biểu mẫu trên màn lớn.</strong> Ba thứ trong hình <span class="chip should">Đề xuất</span>,
+  chưa có trong sản phẩm: <b>cột mục lục</b> có đếm mục đã đổi, nút <b>“Xem lại thay đổi”</b>, và
+  nút <b>“Lưu nháp”</b>. Cả ba phục vụ đúng một nỗi sợ đã ghi trong tài liệu 00 §2.4 — người có
+  thẩm quyền cao nhất là người sợ làm hỏng nhất. <b>Giá của nút Lưu nháp:</b> bản nháp phải nằm
+  ở đâu đó; để trong trình duyệt thì mất khi đổi máy, để trên máy chủ thì phải có bảng nháp,
+  phải dọn rác, và phải quyết định nháp có bị kiểm toán hay không.
+</figcaption>
+</figure>
+
+<h3>4.3 Hộp thoại ngày mất — mẫu chuẩn cho mọi thao tác khó thu hồi</h3>
+
+<p>
+  <a href="../00-dinh-huong.html">Tài liệu 00 §2.4</a> chỉ đích danh hộp thoại này là
+  <b>mẫu chuẩn</b>. Dưới đây là mẫu ấy được tách thành năm phần để tái sử dụng, kèm lý do từng
+  phần tồn tại.
+</p>
+
+<figure>
+<svg viewBox="0 0 1040 600" role="img" aria-label="Khung dây hộp thoại xác nhận ngày mất">
+  <rect class="wf-khung" x="0" y="0" width="1040" height="600" style="fill:none;stroke:none"/>
+  <rect class="wf-o" x="140" y="20" width="720" height="530" rx="8"/>
+
+  <text class="wf-chu" style="font-size:20px;font-weight:700;fill:var(--do-tram)" x="168" y="62">Bạn đang ghi nhận một người đã mất</text>
+  <line class="wf-net" x1="140" y1="84" x2="860" y2="84"/>
+
+  <rect x="168" y="104" width="664" height="72" rx="4" style="fill:var(--vang-nen)"/>
+  <text class="wf-chu" style="font-size:17px" x="186" y="134">Bạn đang ghi <tspan style="font-weight:700">Nguyễn Văn An</tspan> là đã mất.</text>
+  <text class="wf-chu" style="font-size:17px" x="186" y="160">Hồ sơ này hiện đang được ghi nhận là còn sống. Bạn chắc chứ?</text>
+
+  <rect class="wf-o" x="168" y="196" width="664" height="96" rx="4" style="fill:var(--vang-nen);stroke:var(--vien-dam)"/>
+  <text class="wf-phu" style="font-weight:700" x="186" y="220">Ngày mất bạn vừa nhập</text>
+  <text class="wf-chu" style="font-size:19px;font-weight:600;font-family:var(--f-hien)" x="186" y="250">04/11/2025 · ngày 15 tháng 9 âm lịch, năm Ất Tỵ</text>
+  <text class="wf-phu" x="186" y="276">Xin đọc lại ngày trên. Đây là ngày sẽ dùng để tính ngày giỗ hằng năm.</text>
+
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="168" y="326">Sau khi lưu:</text>
+  <circle style="fill:var(--muc-nhat)" cx="180" cy="350" r="3"/>
+  <text class="wf-chu" style="font-size:16px" x="196" y="356">Hồ sơ của Nguyễn Văn An trở thành <tspan style="font-weight:700">công khai</tspan>, xem được cả khi chưa đăng nhập.</text>
+  <circle style="fill:var(--muc-nhat)" cx="180" cy="380" r="3"/>
+  <text class="wf-chu" style="font-size:16px" x="196" y="386">Hệ thống sinh <tspan style="font-weight:700">lịch nhắc giỗ</tspan> và sẽ gửi nhắc cho cả chi/nhánh trước 7, 3 và 1 ngày.</text>
+  <circle style="fill:var(--muc-nhat)" cx="180" cy="410" r="3"/>
+  <text class="wf-chu" style="font-size:16px" x="196" y="416">Sửa lại thì được, nhưng <tspan style="font-weight:700">thứ đã lộ ra thì không thu về được</tspan>.</text>
+
+  <line class="wf-net" x1="140" y1="446" x2="860" y2="446"/>
+  <rect class="wf-o" x="560" y="474" width="130" height="56" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="596" y="510">Quay lại</text>
+  <rect x="706" y="474" width="126" height="56" rx="4" style="fill:var(--do-loi)"/>
+  <text class="wf-chu" style="font-size:17px;fill:#fff;font-weight:600" x="726" y="510">Xác nhận</text>
+
+  <text class="wf-phu" style="font-weight:700" x="0" y="128">1 · Nêu đích danh</text>
+  <text class="wf-phu" x="0" y="146">“Bạn chắc chứ?” không</text>
+  <text class="wf-phu" x="0" y="162">giúp ai phát hiện mình</text>
+  <text class="wf-phu" x="0" y="178">đang sửa nhầm hồ sơ.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="0" y="230">2 · Chiếu lại giá trị</text>
+  <text class="wf-phu" x="0" y="248">Rủi ro thật là gõ nhầm</text>
+  <text class="wf-phu" x="0" y="264">ngày. Chiếu lại kèm ngày</text>
+  <text class="wf-phu" x="0" y="280">âm để soi được lỗi gõ.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="0" y="336">3 · Nêu HỆ QUẢ</text>
+  <text class="wf-phu" x="0" y="354">Ba hệ quả cụ thể, không</text>
+  <text class="wf-phu" x="0" y="370">phải một câu hỏi trống.</text>
+  <text class="wf-phu" x="0" y="386">Đây là phần khiến mẫu</text>
+  <text class="wf-phu" x="0" y="402">này khác mọi hộp thoại</text>
+  <text class="wf-phu" x="0" y="418">“OK / Cancel” thường gặp.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="0" y="500">4 · Nút bất đối xứng</text>
+  <text class="wf-phu" x="0" y="518">Quay lại đứng trước và là</text>
+  <text class="wf-phu" x="0" y="534">nút thường; Xác nhận màu</text>
+  <text class="wf-phu" x="0" y="550">cảnh báo. Thứ tự nói rằng</text>
+  <text class="wf-phu" x="0" y="566">lối an toàn là xem lại.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="880" y="500">5 · KHÔNG bắt gõ lý do</text>
+  <text class="wf-phu" x="880" y="518">Ghi nhận một người đã mất</text>
+  <text class="wf-phu" x="880" y="534">là việc bình thường của</text>
+  <text class="wf-phu" x="880" y="550">gia phả. Chỉ hộp thoại kỵ</text>
+  <text class="wf-phu" x="880" y="566">húy mới bắt gõ lý do, vì</text>
+  <text class="wf-phu" x="880" y="582">đó là NGOẠI LỆ với lệ họ.</text>
+</svg>
+<figcaption>
+  <strong>Mẫu chuẩn, năm phần.</strong> Phần 5 là phần dễ làm sai nhất: cám dỗ là bắt gõ lý do
+  cho <em>mọi</em> thao tác nguy hiểm, cho “an toàn”. Nhưng bắt gõ lý do cho việc bình thường thì
+  người dùng học cách gõ bừa một chữ để qua cửa — và khi tới thao tác thật sự cần lý do, thói
+  quen gõ bừa đã hình thành. <b>Ô lý do là tài nguyên khan hiếm, tiêu vào đúng chỗ.</b>
+</figcaption>
+</figure>
+
+<h3>4.4 Mẫu chuẩn này còn phải dùng ở đâu nữa</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Thao tác</th><th>Hệ quả phải nêu</th><th>Bắt gõ lý do?</th><th>Trạng thái</th></tr></thead>
+  <tbody>
+    <tr><td>Ghi nhận người đã mất</td><td>Công khai hoá hồ sơ · sinh lịch giỗ · không thu hồi được</td><td>Không</td><td><span class="chip xong">Đã dựng</span></td></tr>
+    <tr><td>Ghi đè cảnh báo kỵ húy</td><td>Trùng tên húy bậc trên · ghi vào nhật ký kiểm toán</td><td><b>Có</b> (tối thiểu 5 ký tự)</td><td><span class="chip xong">Đã dựng</span></td></tr>
+    <tr><td>Xoá mềm một nhân khẩu</td><td>Node vẫn nằm trong cây · biến khỏi tìm kiếm và phả đồ với mọi vai trừ Quản trị · con cháu mất một mắt xích hiển thị</td><td><b>Có</b></td><td><span class="chip must">Chưa có</span></td></tr>
+    <tr><td>Ẩn danh hoá theo yêu cầu xoá (Nghị định 13)</td><td>Xoá dữ liệu tầng 3 · <b>giữ node lineage</b> · không hoàn tác được · ảnh hưởng ai đang trỏ tới người này</td><td><b>Có</b></td><td><span class="chip must">Chưa có</span></td></tr>
+    <tr><td>Gộp hai hồ sơ trùng</td><td>Hai node thành một · mọi cạnh dồn về một phía · id cũ chuyển hướng</td><td><b>Có</b></td><td><span class="chip must">Chưa có</span></td></tr>
+    <tr><td>Duyệt một đính chính chạm ngày mất</td><td><b>Y hệt hàng đầu bảng</b> — chỉ khác là người bấm không phải người nhập</td><td>Không</td><td><span class="chip must">Chưa có</span> — xem §5</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Câu hỏi pháp lý tài liệu này nêu chứ không tự quyết</p>
+  <p>
+    <a href="../00-dinh-huong.html">Tài liệu 00 §1b</a> đặt vấn đề: lập luận “ẩn danh hoá thay vì
+    xoá cứng để cây khỏi gãy” <b>yếu hẳn ở ca dâu/rể</b> — xoá một người con dâu không làm gãy
+    đường huyết thống nào, con vẫn nối với bố. Trong khi cơ sở pháp lý để đòi xoá lại <em>mạnh
+    hơn</em>: họ không tự nguyện gia nhập bộ dữ liệu, họ được nhập vào bởi nhà chồng. Ca ly hôn
+    còn gay gắt hơn.
+  </p>
+  <p>
+    Thiết kế không giải được câu này. Nó chỉ ghi lại rằng: <b>nếu</b> Hội đồng và BA quyết định
+    cho phép xoá thật với người dâu/rể, thì hộp thoại xác nhận phải nêu thêm một hệ quả riêng —
+    “con của người này sẽ không còn thấy tên mẹ/cha trong phả” — và đó là hệ quả tình cảm, không
+    phải kỹ thuật.
+  </p>
+</div>
+
+<h3>4.5 Chỗ dễ hỏng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ hỏng</th><th>Vì sao</th><th>Cách chữa và cái giá</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Không có gì giữ dữ liệu chưa lưu</b> <span class="chip must">Đang gãy</span></td>
+      <td>Tôi soát cả <code>frontend/src</code>: <b>không có</b> <code>beforeunload</code>, không có chặn điều hướng, không có nháp. <code>isDirty</code> chỉ in ra dòng chữ “chưa lưu” cạnh nút. Một cụ Trưởng chi nhập nửa tiếng rồi vuốt-lùi trên máy tính bảng là mất sạch, im lặng.</td>
+      <td>Ba lớp: chặn rời trang, nháp trong trình duyệt, nút “Lưu nháp” lên máy chủ. <b>Giá:</b> hộp thoại chặn rời trang bị nhiều người ghét và trình duyệt không cho tuỳ biến chữ; nháp máy chủ thì kéo theo bảng nháp, dọn rác và câu hỏi “nháp có bị kiểm toán không”.</td>
+    </tr>
+    <tr>
+      <td><b>Xung đột phiên bản là ngõ cụt</b> <span class="chip must">Đang gãy</span></td>
+      <td>Lưu bằng <code>If-Match</code>; người khác sửa trước thì trả <code>409 OPTIMISTIC_LOCK_CONFLICT</code> và giao diện hiện một dải đỏ “Bản ghi đã bị người khác sửa”. <b>Không có gì khác.</b> Không cho xem người kia đổi gì, không cho gộp, không giữ lại bản của mình. Người dùng chỉ còn cách nhập lại từ đầu.</td>
+      <td>Màn hình so sánh ba cột: bản gốc · bản của họ · bản của tôi, chọn từng trường. <b>Giá:</b> đây là màn hình khó nhất trong cả sản phẩm và hầu như không ai chạm tới nó — dễ thành công sức đổ vào chỗ ít người dùng. Bản rẻ hơn: giữ nguyên dữ liệu đã gõ trên màn hình và chỉ báo “tải lại rồi thử lưu tiếp”, để ít nhất công sức không mất.</td>
+    </tr>
+    <tr>
+      <td><b>Sửa quan hệ thì không có đường nào</b> <span class="chip must">Đang gãy</span></td>
+      <td>Mục “Nối quan hệ” <b>chỉ có ở chế độ thêm mới</b> (<code>props.mode === "create"</code>). Ghi nhầm cha của một người đã lưu thì không có giao diện nào sửa được — hợp đồng cũng chưa có <code>PATCH /relationships</code>.</td>
+      <td>Chờ hợp đồng. Trong lúc chờ, biểu mẫu <b>phải nói ra</b>: một dòng “Muốn sửa quan hệ cha/mẹ/vợ/chồng, xin liên hệ Quản trị”. <b>Giá:</b> thú nhận một lỗ hổng ngay trên màn hình — nhưng im lặng thì Trưởng chi tìm mỏi mắt rồi kết luận mình không đủ quyền.</td>
+    </tr>
+    <tr>
+      <td><b>Công tắc “còn sống” quá dễ gạt</b></td>
+      <td>Một cú chạm nhầm vào công tắc là chuyển một người sống thành đã khuất. May là có hộp thoại chặn — <b>và hộp thoại đó bắt cả hai đường</b> (gõ ngày mất, và gạt công tắc), vì hệ quả y hệt nhau.</td>
+      <td>Giữ nguyên. Đây là chỗ mã nguồn làm đúng: mốc so sánh là <em>bản đã lưu</em>, không phải trạng thái công tắc trên màn hình.</td>
+    </tr>
+    <tr>
+      <td><b>Mức chia sẻ nằm nhầm chỗ</b></td>
+      <td>Ô <code>privacyLevel</code> đặt trong mục “Liên hệ” của biểu mẫu <em>quản trị</em>. Nghĩa là quyền riêng tư của một người do <b>người khác</b> đặt hộ.</td>
+      <td>Chuyển sang hồ sơ của chính chủ (Khối B, §2.2) và để lại ở đây dạng chỉ-đọc. <b>Giá:</b> Trưởng chi mất một công cụ tiện tay; đổi lại đúng tinh thần “chủ thể tự kiểm soát” của BA v2 §10.</td>
+    </tr>
+    <tr>
+      <td><b>Biểu mẫu dài trên điện thoại</b></td>
+      <td>Bảy mục cuộn dọc, nút lưu dính đáy chồng lên thanh điều hướng dưới cùng.</td>
+      <td>Trên điện thoại chuyển thành nhiều bước có thanh tiến độ. <b>Giá:</b> nhiều bước làm chậm người nhập hàng loạt — mà nhập hàng loạt lại đúng là việc Trưởng chi hay làm. Nên chia bước <em>chỉ</em> dưới ngưỡng <code>sm</code>, giữ một trang dài ở màn lớn.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>4.6 Trạng thái rỗng · đang tải · lỗi</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Màn hình</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Đang gửi</td><td>Nút “Lưu vào phả” xoay, biểu mẫu vẫn đọc được</td><td><span class="chip xong">Đã dựng</span> Không khoá cả trang — người dùng cần đọc lại thứ mình vừa gõ.</td></tr>
+    <tr><td>Sai định dạng</td><td>Báo lỗi ngay dưới từng ô, kiểm tra lúc rời ô</td><td><span class="chip xong">Đã dựng</span> <code>mode: "onBlur"</code> — không mắng người dùng khi họ còn đang gõ.</td></tr>
+    <tr><td>Trùng tên húy</td><td>Hộp thoại kỵ húy: ai · đời mấy, chi nào · trùng khít hay trùng khi bỏ dấu · bắt gõ lý do</td><td><span class="chip xong">Đã dựng</span> Ba câu hỏi <em>ai / ở đâu trong họ / trùng kiểu gì</em> đều được trả lời. Trùng khi bỏ dấu có thể chỉ là trùng hợp (Hòa / Hoà) nên phải phân biệt.</td></tr>
+    <tr><td>Không đủ quyền</td><td>Dải đỏ “Bạn không có quyền sửa hồ sơ này”</td><td><span class="chip xong">Đã dựng</span> Nhưng thành viên thường <b>không bao giờ nhìn thấy nút Sửa</b>, nên trạng thái này chỉ xảy ra khi quyền bị thu hồi giữa chừng.</td></tr>
+    <tr><td>Máy chủ từ chối dữ liệu</td><td>Dải đỏ + chi tiết từ Problem Details</td><td><span class="chip xong">Đã dựng</span> Rẽ nhánh theo <code>code</code>, không theo chữ hiển thị — đúng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="dinh-chinh">5. Yêu cầu đính chính</h2>
+
+<p>
+  <span class="chip must">Chưa có</span>
+  Không một dòng giao diện nào tồn tại. <code>meta.canRequestCorrection</code> được ghi cứng
+  <code>false</code> ở mọi nơi (<code>mocks/data.ts</code>, <code>mocks/privacy.ts</code>,
+  <code>mocks/person-detail.ts</code>), và thành viên gửi <code>PATCH /persons/{id}</code> nhận
+  thẳng <code>403</code>: <em>“Thành viên chỉ sửa được hồ sơ của chính mình; các thay đổi khác
+  cần Trưởng chi duyệt”</em> — một câu nói đúng về một quy trình <b>chưa có chỗ nào để bắt
+  đầu</b>.
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Vì sao đây là thiếu sót đắt nhất trong cả bảy luồng</p>
+  <p>
+    Người phát hiện sai sót trong gia phả gần như <b>không bao giờ</b> là người có quyền sửa. Cụ
+    Trưởng chi nhập liệu theo quyển sách chép tay; người biết cụ tổ mất năm nào lại là bà cô ở
+    quê, và người biết tên đệm bị chép nhầm là đứa cháu đang ở Đức. <b>Giá trị dữ liệu của sản
+    phẩm nằm ở nhóm không có quyền ghi.</b>
+  </p>
+  <p>
+    Hôm nay nhóm ấy mở một hồ sơ sai, không thấy nút nào, và đóng trang. Không có phễu nào để
+    hứng. Mọi tính năng còn lại — phả đồ, danh xưng, nhắc giỗ — đều là <em>tiêu thụ</em> dữ liệu;
+    đây là luồng duy nhất <em>sinh ra</em> dữ liệu từ số đông.
+  </p>
+</div>
+
+<h3>5.1 Hai phía, hai thiết bị, hai bài toán khác nhau</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th></th><th>Phía gửi</th><th>Phía duyệt</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ai</b></td><td>Thành viên đã đăng nhập, mọi lứa tuổi, thường là kiều bào</td><td>Trưởng chi (trong phạm vi <code>ltree</code> của mình) · Hội đồng Tộc biểu (cả họ)</td></tr>
+    <tr><td><b>Thiết bị</b></td><td>Điện thoại, tại chỗ, ngay lúc phát hiện</td><td>Màn lớn, theo đợt, ngồi yên</td></tr>
+    <tr><td><b>Bài toán</b></td><td><b>Ma sát phải gần bằng không.</b> Ba chạm là mất người.</td><td><b>Đủ bằng chứng để quyết mà không phải hỏi lại.</b> Thiếu thông tin là hàng đợi đọng.</td></tr>
+    <tr><td><b>Cái sợ</b></td><td>“Góp ý rồi chẳng ai trả lời” → không góp nữa</td><td>“Duyệt nhầm làm hỏng phả” → không duyệt gì cả</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.2 Khung dây — phía gửi, điện thoại</h3>
+
+<figure>
+<svg viewBox="0 0 1040 880" role="img" aria-label="Khung dây màn hình gửi yêu cầu đính chính trên điện thoại">
+  <rect class="wf-khung" x="40" y="20" width="390" height="840" rx="10"/>
+  <rect class="wf-o" x="40" y="20" width="390" height="56"/>
+  <rect x="205" y="34" width="60" height="5" rx="2.5" style="fill:var(--vien-dam)"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="56" y="66">Xin đính chính</text>
+
+  <text class="wf-phu" x="52" y="102">Về hồ sơ</text>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="52" y="124">Nguyễn Văn Đức · đời 4 · Chi Nhất</text>
+
+  <text class="wf-phu" x="52" y="158">Chỗ nào chưa đúng?</text>
+  <rect class="wf-o" x="52" y="166" width="366" height="52" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="66" y="198">Năm mất ▾</text>
+
+  <rect class="wf-o" x="52" y="228" width="366" height="72" rx="4" style="fill:var(--nen-giay)"/>
+  <text class="wf-phu" x="66" y="252">Đang ghi trong phả</text>
+  <text class="wf-chu" style="font-size:17px" x="66" y="280">1978</text>
+
+  <text class="wf-phu" x="52" y="326">Theo bạn thì đúng là</text>
+  <rect class="wf-o" x="52" y="334" width="366" height="52" rx="4" style="stroke:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:17px" x="66" y="366">1976</text>
+
+  <text class="wf-phu" x="52" y="412">Bạn biết điều này từ đâu?</text>
+  <rect class="wf-o" x="52" y="420" width="178" height="48" rx="4" style="fill:var(--do-nhat);stroke:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:15px;fill:var(--do-tram);font-weight:600" x="64" y="450">Bia mộ / văn bia</text>
+  <rect class="wf-o" x="240" y="420" width="178" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:15px" x="252" y="450">Gia phả giấy</text>
+  <rect class="wf-o" x="52" y="476" width="178" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:15px" x="64" y="506">Người nhà kể</text>
+  <rect class="wf-o" x="240" y="476" width="178" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:15px" x="252" y="506">Giấy tờ</text>
+
+  <rect class="wf-o" x="52" y="540" width="366" height="88" rx="4" style="stroke-dasharray:5 4"/>
+  <text class="wf-chu" style="font-size:17px;fill:var(--do-tram)" x="66" y="576">Chụp ảnh minh chứng</text>
+  <text class="wf-phu" x="66" y="600">Ảnh bia mộ, trang sách chép tay, giấy tờ…</text>
+  <text class="wf-phu" x="66" y="618">Không bắt buộc, nhưng đơn có ảnh được duyệt nhanh hơn.</text>
+
+  <text class="wf-phu" x="52" y="658">Muốn nói thêm gì với Trưởng chi?</text>
+  <rect class="wf-o" x="52" y="666" width="366" height="72" rx="4"/>
+  <text class="wf-phu" x="66" y="692">Cháu là con ông Bình, có về giỗ năm ngoái…</text>
+
+  <rect x="52" y="754" width="366" height="56" rx="4" style="fill:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:18px;fill:#fff;font-weight:600" x="118" y="790">Gửi lời đính chính</text>
+  <text class="wf-phu" x="52" y="834">Trưởng chi Nguyễn Văn Bình sẽ nhận được và trả lời bạn.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="184">Chọn “chỗ nào chưa đúng”, không gõ tự do</text>
+  <text class="wf-phu" x="478" y="202">Danh sách chỉ gồm những trường mà CHÍNH BẠN đang</text>
+  <text class="wf-phu" x="478" y="218">nhìn thấy được. Người không được xem số điện thoại</text>
+  <text class="wf-phu" x="478" y="234">thì không có mục “số điện thoại” để chọn — nếu có,</text>
+  <text class="wf-phu" x="478" y="250">danh sách trường tự nó trở thành kênh dò dữ liệu.</text>
+  <line class="wf-net" x1="418" y1="192" x2="470" y2="192" stroke-dasharray="4 3"/>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="288">Hai mục KHÔNG phải sửa trường, và quý nhất</text>
+  <text class="wf-phu" x="478" y="306">Cuối danh sách phải có “Thiếu một người trong phả”</text>
+  <text class="wf-phu" x="478" y="322">và “Quan hệ ghi chưa đúng”. Hai loại này không sửa</text>
+  <text class="wf-phu" x="478" y="338">được bằng một ô nhập, nhưng chúng là thứ mà cả một</text>
+  <text class="wf-phu" x="478" y="354">nhánh dòng họ phụ thuộc vào. Nếu biểu mẫu chỉ cho</text>
+  <text class="wf-phu" x="478" y="370">sửa trường, hai loại đó không bao giờ được báo.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="446">Nguồn tin là bốn nút, không phải một ô chữ</text>
+  <text class="wf-phu" x="478" y="464">Người duyệt cần biết trọng lượng của lời khai.</text>
+  <text class="wf-phu" x="478" y="480">“Bia mộ” và “người nhà kể” là hai mức tin cậy khác</text>
+  <text class="wf-phu" x="478" y="496">hẳn nhau. Bốn nút cỡ 48 đơn vị thì một tay bấm được;</text>
+  <text class="wf-phu" x="478" y="512">một ô chữ tự do thì người ta bỏ trống.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="596">Ảnh: đường vào có giá trị nhất và tốn nhất</text>
+  <text class="wf-phu" x="478" y="614">Ảnh bia mộ, trang sách chép tay — đây chính là thứ</text>
+  <text class="wf-phu" x="478" y="630">Giai đoạn 3 gọi là “thư viện di sản”. Nhưng nó kéo</text>
+  <text class="wf-phu" x="478" y="646">theo MinIO, ảnh chờ duyệt, dung lượng, và câu hỏi</text>
+  <text class="wf-phu" x="478" y="662">ảnh bị từ chối thì xoá hay giữ. Vì thế: KHÔNG bắt buộc.</text>
+
+  <text class="wf-phu" style="font-weight:700;fill:var(--do-tram)" x="478" y="806">Câu cuối là lời hứa, phải giữ được</text>
+  <text class="wf-phu" x="478" y="824">Nêu đích danh người sẽ trả lời. Nếu hệ thống không</text>
+  <text class="wf-phu" x="478" y="840">bảo đảm có người trả lời thì đừng viết câu này —</text>
+  <text class="wf-phu" x="478" y="856">một lời hứa gãy còn tệ hơn không hứa.</text>
+</svg>
+<figcaption>
+  <strong>Phía gửi.</strong> Toàn bộ màn hình là <em>một</em> ngăn dưới, mở từ nút “Báo sai sót ở
+  hồ sơ này” (§2.3). Bốn ô bắt buộc: chỗ sai · giá trị đúng · nguồn tin · gửi. Ảnh và lời nhắn
+  là tuỳ chọn. <b>Đánh đổi trung tâm:</b> càng ít ô thì càng nhiều người gửi, nhưng càng ít ô thì
+  người duyệt càng phải hỏi lại — và mỗi lần hỏi lại là một vòng chờ nhiều ngày. Bốn ô là chỗ
+  tài liệu này đặt vạch; nếu đo thấy hàng đợi toàn đơn thiếu bằng chứng thì tăng lên, chứ không
+  đoán trước.
+</figcaption>
+</figure>
+
+<h3>5.3 Khung dây — phía duyệt, màn lớn</h3>
+
+<figure>
+<svg viewBox="0 0 1280 720" role="img" aria-label="Khung dây hàng đợi duyệt đính chính trên màn hình lớn">
+  <rect class="wf-khung" x="0" y="0" width="1280" height="720"/>
+  <rect class="wf-o" x="0" y="0" width="1280" height="64"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="20" y="40">Lời xin đính chính · Chi Nhất</text>
+  <text class="wf-chu" style="font-size:16px" x="1050" y="40">14 đơn đang chờ</text>
+
+  <!-- bộ lọc -->
+  <rect class="wf-o" x="24" y="88" width="150" height="44" rx="4" style="fill:var(--do-nhat)"/>
+  <text class="wf-chu" style="font-size:16px;fill:var(--do-tram);font-weight:600" x="56" y="116">Đang chờ</text>
+  <rect class="wf-o" x="182" y="88" width="150" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="216" y="116">Đã duyệt</text>
+  <rect class="wf-o" x="340" y="88" width="150" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="376" y="116">Đã từ chối</text>
+  <rect class="wf-o" x="1000" y="88" width="256" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="1016" y="116">Chờ lâu nhất trước ▾</text>
+
+  <!-- danh sách trái -->
+  <rect class="wf-o" x="24" y="152" width="360" height="540" rx="6"/>
+  <rect x="32" y="160" width="344" height="96" rx="4" style="fill:var(--do-nhat)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="48" y="188">Nguyễn Văn Đức</text>
+  <text class="wf-phu" x="48" y="210">Năm mất · 1978 → 1976</text>
+  <rect x="48" y="220" width="120" height="24" rx="3" style="fill:var(--do-loi-nen)"/>
+  <text class="wf-phu" style="fill:var(--do-loi);font-weight:700" x="58" y="237">Chờ 19 ngày</text>
+  <text class="wf-phu" x="184" y="237">Nguyễn Thị Mai gửi</text>
+
+  <line class="wf-net" x1="32" y1="264" x2="376" y2="264"/>
+  <text class="wf-chu" style="font-size:17px" x="48" y="292">Nguyễn Văn Bảo</text>
+  <text class="wf-phu" x="48" y="314">Thiếu một người trong phả</text>
+  <text class="wf-phu" x="48" y="336">Chờ 4 ngày · Trần Văn Hùng gửi</text>
+
+  <line class="wf-net" x1="32" y1="356" x2="376" y2="356"/>
+  <text class="wf-chu" style="font-size:17px" x="48" y="384">Lê Thị Hoa</text>
+  <text class="wf-phu" x="48" y="406">Quê quán · Nam Định → Thái Bình</text>
+  <text class="wf-phu" x="48" y="428">Chờ 2 ngày · Lê Văn Sơn gửi</text>
+
+  <!-- chi tiết phải -->
+  <rect class="wf-o" x="408" y="152" width="848" height="540" rx="6"/>
+  <text class="wf-chu" style="font-size:19px;font-weight:700" x="432" y="186">Nguyễn Văn Đức · đời 4 · Chi Nhất</text>
+  <text class="wf-phu" x="432" y="208">Nguyễn Thị Mai (đời 5, Chi Nhất — cháu gọi bằng bác) gửi ngày 18/08/2026</text>
+
+  <!-- so sánh -->
+  <rect class="wf-o" x="432" y="228" width="392" height="110" rx="4" style="fill:var(--nen-giay)"/>
+  <text class="wf-phu" style="font-weight:700" x="452" y="254">ĐANG GHI TRONG PHẢ</text>
+  <text class="wf-chu" style="font-size:16px" x="452" y="282">Năm mất</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:var(--f-hien)" x="452" y="316">1978</text>
+
+  <rect class="wf-o" x="840" y="228" width="392" height="110" rx="4" style="fill:var(--do-nhat);stroke:var(--do-tram)"/>
+  <text class="wf-phu" style="font-weight:700;fill:var(--do-tram)" x="860" y="254">ĐỀ NGHỊ SỬA THÀNH</text>
+  <text class="wf-chu" style="font-size:16px" x="860" y="282">Năm mất</text>
+  <text class="wf-chu" style="font-size:22px;font-weight:700;font-family:var(--f-hien);fill:var(--do-tram)" x="860" y="316">1976</text>
+
+  <!-- nguồn -->
+  <rect class="wf-o" x="432" y="356" width="800" height="150" rx="4"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600;fill:var(--do-tram)" x="452" y="384">Căn cứ người gửi đưa ra</text>
+  <rect x="452" y="396" width="150" height="28" rx="3" style="fill:var(--vang-nen)"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:700" x="464" y="415">Bia mộ / văn bia</text>
+  <rect class="wf-o" x="452" y="434" width="120" height="56" rx="4"/>
+  <text class="wf-phu" x="472" y="466">ảnh 1</text>
+  <rect class="wf-o" x="584" y="434" width="120" height="56" rx="4"/>
+  <text class="wf-phu" x="604" y="466">ảnh 2</text>
+  <text class="wf-chu" style="font-size:16px" x="732" y="452">“Cháu chụp bia mộ cụ ở nghĩa trang họ,</text>
+  <text class="wf-chu" style="font-size:16px" x="732" y="474">trên bia khắc năm Bính Thìn.”</text>
+
+  <!-- hành động -->
+  <line class="wf-net" x1="408" y1="530" x2="1256" y2="530"/>
+  <rect x="432" y="554" width="200" height="56" rx="4" style="fill:var(--do-tram)"/>
+  <text class="wf-chu" style="font-size:18px;fill:#fff;font-weight:600" x="470" y="590">Duyệt và sửa</text>
+  <rect class="wf-o" x="648" y="554" width="200" height="56" rx="4"/>
+  <text class="wf-chu" style="font-size:18px" x="678" y="590">Hỏi thêm người gửi</text>
+  <rect class="wf-o" x="864" y="554" width="200" height="56" rx="4"/>
+  <text class="wf-chu" style="font-size:18px" x="900" y="590">Từ chối, có lý do</text>
+
+  <text class="wf-phu" style="font-weight:700;fill:var(--do-tram)" x="432" y="644">Bấm “Duyệt và sửa” ở đơn này sẽ mở hộp thoại ngày mất của §4.3 — vì hệ quả y hệt nhau:</text>
+  <text class="wf-phu" x="432" y="662">công khai hoá hồ sơ và sinh lại lịch nhắc giỗ. Người duyệt không phải người nhập, nên càng</text>
+  <text class="wf-phu" x="432" y="680">phải nêu đủ hệ quả: họ đang thay mặt người khác quyết một việc khó thu hồi.</text>
+</svg>
+<figcaption>
+  <strong>Phía duyệt.</strong> Danh sách bên trái xếp <b>chờ lâu nhất trước</b>, không phải mới
+  nhất trước — hàng đợi đọng là cách chết thường gặp nhất của cơ chế này, nên thứ tự mặc định
+  phải chống lại nó. Ba nút hành động đều có nhãn chữ đầy đủ; <b>“Từ chối” bắt buộc kèm lý do</b>
+  vì lý do ấy là thứ duy nhất người gửi nhận lại được.
+</figcaption>
+</figure>
+
+<h3>5.4 Bảy luật của cơ chế này</h3>
+
+<ol>
+  <li><b>Mọi đơn đều được trả lời.</b> Duyệt, từ chối kèm lý do, hoặc hỏi thêm — không có trạng
+    thái “im lặng vĩnh viễn”. Đây không phải tính năng lịch sự, đây là <b>điều kiện sống</b>: một
+    người bị phớt lờ một lần sẽ không gửi lần thứ hai, và họ sẽ kể lại cho cả nhà.</li>
+  <li><b>Danh sách trường chỉ gồm thứ người gửi nhìn thấy.</b> Nếu không, chính biểu mẫu góp ý
+    trở thành công cụ dò xem hồ sơ có những trường nào.</li>
+  <li><b>Không hiện giá trị hiện tại của trường mà người gửi không được xem.</b> Ô “đang ghi
+    trong phả” chỉ hiện khi họ vốn đã thấy nó.</li>
+  <li><b>Người duyệt thấy cả hai vế.</b> Họ được xem giá trị cũ đầy đủ vì họ có quyền — nhưng
+    <em>đơn</em> chỉ mang theo giá trị mới, không mang giá trị cũ do người gửi chép lại.</li>
+  <li><b>Phạm vi chi là thật.</b> Trưởng chi chỉ thấy đơn trong <code>ltree</code> của mình. Đơn
+    nằm ngoài phạm vi phải tự chuyển lên Hội đồng, không được rơi vào khoảng không.</li>
+  <li><b>Duyệt hàng loạt bị cấm với thao tác khó thu hồi.</b> Sửa quê quán thì gộp được; ghi
+    nhận người mất, gộp hồ sơ, xoá thì không.</li>
+  <li><b>Đơn quá hạn phải leo thang.</b> Sau một ngưỡng do Hội đồng chốt (tài liệu này
+    <b>không tự đặt số ngày</b>), đơn hiện thêm ở hộp thư của Hội đồng Tộc biểu. <b>Giá:</b>
+    Trưởng chi có thể thấy bị giám sát; phải nói rõ đây là lưới an toàn cho người gửi, không phải
+    thước đo hiệu suất của Trưởng chi.</li>
+</ol>
+
+<h3>5.5 Chỗ dễ hỏng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ hỏng</th><th>Vì sao</th><th>Cách chữa và cái giá</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Hàng đợi đọng</b></td>
+      <td>Trưởng chi 60 tuổi, việc họ là việc không lương, và ai cũng sợ duyệt sai. Mặc định của hệ thống là <em>không làm gì</em>, mà không làm gì thì không bao giờ sai.</td>
+      <td>Xếp chờ-lâu-nhất-trước · huy hiệu đếm ngày · leo thang lên Hội đồng · nhắc qua đúng kênh đã có (<code>CHANGE_REQUEST</code> đã là một loại thông báo trong sản phẩm). <b>Giá:</b> thêm áp lực lên người tình nguyện; làm quá tay thì họ bỏ vai.</td>
+    </tr>
+    <tr>
+      <td><b>Đơn thiếu bằng chứng</b></td>
+      <td>Bốn ô là ít; nhiều đơn sẽ chỉ có “nghe nói thế”.</td>
+      <td>“Hỏi thêm người gửi” phải là một vòng trao đổi <em>trong</em> đơn, không phải một tin nhắn riêng. <b>Giá:</b> đơn có hội thoại là một tính năng nhắn tin thu nhỏ — phải kiểm duyệt, phải thông báo, phải lưu.</td>
+    </tr>
+    <tr>
+      <td><b>Đính chính hàng loạt từ một người</b></td>
+      <td>Một người nhiệt tình có thể gửi ba mươi đơn trong một tối, chôn vùi hàng đợi.</td>
+      <td>Gộp theo người gửi trong danh sách; hạn mức mềm. <b>Giá:</b> hạn mức chặn đúng người đang đóng góp nhiều nhất — phải là hạn mức <em>mềm</em> (cảnh báo) chứ không phải chặn cứng.</td>
+    </tr>
+    <tr>
+      <td><b>Từ chối không lý do</b></td>
+      <td>Nút “Từ chối” dễ bấm hơn nút “Hỏi thêm”. Nếu không bắt lý do, mọi đơn khó sẽ thành từ chối im lặng.</td>
+      <td>Bắt buộc lý do, tối thiểu một câu. <b>Giá:</b> ma sát cho người duyệt vốn đã bận — nhưng ma sát đặt đúng chỗ.</td>
+    </tr>
+    <tr>
+      <td><b>Đơn về chính mình</b></td>
+      <td>Thành viên sửa hồ sơ <em>của mình</em> vốn có quyền trực tiếp. Nếu luồng này bắt họ xin duyệt thì vừa sai luật vừa gây bực.</td>
+      <td>Khi <code>meta.isSelf</code>, nút phải là “Sửa hồ sơ của tôi”, không phải “Xin đính chính”. <b>Giá:</b> hai nhãn cho một chỗ — phải kiểm thử cả hai vai.</td>
+    </tr>
+    <tr>
+      <td><b>Đơn chạm dữ liệu tầng 3 của người khác</b></td>
+      <td>Ai đó “đính chính” số điện thoại của người khác. Đó không phải đính chính gia phả, đó là ghi dữ liệu cá nhân của người thứ ba.</td>
+      <td>Loại hẳn trường tầng 3 khỏi danh sách chọn — kể cả với người nhìn thấy chúng. <b>Giá:</b> một ca hợp lệ (Trưởng chi cập nhật số điện thoại giúp cụ già) mất đường đi; đường đó phải nằm ở luồng §4, có kiểm toán.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.6 Trạng thái rỗng · đang tải · lỗi</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Màn hình</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Gửi xong</td><td>“Đã gửi tới Trưởng chi Nguyễn Văn Bình. Bạn sẽ nhận được trả lời trong Thông báo.”</td><td>Nêu đích danh người nhận. Không dùng chữ “Yêu cầu #4821 đã được tạo”.</td></tr>
+    <tr><td>Hàng đợi rỗng (phía duyệt)</td><td>“Không còn lời xin đính chính nào đang chờ.”</td><td>Trạng thái <b>tốt</b>, phải viết như một tin vui, không như một màn hình lỗi.</td></tr>
+    <tr><td>Người gửi chưa ghép tài khoản</td><td>Dùng lại nguyên câu <code>ACCOUNT_NOT_LINKED</code></td><td>Cùng một vấn đề với §3.5 — sửa một chỗ, dùng lại ba chỗ.</td></tr>
+    <tr><td>Hồ sơ đã đổi từ lúc gửi đơn</td><td>Dải hổ phách “Giá trị trong phả đã đổi từ lúc nhận đơn: nay là 1976.”</td><td>Ca này chắc chắn xảy ra với đơn chờ 19 ngày. Không được lặng lẽ ghi đè.</td></tr>
+    <tr><td>Đang gửi ảnh</td><td>Thanh tiến độ theo từng ảnh, cho phép huỷ từng ảnh</td><td>Mạng 3G ở quê là ca thật, không phải ca hiếm.</td></tr>
+    <tr><td>Lỗi gửi</td><td>Giữ nguyên toàn bộ nội dung đã gõ + nút “Gửi lại”</td><td>Tuyệt đối không xoá nội dung. Đây là chỗ luồng §4 đang làm sai và luồng này không được lặp lại.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="nhac-gio">6. Nhắc giỗ và trung tâm thông báo</h2>
+
+<p>
+  <span class="chip xong">Đã dựng</span>
+  <code>frontend/src/components/events/</code> ·
+  <code>frontend/src/components/notifications/</code> ·
+  <code>frontend/src/app/[locale]/events/page.tsx</code> ·
+  <code>notifications/page.tsx</code>
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chiều</th><th>Nội dung</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ai</b></td><td>Mọi thành viên đã đăng nhập <b>cùng chi/nhánh</b> với người được giỗ. Việc chọn ai nhận là của máy chủ, giao diện không lọc lại.</td></tr>
+    <tr><td><b>Thiết bị</b></td><td>Điện thoại (đẩy + hộp thư) và màn lớn (lịch mười hai tháng, để in ra dán ở từ đường).</td></tr>
+    <tr><td><b>Điểm vào</b></td><td>Thông báo đẩy trên màn khoá · chuông trên thanh đầu trang · mục “Thông báo” ở thanh dưới cùng · trang “Giỗ &amp; Sự kiện”.</td></tr>
+    <tr><td><b>Điểm ra</b></td><td>Mở hồ sơ người được giỗ · đánh dấu đã đọc · bật/tắt đẩy trong Cài đặt.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6.1 Ba tầng kênh, xếp theo mức bảo đảm</h3>
+
+<ol>
+  <li><b>Hộp thư trong ứng dụng — không tắt được, luôn đầy đủ.</b> Mọi thứ máy chủ đã xếp hàng
+    đều nằm ở đây, bất kể người dùng có cho phép đẩy hay không. Đây là kênh <em>bảo đảm</em> của
+    MVP.</li>
+  <li><b>Đẩy Web Push — thêm vào, không thay thế.</b> Chỉ xin quyền <b>sau khi</b> người dùng đã
+    thật sự xem một ngày giỗ (<code>PushEngagementSignal</code>), không xin ngay lúc mở ứng dụng.
+    Trên iOS còn phải cài PWA trước — đã có hướng dẫn riêng
+    (<code>ios-install-guide.tsx</code>).</li>
+  <li><b>Zalo</b> — kênh MVP theo BA v2 §11, nằm ngoài giao diện này.</li>
+</ol>
+
+<div class="khoi">
+  <p class="nhan">Một quyết định nhỏ nhưng là chốt chặn riêng tư</p>
+  <p>
+    <code>EventCard</code> in nguyên văn <code>event.title</code> do máy chủ soạn, và
+    <b>không bao giờ tự ghép</b> chuỗi <code>"Giỗ " + tên người</code>. Lý do: nội dung thông báo
+    đẩy hiện trên <b>màn hình khoá</b>, tức là hiện cho bất cứ ai cầm cái điện thoại đó. Tên
+    người phải do máy chủ quyết có được in ra hay không, sau khi đã lọc theo tầng — nếu trình
+    duyệt tự ghép thì mọi tầng riêng tư bị vô hiệu ở đúng chỗ dễ lộ nhất.
+  </p>
+</div>
+
+<h3>6.2 Khung dây — màn khoá và hộp thư, điện thoại</h3>
+
+<figure>
+<svg viewBox="0 0 1040 860" role="img" aria-label="Khung dây thông báo nhắc giỗ trên màn khoá và hộp thư">
+  <text class="wf-phu" style="font-weight:700" x="40" y="16">A · Thông báo đẩy trên màn khoá</text>
+  <rect class="wf-khung" x="40" y="28" width="390" height="200" rx="10"/>
+  <rect class="wf-o" x="52" y="44" width="366" height="120" rx="8" style="fill:var(--nen-the)"/>
+  <text class="wf-phu" x="70" y="70">Gia phả họ Nguyễn · 07:00</text>
+  <text class="wf-chu" style="font-size:17px;font-weight:700" x="70" y="98">Còn 3 ngày tới giỗ cụ Nguyễn Văn Đức</text>
+  <text class="wf-chu" style="font-size:16px" x="70" y="124">Ngày 15 tháng 9 âm lịch · 04/11/2026</text>
+  <text class="wf-phu" x="70" y="148">Chi Nhất</text>
+  <text class="wf-phu" x="52" y="192">Nội dung này do máy chủ soạn sẵn và không mang dữ liệu tầng 3.</text>
+  <text class="wf-phu" x="52" y="210">Ngày âm đứng trước ngày dương — đó là ngày dòng họ thật sự giữ.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="40" y="268">B · Hộp thư trong ứng dụng</text>
+  <rect class="wf-khung" x="40" y="280" width="390" height="560" rx="10"/>
+  <rect class="wf-o" x="40" y="280" width="390" height="56"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="56" y="316">Thông báo</text>
+  <rect x="330" y="292" width="88" height="32" rx="16" style="fill:var(--do-nhat)"/>
+  <text class="wf-phu" style="fill:var(--do-tram);font-weight:700" x="344" y="313">4 chưa đọc</text>
+
+  <rect class="wf-o" x="52" y="348" width="118" height="44" rx="4" style="fill:var(--do-nhat)"/>
+  <text class="wf-chu" style="font-size:15px;fill:var(--do-tram);font-weight:600" x="78" y="376">Tất cả</text>
+  <rect class="wf-o" x="178" y="348" width="118" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:15px" x="196" y="376">Chưa đọc</text>
+  <rect class="wf-o" x="304" y="348" width="114" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:15px" x="322" y="376">Đã đọc</text>
+
+  <!-- gộp một sự kiện thành một dòng -->
+  <rect class="wf-o" x="52" y="406" width="366" height="140" rx="6" style="stroke:var(--do-tram)"/>
+  <circle style="fill:var(--do-tram)" cx="70" cy="432" r="5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:700" x="86" y="438">Giỗ cụ Nguyễn Văn Đức</text>
+  <text class="wf-chu" style="font-size:16px" x="86" y="464">Ngày 15 tháng 9 âm lịch</text>
+  <text class="wf-chu" style="font-size:15px" x="86" y="486">Dương lịch 04/11/2026 · còn 3 ngày</text>
+  <rect x="86" y="498" width="80" height="26" rx="3" style="fill:var(--vang-nen)"/>
+  <text class="wf-phu" style="fill:var(--ho-phach);font-weight:700" x="96" y="516">Nhắc 7·3·1</text>
+  <text class="wf-phu" x="180" y="516">Chi Nhất · nhắc gần nhất 07:00 hôm nay (giờ VN)</text>
+  <text class="wf-phu" x="86" y="538">Đã nhắc trước 7 ngày · 3 ngày</text>
+
+  <rect class="wf-o" x="52" y="558" width="366" height="96" rx="6"/>
+  <circle style="fill:var(--do-tram)" cx="70" cy="584" r="5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="86" y="590">Chạp mả họ · ngày 20 tháng chạp</text>
+  <text class="wf-chu" style="font-size:15px" x="86" y="616">Dương lịch 28/01/2027 · còn 84 ngày</text>
+  <rect x="86" y="626" width="104" height="24" rx="3" style="fill:var(--nen-giay)"/>
+  <text class="wf-phu" x="96" y="643">Cả dòng họ</text>
+
+  <rect class="wf-o" x="52" y="666" width="366" height="96" rx="6" style="fill:none"/>
+  <text class="wf-chu" style="font-size:17px" x="86" y="698">Lời xin đính chính của bạn đã được duyệt</text>
+  <text class="wf-phu" x="86" y="722">Trưởng chi Nguyễn Văn Bình · 12/08/2026 09:14 (giờ VN)</text>
+  <rect x="86" y="732" width="128" height="24" rx="3" style="fill:var(--nen-giay)"/>
+  <text class="wf-phu" x="96" y="749">Yêu cầu đính chính</text>
+
+  <rect class="wf-o" x="52" y="776" width="366" height="48" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="66" y="806">Đánh dấu tất cả đã đọc</text>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="428">Gộp 7·3·1 thành MỘT dòng</text>
+  <text class="wf-phu" x="478" y="446">Hôm nay mỗi mốc nhắc là một thông báo riêng. Một</text>
+  <text class="wf-phu" x="478" y="462">chi có 20 ngày giỗ thì mỗi năm hộp thư nhận 60 dòng,</text>
+  <text class="wf-phu" x="478" y="478">trong đó 40 dòng nói lại đúng thứ đã nói.</text>
+  <text class="wf-phu" x="478" y="502" style="font-weight:700">ĐỀ XUẤT: một dòng cho mỗi ngày giỗ, cập nhật tại chỗ,</text>
+  <text class="wf-phu" x="478" y="518" style="font-weight:700">có dòng phụ ghi các mốc đã nhắc.</text>
+  <text class="wf-phu" x="478" y="542">GIÁ: mất dấu vết từng lần gửi trong giao diện (vẫn còn</text>
+  <text class="wf-phu" x="478" y="558">trong nhật ký máy chủ), và “chưa đọc” trở nên mơ hồ —</text>
+  <text class="wf-phu" x="478" y="574">đọc mốc 7 ngày rồi có tính là đã đọc mốc 3 ngày không?</text>
+  <text class="wf-phu" x="478" y="590">Phải chốt: mỗi mốc mới làm dòng đó chưa-đọc trở lại.</text>
+  <line class="wf-net" x1="418" y1="476" x2="470" y2="476" stroke-dasharray="4 3"/>
+
+  <text class="wf-phu" style="font-weight:700;fill:var(--do-loi)" x="478" y="718">“(giờ VN)” là chữ đang thiếu</text>
+  <text class="wf-phu" x="478" y="736">Mã nguồn cố ý định dạng mọi mốc thời gian theo</text>
+  <text class="wf-phu" x="478" y="752">Asia/Ho_Chi_Minh — đúng, vì ngày của dòng họ là ngày</text>
+  <text class="wf-phu" x="478" y="768">ở Việt Nam. Nhưng KHÔNG có nhãn múi giờ nào. Một</text>
+  <text class="wf-phu" x="478" y="784">thành viên ở Đức đọc “09:14” và trừ nhầm sáu tiếng.</text>
+  <line class="wf-net" x1="418" y1="740" x2="470" y2="740" stroke-dasharray="4 3"/>
+</svg>
+<figcaption>
+  <strong>Màn khoá và hộp thư.</strong> Cả hai đều đặt <b>ngày âm trước, ngày dương sau</b> —
+  <code>death_lunar</code> là nguồn sự thật của ngày giỗ, ngày dương chỉ là tiện ích cho người
+  sống theo lịch làm việc. Đảo thứ tự là nói sai về thứ mà gia đình thật sự giữ.
+</figcaption>
+</figure>
+
+<h3>6.3 Tháng nhuận — chỗ sai đắt nhất và im lặng nhất</h3>
+
+<p>
+  Ngày âm có ba cách trượt mà ngày dương không có: <b>tháng nhuận</b>, <b>tháng thiếu</b> (giỗ
+  ngày 30 rơi vào năm tháng đó chỉ có 29 ngày), và việc cùng một ngày âm rơi vào hai ngày dương
+  khác nhau qua các năm. Mọi phép quy đổi là việc của máy chủ. Nhưng giao diện <b>phải nói ra
+  kết quả của phép quy đổi</b>, vì người đọc là người sẽ đi thắp hương.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Ca</th><th>Sản phẩm hiện làm gì</th><th>Cần thêm gì</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Ngày giỗ nằm trong tháng nhuận</td>
+      <td><span class="chip xong">Đã dựng</span> In thêm chữ “(tháng nhuận)” màu hổ phách, luôn in khi <code>lunar.leap</code> đúng. <em>“tháng 9 nhuận không phải tháng 9.”</em></td>
+      <td>Không cần thêm. Đây là chỗ mã nguồn làm đúng.</td>
+    </tr>
+    <tr>
+      <td>Năm nay không có tháng nhuận tương ứng</td>
+      <td>Chỉ có <code>nextOccurrenceSolar</code> do máy chủ tính. <b>Không nói</b> đã áp quy tắc nào.</td>
+      <td><span class="chip should">Đề xuất</span> Một dòng: “Năm nay không có tháng 9 nhuận; giỗ tính vào tháng 9 thường.” <b>Giá:</b> cần máy chủ trả thêm một trường ghi chú quy đổi — đổi hợp đồng.</td>
+    </tr>
+    <tr>
+      <td>Giỗ ngày 30, năm nay tháng thiếu</td>
+      <td>Như trên: chỉ có ngày dương, không có lời giải thích.</td>
+      <td><span class="chip should">Đề xuất</span> “Tháng 9 năm nay chỉ có 29 ngày; giỗ tính vào ngày 29.” <b>Chỗ có thể sai:</b> nhiều dòng họ có lệ riêng (lùi hẳn sang tháng sau). Nếu lệ họ khác quy tắc máy, mà máy lại im lặng, thì <b>cả họ đi thắp hương sai ngày và không ai biết vì sao</b>.</td>
+    </tr>
+    <tr>
+      <td>Sự kiện chưa quy đổi được</td>
+      <td><span class="chip xong">Đã dựng</span> Có sẵn câu “{n} sự kiện chưa có ngày dương tương ứng.”</td>
+      <td>Giữ. Cần thêm lối bấm vào để xem là những sự kiện nào.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6.4 Khung dây — lịch mười hai tháng, màn lớn</h3>
+
+<figure>
+<svg viewBox="0 0 1280 400" role="img" aria-label="Khung dây lịch mười hai tháng trên màn hình lớn">
+  <rect class="wf-khung" x="0" y="0" width="1280" height="400"/>
+  <text class="wf-chu" style="font-size:19px;font-weight:700" x="24" y="42">Lịch mười hai tháng tới</text>
+  <rect class="wf-o" x="900" y="18" width="180" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="916" y="46">Cả dòng họ ▾</text>
+  <rect class="wf-o" x="1096" y="18" width="160" height="44" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="1112" y="46">In ra giấy</text>
+
+  <rect class="wf-o" x="24" y="80" width="296" height="140" rx="6"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:700;fill:var(--do-tram)" x="42" y="108">Tháng 9</text>
+  <text class="wf-chu" style="font-size:16px" x="42" y="136">15 · Giỗ cụ Nguyễn Văn Đức</text>
+  <text class="wf-phu" x="42" y="156">Chi Nhất · dương 04/11/2026</text>
+  <text class="wf-chu" style="font-size:16px" x="42" y="184">22 · Giỗ bà Trần Thị Lan</text>
+  <text class="wf-phu" x="42" y="204">Chi Nhất · dương 11/11/2026</text>
+
+  <rect class="wf-o" x="336" y="80" width="296" height="140" rx="6" style="fill:var(--vang-nen);stroke:var(--ho-phach)"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:700;fill:var(--ho-phach)" x="354" y="108">Tháng 9 nhuận</text>
+  <text class="wf-chu" style="font-size:16px" x="354" y="136">Không có giỗ</text>
+  <text class="wf-phu" x="354" y="164">Tháng nhuận được tách thành một ô</text>
+  <text class="wf-phu" x="354" y="182">RIÊNG, không gộp vào tháng 9.</text>
+
+  <rect class="wf-o" x="648" y="80" width="296" height="140" rx="6"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:700;fill:var(--do-tram)" x="666" y="108">Tháng 10</text>
+  <text class="wf-chu" style="font-size:16px" x="666" y="136">Không có giỗ</text>
+
+  <rect class="wf-o" x="960" y="80" width="296" height="140" rx="6"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:700;fill:var(--do-tram)" x="978" y="108">Tháng Chạp</text>
+  <text class="wf-chu" style="font-size:16px" x="978" y="136">20 · Chạp mả họ</text>
+  <text class="wf-phu" x="978" y="156">Cả dòng họ · dương 28/01/2027</text>
+
+  <text class="wf-phu" style="font-weight:700" x="24" y="264">Vì sao có nút “In ra giấy”</text>
+  <text class="wf-phu" x="24" y="284">Ở nhiều dòng họ, lịch giỗ được dán ở từ đường và gửi cho các cụ không dùng điện thoại thông minh.</text>
+  <text class="wf-phu" x="24" y="304">Bản in là kênh phân phối THẬT, không phải tính năng phụ — và nó cũng là cách duy nhất tới được</text>
+  <text class="wf-phu" x="24" y="324">những người mà sản phẩm này không bao giờ chạm tới bằng màn hình.</text>
+  <text class="wf-phu" style="fill:var(--do-loi)" x="24" y="352">GIÁ: bản in phải tự chịu trách nhiệm về quyền riêng tư — giấy không có phiên đăng nhập. Bản in</text>
+  <text class="wf-phu" style="fill:var(--do-loi)" x="24" y="372">chỉ được chứa người đã khuất và ngày giỗ, không được kèm bất cứ thông tin nào của người sống.</text>
+</svg>
+<figcaption>
+  <strong>Lịch mười hai tháng.</strong> Điểm khác biệt duy nhất đáng kể so với bản điện thoại là
+  <b>nhìn được cả năm cùng lúc</b> — đúng nhu cầu của Hội đồng khi họp bàn lịch lễ. Tháng nhuận
+  tách hẳn thành một ô riêng, vì gộp nó vào tháng thường là đúng cái lỗi mà toàn bộ phần quy đổi
+  âm lịch sinh ra để tránh.
+</figcaption>
+</figure>
+
+<h3>6.5 Chỗ dễ hỏng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ hỏng</th><th>Vì sao</th><th>Cách chữa và cái giá</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Chuông trên thanh đầu trang là biểu tượng trần</b> <span class="chip must">Đang gãy</span></td>
+      <td><code>notification-bell.tsx</code> dựng <code>&lt;BellOutlined&gt;</code> trong một
+        <code>&lt;Badge&gt;</code> — <b>không phải <code>&lt;button&gt;</code></b>, nên bàn phím không tới được và trình đọc màn hình chỉ nghe một nhãn. Vùng chạm là chính cái biểu tượng, cỡ chữ 18px, <b>xa ngưỡng 44</b>. Vi phạm nguyên tắc 3 (biểu tượng luôn đi kèm chữ) và nguyên tắc 2.</td>
+      <td>Đổi thành nút thật, cao 44, có nhãn “Thông báo” từ ngưỡng <code>sm</code> trở lên. <b>Giá:</b> thanh đầu trang đã chật — mã nguồn ghi rõ mỗi pixel khoảng cách bị nhân năm lần vì <code>&lt;Space&gt;</code> tính cả mục ẩn. Phải bỏ bớt thứ khác, ví dụ gộp Cài đặt vào trình đơn tài khoản.</td>
+    </tr>
+    <tr>
+      <td><b>Ba thông báo cho một ngày giỗ</b></td>
+      <td>Nhắc 7, 3, 1 ngày sinh ba dòng riêng. Ở quy mô một chi đông giỗ, hộp thư biến thành tiếng ồn và người dùng tắt đẩy.</td>
+      <td>Gộp theo sự kiện (xem chú thích khung dây §6.2). <b>Giá:</b> “chưa đọc” trở nên mơ hồ, phải chốt luật rõ; và mất dấu từng lần gửi trong giao diện.</td>
+    </tr>
+    <tr>
+      <td><b>Không có nhãn múi giờ</b> <span class="chip must">Đang gãy</span></td>
+      <td>Mọi mốc thời gian định dạng theo <code>Asia/Ho_Chi_Minh</code> — cố ý và đúng — nhưng không in ra rằng đó là giờ Việt Nam. Người dùng chính của sản phẩm là <b>kiều bào</b>.</td>
+      <td>Thêm “(giờ VN)”. <b>Giá:</b> bằng không.</td>
+    </tr>
+    <tr>
+      <td><b>Xin quyền đẩy sai lúc</b></td>
+      <td>Sản phẩm làm đúng: chỉ xin sau khi người dùng đã xem một ngày giỗ. Rủi ro là ai đó “tối ưu tỉ lệ đồng ý” bằng cách xin sớm hơn.</td>
+      <td>Không chữa — ghi vào tài liệu để không bị đảo ngược. Bị từ chối một lần là mất kênh đẩy <b>vĩnh viễn</b> trên nhiều trình duyệt.</td>
+    </tr>
+    <tr>
+      <td><b>Nhắc cho người không thuộc chi</b></td>
+      <td>Việc chọn người nhận là của máy chủ. Nếu ghép tài khoản sai chi thì người ta nhận nhắc giỗ của họ khác — vừa phiền vừa là rò rỉ nhẹ.</td>
+      <td>Mỗi thông báo phải in tên chi/nhánh mục tiêu (đã có). Thêm lối “Tôi không thuộc chi này” dẫn sang §5. <b>Giá:</b> thêm một loại đơn cho hàng đợi.</td>
+    </tr>
+    <tr>
+      <td><b>Tài khoản chưa ghép nhân khẩu</b></td>
+      <td>Hộp thư rỗng vĩnh viễn. Đã xử lý tốt: có mã <code>ACCOUNT_NOT_LINKED</code> và lời hướng dẫn hỏi ai.</td>
+      <td>Giữ. Đây là mẫu tốt nhất trong sản phẩm cho trạng thái rỗng-có-nguyên-nhân; §3 và §5 nên dùng lại nguyên văn.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6.6 Trạng thái rỗng · đang tải · lỗi</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Màn hình</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Chưa có giỗ nào trong kỳ</td><td>“Chưa có ngày giỗ nào trong khoảng thời gian này.”</td><td><span class="chip xong">Đã dựng</span> Với khách, đây cũng là kết quả của việc lọc người sống — không được nói ra.</td></tr>
+    <tr><td>Hộp thư rỗng</td><td>“Chưa có thông báo nào”</td><td><span class="chip xong">Đã dựng</span></td></tr>
+    <tr><td>Tài khoản chưa ghép</td><td>Dải xanh + hướng dẫn liên hệ Trưởng chi</td><td><span class="chip xong">Đã dựng</span> Mẫu tốt.</td></tr>
+    <tr><td>Đang tải</td><td>Khung xương 5 dòng</td><td><span class="chip xong">Đã dựng</span></td></tr>
+    <tr><td>Lỗi tải</td><td>Dải đỏ “Không tải được thông báo”</td><td><span class="chip xong">Đã dựng</span> Thiếu nút thử lại.</td></tr>
+    <tr><td>Trình duyệt chặn đẩy</td><td>Thẻ cài đặt nói rõ trạng thái quyền, kèm hướng dẫn iOS cài PWA</td><td><span class="chip xong">Đã dựng</span> Và <b>luôn</b> nhắc rằng hộp thư trong ứng dụng vẫn đầy đủ.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="tim-kiem">7. Tìm kiếm</h2>
+
+<p>
+  <span class="chip xong">Đã dựng</span>
+  <code>frontend/src/components/search/</code> ·
+  <code>frontend/src/hooks/use-person-search.ts</code>
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chiều</th><th>Nội dung</th></tr></thead>
+  <tbody>
+    <tr><td><b>Ai</b></td><td>Mọi vai. Kết quả đã được máy chủ lọc theo quyền trước khi trả về.</td></tr>
+    <tr><td><b>Thiết bị</b></td><td>Điện thoại. Đây cũng là <b>cửa vào thực tế của phả đồ</b> — người ta tìm tên rồi mới mở cây từ người đó.</td></tr>
+    <tr><td><b>Điểm vào</b></td><td>Mục “Tìm” ở thanh dưới cùng · thanh đầu trang trên màn lớn · liên kết chia sẻ <code>?q=&amp;generation=&amp;branchId=</code>.</td></tr>
+    <tr><td><b>Điểm ra</b></td><td>Hồ sơ · đặt người đó làm gốc phả đồ · chọn người trong ô tra danh xưng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>7.1 Có dấu hay không dấu đều được — và vì sao trình duyệt không được đụng vào</h3>
+
+<p>
+  Chuỗi người dùng gõ được gửi <b>nguyên xi</b> sang máy chủ. Không bỏ dấu, không chuẩn hoá,
+  không lọc lại phía trình duyệt. Máy chủ tìm bằng <code>unaccent</code> trên mọi lớp tên —
+  húy, tự, hiệu, thụy, thường gọi, pháp danh. Nếu trình duyệt tự bỏ dấu, nó tạo ra một bộ so
+  khớp <em>thứ hai, yếu hơn</em>, và hai bên sẽ bất đồng ở đúng những chữ như “Đức” / “Duc” theo
+  cách không ai gỡ nổi từ giao diện.
+</p>
+
+<h3>7.2 Câu hỏi khó: nói gì khi kết quả bị lọc bớt vì quyền riêng tư</h3>
+
+<div class="khoi">
+  <p class="nhan">Ba câu trả lời, hai câu sai</p>
+  <p>
+    <b>“Không tìm thấy ai phù hợp.”</b> — nói dối. Có người tên đó, chỉ là bạn không được xem.
+  </p>
+  <p>
+    <b>“3 kết quả bị ẩn vì lý do riêng tư.”</b> — làm lộ đúng thứ đang giấu. Một người muốn dò
+    xem cô X có trong họ hay không chỉ cần gõ tên cô và đọc con số. Tệ hơn nữa, con số ấy biến
+    tìm kiếm thành một máy đếm người sống theo từng cái tên.
+  </p>
+  <p>
+    <b>“Tìm kiếm này chỉ hiện những người bạn được phép xem.”</b> — đúng. Vì nó là một câu về
+    <em>phạm vi của công cụ</em>, không phải về <em>kết quả của lần tìm này</em>. Và nó phải
+    <b>luôn hiện</b>: khi có kết quả, khi không có kết quả, khi chưa gõ gì.
+  </p>
+</div>
+
+<p>
+  Cùng một lối thoát với §2.2: <b>nói về quyền của người dùng, không nói về nội dung dữ liệu</b>.
+  Câu chữ chỉ đổi theo <em>vai</em>, không bao giờ đổi theo <em>truy vấn</em>. Nếu một ngày câu
+  này chỉ hiện khi có kết quả bị lọc, nó lập tức trở thành đèn báo.
+</p>
+
+<h3>7.3 Khung dây — tìm kiếm trên điện thoại</h3>
+
+<figure>
+<svg viewBox="0 0 1040 800" role="img" aria-label="Khung dây màn hình tìm kiếm trên điện thoại">
+  <rect class="wf-khung" x="40" y="20" width="390" height="760" rx="10"/>
+  <rect class="wf-o" x="40" y="20" width="390" height="56"/>
+  <text class="wf-chu" style="font-size:18px;font-weight:700" x="56" y="56">Tìm người trong họ</text>
+
+  <text class="wf-chu" style="font-size:16px" x="52" y="106">Tên người cần tìm</text>
+  <rect class="wf-o" x="52" y="116" width="366" height="52" rx="4"/>
+  <text class="wf-chu" style="font-size:17px" x="80" y="148">nguyen van duc</text>
+  <text class="wf-phu" x="60" y="148">🔍</text>
+  <text class="wf-phu" x="52" y="188">Không cần bỏ dấu. Tìm trên mọi lớp tên: húy, tự, hiệu,</text>
+  <text class="wf-phu" x="52" y="206">thụy, thường gọi, pháp danh.</text>
+
+  <rect class="wf-o" x="52" y="220" width="366" height="52" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="66" y="252">Lọc theo đời · chi · quê quán ▾</text>
+
+  <!-- câu phạm vi, LUÔN hiện -->
+  <rect class="wf-o" x="52" y="286" width="366" height="76" rx="4" style="fill:var(--nen-giay)"/>
+  <text class="wf-chu" style="font-size:16px" x="66" y="312">Tìm kiếm này chỉ hiện những người</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="334">bạn được phép xem. Người còn sống chỉ</text>
+  <text class="wf-chu" style="font-size:16px" x="66" y="356">hiện với thành viên đã đăng nhập.</text>
+
+  <text class="wf-chu" style="font-size:16px" x="52" y="392">2 kết quả</text>
+
+  <rect class="wf-o" x="52" y="404" width="366" height="104" rx="6"/>
+  <circle style="fill:var(--vien-dam)" cx="72" cy="432" r="5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="90" y="438">Nguyễn Văn Đức</text>
+  <text class="wf-chu" style="font-size:15px" x="252" y="438">阮文德</text>
+  <text class="wf-phu" x="336" y="438">Đã khuất</text>
+  <text class="wf-chu" style="font-size:15px" x="90" y="464">Đời thứ 4 · Chi Nhất · Nam Định · 1902–1978</text>
+  <rect x="90" y="476" width="152" height="24" rx="3" style="fill:var(--vang-nen)"/>
+  <text class="wf-phu" x="100" y="493">Khớp ở tên thường gọi</text>
+
+  <rect class="wf-o" x="52" y="520" width="366" height="80" rx="6"/>
+  <circle style="fill:var(--xanh)" cx="72" cy="548" r="5"/>
+  <text class="wf-chu" style="font-size:17px;font-weight:600" x="90" y="554">Nguyễn Văn Đức</text>
+  <text class="wf-phu" x="336" y="554">Còn sống</text>
+  <text class="wf-chu" style="font-size:15px" x="90" y="580">Đời thứ 6 · Chi Nhì</text>
+
+  <rect class="wf-o" x="52" y="620" width="366" height="52" rx="4"/>
+  <text class="wf-chu" style="font-size:16px" x="66" y="652">Không thấy người cần tìm? Xin bổ sung →</text>
+
+  <rect class="wf-o" x="40" y="724" width="390" height="56"/>
+  <line class="wf-net" x1="40" y1="724" x2="430" y2="724"/>
+  <text class="wf-phu" x="52" y="758">Trang chủ</text>
+  <text class="wf-phu" x="130" y="758">Phả đồ</text>
+  <text class="wf-phu" style="fill:var(--do-tram);font-weight:700" x="202" y="758">Tìm</text>
+  <text class="wf-phu" x="256" y="758">Danh xưng</text>
+  <text class="wf-phu" x="350" y="758">Giỗ</text>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="112">Nhãn HIỆN, không phải chỉ placeholder</text>
+  <text class="wf-phu" x="478" y="130">Hôm nay nhãn “Tên người cần tìm” là sr-only — chỉ</text>
+  <text class="wf-phu" x="478" y="146">trình đọc màn hình nghe được. Placeholder biến mất</text>
+  <text class="wf-phu" x="478" y="162">ngay khi bắt đầu gõ, để lại một ô trắng không tên.</text>
+  <text class="wf-phu" x="478" y="178">Với người 70 tuổi, ô không nhãn là một câu đố.</text>
+  <line class="wf-net" x1="418" y1="142" x2="470" y2="142" stroke-dasharray="4 3"/>
+
+  <text class="wf-phu" style="font-weight:700;fill:var(--do-tram)" x="478" y="308">Câu này LUÔN hiện, không phụ thuộc kết quả</text>
+  <text class="wf-phu" x="478" y="326">Đổi theo VAI, không đổi theo TRUY VẤN. Khách thấy</text>
+  <text class="wf-phu" x="478" y="342">bản có thêm nút Đăng nhập; thành viên thấy bản này.</text>
+  <text class="wf-phu" x="478" y="358">Hiện-có-điều-kiện = biến nó thành đèn báo dữ liệu.</text>
+  <text class="wf-phu" x="478" y="382" style="fill:var(--do-loi)">GIÁ: một khối chữ thường trực mà người dùng quen rồi</text>
+  <text class="wf-phu" x="478" y="398" style="fill:var(--do-loi)">sẽ ngừng đọc. Chấp nhận — nó không phải để đọc mỗi</text>
+  <text class="wf-phu" x="478" y="414" style="fill:var(--do-loi)">lần, nó để có mặt đúng lần người ta thắc mắc.</text>
+  <line class="wf-net" x1="418" y1="326" x2="470" y2="326" stroke-dasharray="4 3"/>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="486">Nhãn “khớp ở lớp tên nào” — một câu hỏi mở</text>
+  <text class="wf-phu" x="478" y="504">Nhãn này rất hữu ích với người đã khuất (mọi lớp tên</text>
+  <text class="wf-phu" x="478" y="520">đều công khai). Nhưng nếu máy chủ báo “khớp ở tên húy”</text>
+  <text class="wf-phu" x="478" y="536">cho một người CÒN SỐNG ở mức T1 — nơi lớp tên húy vốn</text>
+  <text class="wf-phu" x="478" y="552">không được trả về — thì nhãn đó nói rằng người này có</text>
+  <text class="wf-phu" x="478" y="568">một tên húy đúng bằng chuỗi bạn vừa gõ. Câu hỏi cho</text>
+  <text class="wf-phu" x="478" y="584">đội backend, không phải cho thiết kế.</text>
+
+  <text class="wf-phu" style="font-weight:700" x="478" y="646">Lối ra khi không tìm thấy</text>
+  <text class="wf-phu" x="478" y="664">Dẫn thẳng sang luồng §5 (“Thiếu một người trong phả”).</text>
+  <text class="wf-phu" x="478" y="680">Đây là chỗ chuyển một lần tìm thất bại thành một</text>
+  <text class="wf-phu" x="478" y="696">đóng góp dữ liệu — rẻ nhất trong cả sản phẩm.</text>
+</svg>
+<figcaption>
+  <strong>Tìm kiếm.</strong> Ba thứ <span class="chip should">Đề xuất</span> so với sản phẩm hiện
+  tại: nhãn ô nhập hiện rõ thay vì <code>sr-only</code>, khối “phạm vi tìm kiếm” thường trực, và
+  lối ra “Xin bổ sung” khi không thấy. Thanh dưới cùng trong hình đã thay “Thông báo” bằng “Danh
+  xưng” — <b>đây là một đánh đổi chưa chốt</b>, xem §3.5.
+</figcaption>
+</figure>
+
+<h3>7.4 Chỗ dễ hỏng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Chỗ hỏng</th><th>Vì sao</th><th>Cách chữa và cái giá</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Khách bị bỏ rơi</b> <span class="chip must">Đang gãy</span></td>
+      <td>Phả đồ hiện lời mời đăng nhập rất tử tế cho khách. <b>Tìm kiếm thì không</b>: khách gõ tên một người còn sống và nhận “Không tìm thấy ai phù hợp.” Họ kết luận cổng thông tin dòng họ trống rỗng, rồi bỏ đi.</td>
+      <td>Khối phạm vi phiên bản khách, kèm nút Đăng nhập. <b>Giá:</b> gần bằng không, và nó thu hồi lại đúng nhóm người mà sản phẩm đang mất im lặng.</td>
+    </tr>
+    <tr>
+      <td><b>Không duyệt được, chỉ tìm được</b></td>
+      <td><code>q</code> bắt buộc dài ít nhất 1 ký tự. Không gõ tên thì bộ lọc vô dụng: <em>“cho tôi xem tất cả người đời thứ 5 của Chi Nhất”</em> là câu hỏi rất thường gặp và hệ thống không trả lời được.</td>
+      <td>Cho phép tìm bằng bộ lọc không cần từ khoá. <b>Giá:</b> đổi hợp đồng, và mở ra khả năng tải về cả danh sách một chi — tức là một kênh thu thập dữ liệu hàng loạt cần giới hạn nhịp và kiểm toán.</td>
+    </tr>
+    <tr>
+      <td><b>Bộ lọc đời cứng ở 20</b></td>
+      <td>Danh sách đời dừng ở 20 cho vừa màn hình. Máy chủ không giới hạn. Dòng họ có 21 đời sẽ không lọc được đời 21.</td>
+      <td>Lấy số đời lớn nhất từ máy chủ. <b>Giá:</b> thêm một lời gọi; hoặc đơn giản là nới số cứng và ghi chú.</td>
+    </tr>
+    <tr>
+      <td><b>Nhãn ô nhập bị ẩn</b></td>
+      <td><code>sr-only</code>: chỉ trình đọc màn hình nghe được. Placeholder biến mất khi gõ.</td>
+      <td>Hiện nhãn. <b>Giá:</b> một dòng chiều cao — rẻ hơn nhiều so với một ô không tên.</td>
+    </tr>
+    <tr>
+      <td><b>Nhãn lớp tên khớp có thể rò rỉ</b></td>
+      <td><code>matchedNameType</code> cho biết truy vấn khớp ở lớp tên nào. Với người sống ở mức T1, các lớp tên đó không được trả về — nhưng nhãn thì có.</td>
+      <td>Câu hỏi cho backend: hoặc bỏ nhãn khi lớp khớp không nằm trong tầng người xem, hoặc chỉ khớp trên các lớp tên trong tầng. <b>Không phải việc của giao diện</b> — giao diện chỉ được in ra thứ nhận về.</td>
+    </tr>
+    <tr>
+      <td><b>Số kết quả có thể gây hiểu nhầm</b></td>
+      <td><code>totalElements</code> đã lọc theo quyền — nên nó an toàn. Nhưng hai người khác vai gõ cùng một chữ sẽ thấy hai con số khác nhau, và nếu họ ngồi cạnh nhau thì phép trừ ra đúng số người bị ẩn.</td>
+      <td>Không có cách chữa hoàn hảo; đây là hạn chế cố hữu của mọi hệ thống lọc theo quyền. Ghi lại để không ai tưởng mình đã bịt kín.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>7.5 Trạng thái rỗng · đang tải · lỗi</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Màn hình</th><th>Ghi chú</th></tr></thead>
+  <tbody>
+    <tr><td>Chưa gõ gì</td><td>“Nhập tên để bắt đầu tìm.”</td><td><span class="chip xong">Đã dựng</span> Khối phạm vi vẫn hiện ở trạng thái này.</td></tr>
+    <tr><td>Đang gõ / đang tìm</td><td>Giữ nguyên kết quả cũ trên màn hình, chỉ bật <code>aria-busy</code></td><td><span class="chip xong">Đã dựng</span> Không nháy sang khung xương mỗi lần gõ — quyết định tốt.</td></tr>
+    <tr><td>Không có kết quả</td><td>“Không tìm thấy ai phù hợp.” + lối “Xin bổ sung”</td><td><span class="chip xong">Đã dựng</span> phần chữ; <span class="chip should">Đề xuất</span> phần lối ra.</td></tr>
+    <tr><td>Lỗi</td><td>Dải đỏ “Không tìm được. Vui lòng thử lại.”</td><td><span class="chip xong">Đã dựng</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="mau-chuan">8. Bốn mẫu dùng chung cho cả bảy luồng</h2>
+
+<p>
+  Bảy luồng trên lặp lại đúng bốn khuôn. Viết một lần ở đây để không phải quyết lại bảy lần, và
+  để bảy người khác nhau viết bảy màn hình vẫn ra một sản phẩm.
+</p>
+
+<h3>8.1 Mẫu hộp thoại cho thao tác khó thu hồi</h3>
+
+<p>Đầy đủ ở <a href="#bieu-mau">§4.3</a>. Rút gọn thành danh mục kiểm:</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Phần</th><th>Câu hỏi tự kiểm</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Nêu đích danh</td><td>Hộp thoại có in <b>tên người bị ảnh hưởng</b> không? Nếu người dùng đang mở nhầm hồ sơ, hộp thoại này có giúp họ nhận ra không?</td></tr>
+    <tr><td>2</td><td>Chiếu lại giá trị</td><td>Giá trị sắp lưu có được in lại nguyên văn không? Với ngày tháng, có kèm <b>ngày âm</b> để soi lỗi gõ không?</td></tr>
+    <tr><td>3</td><td>Nêu hệ quả</td><td>Có liệt kê <b>hệ quả cụ thể</b> — ai sẽ thấy gì, hệ thống sẽ gửi gì — hay chỉ hỏi “bạn chắc chứ?”</td></tr>
+    <tr><td>4</td><td>Nút bất đối xứng</td><td>Nút an toàn có đứng <b>trước</b> và là nút thường không? Nút nguy hiểm có mang màu cảnh báo không?</td></tr>
+    <tr><td>5</td><td>Ô lý do đúng chỗ</td><td>Thao tác này là <b>ngoại lệ với lệ họ</b> (kỵ húy, xoá, gộp) hay là <b>việc bình thường</b> của gia phả (ghi nhận người mất)? Chỉ loại đầu mới bắt gõ lý do.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>8.2 Ba luật không tiết lộ</h3>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Luật 1 · Vắng thì không vẽ gì</h4>
+    <p>
+      Trường bị lọc render thành <b>không có gì</b>. Không nhãn rỗng, không gạch ngang, không dấu
+      ba chấm, không ổ khoá, không “—”. Mục nào rỗng hết thì mất luôn tiêu đề mục.
+    </p>
+    <p class="day">“Bị giấu” và “chưa ai ghi” bắt buộc phải không phân biệt được. Đã có sẵn trong <code>lib/privacy/present.ts</code>.</p>
+  </div>
+  <div class="the">
+    <h4>Luật 2 · Nói về quyền, đừng nói về dữ liệu</h4>
+    <p>
+      Được phép nói “<b>bạn</b> đang xem ở mức T1, mức này không hiện số điện thoại của bất kỳ ai”.
+      Không được nói “<b>hồ sơ này</b> có 3 trường bị ẩn”.
+    </p>
+    <p class="day">Câu loại một suy ra từ vai người xem — thứ họ đã biết. Câu loại hai suy ra từ nội dung — thứ đang được giấu.</p>
+  </div>
+  <div class="the">
+    <h4>Luật 3 · Hằng số, không phải có điều kiện</h4>
+    <p>
+      Mọi lời giải thích về quyền riêng tư phải hiện <b>luôn luôn</b> ở bối cảnh đó, kể cả khi
+      chẳng có gì bị lọc.
+    </p>
+    <p class="day">Một khối chỉ hiện khi có dữ liệu bị giấu chính là một đèn báo “ở đây có dữ liệu bị giấu”. Đây là lỗi dễ mắc nhất khi ai đó “tối ưu” giao diện về sau.</p>
+  </div>
+</div>
+
+<h3>8.3 Năm trạng thái, không phải ba</h3>
+
+<p>
+  Mọi màn hình có dữ liệu phải phân biệt <b>năm</b> trạng thái. Gộp bất kỳ hai cái nào cũng sinh
+  ra một lời nói dối:
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Trạng thái</th><th>Nghĩa</th><th>Không được viết là</th></tr></thead>
+  <tbody>
+    <tr><td><b>Chờ</b> (idle)</td><td>Người dùng chưa hỏi gì</td><td>“Không có kết quả”</td></tr>
+    <tr><td><b>Đang tải</b></td><td>Đã hỏi, chưa có trả lời</td><td>Màn hình trắng</td></tr>
+    <tr><td><b>Rỗng thật</b></td><td>Đã hỏi, không có gì</td><td>“Lỗi”</td></tr>
+    <tr><td><b>Rỗng vì quyền</b></td><td>Có, nhưng người này không được xem</td><td><b>Bất cứ chữ nào khác với “rỗng thật”</b> — hai cái phải giống hệt nhau</td></tr>
+    <tr><td><b>Lỗi</b></td><td>Hỏi không được</td><td>“Không có kết quả”</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Một ngoại lệ có chủ ý</p>
+  <p>
+    Phả đồ <b>không</b> gộp “rỗng vì quyền” vào bất cứ dải băng nào. Dải “cây chưa đầy đủ” chỉ
+    bật cho ngưỡng dung lượng <code>maxNodes</code>, tuyệt đối không cho lọc riêng tư — nếu không
+    nó sẽ sáng lên đúng những chỗ có người sống bị giấu. Mã nguồn ghi rõ điều này ở
+    <code>tree-truncated-banner.tsx</code> và nó phải được giữ.
+  </p>
+</div>
+
+<h3>8.4 Sàn kích thước, áp cho mọi luồng</h3>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>Thứ</th><th>Sàn</th><th>Chỗ đang vi phạm</th></tr></thead>
+  <tbody>
+    <tr><td>Vùng chạm</td><td><b>44×44 px thật</b>, sau mọi phép co phóng</td><td>Nút bung nhánh (24, còn 18 ở mức phóng 0,75) · chuông thông báo trên thanh đầu trang</td></tr>
+    <tr><td>Thân bài</td><td>16 px</td><td>Thẻ nhân khẩu trên phả đồ: tên 13 px, phụ đề 10,5 px, huy hiệu 9,5 px — <em>trước</em> khi nhân với mức phóng</td></tr>
+    <tr><td>Nội dung chính</td><td>17–18 px</td><td>Hầu hết nhãn phụ trong hồ sơ và kết quả tìm kiếm ở 12–13 px</td></tr>
+    <tr><td>Nhãn điều khiển</td><td>Luôn có <b>chữ</b>, biểu tượng chỉ để tăng tốc</td><td>Chuông · bánh răng Cài đặt · nút bung nhánh (+/−) · nút đảo chiều trong tra danh xưng</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Chỗ tài liệu này tự mâu thuẫn, và cách xử lý</p>
+  <p>
+    Thẻ nhân khẩu 208×96 px chứa tên, đời, chi, năm sinh–mất và tối đa ba huy hiệu. Ở cỡ chữ 16
+    px, chừng ấy nội dung <b>không vừa</b>. Không thể vừa giữ mật độ cây vừa giữ sàn cỡ chữ.
+  </p>
+  <p>
+    <b>Cách xử lý được đề xuất, kèm giá:</b> bỏ bớt nội dung trên thẻ thay vì bóp chữ. Thẻ chỉ
+    giữ <em>tên</em> (16 px) và <em>một</em> dòng phụ (đời · chi, 14 px); năm sinh–mất và huy
+    hiệu chuyển vào ngăn hồ sơ khi chạm. <b>Giá:</b> mất khả năng đọc lướt cả một đời để tìm ai
+    là đích tôn — đúng thứ mà Hội đồng hay làm trên màn lớn. <b>Đề xuất dung hoà:</b> giữ bản dày
+    ở màn lớn (nơi mức phóng thường ≥ 0,79 nên chữ 13 px hiện ra ≈ 10 px vẫn còn đọc được khi
+    ngồi gần), và dùng bản gọn dưới ngưỡng <code>md</code>. <b>Đây là một đánh đổi chưa chốt</b>,
+    không phải một kết luận.
+  </p>
+</div>
+
+<h2 id="that-bai">9. Chỗ luồng hiện tại đang làm người dùng thất bại</h2>
+
+<p>
+  Tổng hợp những chỗ tìm được khi đọc mã nguồn. Xếp theo mức thiệt hại, không theo công sức sửa.
+  Cột cuối ghi đường dẫn tệp để kiểm chứng lại.
+</p>
+
+<div class="cuon">
+<table>
+  <thead><tr><th>#</th><th>Vấn đề</th><th>Người dùng gặp gì</th><th>Ở đâu</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><b>Không có luồng đính chính</b> <span class="chip must">Nặng nhất</span></td>
+      <td>Thành viên phát hiện sai sót: không thấy nút Sửa (vì <code>meta.canEdit</code> sai), không thấy nút báo lỗi (vì chưa dựng), và <code>canRequestCorrection</code> bị ghi cứng <code>false</code>. Họ đóng trang. <b>Cơ chế thu thập dữ liệu quan trọng nhất của sản phẩm hiện có không một điểm bắt đầu nào.</b></td>
+      <td><code>mocks/data.ts</code> · <code>mocks/privacy.ts</code> · <code>mocks/person-detail.ts</code> · <code>mocks/handlers/persons.ts:282</code></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><b>Hồ sơ không có mục Quan hệ</b> <span class="chip must">Nặng</span></td>
+      <td>Mở hồ sơ một người là thấy một cá nhân đứng một mình — không cha, không mẹ, không vợ chồng, không con. Trong sản phẩm gia phả. Dữ liệu đã có trong <code>PersonDto.relationships</code> nhưng không được dựng.</td>
+      <td><code>components/person/person-profile.tsx</code> (dựng 5 mục, không mục nào là quan hệ) · <code>types/api.ts:445</code></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><b>Người dùng không biết mình đang xem ở tầng nào</b> <span class="chip must">Nặng</span></td>
+      <td>Hồ sơ ngắn, và không có cách nào phân biệt “chưa ai ghi” với “bạn không được xem”. Nguyên tắc 7 của tài liệu 00 chưa được thực hiện. <code>meta.visibleTier</code> được máy chủ trả về nhưng <b>không một dòng giao diện nào đọc nó</b> — tôi soát cả <code>frontend/src</code>, nó chỉ xuất hiện trong dữ liệu giả lập.</td>
+      <td><code>types/api.ts:166</code> (<code>VisibleTier</code>) — không có nơi tiêu thụ</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><b>Tra danh xưng đặt ngược vai</b> <span class="chip must">Nặng</span></td>
+      <td>Bấm “Tra danh xưng” từ hồ sơ bác Đức thì sản phẩm hỏi <em>“bác Đức gọi ai là gì?”</em> — ngược đúng 180° so với câu người dùng vừa nghĩ. Với người con dâu, người cần tính năng này nhất, đó là ngõ cụt ngay bước đầu.</td>
+      <td><code>components/person/person-profile.tsx</code> — <code>/kinship?from=${person.id}</code>, phải là <code>?to=</code></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><b>Không có lối vào tra danh xưng trên điện thoại</b> <span class="chip must">Nặng</span></td>
+      <td>Thanh dưới cùng có 5 mục và <b>không có Danh xưng</b>; chỉ thanh đầu trang (ẩn dưới ngưỡng <code>md</code>) mới có. Người dùng chính của tính năng dùng điện thoại. Cộng với mục 4, bộ luật 157 điều — trong đó 30 điều nhóm J6 dành riêng cho dâu/rể — hầu như không tới được ai.</td>
+      <td><code>components/layout/mobile-nav.tsx</code> vs <code>components/layout/header.tsx</code></td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><b>Không có gì giữ dữ liệu chưa lưu</b> <span class="chip must">Nặng</span></td>
+      <td>Trưởng chi nhập biểu mẫu bảy mục trong nửa tiếng, vuốt lùi một cái là mất sạch, im lặng. Không có <code>beforeunload</code>, không chặn điều hướng, không nháp. <code>isDirty</code> chỉ in ra dòng chữ “chưa lưu”.</td>
+      <td><code>components/person-form/person-form.tsx</code> — tìm cả cây nguồn không có <code>beforeunload</code></td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><b>Nút bung nhánh dưới ngưỡng chạm</b> <span class="chip must">Nặng</span></td>
+      <td>Nút <code>h-6 w-6</code> = 24 px, và co theo mức phóng: ở mức mở mặc định 0,75 còn <b>18 px</b>. Thao tác chính của màn hình chính vi phạm sàn 44 px của tài liệu 00 §2.2 — cùng loại lỗi mà chú thích trong chính tệp đó ghi lại là “tiền lệ đau thương”.</td>
+      <td><code>components/tree/person-node.tsx</code> · <code>lib/tree/fit-view.ts</code></td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><b>Thẻ đếm trên phả đồ nói sai</b> <span class="chip must">Vừa</span></td>
+      <td>Nhãn ghi “{count} nhân khẩu <b>đang hiển thị</b>” nhưng giá trị là <code>loadedCount</code> — số đã <em>tải</em>. Thu một nhánh lại thì màn hình ít người đi mà con số không đổi.</td>
+      <td><code>components/tree/tree-canvas.tsx</code> (<code>nodeCount={loadedCount}</code>) · <code>messages/vi.json → tree.loadedCount</code></td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><b>Chính chủ không tự chỉnh được mức chia sẻ</b> <span class="chip must">Vừa</span></td>
+      <td>BA v2 §10 chốt “chủ thể tự kiểm soát”. Thực tế: ô <code>privacyLevel</code> chỉ nằm trong biểu mẫu <em>quản trị</em> mà thành viên thường không mở được; trang Cài đặt chỉ có cài đặt thông báo. Quyền riêng tư của một người do người khác đặt hộ.</td>
+      <td><code>components/person-form/person-form.tsx</code> · <code>components/settings/notification-settings-screen.tsx</code></td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><b>Khách bị bỏ rơi ở ô tìm kiếm</b> <span class="chip must">Vừa</span></td>
+      <td>Phả đồ mời khách đăng nhập rất tử tế; tìm kiếm thì trả “Không tìm thấy ai phù hợp.” và không nói gì thêm. Khách kết luận cổng thông tin trống rỗng. Hai màn hình cùng một vấn đề, hai cách đối xử.</td>
+      <td><code>components/tree/tree-canvas.tsx</code> (có lời mời) vs <code>components/search/search-result-list.tsx</code> (không có)</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td><b>Xung đột phiên bản là ngõ cụt</b> <span class="chip must">Vừa</span></td>
+      <td><code>409 OPTIMISTIC_LOCK_CONFLICT</code> chỉ hiện một dải đỏ “Bản ghi đã bị người khác sửa”. Không xem được người kia đổi gì, không gộp được, không giữ được bản của mình. Chỉ còn cách nhập lại từ đầu.</td>
+      <td><code>components/person-form/person-form.tsx</code> — hàm <code>SubmitError</code></td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td><b>Sửa quan hệ thì không có đường nào</b> <span class="chip must">Vừa</span></td>
+      <td>Mục nối quan hệ chỉ có ở chế độ <em>thêm mới</em>. Ghi nhầm cha của một người đã lưu thì không giao diện nào sửa được, và màn hình không nói ra điều đó — Trưởng chi tìm mỏi mắt rồi tưởng mình thiếu quyền.</td>
+      <td><code>components/person-form/person-form.tsx</code> (<code>props.mode === "create"</code>) · <code>relationship-link-field.tsx</code></td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td><b>Chuông thông báo là biểu tượng trần</b> <span class="chip must">Vừa</span></td>
+      <td>Không phải <code>&lt;button&gt;</code> nên bàn phím không tới được; không có nhãn chữ (vi phạm nguyên tắc 3); vùng chạm là chính cái biểu tượng 18 px.</td>
+      <td><code>components/notifications/notification-bell.tsx</code></td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td><b>Không có nhãn múi giờ</b> <span class="chip must">Nhẹ nhưng hay gặp</span></td>
+      <td>Mọi mốc thời gian in theo <code>Asia/Ho_Chi_Minh</code> — cố ý và đúng — nhưng không nói ra. Người dùng chính là kiều bào; họ trừ nhầm sáu, bảy tiếng.</td>
+      <td><code>components/notifications/notification-item.tsx</code></td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td><b>Hai chế độ xem còn lại kể chuyện bằng ngữ pháp khác</b> <span class="chip must">Nhẹ, nhưng gây mất tin</span></td>
+      <td>Toả tròn và Ma trận đời chưa dựng lại theo đơn vị gia đình: vợ chồng không đứng cạnh nhau, không có thanh hôn phối. Người dùng đổi chế độ thấy hình khác hẳn và không ai báo vì sao — dễ kết luận <em>dữ liệu</em> sai chứ không phải cách vẽ khác.</td>
+      <td><code>components/tree/tree-canvas-inner.tsx</code> · <code>lib/tree/layout-radial.ts</code> · <code>layout-matrix.ts</code></td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td><b>Nhãn ô tìm kiếm bị ẩn</b> <span class="chip must">Nhẹ</span></td>
+      <td>Nhãn là <code>sr-only</code>; placeholder biến mất ngay khi gõ, để lại một ô trắng không tên. Với người lão thị, ô không nhãn là một câu đố.</td>
+      <td><code>components/search/search-box.tsx</code></td>
+    </tr>
+    <tr>
+      <td>17</td>
+      <td><b>Không duyệt được, chỉ tìm được</b> <span class="chip must">Nhẹ</span></td>
+      <td><code>q</code> bắt buộc, nên bộ lọc đời/chi/quê quán không dùng riêng được. Câu hỏi rất thường gặp “cho tôi xem hết người đời thứ 5 của Chi Nhất” không có câu trả lời.</td>
+      <td><code>components/search/person-search-screen.tsx</code> (<code>idle = params.q.length === 0</code>)</td>
+    </tr>
+    <tr>
+      <td>18</td>
+      <td><b>Câu hỏi để ngỏ, không phải lỗi</b></td>
+      <td><code>matchedNameType</code> nói truy vấn khớp ở lớp tên nào. Với người còn sống ở mức T1, các lớp tên đó vốn không được trả về — nhưng nhãn thì có. Cần đội backend xác nhận nó chỉ khớp trên các lớp nằm trong tầng người xem.</td>
+      <td><code>components/search/search-result-card.tsx</code> · <code>types/api.ts</code> (<code>PersonSummaryDto.matchedNameType</code>)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>9.1 Nếu chỉ sửa được ba thứ</h3>
+
+<div class="khoi chot">
+  <p class="nhan">Thứ tự đề xuất</p>
+  <ol>
+    <li><b>Mục Quan hệ trên hồ sơ</b> (số 2). Rẻ nhất trong nhóm nặng — dữ liệu đã có sẵn — và
+      nó đồng thời chữa phần lớn nỗi khổ của hồ sơ dâu/rể.</li>
+    <li><b>Đổi <code>?from=</code> thành <code>?to=</code> và đưa Danh xưng vào thanh dưới
+      cùng</b> (số 4 và 5). Gần như không tốn gì, và nó mở khoá 30 luật nhóm J6 mà Hội đồng đã
+      duyệt nhưng chưa ai dùng được.</li>
+    <li><b>Luồng đính chính, tối thiểu</b> (số 1). Đắt nhất, nhưng mọi thứ khác chỉ là tiêu thụ
+      dữ liệu; đây là thứ duy nhất sinh ra dữ liệu. Bản tối thiểu chấp nhận được: một ngăn dưới
+      bốn ô, một hàng đợi có ba nút, và <b>lời hứa mọi đơn đều được trả lời</b>.</li>
+  </ol>
+  <p>
+    Ba mục còn lại đáng làm ngay vì gần như không tốn công: nhãn “đã tải” thay cho “đang hiển
+    thị” (số 8), nhãn “(giờ VN)” (số 14), và lời mời đăng nhập ở ô tìm kiếm (số 10).
+  </p>
+</div>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 04 · Luồng trải nghiệm lõi. Thứ tự ưu tiên khi có mâu thuẫn:
+    <b>BA v2 → <a href="../00-dinh-huong.html">tài liệu 00</a> → tài liệu này</b>.
+    Ràng buộc về người dâu/rể ở <a href="../00-dinh-huong.html">00 §1b</a> đã được áp vào
+    <a href="#pha-do">§1.6</a> và toàn bộ <a href="#danh-xung">§3</a>.
+  </p>
+  <p>
+    Mọi con số mô tả sản phẩm trong tài liệu này đều đọc thẳng từ mã nguồn trong
+    <code>frontend/src/</code> và có ghi đường dẫn. Hai con số <b>157 luật</b> và <b>30 luật
+    nhóm J6</b> lấy nguyên từ tài liệu 00 §1b, không phải do tài liệu này đếm. Mọi thứ mang nhãn
+    <span class="chip should">Đề xuất</span> là thiết kế mới, chưa có mã, và đều kèm cái giá của
+    nó.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Người dùng &amp; chuẩn tiếp cận — Cổng Thông Tin Dòng Họ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+</head>
+<body>
+<div class="trang">
+
+<nav class="dieu-huong">
+  <a href="../00-dinh-huong.html">← 00 · Định hướng thiết kế</a>
+  <span>·</span>
+  <span>01 · Người dùng &amp; chuẩn tiếp cận</span>
+</nav>
+
+<header class="dau">
+  <p class="nhan-tren">Hệ thống Quản lý Gia phả &amp; Cổng thông tin Dòng họ · Tài liệu 01</p>
+  <h1>Người dùng &amp; chuẩn tiếp cận</h1>
+  <p class="tom-tat">
+    Tài liệu 00 đã chốt rằng <strong>người dùng trung bình không tồn tại</strong> và sàn phải đặt
+    theo người khó nhất. Tài liệu này làm hai việc tiếp theo: <strong>đặt tên cho những người khó
+    nhất đó</strong> — sáu con người cụ thể, không phải sáu nhãn nhân khẩu — và <strong>biến
+    WCAG 2.2 mức AA thành các yêu cầu kiểm được</strong> trên đúng bảng màu, đúng cỡ chữ, đúng
+    vùng chạm mà sản phẩm đang chạy.
+  </p>
+  <p class="tom-tat" style="margin-top:14px">
+    Mọi tỉ số tương phản trong tài liệu này được <strong>tính từ mã màu thật</strong> trong
+    <code>frontend/src/styles/tokens.ts</code> theo công thức WCAG. Mọi kích thước px được
+    <strong>đọc từ mã nguồn đang chạy</strong>, có ghi đường dẫn. Chỗ nào là đề xuất thì có chữ
+    “đề xuất”.
+  </p>
+</header>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Kết luận ngắn cho người bận</p>
+  <p>
+    Kiểm bảng màu thật cho ra <b>bốn lỗi tương phản dưới ngưỡng AA đang tồn tại trong sản phẩm</b>,
+    trong đó có một lỗi trớ trêu: <b>di chuột lên một đường liên kết làm nó khó đọc đi</b>
+    (7,77:1 → 2,95:1). Kiểm cỡ chữ và vùng chạm cho ra <b>toàn bộ lớp giao diện Ant Design đang
+    chạy ở 14px và cao 32px</b> — dưới cả hai cái sàn mà tài liệu 00 gọi là “không có ngoại lệ”.
+    Và tiền lệ phóng 0.21 <b>chưa được chữa xong</b>: sàn 0.75 hiện tại vẫn cho ra nút bung nhánh
+    18px. Chi tiết ở mục 4.
+  </p>
+</div>
+
+<h2>1. Cách đọc tài liệu này</h2>
+
+<p>
+  Sáu chân dung ở mục 2 không phải để trang trí. Mỗi yêu cầu tiếp cận ở mục 4 đều truy được về
+  ít nhất một người trong số họ; yêu cầu nào không truy được về ai thì đã bị bỏ ra khỏi tài liệu.
+  Ngược lại, mỗi chân dung phải sinh ra được ít nhất một yêu cầu mà năm người kia không sinh ra —
+  nếu không, đó là một nhãn nhân khẩu chứ không phải một người.
+</p>
+
+<p>
+  Tài liệu 00 dựng dải tuổi thành <em>hai cột</em>: 16–25 và 60–70. Cách dựng đó đúng nhưng
+  <b>để hở đúng một chỗ</b>, và chỗ hở đó là lý do bộ luật danh xưng có 157 luật chứ không phải
+  15 luật. Xem chân dung số 4.
+</p>
+
+<h2>2. Sáu chân dung</h2>
+
+<p>
+  Trải từ 18 đến 71. Ba người thuộc hai đầu dải mà tài liệu 00 mô tả; ba người còn lại là những
+  ca mà hai đầu dải không phủ được: con dâu, thành viên phổ thông không có động lực, và người
+  giữ ký ức bên ngoại.
+</p>
+
+<h3>1 · Cụ Nguyễn Văn Đệ, 71 — Tộc trưởng đời thứ 14</h3>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Hoàn cảnh</h4>
+    <p>
+      Ở Hưng Yên, cạnh từ đường. Giữ cuốn phả giấy chép tay năm 1968 và là người duy nhất còn
+      đọc được phần chữ Hán trong đó. Thẩm quyền cao nhất về dữ liệu: một lời của cụ là chốt.
+      Mắt phải mổ đục thuỷ tinh thể năm 2023; đọc chữ nhỏ được nhưng chóng mỏi, và khả năng
+      phân biệt hai sắc kem gần nhau đã kém đi rõ rệt.
+    </p>
+    <p class="day">Thiết bị: máy tính bảng 10" con trai mua tặng, cỡ chữ hệ điều hành đã để mức lớn nhất. Ngồi bàn, có kính đọc. Wifi nhà chập chờn.</p>
+  </div>
+  <div class="the">
+    <h4>Việc cụ cần làm</h4>
+    <p>
+      Duyệt các bản xin đính chính do Trưởng chi gửi lên · tra vai vế khi có người hỏi ngay
+      giữa đám giỗ · đọc lại tên huý các cụ cho đúng chữ · xác nhận ai là đích tôn của một chi
+      đang tranh chấp.
+    </p>
+    <p class="day">Tần suất: tuần vài lần, dồn vào các dịp lễ. Mỗi phiên dài, không vội.</p>
+  </div>
+  <div class="the">
+    <h4>Điều cụ sợ</h4>
+    <p>
+      Bấm nhầm một cái làm mất cả một chi, và không biết đường lấy lại. Sợ hơn nữa là
+      <b>phải hỏi con cháu cách dùng</b> — với một người mà cả họ hỏi ý kiến, việc đó không
+      phải là bất tiện, đó là mất thể diện.
+    </p>
+    <p class="day">Hệ quả thiết kế: mọi thứ cụ cần phải làm được mà không hỏi ai. Không có “lần đầu chỉ dẫn” nào cứu được cụ ở lần thứ mười.</p>
+  </div>
+  <div class="the">
+    <h4>Hệ thống hiện tại làm cụ thất bại thế nào</h4>
+    <p>
+      Mở phả đồ trên tablet ra một dàn thẻ mà tên người in ở <b>13px</b>, đời và chi ở
+      <b>10,5px</b>, huy hiệu ở <b>9,5px</b>
+      (<code>frontend/src/components/tree/person-node.tsx</code>). Nút bung nhánh là một dấu
+      cộng <b>24px không có nhãn chữ</b> — vi phạm thẳng nguyên tắc 3 của tài liệu 00.
+      Thẻ người đã khuất phân biệt với người sống bằng nền kem <code>#f2ede2</code> trên nền
+      trắng: tương phản <b>1,17:1</b>, tức là với mắt cụ, gần như không phân biệt được.
+    </p>
+  </div>
+</div>
+
+<h3>2 · Ông Nguyễn Văn Thịnh, 52 — Trưởng chi Ba, 47 nhân khẩu</h3>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Hoàn cảnh</h4>
+    <p>
+      Ở Hà Nội, về quê mỗi tháng một lần. Là <b>người nhập liệu chính</b> của cả hệ thống:
+      Hội đồng quyết định, nhưng người ngồi gõ là ông. Gõ mười ngón chậm, làm việc buổi tối
+      sau 22h khi nhà đã yên.
+    </p>
+    <p class="day">Thiết bị: laptop Windows đời cũ, màn 15" 1366×768, cộng điện thoại Android để chụp ảnh bia mộ. Chuột rời.</p>
+  </div>
+  <div class="the">
+    <h4>Việc ông cần làm</h4>
+    <p>
+      Nhập người mới sinh trong chi · cập nhật ngày mất và <b>kiểm chéo ngày âm</b> với cuốn
+      sổ tay của ông · gộp hai bản ghi trùng khi hai nhánh cùng khai một người · gửi xin đính
+      chính lên Hội đồng và theo dõi đã duyệt chưa.
+    </p>
+    <p class="day">Tần suất: gần như hằng tuần. Ông là người dùng nặng nhất của sản phẩm, và là người duy nhất sẽ gặp hết mọi lỗi.</p>
+  </div>
+  <div class="the">
+    <h4>Điều ông sợ</h4>
+    <p>
+      Gõ nhầm một chữ số trong ngày mất, hệ thống lặng lẽ nhận, rồi <b>cả chi nhận nhắc giỗ
+      sai ngày</b> — sai trước mặt Hội đồng và trước cả họ. Nỗi sợ của ông không phải là mất
+      dữ liệu, mà là <b>mất uy tín ở nơi công cộng</b>.
+    </p>
+    <p class="day">Đây chính là chân dung mà hộp thoại xác nhận ngày mất (mẫu chuẩn ở tài liệu 00, nguyên tắc 4) được viết cho.</p>
+  </div>
+  <div class="the">
+    <h4>Hệ thống hiện tại làm ông thất bại thế nào</h4>
+    <p>
+      Không có màn hình “việc của tôi”: sau khi gửi đính chính, ông không biết Hội đồng đã
+      thấy chưa, và không có gì nhắc ông rằng ba hồ sơ trong chi đang thiếu ngày sinh.
+      Toàn bộ ô nhập liệu có viền <code>#e6dfd5</code> trên nền thẻ trắng — <b>1,32:1</b>, tức
+      là lúc 23h, mệt, ông không thấy rõ ranh giới ô mình đang gõ.
+    </p>
+  </div>
+</div>
+
+<h3>3 · Nguyễn Thị Mai Anh, 18 — kiều bào thế hệ hai, Garland, Texas</h3>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Hoàn cảnh</h4>
+    <p>
+      Sinh ở Mỹ, năm nhất đại học. Nói tiếng Việt trong nhà, nhưng <b>đọc tiếng Anh nhanh hơn
+      tiếng Việt nhiều lần</b>, và từ Hán-Việt thì gần như không có: “đích tôn”, “tuyệt tự”,
+      “kỵ húy” là ba chuỗi âm vô nghĩa. Về Việt Nam hai lần trong đời.
+    </p>
+    <p class="day">Thiết bị: iPhone, dùng một tay, thường nằm. Mạng nhanh. Không bao giờ mở laptop cho việc này.</p>
+  </div>
+  <div class="the">
+    <h4>Việc em cần làm</h4>
+    <p>
+      Trước khi gọi video về cho họ hàng: <b>tra xem mình phải gọi người kia là gì</b> · xem
+      mình là đời thứ mấy · xem ảnh và mộ của ông cố · chụp màn hình cây gia phả gửi cho bạn
+      cùng lớp vì thấy nó đẹp.
+    </p>
+    <p class="day">Tần suất: vài lần một năm, dồn vào Tết và trước các cuộc gọi. Mỗi phiên dưới 3 phút.</p>
+  </div>
+  <div class="the">
+    <h4>Điều em sợ</h4>
+    <p>
+      Gọi sai vai vế rồi bị cười — cụ thể hơn là <b>sợ bị lộ ra rằng mình “không đủ Việt”</b>.
+      Nỗi sợ này khiến em <em>không hỏi</em>: em sẽ im lặng và né gọi tên, chứ không nhắn hỏi bố.
+    </p>
+    <p class="day">Hệ quả thiết kế: câu trả lời danh xưng phải kèm giải thích tại chỗ, không bắt em đi tra một trang thuật ngữ riêng — đi tra tức là thừa nhận mình không biết.</p>
+  </div>
+  <div class="the">
+    <h4>Hệ thống hiện tại làm em thất bại thế nào</h4>
+    <p>
+      Bản tiếng Anh giữ nguyên thuật ngữ dòng họ (đúng theo nguyên tắc 6) nhưng
+      <b>chưa có cơ chế giải thích ở lần xuất hiện đầu</b>, nên với em nó thành chữ lạ chứ không
+      thành kiến thức. Phả đồ mở trên iPhone 393px canh khung xuống sàn <code>0.75</code>: thẻ
+      còn 156px, tên còn khoảng 10px. Em không đọc, em thu phóng, rồi em đóng.
+    </p>
+  </div>
+</div>
+
+<h3>4 · Chị Lê Thị Hạnh, 28 — con dâu, về nhà chồng 14 tháng <span class="chip must">ca then chốt</span></h3>
+
+<div class="khoi">
+  <p class="nhan">Vì sao chân dung này quan trọng nhất</p>
+  <p>
+    Chị Hạnh <b>không thuộc huyết thống</b>. Cây gia phả không có nút nào là “chị”, theo nghĩa
+    huyết thống. Nhưng chị là người <b>phải xưng hô đúng nhiều nhất và biết ít nhất</b>: trong
+    lễ chạp mả đầu tiên, chị đứng trước hơn một trăm người bên chồng, và mọi lời chị nói ra đều
+    bị nghe như một phép thử xem nhà này dạy dâu thế nào.
+  </p>
+  <p>
+    Danh xưng của chị <b>không tính từ chị, mà tính qua chồng</b>: chồng gọi người kia là chú thì
+    chị gọi là chú, chồng gọi là anh thì chị gọi là anh hoặc bác tuỳ vùng, và có những nhánh mà
+    quy tắc đổi hẳn. <b>Đây chính là lý do bộ luật mặc định có 157 luật</b> chứ không phải vài
+    chục — con số này đọc từ
+    <code>backend/src/main/resources/db/migration/R__seed_kinship_rules_default.sql</code>, nơi
+    migration tự kiểm và dừng nếu thiếu.
+  </p>
+</div>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Hoàn cảnh &amp; thiết bị</h4>
+    <p>
+      Nhân viên văn phòng, ở cùng bố mẹ chồng. Android tầm trung, màn 6,5". Dùng
+      <b>lúc rảnh tay trong bếp, một tay, đôi khi đang bế con</b>, giữa tiếng ồn.
+      Không bao giờ dùng trước mặt nhà chồng — dùng lén.
+    </p>
+    <p class="day">Phiên dùng ngắn nhất trong cả sáu chân dung: 20–40 giây, và phải cho ra câu trả lời trong khoảng đó.</p>
+  </div>
+  <div class="the">
+    <h4>Việc chị cần làm</h4>
+    <p>
+      “Người sắp bước vào cửa kia, <b>tôi</b> phải gọi là gì?” · “Con tôi gọi bà ấy là gì?” ·
+      Học trước danh sách những người sẽ có mặt ở lễ chạp mả · Biết ai là Trưởng chi để chào
+      trước.
+    </p>
+    <p class="day">Chị cần <b>đường vào bằng khuôn mặt và tên gọi thường ngày</b>, không phải bằng cấu trúc cây — chị không biết cấu trúc.</p>
+  </div>
+  <div class="the">
+    <h4>Điều chị sợ</h4>
+    <p>
+      Hỏi chồng lần thứ năm cùng một câu · gọi sai trước mặt mẹ chồng · và một nỗi sợ khác hẳn
+      năm người kia: <b>sợ dữ liệu của chính mình</b>. Số điện thoại, ảnh, ngày sinh của chị
+      nằm trong một hệ thống mà hàng trăm người bên chồng — phần lớn chị chưa gặp — có tài khoản.
+    </p>
+    <p class="day">Đây là nơi phân tầng T1/T2/T3 (BA v2 §10) thôi là điều khoản pháp lý và trở thành một mối lo xã hội có thật.</p>
+  </div>
+  <div class="the">
+    <h4>Hệ thống hiện tại làm chị thất bại thế nào</h4>
+    <p>
+      Tra danh xưng hiện lấy gốc là “tôi” trong huyết thống. Chị không có gốc đó, nên
+      <b>chị không có đường vào</b>. Bộ 157 luật xử lý được ca dâu/rể ở tầng dữ liệu, nhưng
+      giao diện chưa mở cửa cho người không phải huyết thống — tức là phần đắt nhất của hệ
+      thống đang phục vụ đúng người cần nó nhất bằng con số không.
+    </p>
+  </div>
+</div>
+
+<h3>5 · Anh Nguyễn Văn Hải, 41 — thành viên phổ thông, Bình Dương</h3>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Hoàn cảnh</h4>
+    <p>
+      Kỹ sư giám sát công trình. Vào hệ thống <b>3–4 lần một năm</b>, luôn luôn vì bị nhắc chứ
+      không bao giờ tự nhớ. Điện thoại Android, thường dùng giữa công trường: một tay, nắng
+      chói, mạng 4G chập chờn, tay có thể bẩn hoặc đeo găng.
+    </p>
+    <p class="day">Đây là chân dung <b>đông nhất</b> về số lượng và <b>ít động lực nhất</b>. Sản phẩm sống hay chết ở nhóm này.</p>
+  </div>
+  <div class="the">
+    <h4>Việc anh cần làm</h4>
+    <p>
+      Nhận nhắc giỗ qua Zalo và biết <b>giỗ ai, ở đâu, ngày dương là ngày nào, mình có phải đi
+      không</b> · chuyển khoản quỹ họ · thỉnh thoảng khoe con mới sinh.
+    </p>
+    <p class="day">Anh không muốn “dùng ứng dụng”. Anh muốn tin nhắn trả lời hộ anh bốn câu trên và thôi.</p>
+  </div>
+  <div class="the">
+    <h4>Điều anh sợ</h4>
+    <p>
+      <b>Anh không sợ gì cả — và đó chính là vấn đề.</b> Không có nỗi sợ nào giữ anh lại, nên
+      bất kỳ ma sát nào cũng đủ để anh bỏ. Thứ gần nhất với nỗi sợ là quên mất một cái giỗ mà
+      lẽ ra phải có mặt.
+    </p>
+    <p class="day">Hệ quả thiết kế: với anh, <b>mọi lời nhắc phải tự nó đủ nghĩa</b>. Một tin nhắn buộc phải mở app mới hiểu là một tin nhắn thất bại.</p>
+  </div>
+  <div class="the">
+    <h4>Hệ thống hiện tại làm anh thất bại thế nào</h4>
+    <p>
+      Nhắc giỗ qua Zalo (GĐ 1) bấm vào sẽ dẫn về web, gặp Keycloak, anh quên mật khẩu, bỏ.
+      Ba lần như vậy là anh tắt thông báo. Sau đó hệ thống mất anh vĩnh viễn và
+      <b>không có cách nào biết điều đó đã xảy ra</b>.
+    </p>
+  </div>
+</div>
+
+<h3>6 · Bà Nguyễn Thị Lụa, 66 — Hội đồng Tộc biểu, người giữ ký ức bên ngoại</h3>
+
+<div class="luoi">
+  <div class="the">
+    <h4>Hoàn cảnh</h4>
+    <p>
+      Ở TP.HCM, con gái của chi Hai, lấy chồng xa từ 1982. Là <b>người phụ nữ đầu tiên trong
+      Hội đồng Tộc biểu</b> của họ. Trí nhớ của bà là nguồn duy nhất về các bà cô tổ, các con
+      gái đi lấy chồng xa, và cả bên ngoại — những chỗ mà cuốn phả giấy 1968 để trắng.
+    </p>
+    <p class="day">Thiết bị: điện thoại màn lớn, cỡ chữ hệ thống đặt ở khoảng 130%. Không dùng máy tính.</p>
+  </div>
+  <div class="the">
+    <h4>Việc bà cần làm</h4>
+    <p>
+      Bổ sung tên các bà cô tổ mà bà còn nhớ, <b>phần lớn không có ngày sinh, có khi không có
+      cả tên huý</b> · nối các nhánh bên ngoại · kể lại và ghi âm chuyện các cụ.
+    </p>
+    <p class="day">Dữ liệu bà đóng góp <b>luôn khuyết</b>. Nếu biểu mẫu bắt đủ trường mới lưu được thì bà không đóng góp được gì.</p>
+  </div>
+  <div class="the">
+    <h4>Điều bà sợ</h4>
+    <p>
+      Rằng công của bà bị xếp là “bên ngoại, không tính vào phả”. Bà đã nghe câu đó cả đời.
+      Bà sẽ không tranh cãi — bà sẽ <b>lặng lẽ thôi đóng góp</b>, và hệ thống mất luôn nguồn
+      duy nhất về một nửa dòng họ.
+    </p>
+    <p class="day">BA v2 §12 đã chốt: <b>con gái và bên ngoại ghi đầy đủ, ngang với con trai, là mặc định của hệ thống</b>. Quyết định đó phải nhìn thấy được trong giao diện, không chỉ nằm trong cơ sở dữ liệu.</p>
+  </div>
+  <div class="the">
+    <h4>Hệ thống hiện tại làm bà thất bại thế nào</h4>
+    <p>
+      Chưa có bằng chứng giao diện nào cho thấy nguyên tắc bình đẳng đã được thể hiện: thứ tự
+      sắp anh chị em, cách vẽ cạnh sang nhà vợ/chồng, và việc một người con gái có mở tiếp được
+      nhánh của mình không — cả ba đều <b>chưa được kiểm bằng mắt của bà Lụa</b>. Đây là một
+      khoảng trống, không phải một cáo buộc; nó phải nằm trong bài kiểm thử ở mục 6.
+    </p>
+  </div>
+</div>
+
+<h2>3. Sáu người này mâu thuẫn với nhau ở đâu</h2>
+
+<p>
+  Không thể thoả mãn cả sáu bằng cùng một mặc định. Bảng dưới nêu các cặp xung đột thật, và
+  <b>khuyến nghị nghiêng về ai</b>, kèm cái giá phải trả cho người còn lại.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:20%">Xung đột</th><th style="width:26%">Một bên</th><th style="width:26%">Bên kia</th><th>Khuyến nghị &amp; cái giá</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Mật độ phả đồ</b></td>
+      <td>Cụ Đệ cần thẻ to, chữ ≥17px, nút ≥44px</td>
+      <td>Cụ Đệ <em>cũng</em> cần thấy trọn cả họ trên màn chiếu ngày giỗ Tổ — việc đó bắt buộc thẻ phải nhỏ</td>
+      <td><b>Cùng một người, hai nhu cầu ngược nhau.</b> Tách làm hai chế độ có tên rõ: “Xem để thao tác” (mặc định, đủ sàn) và “Xem toàn cảnh” (chủ ý, bỏ sàn, <b>tắt thao tác</b>). Giá: người dùng phải học rằng ở chế độ toàn cảnh thì bấm không ăn — phải nói thẳng bằng chữ trên màn hình, không để họ tự đoán.</td>
+    </tr>
+    <tr>
+      <td><b>Ma sát khi sửa</b></td>
+      <td>Ông Thịnh &amp; cụ Đệ: xác nhận kỹ, nêu rõ hệ quả (nguyên tắc 4)</td>
+      <td>Mai Anh: 3 giây không xong là bỏ</td>
+      <td>Nghiêng về <b>ông Thịnh</b>, nhưng buộc ma sát phải tỉ lệ với <b>mức khó thu hồi và số người bị ảnh hưởng</b>, không tỉ lệ với vai trò người dùng. Sửa cách viết tên mình: không xác nhận. Nhập ngày mất: xác nhận đầy đủ. Giá: người trẻ sẽ hầu như không sửa gì, nên gánh nặng nhập liệu ở lại với chính người sợ nó nhất.</td>
+    </tr>
+    <tr>
+      <td><b>Riêng tư</b></td>
+      <td>Chị Hạnh muốn ẩn tối đa</td>
+      <td>Ông Thịnh cần số điện thoại để mời họp chi</td>
+      <td>Nghiêng về <b>chị Hạnh</b> — T3 là opt-in, không có ngoại lệ cho Trưởng chi (BA v2 §10). Giá: Trưởng chi phải quay lại cách liên lạc cũ với người chưa opt-in, và sẽ phàn nàn rằng hệ thống “không dùng được”. Bù bằng chức năng gửi tin qua hệ thống mà không lộ số.</td>
+    </tr>
+    <tr>
+      <td><b>Ngôn ngữ</b></td>
+      <td>Mai Anh cần giải thích “đích tôn” bằng tiếng Anh</td>
+      <td>Cụ Đệ đọc lời giải thích đó thấy thừa và hơi bị coi thường</td>
+      <td>Giải thích <b>chỉ hiện trong ngữ cảnh tiếng Anh</b> và ở dạng bung ra khi chạm, không phải chú thích thường trực. Giá: người Việt đọc bản tiếng Việt nhưng không rành Hán-Việt (có thật, không hiếm) sẽ không được giúp — chấp nhận, và theo dõi ở kiểm thử.</td>
+    </tr>
+    <tr>
+      <td><b>Đầy đủ dữ liệu</b></td>
+      <td>Bà Lụa chỉ nhớ được tên, không nhớ năm</td>
+      <td>Chất lượng phả đòi hỏi ngày tháng chính xác</td>
+      <td>Nghiêng về <b>bà Lụa</b>: cho lưu bản ghi khuyết, đánh dấu “chưa rõ” <b>hiển thị được</b> chứ không giấu. Giá: phả sẽ đầy các ô trống nhìn thấy được, và ai đó sẽ nói trông thiếu chuyên nghiệp. Đổi lại, dữ liệu tồn tại — bà Lụa 66 tuổi, cửa sổ thu thập không mở mãi.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Chuẩn tiếp cận — WCAG 2.2 AA viết thành yêu cầu kiểm được</h2>
+
+<p>
+  Phần này không chép lại tiêu chuẩn. Mỗi mục nêu <b>ngưỡng</b>, <b>hiện trạng đo được</b>,
+  <b>yêu cầu</b>, và <b>cái giá</b>. Mã tiêu chí WCAG để ở cuối dòng cho ai cần đối chiếu.
+</p>
+
+<h3>4.1 Cỡ chữ</h3>
+
+<p>
+  Tài liệu 00 đặt sàn: thân bài ≥16px, nội dung chính 17–18px. Đo hiện trạng cho ra
+  ba vùng vi phạm, và một trong ba là vi phạm <b>toàn hệ thống</b>.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:30%">Vùng</th><th style="width:14%">Đang chạy</th><th style="width:12%">Sàn</th><th style="width:10%">KQ</th><th>Nguồn / ghi chú</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Toàn bộ lớp Ant Design</b> (nút, ô nhập, nhãn biểu mẫu, bảng, thông báo)</td>
+      <td class="so">14px</td><td class="so">16px</td><td class="xau">Hỏng</td>
+      <td><code>frontend/src/styles/antd-theme.ts</code> <b>không khai <code>fontSize</code></b>, nên rơi về mặc định 14 của Ant Design. Đây là vi phạm rộng nhất trong sản phẩm và cũng là vi phạm rẻ nhất để sửa: một dòng.</td>
+    </tr>
+    <tr>
+      <td>Tên người trên thẻ phả đồ</td>
+      <td class="so">13px</td><td class="so">16px</td><td class="xau">Hỏng</td>
+      <td><code>person-node.tsx</code>. Ở mức phóng 0.75 còn ~9,8px. Xem 4.3 để biết vì sao chỗ này cần một lối thoát riêng.</td>
+    </tr>
+    <tr>
+      <td>Đời / chi trên thẻ phả đồ</td>
+      <td class="so">10,5px</td><td class="so">16px</td><td class="xau">Hỏng</td>
+      <td><code>person-node.tsx</code>.</td>
+    </tr>
+    <tr>
+      <td>Huy hiệu (đích tôn, kế tự…) trên thẻ</td>
+      <td class="so">9,5px</td><td class="so">16px</td><td class="xau">Hỏng</td>
+      <td><code>person-node.tsx</code>. Ở 9,5px, dấu tiếng Việt chồng tầng bắt đầu dính vào nhau.</td>
+    </tr>
+    <tr>
+      <td>Thân bài tài liệu thiết kế này</td>
+      <td class="so">17px</td><td class="so">16px</td><td class="tot">Đạt</td>
+      <td><code>design/assets/design-doc.css</code> — đã cố ý đặt 17px.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Yêu cầu C-1 · Cỡ chữ nền</p>
+  <p>
+    <b>C-1.1</b> Khai <code>token.fontSize = 16</code> trong <code>antd-theme.ts</code>.
+    Kiểm được: một unit test đọc <code>antdTheme.token.fontSize</code> và dừng build nếu &lt; 16.
+    <b>Giá:</b> mọi bảng và biểu mẫu dày lên khoảng 12–14% chiều cao; vài bố cục hiện tại sẽ tràn
+    và phải sửa tay. Đó là công thật, không phải một dòng cấu hình rồi xong.
+  </p>
+  <p>
+    <b>C-1.2</b> Không có chữ nào dưới <b>12px</b> ở bất kỳ đâu ngoài canvas phả đồ. Kiểm được:
+    quét mã tìm các lớp kiểu <code>text-[10.5px]</code>, <code>text-[9.5px]</code> — danh sách trắng
+    phải rỗng ngoài thư mục <code>components/tree/</code>.
+  </p>
+  <p>
+    <b>C-1.3</b> Canvas phả đồ là ngoại lệ duy nhất, và <b>chỉ được là ngoại lệ nếu có một
+    đường đọc thay thế đạt sàn</b> — xem C-3.4. Không có đường thay thế thì ngoại lệ không tồn tại.
+  </p>
+</div>
+
+<h3>4.2 Tương phản — kiểm trên đúng bảng màu dự án</h3>
+
+<p>
+  Tất cả tỉ số dưới đây <b>tính từ mã màu trong <code>frontend/src/styles/tokens.ts</code></b>
+  theo công thức độ sáng tương đối của WCAG (ngưỡng kênh 0,04045; hệ số 0,2126 / 0,7152 / 0,0722;
+  luỹ thừa 2,4). Không có số nào ở đây là phỏng đoán. Ngưỡng: <b>4,5:1</b> cho chữ thường,
+  <b>3:1</b> cho chữ lớn (≥18,66px đậm hoặc ≥24px) và cho viền/thành phần giao diện.
+</p>
+
+<h4>Chế độ sáng — các cặp đạt</h4>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:44%">Chữ trên nền</th><th style="width:16%">Tỉ số</th><th style="width:12%">Ngưỡng</th><th style="width:10%">KQ</th><th>Dùng ở đâu</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>#2b2825</code> mực trên <code>#ffffff</code> nền thẻ</td><td class="so">14,66:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Chữ chính trong thẻ</td></tr>
+    <tr><td><code>#2b2825</code> mực trên <code>#f8f6f2</code> nền kem</td><td class="so">13,58:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Chữ chính trên trang</td></tr>
+    <tr><td><code>#2b2825</code> mực trên <code>#f2ede2</code> nền giấy cũ</td><td class="so">12,55:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Chữ trên hồ sơ người đã khuất</td></tr>
+    <tr><td><code>#2c3e50</code> lam trên <code>#f8f6f2</code></td><td class="so">10,18:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Màu thông tin</td></tr>
+    <tr><td><code>#8c2d19</code> đỏ trầm trên <code>#ffffff</code></td><td class="so">8,38:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Liên kết, tiêu đề nhấn</td></tr>
+    <tr><td><code>#ffffff</code> trên <code>#8c2d19</code> đỏ trầm</td><td class="so">8,38:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Nút hành động chính</td></tr>
+    <tr><td><code>#8c2d19</code> trên <code>#f8f6f2</code></td><td class="so">7,77:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Liên kết trên nền trang</td></tr>
+    <tr><td><code>#8c2d19</code> trên <code>#fbeee9</code> đỏ nhạt</td><td class="so">7,39:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Chip, khối nhấn</td></tr>
+    <tr><td><code>#5e564d</code> mực nhạt trên <code>#ffffff</code></td><td class="so">7,21:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Chữ phụ trong thẻ</td></tr>
+    <tr><td><code>#5e564d</code> trên <code>#f8f6f2</code></td><td class="so">6,68:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Chữ phụ trên trang</td></tr>
+    <tr><td><code>#5e564d</code> trên <code>#f2ede2</code></td><td class="so">6,17:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Chữ phụ trên hồ sơ người đã khuất</td></tr>
+    <tr><td><code>#b91c1c</code> đỏ lỗi trên <code>#f8f6f2</code></td><td class="so">5,99:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Thông báo lỗi</td></tr>
+    <tr><td><code>#b91c1c</code> trên <code>#fbeae9</code></td><td class="so">5,56:1</td><td class="so">4,5</td><td class="tot">Đạt</td><td>Khối lỗi</td></tr>
+    <tr><td><code>#2b2825</code> mực trên <code>#d97706</code> hổ phách</td><td class="so">4,60:1</td><td class="so">4,5</td><td class="canh">Đạt sát</td><td>Chữ <b>tối</b> trên nền hổ phách — cách dùng hổ phách duy nhất còn an toàn</td></tr>
+    <tr><td><code>#15803d</code> xanh trên <code>#f8f6f2</code></td><td class="so">4,65:1</td><td class="so">4,5</td><td class="canh">Đạt sát</td><td>Trạng thái “còn sống”, thông báo thành công</td></tr>
+    <tr><td><code>#15803d</code> trên <code>#eaf6ee</code> xanh nền</td><td class="so">4,52:1</td><td class="so">4,5</td><td class="canh">Đạt cực sát</td><td>Chip “xong”. Biên độ 0,02 — chỉnh mã màu một nấc là hỏng.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Chế độ sáng — các cặp hỏng</h4>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:44%">Cặp màu</th><th style="width:16%">Tỉ số</th><th style="width:12%">Ngưỡng</th><th style="width:10%">KQ</th><th>Hậu quả với ai</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>#d97706</code> hổ phách làm <b>chữ</b> trên <code>#f8f6f2</code></td>
+      <td class="so">2,95:1</td><td class="so">4,5</td><td class="xau">Hỏng</td>
+      <td>Mọi chữ cảnh báo. Với cụ Đệ (đã mổ thuỷ tinh thể) là không đọc được, không phải khó đọc.</td>
+    </tr>
+    <tr>
+      <td><code>#d97706</code> trên <code>#fdf6e7</code> vàng nền</td>
+      <td class="so">2,96:1</td><td class="so">4,5</td><td class="xau">Hỏng</td>
+      <td>Chip “nên có”, khối cảnh báo.</td>
+    </tr>
+    <tr>
+      <td><code>#ffffff</code> trên <code>#d97706</code> (nút nền hổ phách)</td>
+      <td class="so">3,19:1</td><td class="so">4,5</td><td class="xau">Hỏng</td>
+      <td>Bất kỳ nút nào lấy hổ phách làm nền và chữ trắng. Cấm dùng.</td>
+    </tr>
+    <tr>
+      <td><code>#d97706</code> làm <b>viền tiêu điểm bàn phím</b> trên <code>#f8f6f2</code></td>
+      <td class="so">2,95:1</td><td class="so">3,0</td><td class="xau">Hỏng</td>
+      <td>Người đi bằng bàn phím <b>không thấy mình đang ở đâu</b>. Hiện là quy tắc <code>:focus-visible</code> trong <code>design-doc.css</code> và trong <code>person-node.tsx</code>.</td>
+    </tr>
+    <tr>
+      <td><code>#e6dfd5</code> viền ô nhập trên <code>#ffffff</code> nền thẻ</td>
+      <td class="so">1,32:1</td><td class="so">3,0</td><td class="xau">Hỏng</td>
+      <td>Ông Thịnh nhập liệu lúc 23h không thấy ranh giới ô. <code>antd-theme.ts</code> gán <code>colorBorder</code> = màu này cho mọi điều khiển.</td>
+    </tr>
+    <tr>
+      <td><code>#e6dfd5</code> trên <code>#f8f6f2</code></td>
+      <td class="so">1,23:1</td><td class="so">3,0</td><td class="xau">Hỏng</td>
+      <td>Viền thẻ trên nền trang. Chấp nhận được nếu <em>chỉ</em> trang trí; không chấp nhận được nếu nó là ranh giới của một điều khiển.</td>
+    </tr>
+    <tr>
+      <td><code>#cdbeaa</code> viền đậm trên <code>#f8f6f2</code></td>
+      <td class="so">1,69:1</td><td class="so">3,0</td><td class="xau">Hỏng</td>
+      <td>Viền thẻ người đã khuất, viền nút bung nhánh.</td>
+    </tr>
+    <tr>
+      <td><b><code>#f2ede2</code> nền “người đã khuất” cạnh <code>#ffffff</code> nền “người sống”</b></td>
+      <td class="so">1,17:1</td><td class="so">3,0</td><td class="xau">Hỏng</td>
+      <td><b>Đây là lỗi nặng nhất về nghĩa.</b> Phân biệt sống/khuất — thông tin quan trọng nhất trên một thẻ gia phả — đang được truyền tải gần như hoàn toàn bằng một khác biệt sắc độ mà mắt 66–71 tuổi không bắt được. Xem 4.8.</td>
+    </tr>
+    <tr>
+      <td><code>#f2ede2</code> cạnh <code>#f8f6f2</code> nền trang</td>
+      <td class="so">1,08:1</td><td class="so">3,0</td><td class="xau">Hỏng</td>
+      <td>Cùng vấn đề, tệ hơn, khi thẻ nằm trực tiếp trên nền trang.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Chế độ tối — kiểm luôn để khỏi bỏ sót</h4>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:50%">Cặp màu</th><th style="width:18%">Tỉ số</th><th style="width:12%">KQ</th><th>Ghi chú</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>#efe8df</code> trên <code>#1a1614</code></td><td class="so">14,78:1</td><td class="tot">Đạt</td><td>Chữ chính</td></tr>
+    <tr><td><code>#e9a83f</code> hổ phách tối trên <code>#1a1614</code></td><td class="so">8,67:1</td><td class="tot">Đạt</td><td><b>Bất đối xứng đáng chú ý:</b> hổ phách chế độ tối hoàn toàn ổn. Lỗi chỉ nằm ở chế độ sáng.</td></tr>
+    <tr><td><code>#e08a72</code> đỏ trầm tối trên <code>#1a1614</code></td><td class="so">6,89:1</td><td class="tot">Đạt</td><td>Liên kết</td></tr>
+    <tr><td><code>#a99c8e</code> mực nhạt tối trên <code>#1a1614</code></td><td class="so">6,70:1</td><td class="tot">Đạt</td><td>Chữ phụ</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Lỗi trớ trêu nhất tìm được</p>
+  <p>
+    <code>antd-theme.ts</code> khai <code>colorLink: primary</code> (<code>#8c2d19</code>,
+    <b>7,77:1</b>) và <code>colorLinkHover: accent</code> (<code>#d97706</code>, <b>2,95:1</b>).
+    Nghĩa là: <b>di chuột lên một đường liên kết làm nó khó đọc đi 2,6 lần</b>, và rơi từ đạt
+    xuống hỏng. Trạng thái phản hồi lẽ ra phải làm rõ hơn thì đang làm mờ đi. Một dòng cấu hình,
+    không ai để ý, và không có bài kiểm nào bắt được.
+  </p>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Yêu cầu C-2 · Tương phản</p>
+  <p>
+    <b>C-2.1 — Cấm hổ phách <code>#d97706</code> làm chữ hoặc viền tiêu điểm ở chế độ sáng.</b>
+    Nó vẫn được dùng làm <em>nền</em> (với chữ mực <code>#2b2825</code>, 4,60:1) và vẫn dùng bình
+    thường ở chế độ tối (8,67:1).
+  </p>
+  <p>
+    <b>C-2.2 — Đề xuất thêm</b> một biến thể hổ phách đậm cho chữ và viền tiêu điểm ở chế độ sáng.
+    Ứng viên tính sẵn: <code>#9c5a06</code> → <b>5,02:1</b> trên nền kem, <b>5,03:1</b> trên
+    <code>#fdf6e7</code>, <b>5,42:1</b> khi làm nền với chữ trắng. Giữ được họ màu hổ phách.
+    <b>Giá:</b> bảng màu có hai sắc hổ phách, và chắc chắn sẽ có người chọn nhầm. Giảm rủi ro bằng
+    cách đặt tên theo <em>công dụng</em> (<code>ho-phach-nen</code> / <code>ho-phach-chu</code>),
+    không theo sắc độ. Đây là <b>thay đổi tokens.ts</b> — thuộc quyền <code>ba</code> và
+    <code>dev</code>, tài liệu này chỉ nêu vấn đề và một lối ra đã tính số.
+  </p>
+  <p>
+    <b>C-2.3 — Đề xuất tách viền điều khiển khỏi viền trang trí.</b> Ứng viên cho viền ô nhập:
+    <code>#8a7a66</code> → <b>4,15:1</b> trên nền thẻ trắng, <b>3,85:1</b> trên nền kem — vượt
+    ngưỡng 3:1 có biên độ. <code>#e6dfd5</code> ở lại làm đường kẻ trang trí.
+    <b>Giá:</b> giao diện “cứng” lên trông thấy; vẻ ấm và mềm mà BA v2 mô tả sẽ mất một phần. Đó
+    là cái giá thật, và nên trả — một ô nhập không nhìn thấy ranh giới thì không phải là thẩm mỹ,
+    đó là lỗi.
+  </p>
+  <p>
+    <b>C-2.4 — Kiểm tự động, không kiểm bằng mắt.</b> Viết một unit test tính tỉ số tương phản
+    trực tiếp từ <code>colorTokens</code> cho một danh sách cặp màu đã khai, và <b>dừng build</b>
+    khi có cặp tụt dưới ngưỡng. Chi phí một lần, hiệu lực vĩnh viễn. Không có bài kiểm này thì
+    hai cặp “đạt cực sát” 4,52:1 sẽ hỏng trong lần chỉnh màu tiếp theo mà không ai biết.
+  </p>
+</div>
+
+<h3>4.3 Vùng chạm — và vì sao tiền lệ 0.21 vẫn chưa được chữa xong</h3>
+
+<p>
+  Tài liệu 00 nhắc tiền lệ: phả đồ từng tự canh khung xuống mức phóng <b>0.21</b>, khiến nút bung
+  nhánh 24px co còn <b>5px</b>. Điều đáng nói không phải là con số 5px, mà là:
+  <b>mọi bài kiểm vẫn xanh</b>. Vì các bài kiểm đo <em>mức phóng</em> — và mức phóng vẫn hoạt động
+  đúng như đặc tả. Không có bài kiểm nào đo <em>kích thước thật trên màn hình sau khi nhân với
+  mức phóng</em>. Đó là bài học, không phải con số.
+</p>
+
+<p>
+  Sự cố đã được xử lý bằng cách đặt sàn <code>MIN_INITIAL_ZOOM = 0.75</code> cho lần canh khung
+  đầu tiên (<code>frontend/src/lib/tree/fit-view.ts</code>). <b>Nhưng phép nhân vẫn chưa qua:</b>
+</p>
+
+<figure>
+  <svg viewBox="0 0 880 320" role="img" aria-labelledby="hinh1-tieude">
+    <title id="hinh1-tieude">Kích thước thật của nút bung nhánh ở bốn mức phóng, so với ô 44×44px</title>
+
+    <text class="wf-chu" x="0" y="18" font-weight="600">Nút bung nhánh 24px, kích thước thật sau khi nhân mức phóng</text>
+    <text class="wf-phu" x="0" y="36">Ô nét đứt = ngưỡng chạm 44×44px của tài liệu 00 · Vòng tròn tô = nút hiện tại · Vòng tròn nét mảnh = vùng chạm 44px nếu mở rộng theo đề xuất</text>
+
+    <!-- cot 1: 0.21 -->
+    <rect class="wf-khung" x="48" y="88" width="44" height="44" fill="none" stroke-dasharray="4 3"/>
+    <circle cx="70" cy="110" r="2.5" class="wf-nhan"/>
+    <circle cx="70" cy="110" r="4.6" class="wf-net"/>
+    <text class="wf-chu" x="70" y="170" text-anchor="middle" font-weight="600">0.21</text>
+    <text class="wf-phu" x="70" y="190" text-anchor="middle">nút thật 5,0px</text>
+    <text class="wf-phu" x="70" y="206" text-anchor="middle">mở rộng 9,2px</text>
+    <text class="wf-phu" x="70" y="228" text-anchor="middle" fill="#b91c1c" font-weight="600">sự cố cũ</text>
+
+    <!-- cot 2: 0.55 -->
+    <rect class="wf-khung" x="248" y="88" width="44" height="44" fill="none" stroke-dasharray="4 3"/>
+    <circle cx="270" cy="110" r="6.6" class="wf-nhan"/>
+    <circle cx="270" cy="110" r="12.1" class="wf-net"/>
+    <text class="wf-chu" x="270" y="170" text-anchor="middle" font-weight="600">0.55</text>
+    <text class="wf-phu" x="270" y="190" text-anchor="middle">nút thật 13,2px</text>
+    <text class="wf-phu" x="270" y="206" text-anchor="middle">mở rộng 24,2px</text>
+    <text class="wf-phu" x="270" y="228" text-anchor="middle" fill="#d97706" font-weight="600">ngưỡng đề xuất</text>
+
+    <!-- cot 3: 0.75 -->
+    <rect class="wf-khung" x="448" y="88" width="44" height="44" fill="none" stroke-dasharray="4 3"/>
+    <circle cx="470" cy="110" r="9" class="wf-nhan"/>
+    <circle cx="470" cy="110" r="16.5" class="wf-net"/>
+    <text class="wf-chu" x="470" y="170" text-anchor="middle" font-weight="600">0.75</text>
+    <text class="wf-phu" x="470" y="190" text-anchor="middle">nút thật 18,0px</text>
+    <text class="wf-phu" x="470" y="206" text-anchor="middle">mở rộng 33,0px</text>
+    <text class="wf-phu" x="470" y="228" text-anchor="middle" fill="#b91c1c" font-weight="600">sàn hiện tại — vẫn dưới 44</text>
+
+    <!-- cot 4: 1.0 -->
+    <rect class="wf-khung" x="648" y="88" width="44" height="44" fill="none" stroke-dasharray="4 3"/>
+    <circle cx="670" cy="110" r="12" class="wf-nhan"/>
+    <circle cx="670" cy="110" r="22" class="wf-net"/>
+    <text class="wf-chu" x="670" y="170" text-anchor="middle" font-weight="600">1.00</text>
+    <text class="wf-phu" x="670" y="190" text-anchor="middle">nút thật 24,0px</text>
+    <text class="wf-phu" x="670" y="206" text-anchor="middle">mở rộng 44,0px</text>
+    <text class="wf-phu" x="670" y="228" text-anchor="middle" fill="#15803d" font-weight="600">đạt</text>
+
+    <line class="wf-net" x1="0" y1="264" x2="880" y2="264" stroke-dasharray="2 4"/>
+    <text class="wf-phu" x="0" y="286">Kích thước nút 24px và mức phóng 0.03 / 0.75 / 2.0 đọc từ person-node.tsx và fit-view.ts. Các tích số là phép nhân, không phải ước lượng.</text>
+  </svg>
+  <figcaption>
+    <strong>Sàn 0.75 chưa đủ.</strong> Nút bung nhánh chỉ đạt 44px khi mức phóng bằng 1.0 —
+    tức là ở <em>mọi</em> mức phóng mặc định hiện tại, nút đều dưới ngưỡng. Ngay cả khi mở vùng
+    chạm ẩn ra 44px quanh vòng tròn 24px (cách làm chuẩn: vùng chạm được phép lớn hơn phần nhìn
+    thấy), sàn phóng vẫn phải ≥ <b>0.55</b> thì vùng chạm mới vượt 24px — ngưỡng tối thiểu tuyệt đối.
+  </figcaption>
+</figure>
+
+<div class="khoi chot">
+  <p class="nhan">Yêu cầu C-3 · Vùng chạm</p>
+  <p>
+    <b>C-3.1</b> Mọi điều khiển ngoài canvas: vùng chạm ≥ <b>44×44px</b>. Hiện
+    <code>antd-theme.ts</code> không khai <code>controlHeight</code>, nên mọi nút, ô nhập, ô chọn,
+    <code>Segmented</code> cỡ mặc định đang cao <b>32px</b>. Sửa: khai
+    <code>controlHeight: 44</code>. <b>Giá:</b> thanh công cụ phả đồ với hai
+    <code>Segmented</code> sẽ tràn dòng trên điện thoại — phải thiết kế lại nó, không chỉ đổi số.
+    (<code>tree-toolbar.tsx</code> đã làm đúng cho nút “Thu toàn cây” bằng <code>!min-h-11</code>;
+    hai <code>Segmented</code> cạnh nó thì chưa.)
+  </p>
+  <p>
+    <b>C-3.2</b> Nút bung nhánh trên phả đồ: giữ vòng tròn nhìn thấy 24px, <b>mở vùng chạm ẩn ra
+    44×44px</b>. Phải kiểm rằng khoảng cách dọc giữa hai thẻ ≥ 48px, nếu không hai vùng chạm sẽ
+    chồng nhau và người dùng bấm trúng nút của người khác.
+  </p>
+  <p>
+    <b>C-3.3 — Sàn phóng thao tác được là 0.55.</b> Dưới mức đó, canvas <b>chuyển sang chế độ
+    toàn cảnh</b>: nút bung nhánh biến mất, các thẻ thành hình thuần không bấm được, và có một
+    dòng chữ trên màn hình nói rõ điều đó. <b>Giá:</b> ở chế độ toàn cảnh người dùng không mở
+    được nhánh bằng cách chạm; họ phải phóng to lại hoặc dùng ô tìm kiếm. Đánh đổi này chấp nhận
+    được vì “Thu toàn cây” đã là một <em>hành động chủ ý</em> theo đúng lập luận đã ghi trong
+    <code>fit-view.ts</code> — cái sai cũ là ném người dùng vào đó mà họ không yêu cầu.
+  </p>
+  <p>
+    <b>C-3.4 — Đường đọc thay thế là bắt buộc, không phải tuỳ chọn.</b> Phải có một chế độ xem
+    dạng danh sách/bậc thang bằng HTML thật (<code>&lt;ul&gt;</code> lồng nhau,
+    <code>aria-expanded</code> trên nút mở nhánh), chữ ≥17px, dùng được hoàn toàn bằng bàn phím và
+    trình đọc màn hình. Đây vừa là lối thoát cho ngoại lệ cỡ chữ ở C-1.3, vừa là cách duy nhất để
+    canvas React Flow đạt được tiêu chí trình đọc màn hình.
+    <b>Đề xuất mạnh:</b> trên khung nhìn ≤480px, chế độ này là <b>mặc định</b>, canvas cách một
+    lần chạm. <b>Giá — và nó lớn:</b> phả đồ là hình ảnh đại diện của sản phẩm, và người mở nó
+    lần đầu trên điện thoại chính là Mai Anh — người ta muốn gây ấn tượng nhất. Đổi ấn tượng lấy
+    khả năng đọc. Cần Hội đồng quyết, xem câu hỏi 2 ở cuối.
+  </p>
+  <p>
+    <b>C-3.5 — Bài kiểm phải đo pixel thật, không đo mức phóng.</b> Đây là bài học trực tiếp từ
+    sự cố 0.21. Một bài kiểm dạng: “với mọi mức phóng mà giao diện có thể tự đặt, kích thước hiệu
+    dụng của mọi điều khiển bấm được ≥ 24px” — nếu bài kiểm này tồn tại từ đầu, sự cố 0.21 đã
+    không bao giờ vào được nhánh chính.
+  </p>
+</div>
+
+<h3>4.4 Thao tác bằng bàn phím</h3>
+
+<p>
+  Không ai trong sáu chân dung tự mô tả mình là người dùng bàn phím. Nhưng ông Thịnh nhập liệu
+  hằng tuần và sẽ tự nhiên chuyển sang Tab/Enter khi thạo; và bất kỳ ai bị chấn thương tay tạm
+  thời cũng rơi vào nhóm này. Đây là yêu cầu về <em>độ bền</em> chứ không phải về một nhóm người.
+</p>
+
+<ul>
+  <li>
+    <b>C-4.1</b> Mọi chức năng thao tác được bằng chuột/chạm phải thao tác được bằng bàn phím,
+    <b>bao gồm mở/thu nhánh và di chuyển trên phả đồ</b>. React Flow không cho việc này miễn phí;
+    đường thực tế là C-3.4 (chế độ danh sách) làm bề mặt bàn phím chính thức. <span class="chip must">bắt buộc</span>
+  </li>
+  <li>
+    <b>C-4.2</b> Không có bẫy tiêu điểm. Đặc biệt kiểm hộp thoại cảnh báo kỵ húy và hộp thoại xác
+    nhận ngày mất: đóng bằng <kbd>Esc</kbd>, và tiêu điểm quay lại đúng chỗ vừa rời đi.
+  </li>
+  <li>
+    <b>C-4.3</b> Viền tiêu điểm <b>luôn nhìn thấy được</b>, ≥2px, tương phản ≥3:1 với nền
+    <em>và</em> với phần tử. Hiện dùng hổ phách 2,95:1 — hỏng, xem C-2.1. Cấm
+    <code>outline: none</code> không có thay thế.
+  </li>
+  <li>
+    <b>C-4.4</b> Phần tử được tiêu điểm không bị thanh công cụ hay lớp phủ che khuất. Canvas phả
+    đồ có bốn lớp phủ (<code>&lt;Controls&gt;</code>, <code>&lt;MiniMap&gt;</code>,
+    <code>&lt;TreeLegend&gt;</code>, thanh công cụ) — đây là rủi ro thật ở màn hình này.
+  </li>
+  <li>
+    <b>C-4.5</b> Có liên kết “bỏ qua, tới nội dung chính” ở đầu mỗi trang. Rẻ, và là thứ đầu tiên
+    người kiểm tiếp cận tìm.
+  </li>
+</ul>
+
+<h3>4.5 Trình đọc màn hình</h3>
+
+<p>
+  Yêu cầu ở đây nặng hơn mức thông thường vì hai lý do riêng của dự án này: dữ liệu là
+  <b>tên người Việt có dấu</b>, và giao diện là <b>song ngữ không đối xứng</b>.
+</p>
+
+<ul>
+  <li>
+    <b>C-5.1 — Đánh dấu ngôn ngữ cho tên người.</b> Khi giao diện đang ở tiếng Anh, tên người và
+    thuật ngữ dòng họ phải bọc <code>lang="vi"</code>, nếu không giọng đọc tiếng Anh sẽ phát ra
+    một chuỗi âm mà chính người trong họ không nhận ra. Mã hiện tại <b>đã làm đúng phần Hán-Nôm</b>
+    (<code>lang="zh-Hant"</code> trong <code>name-layers-field.tsx</code>,
+    <code>person-name-layers.tsx</code>, <code>person-profile-header.tsx</code>) — cần mở rộng
+    nguyên tắc đó sang tên tiếng Việt. <b>Giá:</b> thêm một lớp bọc trên đường vẽ nóng nhất (mỗi
+    nút cây), phải đo lại hiệu năng với cây vài nghìn nút.
+  </li>
+  <li>
+    <b>C-5.2 — Trạng thái sống/khuất phải đọc thành lời.</b> <code>person-node.tsx</code> đã làm
+    đúng: chấm màu để <code>aria-hidden</code>, kèm một <code>&lt;span class="sr-only"&gt;</code>
+    ghi rõ trạng thái. <b>Giữ nguyên mẫu này và áp cho mọi chỗ khác.</b>
+  </li>
+  <li>
+    <b>C-5.3 — Thông báo động phải được xướng.</b> <code>search-result-list.tsx</code> đã có
+    <code>aria-live="polite"</code>. Cần cùng cách xử lý cho: kết quả tra danh xưng, cảnh báo kỵ
+    húy, và trạng thái “đang tải nhánh”.
+  </li>
+  <li>
+    <b>C-5.4 — Nhãn và mô tả cho lớp ẩn của quyền riêng tư.</b> Khi một trường bị ẩn vì tầng T2/T3,
+    trình đọc phải nói ra <em>vì sao</em> nó vắng mặt, không im lặng bỏ qua. Im lặng làm người dùng
+    nghĩ hệ thống hỏng.
+  </li>
+  <li>
+    <b>C-5.5</b> Thứ tự đọc trùng thứ tự nhìn; tiêu đề <code>h1…h3</code> đúng bậc, không nhảy cóc.
+  </li>
+</ul>
+
+<h3>4.6 Chuyển động</h3>
+
+<p>
+  Tìm trong <code>frontend/src</code> hiện <b>không có bất kỳ chỗ nào xử lý
+  <code>prefers-reduced-motion</code></b>. Trong khi đó phả đồ có hoạt ảnh canh khung
+  <b>300ms</b> khi mở và <b>400ms</b> khi thu toàn cây (<code>fit-view.ts</code>) — chính là loại
+  chuyển động thu-phóng toàn màn hình dễ gây chóng mặt nhất với người có rối loạn tiền đình.
+</p>
+
+<ul>
+  <li><b>C-6.1</b> Khi hệ điều hành báo giảm chuyển động: đặt <code>duration: 0</code> cho mọi lần canh khung; tắt hiệu ứng trượt của ngăn kéo và hộp thoại. Kiểm được: một unit test đọc giá trị <code>duration</code> qua hàm chọn tham số, chứ không phải kiểm bằng mắt.</li>
+  <li><b>C-6.2</b> Không có nội dung tự động chạy, tự động lật, tự động phát quá 5 giây mà không có nút dừng. Áp cho bản tin và bảng vàng (GĐ 2–3).</li>
+  <li><b>C-6.3</b> Không có gì nhấp nháy quá 3 lần/giây.</li>
+</ul>
+
+<h3>4.7 Phóng to và cỡ chữ hệ điều hành</h3>
+
+<p>
+  Bà Lụa để cỡ chữ hệ thống ở khoảng 130%; cụ Đệ để mức lớn nhất trên tablet. Đây là
+  <b>cách các cụ tự giải quyết vấn đề của mình</b> — và tài liệu 00 nói đúng: tôn trọng nó thay vì
+  làm một “chế độ người già”. Nhưng có một trở ngại kỹ thuật thật:
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Cỡ chữ đang khai bằng px cứng</p>
+  <p>
+    Mã hiện tại dùng các lớp cỡ chữ tuyệt đối kiểu <code>text-[13px]</code>,
+    <code>text-[10.5px]</code>, <code>text-[9.5px]</code>. Chữ khai bằng px cứng
+    <b>không giãn theo cỡ chữ mà người dùng đặt trong hệ điều hành/trình duyệt</b>. Nghĩa là:
+    cụ Đệ đã kéo cỡ chữ hệ thống lên hết cỡ, và sản phẩm vẫn trả về đúng 13px. Nỗ lực tự cứu
+    của cụ bị vô hiệu hoá.
+  </p>
+</div>
+
+<ul>
+  <li><b>C-7.1</b> Chuyển toàn bộ cỡ chữ nội dung sang đơn vị tương đối (<code>rem</code>), gốc <code>html</code> để ở <code>100%</code>. <b>Giá — và đây là công lớn nhất trong cả tài liệu:</b> phải rà toàn bộ giá trị px rải rác trong frontend; và bố cục canvas đang gắn cứng với px (thẻ 208×96) nên chữ giãn mà thẻ không giãn sẽ tràn. Canvas cần đo lại kích thước thẻ theo cỡ chữ thật, hoặc chấp nhận rằng canvas không theo cỡ chữ hệ thống — trong trường hợp đó C-3.4 (chế độ danh sách) không còn là tuỳ chọn nữa mà là điều kiện sống còn.</li>
+  <li><b>C-7.2</b> Phóng trình duyệt tới <b>200%</b>: không mất nội dung, không mất chức năng, không có chữ chồng chữ.</li>
+  <li><b>C-7.3</b> Ở bề rộng tương đương <b>320px</b>: không có cuộn ngang, trừ hai ngoại lệ được phép vì bản chất hai chiều — <b>canvas phả đồ</b> và <b>bảng dữ liệu rộng</b> (mẫu <code>.cuon</code>).</li>
+  <li><b>C-7.4</b> Không dùng <code>maximum-scale=1</code> hay <code>user-scalable=no</code> trong thẻ viewport. Kiểm được bằng một dòng quét mã.</li>
+</ul>
+
+<h3>4.8 Không truyền nghĩa bằng riêng màu — ca người sống / người đã khuất</h3>
+
+<p>
+  Đây là chỗ mà một quyết định thiết kế <em>đúng về văn hoá</em> lại <em>hỏng về khả năng nhìn</em>,
+  nên đáng nói riêng.
+</p>
+
+<p>
+  Nền “giấy cũ” <code>#f2ede2</code> dành cho người đã khuất là một lựa chọn tốt: nó đọc ra
+  sự tôn kính chứ không đọc ra trạng thái bị vô hiệu hoá — đúng như <code>tokens.ts</code> ghi chú.
+  Vấn đề là <b>nó chỉ chênh nền thẻ trắng 1,17:1 và chênh nền trang 1,08:1</b>. Với mắt đã có
+  đục thuỷ tinh thể hoặc thuỷ tinh thể ngả vàng theo tuổi — tức là cụ Đệ và bà Lụa, hai người
+  <em>quan trọng nhất</em> đối với dữ liệu — khác biệt đó gần như biến mất.
+</p>
+
+<figure>
+  <svg viewBox="0 0 880 260" role="img" aria-labelledby="hinh2-tieude">
+    <title id="hinh2-tieude">Ba tín hiệu độc lập phân biệt người sống và người đã khuất</title>
+
+    <text class="wf-chu" x="0" y="18" font-weight="600">Hiện tại — một tín hiệu, 1,17:1</text>
+    <rect x="0" y="34" width="200" height="96" rx="6" fill="#ffffff" stroke="#8c2d19" stroke-opacity=".5" stroke-width="1.25"/>
+    <text class="wf-chu" x="16" y="60" font-weight="600">Nguyễn Văn Đệ</text>
+    <text class="wf-phu" x="16" y="80">Đời 14 · Chi Trưởng</text>
+    <text class="wf-phu" x="16" y="98">1955 –</text>
+    <circle cx="182" cy="52" r="4" fill="#15803d"/>
+
+    <rect x="216" y="34" width="200" height="96" rx="6" fill="#f2ede2" stroke="#cdbeaa" stroke-width="1.25"/>
+    <text class="wf-chu" x="232" y="60" font-weight="600">Nguyễn Văn Cẩn</text>
+    <text class="wf-phu" x="232" y="80">Đời 13 · Chi Trưởng</text>
+    <text class="wf-phu" x="232" y="98">1921 – 1998</text>
+    <circle cx="398" cy="52" r="4" fill="#5e564d"/>
+    <text class="wf-phu" x="0" y="152" fill="#b91c1c">Nền lệch 1,17:1 · chấm màu 4px, dưới mọi ngưỡng · năm mất là tín hiệu duy nhất còn đọc được</text>
+
+    <line class="wf-net" x1="448" y1="30" x2="448" y2="200" stroke-dasharray="3 4"/>
+
+    <text class="wf-chu" x="472" y="18" font-weight="600">Đề xuất — ba tín hiệu độc lập</text>
+    <rect x="472" y="34" width="200" height="96" rx="6" fill="#ffffff" stroke="#8c2d19" stroke-opacity=".5" stroke-width="1.25"/>
+    <text class="wf-chu" x="488" y="60" font-weight="600">Nguyễn Văn Đệ</text>
+    <text class="wf-phu" x="488" y="80">Đời 14 · Chi Trưởng</text>
+    <text class="wf-phu" x="488" y="98">Sinh 1955</text>
+
+    <rect x="688" y="34" width="192" height="96" rx="6" fill="#f2ede2" stroke="#8a7a66" stroke-width="3"/>
+    <rect x="688" y="34" width="192" height="8" fill="#8a7a66"/>
+    <text class="wf-chu" x="704" y="66" font-weight="600">Nguyễn Văn Cẩn</text>
+    <text class="wf-phu" x="704" y="86">Đời 13 · Chi Trưởng</text>
+    <text class="wf-chu" x="704" y="108" font-weight="600">Đã mất 1998</text>
+
+    <text class="wf-phu" x="472" y="152">1 · nền giấy cũ (giữ, vì đúng về văn hoá)</text>
+    <text class="wf-phu" x="472" y="170">2 · viền dày 3px + dải trên đầu thẻ — tín hiệu hình dạng, không phụ thuộc màu</text>
+    <text class="wf-phu" x="472" y="188">3 · chữ “Đã mất” viết hẳn ra, cùng cỡ chữ chính — tín hiệu ngôn ngữ</text>
+    <text class="wf-phu" x="472" y="212" fill="#15803d">Đọc được cả khi in đen trắng, cả khi mù màu, cả khi đọc bằng trình đọc màn hình</text>
+  </svg>
+  <figcaption>
+    <strong>Ba tín hiệu độc lập thay cho một.</strong> Nền giấy cũ ở lại vì nó mang nghĩa văn hoá
+    đúng; nhưng nó không được là tín hiệu <em>duy nhất</em>. Chữ “Đã mất” viết ra bằng lời là tín
+    hiệu bền nhất — nó qua được cả máy in đen trắng lẫn trình đọc màn hình.
+    <strong>Giá:</strong> thẻ mất thêm một dòng chữ, tức mất chỗ, tức thẻ phải to hơn hoặc bớt
+    thông tin khác. Đó chính là cái mà tài liệu 00 gọi là “chật thì bỏ bớt thứ khác”.
+  </figcaption>
+</figure>
+
+<ul>
+  <li><b>C-8.1</b> Mọi thông tin đang truyền bằng màu phải có ít nhất <b>một tín hiệu không phải màu</b> đi kèm: chữ, hình dạng, hoặc vị trí. Áp cho: sống/khuất · huy hiệu đích tôn/kế tự/tuyệt tự · tầng riêng tư T1/T2/T3 · trạng thái duyệt đính chính.</li>
+  <li><b>C-8.2</b> Chấm trạng thái 4–8px không được tính là một tín hiệu. Nó quá nhỏ để nhìn thấy ở mức phóng &lt;1.0 và quá nhỏ để phân biệt màu ở mọi mức phóng.</li>
+  <li><b>C-8.3</b> Kiểm bằng cách in màn hình ra giấy đen trắng và đưa cho người chưa từng thấy sản phẩm. Nếu họ không chỉ ra được ai đã mất, tiêu chí này chưa đạt. Rẻ, và không lừa được.</li>
+</ul>
+
+<h3>4.9 Bảng gộp — tiêu chí kiểm được</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:10%">Mã</th><th style="width:44%">Yêu cầu</th><th style="width:26%">Cách kiểm</th><th>Ưu tiên</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>C-1.1</td><td><code>fontSize</code> nền ≥ 16px</td><td>Unit test đọc <code>antdTheme.token</code></td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-1.2</td><td>Không có chữ &lt;12px ngoài canvas</td><td>Quét mã, danh sách trắng rỗng</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-2.1</td><td>Hổ phách không làm chữ/viền tiêu điểm ở chế độ sáng</td><td>Quét mã + duyệt thiết kế</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-2.4</td><td>Bài kiểm tương phản dừng build</td><td>Unit test trên <code>colorTokens</code></td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-3.1</td><td>Điều khiển ngoài canvas ≥44px</td><td><code>controlHeight</code> + kiểm mắt trên 3 màn</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-3.3</td><td>Sàn phóng thao tác 0.55; dưới đó là chế độ toàn cảnh</td><td>Unit test trên tham số canh khung</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-3.4</td><td>Chế độ danh sách bằng HTML thật</td><td>axe-core + kiểm bằng NVDA/VoiceOver</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-3.5</td><td>Bài kiểm đo px hiệu dụng, không đo mức phóng</td><td>Unit test tính tích số</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-4.1</td><td>Mọi chức năng dùng được bằng bàn phím</td><td>Đi hết luồng chỉ bằng bàn phím</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-4.3</td><td>Viền tiêu điểm ≥3:1, luôn thấy</td><td>Bài kiểm tương phản + kiểm mắt</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-5.1</td><td><code>lang="vi"</code> cho tên người trong ngữ cảnh tiếng Anh</td><td>Kiểm bằng trình đọc màn hình</td><td><span class="chip should">Nên có</span></td></tr>
+    <tr><td>C-6.1</td><td>Tôn trọng <code>prefers-reduced-motion</code></td><td>Unit test trên tham số hoạt ảnh</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-7.1</td><td>Cỡ chữ theo đơn vị tương đối</td><td>Quét mã + kiểm với cỡ chữ hệ thống 200%</td><td><span class="chip should">Nên có</span></td></tr>
+    <tr><td>C-7.2</td><td>Phóng 200% không mất chức năng</td><td>Kiểm tay trên 3 trang chính</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-8.1</td><td>Không truyền nghĩa bằng riêng màu</td><td>In đen trắng, đưa người lạ đọc</td><td><span class="chip must">Phải có</span></td></tr>
+    <tr><td>C-2.2</td><td>Thêm biến thể hổ phách đậm cho chữ</td><td>Cần <code>ba</code> + <code>dev</code> chốt tokens</td><td><span class="chip should">Nên có</span></td></tr>
+    <tr><td>C-2.3</td><td>Tách viền điều khiển khỏi viền trang trí</td><td>Cần <code>ba</code> + <code>dev</code> chốt tokens</td><td><span class="chip should">Nên có</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>5. Tám kịch bản dùng thật</h2>
+
+<p>
+  Mỗi kịch bản là một tình huống có thật về mặt xã hội, không phải một luồng bấm. Cột cuối là
+  <b>chỗ nó hỏng</b> — vì đó mới là thứ hữu ích cho thiết kế.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:6%">#</th><th style="width:30%">Tình huống</th><th style="width:22%">Ai · thiết bị · bối cảnh</th><th style="width:26%">Cái gì có thể hỏng</th><th>Yêu cầu liên quan</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>K1</b></td>
+      <td><b>Tra danh xưng ngay giữa đám giỗ.</b> Có người lạ đến chào, cả sân nhìn cụ Đệ chờ cụ xưng hô trước.</td>
+      <td>Cụ Đệ · tablet cầm tay · sân từ đường, nắng chói, 3G yếu, đông người</td>
+      <td>Nắng làm nền kem và nền giấy cũ (1,17:1) thành một màu · cụ phải dùng một tay vì tay kia cầm tablet · nếu mất quá 15 giây thì cụ bỏ máy và đoán bừa · <b>đoán sai giữa đám đông là mất mặt hơn cả không tra</b></td>
+      <td>C-2.x, C-3.1, C-7.2</td>
+    </tr>
+    <tr>
+      <td><b>K2</b></td>
+      <td><b>Con dâu học trước danh xưng cho lễ chạp mả.</b> Cần biết sẽ gọi khoảng 20 người bên chồng là gì, tối trước ngày đi.</td>
+      <td>Chị Hạnh · Android 6,5", một tay · trong bếp, có tiếng ồn, dùng lén</td>
+      <td><b>Chị không có nút gốc trong huyết thống</b> — không có đường vào · phải nhập gốc “qua chồng” mà giao diện chưa có · danh sách 20 người không có ảnh thì học không vào · nếu chị phải hỏi chồng cách dùng thì mục đích của chức năng đã hỏng</td>
+      <td>C-1.1, C-3.1, mục 2 §4</td>
+    </tr>
+    <tr>
+      <td><b>K3</b></td>
+      <td><b>Kiều bào tra trước cuộc gọi video.</b> 21h giờ Texas, sắp gọi cho “ông ở Việt Nam”, không chắc là ông nội hay ông bác.</td>
+      <td>Mai Anh · iPhone, một tay, đang nằm · giao diện tiếng Anh</td>
+      <td>Kết quả trả về “ông bác” mà không giải thích khác gì “ông nội” · phả đồ mở ở mức thu nhỏ, chữ ~10px · nếu quá 3 giây thì em đóng và gọi luôn, né xưng hô · <b>thất bại ở đây không tạo ra khiếu nại, nó tạo ra một người dùng biến mất</b></td>
+      <td>C-1.2, C-3.3, C-3.4</td>
+    </tr>
+    <tr>
+      <td><b>K4</b></td>
+      <td><b>Trưởng chi nhập ngày mất lúc 23h.</b> Cụ trong chi mới mất; ông Thịnh nhập theo giấy báo tử, gõ nhầm 1943 thành 1934.</td>
+      <td>Ông Thịnh · laptop 1366×768 · mệt, muộn, một mình</td>
+      <td>Viền ô nhập 1,32:1 nên không rõ đang gõ ô nào · nếu hệ thống lặng lẽ nhận thì <b>cả chi nhận nhắc giỗ sai ngày âm</b> · hộp thoại xác nhận phải chiếu lại ngày âm để soi lỗi gõ, đúng mẫu chuẩn ở tài liệu 00 · và phải nói rõ hệ quả: hồ sơ chuyển thành công khai với cả khách</td>
+      <td>C-2.3, nguyên tắc 4</td>
+    </tr>
+    <tr>
+      <td><b>K5</b></td>
+      <td><b>Nhận nhắc giỗ Zalo giữa công trường.</b> Tin nhắn báo giỗ cụ tổ chi Ba còn 3 ngày.</td>
+      <td>Anh Hải · Android, một tay, đeo găng · nắng gắt, 4G chập chờn</td>
+      <td>Tin nhắn không nói rõ giỗ ai / ở đâu / ngày dương nào thì anh bỏ qua · bấm vào gặp màn đăng nhập, quên mật khẩu, bỏ · <b>ba lần như vậy anh tắt thông báo và hệ thống mất anh mà không biết</b> · nắng + găng tay = mọi nút dưới 44px đều trượt</td>
+      <td>C-3.1, GĐ 1 Zalo</td>
+    </tr>
+    <tr>
+      <td><b>K6</b></td>
+      <td><b>Ghi tên một bà cô tổ không rõ năm sinh.</b> Bà Lụa nhớ tên và nhớ bà ấy lấy chồng ở Nam Định, không nhớ gì thêm.</td>
+      <td>Bà Lụa · điện thoại màn lớn, cỡ chữ hệ thống 130% · ngồi nhà, không vội</td>
+      <td>Cỡ chữ hệ thống 130% <b>không có tác dụng</b> vì mã dùng px cứng · biểu mẫu bắt buộc ngày sinh thì bà không lưu được và sẽ thôi đóng góp · nếu bản ghi khuyết bị vẽ mờ đi thì trông như “hạng hai”, đúng nỗi sợ của bà</td>
+      <td>C-7.1, BA v2 §12</td>
+    </tr>
+    <tr>
+      <td><b>K7</b></td>
+      <td><b>Chiếu phả đồ toàn cây ngày giỗ Tổ.</b> Máy chiếu trong nhà thờ họ, khoảng 60 người xem, người ngồi xa cách màn 6m, phần lớn trên 60 tuổi.</td>
+      <td>Ông Thịnh điều khiển laptop · cụ Đệ và cả họ xem · phòng sáng, máy chiếu cũ, tương phản kém</td>
+      <td>Ở mức phóng đủ để thấy trọn cây thì tên người còn vài px — không ai đọc được, và <b>giá trị cảm xúc của khoảnh khắc mất sạch</b> · máy chiếu cũ nén tương phản, nên mọi cặp màu “đạt sát” 4,52:1 sẽ tụt xuống dưới ngưỡng · nếu ai đó chạm nhầm vào canvas, cả họ thấy cây nhảy</td>
+      <td>C-3.3, C-2.4</td>
+    </tr>
+    <tr>
+      <td><b>K8</b></td>
+      <td><b>Duyệt một đính chính đang tranh chấp.</b> Hai chi khai khác nhau về mẹ của cùng một người. Cụ Đệ phải chốt, và <b>một trong hai chi sẽ không hài lòng</b>.</td>
+      <td>Cụ Đệ · tablet · một mình, buổi tối, sau khi đã hỏi ý vài người</td>
+      <td>Đây là thao tác khó thu hồi nhất trong cả sản phẩm và nó <b>có hậu quả xã hội, không chỉ hậu quả dữ liệu</b> · nếu giao diện chỉ hỏi “bạn chắc chứ?” thì nó đang bỏ mặc cụ · phải hiện: ai khai gì, ai sẽ thấy thay đổi này, và có lấy lại được không · cụ có thể muốn <b>hoãn</b> — nếu không có nút hoãn thì cụ sẽ đóng máy và không quay lại</td>
+      <td>Nguyên tắc 4, C-4.2</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Điều tám kịch bản này nói chung một câu</p>
+  <p>
+    Sáu trong tám kịch bản diễn ra <b>trước mặt người khác</b> hoặc <b>có hậu quả trước mặt người
+    khác</b>. Đây không phải một sản phẩm dùng riêng tư. Hệ quả thiết kế: <b>tốc độ cho ra câu
+    trả lời quan trọng hơn độ phong phú của câu trả lời</b>, và <b>mọi thất bại đều là thất bại
+    công khai</b>. Đó là lý do vì sao ở đây tương phản và cỡ chữ không phải là chuyện tuân thủ
+    tiêu chuẩn — chúng là chuyện thể diện.
+  </p>
+</div>
+
+<h2>6. Cách đo</h2>
+
+<h3>6.1 Hàng rào tự động — chạy mỗi lần build</h3>
+
+<p>
+  Đây là phần rẻ và phải làm trước, vì nó bắt được đúng loại lỗi mà sự cố 0.21 minh hoạ: lỗi mà
+  <b>mọi bài kiểm hiện có vẫn xanh</b>.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:26%">Hàng rào</th><th style="width:36%">Nội dung</th><th>Vì sao nó bắt được thứ mà bài kiểm hiện tại không bắt</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Bài kiểm tương phản trên tokens</b></td>
+      <td>Tính tỉ số cho danh sách cặp màu đã khai; dừng build nếu dưới ngưỡng. Bao gồm cả chế độ tối.</td>
+      <td>Bốn lỗi ở mục 4.2 đã tồn tại trong mã nhiều tháng mà không ai thấy, vì không có gì nhìn vào chúng.</td>
+    </tr>
+    <tr>
+      <td><b>Bài kiểm px hiệu dụng</b></td>
+      <td>Với mọi tham số phóng mà giao diện tự đặt, tính kích thước thật của điều khiển và so ngưỡng.</td>
+      <td>Bài kiểm cũ đo mức phóng; mức phóng vẫn đúng đặc tả trong khi nút còn 5px.</td>
+    </tr>
+    <tr>
+      <td><b>axe-core trên các trang chính</b></td>
+      <td>Chạy trong bộ kiểm giao diện, ngưỡng: không lỗi mức “serious/critical”.</td>
+      <td>Bắt được nhãn thiếu, bậc tiêu đề sai, vai trò ARIA sai — loại lỗi mà mắt người quen mã rất hay bỏ qua.</td>
+    </tr>
+    <tr>
+      <td><b>Quét cỡ chữ</b></td>
+      <td>Tìm mọi khai báo px tuyệt đối dưới 12px; danh sách trắng phải khai tường minh và có lý do.</td>
+      <td>Cỡ 9,5px vào được nhánh chính vì không ai nghĩ đó là một quyết định.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <b>Giới hạn phải nói thẳng:</b> bốn hàng rào trên gộp lại chỉ bắt được khoảng một phần ba số
+  vấn đề tiếp cận thực tế. Chúng <b>không</b> bắt được: nhãn viết khó hiểu, thứ tự đọc vô lý,
+  câu trả lời danh xưng đúng-mà-không-ai-hiểu, và toàn bộ nhóm vấn đề “cụ sợ bấm”. Những thứ đó
+  chỉ có người thật mới tìm ra.
+</p>
+
+<h3>6.2 Chỉ số — và vì sao không dùng SUS</h3>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:24%">Chỉ số</th><th style="width:22%">Đo thế nào</th><th style="width:18%">Ngưỡng đề xuất</th><th>Vì sao chọn chỉ số này</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Tỉ lệ hoàn thành không cần trợ giúp</b></td>
+      <td>Đếm trên từng bài của từng người</td>
+      <td class="so">≥ 80%</td>
+      <td>Chỉ số duy nhất không cãi được. “Cần trợ giúp” tính cả việc người tham gia quay sang hỏi người điều phối.</td>
+    </tr>
+    <tr>
+      <td><b>Thời gian ra câu trả lời danh xưng</b></td>
+      <td>Bấm giờ từ lúc mở app đến lúc nói ra danh xưng đúng</td>
+      <td class="so">≤ 20 giây</td>
+      <td>Lấy từ K1: giữa đám giỗ, quá 15–20 giây là người ta bỏ máy và đoán bừa. Ngưỡng này là <b>đề xuất</b>, cần hiệu chỉnh sau vòng kiểm đầu.</td>
+    </tr>
+    <tr>
+      <td><b>Lỗi lọt qua khi nhập ngày mất</b></td>
+      <td>Cố tình đưa một ngày sai vào bài; đếm số lần người tham gia lưu mà không phát hiện</td>
+      <td class="so">= 0</td>
+      <td>Đây là lỗi có hậu quả lan ra cả họ. Ngưỡng phải là 0, không phải “thấp”.</td>
+    </tr>
+    <tr>
+      <td><b>Độ tự tin “không sợ làm hỏng”</b></td>
+      <td>Một câu 7 mức, hỏi <b>trước và sau</b> phiên, chỉ với người có quyền sửa</td>
+      <td class="so">tăng ≥ 2 mức</td>
+      <td>Nỗi sợ của cụ Đệ là rủi ro sản phẩm lớn nhất về mặt dữ liệu. Nếu không đo nó thì không quản được nó.</td>
+    </tr>
+    <tr>
+      <td><b>Độ dễ cảm nhận từng bài (SEQ)</b></td>
+      <td>Một câu 7 mức ngay sau mỗi bài</td>
+      <td class="so">≥ 5,5 / 7</td>
+      <td><b>Cố ý dùng SEQ thay cho SUS.</b> SUS là 10 câu trừu tượng, có câu phủ định gài bẫy, và với người 66–71 tuổi chưa quen ứng dụng thì nó đo khả năng hiểu bảng hỏi nhiều hơn đo sản phẩm. SEQ một câu, hỏi ngay lúc trải nghiệm còn nóng.</td>
+    </tr>
+    <tr>
+      <td><b>Tỉ lệ mở nhắc giỗ Zalo</b></td>
+      <td>Thống kê thật sau khi phát hành</td>
+      <td class="so">chưa đặt</td>
+      <td>Chỉ số sống còn cho chân dung anh Hải, nhưng <b>chưa có dữ liệu nền nên chưa được phép đặt ngưỡng</b>. Đo ba chu kỳ giỗ rồi mới đặt. Đặt ngưỡng bây giờ là bịa số.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6.3 Kế hoạch kiểm thử với người thật</h3>
+
+<p>
+  <b>Đề xuất: 14 người, một vòng trước khi đóng Giai đoạn 1, một vòng nhỏ hơn trước Giai đoạn 2.</b>
+  Con số 14 không phải để đạt ý nghĩa thống kê — nghiên cứu định tính không cần thế. Nó là số nhỏ
+  nhất còn phủ được sáu chân dung với ít nhất hai người mỗi chân dung ở các nhóm quan trọng, để
+  một người bất thường không kéo lệch kết luận.
+</p>
+
+<div class="cuon">
+<table>
+  <thead>
+    <tr><th style="width:10%">Số người</th><th style="width:18%">Tuổi</th><th style="width:24%">Chân dung</th><th style="width:24%">Điều kiện tuyển bắt buộc</th><th>Bài chính</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="so"><b>3</b></td><td class="so">62–75</td><td>Tộc trưởng / Hội đồng Tộc biểu</td>
+      <td>Ít nhất <b>1 người chưa từng tự cài một ứng dụng nào</b>; ít nhất 1 người đeo kính đọc. Bắt buộc có <b>ít nhất 1 nữ</b> (chân dung bà Lụa).</td>
+      <td>K1 tra danh xưng · K8 duyệt đính chính tranh chấp · K7 chiếu toàn cây</td>
+    </tr>
+    <tr>
+      <td class="so"><b>3</b></td><td class="so">45–60</td><td>Trưởng chi / người nhập liệu</td>
+      <td>Đang thực sự quản một chi, hoặc đang giữ một cuốn phả giấy.</td>
+      <td>K4 nhập ngày mất có bẫy sai · gộp hai bản ghi trùng · gửi xin đính chính</td>
+    </tr>
+    <tr>
+      <td class="so"><b>3</b></td><td class="so">16–25</td><td>Kiều bào thế hệ hai</td>
+      <td>Ít nhất <b>2 người sinh ở nước ngoài</b>; ít nhất <b>1 người tự nhận đọc tiếng Anh nhanh hơn tiếng Việt</b>. Cho dùng giao diện tiếng Anh.</td>
+      <td>K3 tra trước cuộc gọi · tự tìm mình trên cây · giải thích lại “đích tôn” bằng lời của mình</td>
+    </tr>
+    <tr>
+      <td class="so"><b>2</b></td><td class="so">24–35</td><td><b>Con dâu</b></td>
+      <td>Về nhà chồng <b>dưới 3 năm</b>, không thuộc huyết thống dòng họ đang thử. Phỏng vấn <b>riêng, không có mặt nhà chồng</b> — nếu không, dữ liệu về nỗi lo riêng tư sẽ bằng không.</td>
+      <td>K2 học danh xưng trước lễ · tự xem và chỉnh tầng riêng tư của chính mình</td>
+    </tr>
+    <tr>
+      <td class="so"><b>3</b></td><td class="so">30–50</td><td>Thành viên phổ thông</td>
+      <td>Ít nhất <b>1 người chưa từng mở hệ thống lần nào</b>, tuyển đúng vì lý do đó.</td>
+      <td>K5 từ tin nhắn Zalo đến chỗ cần đến · tra xem mình là đời thứ mấy</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Cách chạy</h4>
+<ul>
+  <li><b>Tại chỗ, trên thiết bị của chính họ.</b> Không phát máy mượn. Nửa số phát hiện quan trọng nằm ở cỡ chữ hệ thống họ đã đặt, ở màn hình đã xước, ở việc họ dùng một tay — những thứ biến mất sạch khi đưa họ một chiếc iPad mới.</li>
+  <li><b>Nghĩ thành tiếng, không hướng dẫn.</b> Khi người tham gia bí, đếm 30 giây trước khi giúp, và ghi lại là “cần trợ giúp”.</li>
+  <li><b>Với nhóm 62–75: không quay phim mặt.</b> Quay màn hình và ghi âm là đủ. Máy quay chĩa vào mặt một vị Tộc trưởng sẽ đổi hẳn hành vi của cụ, và có thể bị hiểu là thiếu tôn trọng.</li>
+  <li><b>Với nhóm con dâu: người điều phối nên là nữ</b>, và phải nói rõ ngay đầu buổi rằng phản hồi không được chuyển về nhà chồng dưới dạng nhận diện được.</li>
+  <li><b>Một bài bắt buộc cho mọi người:</b> in một màn hình ra giấy đen trắng và hỏi “ai trong đây đã mất?” (kiểm C-8.3). Mất 30 giây, và không lừa được ai.</li>
+</ul>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Cái giá của kế hoạch này</p>
+  <p>
+    14 người, tuyển đúng điều kiện, đi tận nơi, phỏng vấn riêng nhóm con dâu — đây là
+    <b>một khối lượng công việc thật</b>, khoảng vài tuần của một người, và nó cạnh tranh trực
+    tiếp với việc viết mã trong lịch Giai đoạn 1. Nếu chỉ được chọn một phần, thứ tự cắt là:
+    giữ nhóm <b>62–75</b> và nhóm <b>con dâu</b> (hai nhóm mà không ai trong đội dự án đoán đúng
+    được hành vi), cắt bớt nhóm 30–50 xuống 1 người (nhóm dễ đoán nhất). <b>Không được cắt hết</b>:
+    một sản phẩm về dòng họ mà chưa từng đặt trước mặt một vị Tộc trưởng thì mọi thứ trong tài liệu
+    này chỉ là giả thuyết có căn cứ, chứ chưa phải sự thật.
+  </p>
+</div>
+
+<h2>7. Những chỗ tài liệu này chưa giải quyết được</h2>
+
+<p>
+  Theo đúng yêu cầu của tài liệu 00: một tài liệu chỉ toàn ưu điểm là một tài liệu chưa nghĩ xong.
+  Bốn chỗ dưới đây tôi <b>không</b> giải quyết được ở tầng thiết kế và cần Hội đồng hoặc vai khác
+  quyết.
+</p>
+
+<ol>
+  <li>
+    <b>Sàn tiếp cận và tính năng đinh của sản phẩm mâu thuẫn trực tiếp.</b> Sàn 16px + 44px là
+    đúng; “thấy trọn cả họ trên một màn hình” cũng đúng, và là khoảnh khắc cảm xúc mà cả sản phẩm
+    được xây để tạo ra. Hai điều này không thể cùng đúng trên một canvas. Tôi đề xuất tách hai chế
+    độ (C-3.3) nhưng đó là <b>giảm nhẹ, không phải giải quyết</b>.
+  </li>
+  <li>
+    <b>Nguyên tắc “biểu tượng luôn đi kèm chữ” không áp được lên canvas.</b> Gắn nhãn chữ cho nút
+    bung nhánh trên mỗi thẻ sẽ làm thẻ rộng thêm khoảng một nửa, và cây thành không xem được. Tài
+    liệu 00 nói “không có ngoại lệ” cho vùng chạm nhưng không nói gì về ngoại lệ cho nhãn chữ.
+    Tôi chưa có cách nào vừa giữ nguyên tắc vừa giữ được cây.
+  </li>
+  <li>
+    <b>Việc sửa tokens.ts nằm ngoài quyền của tài liệu này.</b> C-2.2 và C-2.3 đề xuất thêm hai
+    biến màu; tôi đã tính sẵn số để khỏi phải đoán, nhưng quyết định thuộc <code>ba</code> và
+    <code>dev</code>. Đến khi có quyết định, <b>bốn lỗi tương phản ở mục 4.2 vẫn đang tồn tại
+    trong sản phẩm</b>.
+  </li>
+  <li>
+    <b>Riêng tư của con dâu chạm vào Nghị định 13/2023 và cần <code>ba</code> vào cuộc.</b>
+    Câu hỏi cụ thể: một người <em>không thuộc huyết thống</em>, được nhập vào hệ thống bởi
+    <em>nhà chồng</em>, có dữ liệu cá nhân trong đó — thì ai là người kiểm soát dữ liệu, và chị
+    rút lại sự đồng ý bằng cách nào mà không xoá mất liên kết hôn nhân trong phả? BA v2 §10 đã
+    trả lời cho thành viên huyết thống bằng cơ chế ẩn danh hoá thay vì xoá; <b>ca con dâu chưa
+    được trả lời tường minh</b>. Đây là rủi ro pháp lý, không phải rủi ro thiết kế —
+    chuyển sang <code>ba</code>.
+  </li>
+</ol>
+
+<h2>8. Câu hỏi cho Hội đồng Tộc biểu</h2>
+
+<ol>
+  <li>
+    <b>Trên điện thoại, mở ra thấy gì trước?</b> Chúng tôi đề xuất mặc định là danh sách chữ to
+    đọc được, còn phả đồ đồ hoạ cách một lần chạm. Cách này dễ đọc hơn hẳn nhưng lần đầu mở ra
+    sẽ kém ấn tượng — đúng lúc con cháu ở xa mở lần đầu. Hội đồng chọn ấn tượng hay chọn đọc được?
+  </li>
+  <li>
+    <b>Ở chế độ xem toàn cây, có chấp nhận rằng chạm vào không mở được nhánh không?</b> Đây là
+    cách duy nhất chúng tôi tìm được để vừa giữ được khoảnh khắc chiếu cả họ lên màn hình ngày giỗ
+    Tổ, vừa không lặp lại sự cố nút 5px.
+  </li>
+  <li>
+    <b>Trưởng chi có được xem số điện thoại của thành viên trong chi mà không cần người đó đồng ý
+    không?</b> BA v2 §10 nói là không. Chúng tôi giữ nguyên và đề xuất bù bằng chức năng “gửi tin
+    qua hệ thống mà không lộ số”. Xin Hội đồng xác nhận, vì Trưởng chi sẽ phản đối.
+  </li>
+  <li>
+    <b>Bản ghi thiếu ngày tháng có được hiển thị công khai trong phả không, hay để riêng chờ xác
+    minh?</b> Nếu để riêng, phần lớn đóng góp của các bà về bên ngoại sẽ nằm ngoài phả, và người
+    đóng góp sẽ hiểu đó là bị xếp hạng hai. Chúng tôi đề xuất hiển thị luôn, ghi rõ “chưa rõ”.
+  </li>
+  <li>
+    <b>Hội đồng cho phép mời con dâu tham gia buổi kiểm thử một cách riêng tư — không có mặt nhà
+    chồng — chứ?</b> Nếu không, chúng tôi sẽ không thu được gì thật về nhóm người dùng phải xưng
+    hô nhiều nhất và biết ít nhất trong cả dòng họ.
+  </li>
+</ol>
+
+<footer class="chan-trang">
+  <p>
+    Tài liệu 01 · <b>Người dùng &amp; chuẩn tiếp cận</b>. Xây trên ràng buộc của
+    <a href="../00-dinh-huong.html">tài liệu 00</a> và BA v2 §10–§12.
+    Mọi tỉ số tương phản tính từ <code>frontend/src/styles/tokens.ts</code>; mọi kích thước px
+    đọc từ <code>frontend/src/components/tree/person-node.tsx</code>,
+    <code>frontend/src/lib/tree/fit-view.ts</code>,
+    <code>frontend/src/styles/antd-theme.ts</code>. Số 157 luật danh xưng đọc từ
+    <code>backend/src/main/resources/db/migration/R__seed_kinship_rules_default.sql</code>.
+    Thứ tự ưu tiên khi có mâu thuẫn: <b>BA v2 → tài liệu 00 → tài liệu này</b>.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
