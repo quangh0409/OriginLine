@@ -179,7 +179,21 @@ services:
     ports:
       - "${KEYCLOAK_PORT:-8081}:8081"
     volumes:
-      - ./keycloak:/opt/keycloak/data/import:ro
+      # Gắn TỪNG FILE realm, không gắn cả thư mục ./keycloak nữa.
+      # Lý do: thư mục ấy giờ còn chứa `themes/`, và `--import-realm` quét cả
+      # thư mục import. Gắn cả cụm lên /opt/keycloak/data/import là đưa thư mục
+      # theme vào đường đi của bộ nhập realm — không có lợi gì và có chỗ để sai.
+      - ./keycloak/realm-giapha.json:/opt/keycloak/data/import/realm-giapha.json:ro
+      # Giao diện đăng nhập của dòng họ. `realm-giapha.json` trỏ tới nó bằng
+      # khoá `loginTheme: giapha`; thiếu mount này thì realm trỏ vào một theme
+      # KHÔNG TỒN TẠI và Keycloak lặng lẽ rơi về giao diện gốc của nó — tức mất
+      # toàn bộ bảy nguyên tắc của tài liệu 00 trên màn hình đầu tiên, mà không
+      # có lỗi nào in ra.
+      #
+      # `start-dev` TẮT bộ đệm theme, nên sửa tệp trong themes/giapha là F5 thấy
+      # ngay, không phải khởi động lại container. Ở chế độ `start` (sản xuất)
+      # thì ngược lại — xem README.md mục Keycloak.
+      - ./keycloak/themes/giapha:/opt/keycloak/themes/giapha:ro
     networks: [giapha-net]
 
 volumes:

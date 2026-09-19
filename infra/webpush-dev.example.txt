@@ -1,0 +1,63 @@
+# =====================================================================================
+# MAU cau hinh Web Push (VAPID) cho MAY PHAT TRIEN
+#
+# Day la TEP MAU. No KHONG chua khoa that va khong duoc phep chua khoa that.
+# Hai dong duoi chi la cho danh san; ban tu sinh cap khoa cua rieng minh va dan vao
+# MOT BAN SAO NAM NGOAI KHO MA (vi du C:\giapha-secrets\webpush-dev.txt).
+#
+# VI SAO KHOA THAT KHONG NAM TRONG KHO MA
+#   Khoa rieng VAPID la quyen day thong bao toi dien thoai that cua nguoi trong dong ho.
+#   Bat cu thu gi da vao lich su Git thi con mai o do: xoa tep o commit sau KHONG xoa
+#   duoc noi dung o commit truoc, va moi ban clone deu da co. Vi vay khoa chi vao he
+#   thong qua BIEN MOI TRUONG, do nguoi van hanh dat, mot lan cho moi moi truong.
+#   `WebPushPropertiesTest` dang canh dieu nay: no lam do bo test neu application.yml
+#   xuat hien khoa rieng.
+#
+# MOI MOI TRUONG MOT CAP KHOA RIENG (dev / staging / production).
+#   Dung chung nghia la mot ban dev chay tren laptop co the day thong bao that.
+#
+# =====================================================================================
+# 1) SINH CAP KHOA - bang chinh cong cu cua du an, khong them phu thuoc nao
+# =====================================================================================
+#   cd backend
+#   ./mvnw -q compile          # Windows: .\mvnw.cmd -q compile
+#   java -cp target/classes vn.giapha.notification.infrastructure.webpush.VapidKeyGenerator
+#
+#   Cong cu in ra dung hai dong duoi day (P-256, base64url khong dem):
+#     - khoa cong khai: 65 byte diem khong nen -> 87 ky tu, luon bat dau bang chu 'B'
+#     - khoa rieng:     32 byte vo huong d     -> 43 ky tu
+#
+# =====================================================================================
+# 2) NAP VAO TIEN TRINH BACKEND
+# =====================================================================================
+#   PowerShell (chi hieu luc trong cua so hien tai):
+#     $env:GIAPHA_WEBPUSH_PUBLIC_KEY  = "<dan khoa cong khai>"
+#     $env:GIAPHA_WEBPUSH_PRIVATE_KEY = "<dan khoa rieng>"
+#     cd backend; .\mvnw.cmd spring-boot:run
+#
+#   bash:
+#     export GIAPHA_WEBPUSH_PUBLIC_KEY="<dan khoa cong khai>"
+#     export GIAPHA_WEBPUSH_PRIVATE_KEY="<dan khoa rieng>"
+#     cd backend && ./mvnw spring-boot:run
+#
+#   Khoa chi duoc doc MOT LAN luc khoi dong (va tu kiem "hai khoa cung mot cap" ngay
+#   tai do). Dat bien cho mot tien trinh dang chay khong co tac dung - phai khoi dong lai.
+#
+# =====================================================================================
+# 3) KIEM TRA
+# =====================================================================================
+#   GET /api/v1/admin/notifications/webpush   (vai ADMIN) -> "ready": true
+#   GET /api/v1/push/public-key               (da dang nhap) -> 200 kem khoa cong khai
+#   Chua cau hinh thi hai endpoint tren tra ready=false va 422 WEBPUSH_NOT_CONFIGURED.
+#
+# =====================================================================================
+# 4) KHI DOI KHOA
+# =====================================================================================
+#   Trinh duyet gan subscription voi dung khoa cong khai luc `subscribe()`. Doi khoa thi
+#   MOI ban ghi trong `push_subscription` thanh vo dung (push service tra 403) va nguoi
+#   dung phai bat lai cong tac. Sinh mot lan roi giu.
+#
+# =====================================================================================
+
+GIAPHA_WEBPUSH_PUBLIC_KEY=thay-bang-khoa-cong-khai-cua-ban
+GIAPHA_WEBPUSH_PRIVATE_KEY=dan-khoa-rieng-KHONG-COMMIT

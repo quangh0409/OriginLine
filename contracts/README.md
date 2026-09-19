@@ -226,5 +226,9 @@ mock, nhưng đây là chỗ cần một câu trả lời dứt khoát trước 
 | Ngày | Phiên bản | Thay đổi | Người duyệt |
 |---|---|---|---|
 | 2026-08-31 | `1.0.0-sprint1` | Bản chốt đầu tiên của Sprint 1: 16 operation REST + GraphQL SDL chỉ-Query. | *chờ BE + FE xác nhận* |
+| 2026-09-11 | `1.1.0-privacy-consent` | **PHÁ VỠ.** Bỏ `PrivacyLevel`; thay bằng mô hình đồng thuận theo **từng nhóm trường**: enum `ShareScope` (`PRIVATE`/`BRANCH`/`CLAN`) + schema `PrivacySettings` (5 nhóm). `PersonDto.privacyLevel` → `PersonDto.privacy`; `CreatePersonRequest.privacyLevel` → `.privacy` (vắng mặt ⇒ `PRIVATE`); `UpdatePersonRequest.privacyLevel` → `.privacy` (**hợp nhất**, không thay thế; `clearFields: ["privacy"]` để đóng hết). `VisibleTier` giữ nguyên 4 giá trị nhưng nay chỉ là **tóm tắt suy ra từ kết quả lọc**, không phải đầu vào. GraphQL: `Person.privacyLevel` → `Person.privacy: PrivacySettings`. | *chờ BE + FE xác nhận* |
+| 2026-09-11 | `1.1.0-privacy-consent` | *Tương thích ngược.* Thêm `RelationshipDto.otherPerson` (không nằm trong `required`). | — |
+| 2026-09-11 | `1.1.0-privacy-consent` | **PHÁ VỠ (ngữ nghĩa).** `EventType` thêm `SINH_NHAT`, `KHANH_THANH`, `HOP_HO`, `CUOI_HOI`; `MUNG_THO` không còn gộp sinh nhật và `KHAC` không còn gộp họp họ/cưới hỏi/khánh thành. | *chờ BE + FE xác nhận* |
+| 2026-09-11 | `1.1.0-privacy-consent` | **PHÁ VỠ.** `ConflictProblem.conflicts[]` nay là `oneOf [TabooConflict, DuplicateCandidate]` (trước đây khai sai là chỉ `TabooConflict`, không khớp `DUPLICATE_PERSON_SUSPECTED`). Thêm schema `DuplicateCandidate`. | *chờ BE + FE xác nhận* |
 
 Mọi thay đổi **phá vỡ tương thích** phải thêm một dòng ở đây, kèm tên người của cả hai phía đã đồng ý.

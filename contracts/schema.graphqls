@@ -105,16 +105,38 @@ enum PrivacyTier {
 }
 
 """
-Mức chia sẻ do **chính chủ thể** chọn, ghi đè mặc định.
+Mức chia sẻ do **chính chủ thể** chọn, đặt **độc lập cho từng nhóm trường**
+(xem `PrivacySettings`). Mặc định là KÍN: thiếu lựa chọn ⇒ `PRIVATE`.
+
+Đây là ý chí của chủ thể, **không phải kết quả cuối**. Khách vãng lai vẫn không thấy bất kỳ
+người còn sống nào kể cả khi chọn `CLAN`; trẻ vị thành niên vẫn ẩn tối đa; người đã khuất vẫn
+công khai.
 """
-enum PrivacyLevel {
-  DEFAULT
-  "Mở Tầng 3 cho thành viên cùng chi/ngành."
-  BRANCH_OPT_IN
-  "Mở Tầng 3 cho mọi thành viên đã đăng nhập."
-  CLAN_OPT_IN
-  "Siết chặt hơn mặc định — chỉ Tầng 1. Mặc định của trẻ vị thành niên."
-  RESTRICTED
+enum ShareScope {
+  "Riêng tư — chỉ chính chủ và Hội đồng Tộc biểu / ADMIN."
+  PRIVATE
+  "Cùng chi — thành viên đã đăng nhập trong phạm vi `ltree` của chi/ngành."
+  BRANCH
+  "Cả họ xem — mọi thành viên đã đăng nhập."
+  CLAN
+}
+
+"""
+Bản đồng thuận riêng tư: năm nhóm trường, mỗi nhóm một mức độc lập
+(Nghị định 13/2023, BA v2 §10). Thay cho `PrivacyLevel` cũ — vốn là **một** mức áp cho cả
+con người và chỉ nới/siết được toàn bộ Tầng 3 một lượt.
+"""
+type PrivacySettings {
+  "Nghề nghiệp và nơi làm việc."
+  occupation: ShareScope!
+  "Nơi ở cấp tỉnh."
+  residenceProvince: ShareScope!
+  "Địa chỉ trú quán đầy đủ."
+  residenceFull: ShareScope!
+  "Điện thoại · email · Zalo — đi thành **một khối**, không tách lẻ."
+  contact: ShareScope!
+  "Ngày sinh đầy đủ và ảnh chân dung."
+  birthDetailAndPhoto: ShareScope!
 }
 
 """
@@ -462,8 +484,11 @@ type Person {
   Là Tầng 3 với người còn sống vì nội dung không kiểm soát trước được.
   """
   attributes: JSON @privacyTier(tier: T3)
-  "Mức chia sẻ do chủ thể chọn. Chỉ **chính chủ** và `ADMIN` thấy trường này."
-  privacyLevel: PrivacyLevel @privacyTier(tier: T3)
+  """
+  Bản đồng thuận riêng tư của chủ thể — năm nhóm trường, năm mức độc lập.
+  Chỉ **chính chủ** và `ADMIN` thấy khối này; với vai khác nó là `null`.
+  """
+  privacy: PrivacySettings @privacyTier(tier: T3)
 
   # --- Quan hệ lồng nhau — lý do chính để dùng GraphQL ------------------------
   "Cha/mẹ. `kind` để tách cha mẹ ruột khỏi cha mẹ nuôi."
