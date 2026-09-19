@@ -27,6 +27,9 @@
          1.2.x la dong tuong thich voi Spring Boot 3.3.x. -->
     <spring-modulith.version>1.2.4</spring-modulith.version>
     <springdoc.version>2.6.0</springdoc.version>
+    <!-- Doc/sinh .xlsx cho duong ong nhap lieu hang loat (dataimport). Khong nam trong
+         spring-boot-dependencies nen phai ghim phien ban o day. -->
+    <poi.version>5.4.1</poi.version>
   </properties>
 
   <dependencyManagement>
@@ -100,6 +103,19 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+
+    <!-- ============ Doc/sinh Excel cho duong ong nhap lieu (dataimport) ============ -->
+    <!--
+      poi-ooxml keo theo poi (loi), xmlbeans va commons-compress.
+      LUU Y: chi dung XSSFReader + SAX de DOC (bo nho khong phu thuoc kich thuoc tep);
+      WorkbookFactory.create() tren tep nguoi dung gui len la cach chac chan nhat de mot
+      tep 20 MB lam sap tien trinh web. Xem vn.giapha.dataimport.infrastructure.excel.
+    -->
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>${poi.version}</version>
     </dependency>
 
     <!-- ============ Van hanh ============ -->
