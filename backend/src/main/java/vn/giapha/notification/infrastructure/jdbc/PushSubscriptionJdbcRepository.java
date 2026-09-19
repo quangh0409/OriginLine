@@ -25,6 +25,14 @@ import vn.giapha.notification.domain.port.PushSubscriptionRepository;
  * Hệ quả: {@code ON CONFLICT} phải viết là {@code ON CONFLICT (md5(endpoint))}, đúng biểu thức của
  * chỉ mục. Viết {@code ON CONFLICT (endpoint)} sẽ lỗi lúc chạy vì không có chỉ mục nào khớp.
  *
+ * <h2>Hai lối để một đăng ký thôi được gửi</h2>
+ * <ul>
+ *   <li><b>Xoá</b> khi push service trả 404/410 — nó đã khẳng định đăng ký không còn tồn tại.</li>
+ *   <li><b>Tắt cờ</b> ({@code is_active = FALSE}) khi đủ {@link PushSubscriptionRepository#NGUONG_LOI_LIEN_TIEP}
+ *       lần lỗi tạm thời liên tiếp — ở đây ta chỉ suy đoán, nên giữ bản ghi để màn hình quản lý thiết
+ *       bị còn giải thích được vì sao máy ấy im lặng.</li>
+ * </ul>
+ *
  * <p>Ghi lại cùng endpoint là <b>cập nhật</b> (khoá client có thể đã xoay vòng), đồng thời
  * {@code failure_count} về 0 và {@code is_active} bật lại: trình duyệt vừa đăng ký lại nghĩa là
  * thiết bị đang sống trở lại.</p>
@@ -60,7 +68,12 @@ public class PushSubscriptionJdbcRepository implements PushSubscriptionRepositor
             SELECT
             """ + COLUMNS + """
               FROM push_subscription
-             WHERE app_user_id = :appUserId AND is_active
+             WHERE app_user_id = :appUserId
+               AND is_active
+               -- Han dung do trinh duyet cung cap luc dang ky. Khong loc o day thi moi mua gio
+               -- deu gui vao mot endpoint da het han, va co push service khong bao gio tra 410
+               -- cho endpoint het han nen khong bao gio co gi don no di.
+               AND (expires_at IS NULL OR expires_at > now())
              ORDER BY created_at
             """;
 
@@ -85,10 +98,16 @@ public class PushSubscriptionJdbcRepository implements PushSubscriptionRepositor
              WHERE id = :id
             """;
 
+    // Ve phai cua SET doc gia tri CU cua dong, nen `failure_count + 1` chinh la so dem sau lan nay.
+    // Dieu kien `is_active` o WHERE lam hai viec: mot dong da tat khong bao gio tu bat lai (chi
+    // `save()` moi bat lai duoc), va lan goi thu sau nguong khong tra ve dong nao - nen ham chi
+    // bao "vua bi tat" DUNG mot lan, thay vi log canh bao lap lai moi lan gui.
     private static final String SQL_FAILURE = """
             UPDATE push_subscription
-               SET failure_count = failure_count + 1
-             WHERE id = :id
+               SET failure_count = failure_count + 1,
+                   is_active     = (failure_count + 1 < :nguong)
+             WHERE id = :id AND is_active
+         RETURNING is_active, failure_count
             """;
 
     private static final RowMapper<PushSubscription> MAPPER = (rs, rowNum) -> new PushSubscription(
@@ -176,8 +195,22 @@ public class PushSubscriptionJdbcRepository implements PushSubscriptionRepositor
 
     @Override
     @Transactional
-    public void recordFailure(UUID id) {
-        jdbc.update(SQL_FAILURE, new MapSqlParameterSource("id", id));
+    public boolean recordFailure(UUID id) {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("nguong", PushSubscriptionRepository.NGUONG_LOI_LIEN_TIEP);
+        Boolean vuaTat = jdbc.query(SQL_FAILURE, params, (ResultSetExtractor<Boolean>) rs -> {
+            if (!rs.next()) {
+                // Dong da bi tat tu truoc, hoac da bi xoa. Khong con gi de dem.
+                return Boolean.FALSE;
+            }
+            return !rs.getBoolean("is_active");
+        });
+        if (Boolean.TRUE.equals(vuaTat)) {
+            log.warn("Tat dang ky Web Push {} sau {} lan gui loi lien tiep - se khong gui nua cho"
+                    + " toi khi thiet bi dang ky lai", id, PushSubscriptionRepository.NGUONG_LOI_LIEN_TIEP);
+        }
+        return Boolean.TRUE.equals(vuaTat);
     }
 
     private static Instant toInstant(Timestamp timestamp) {

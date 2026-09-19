@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
+import vn.giapha.genealogy.domain.PrivacyConsent;
 import vn.giapha.genealogy.domain.PrivacyLevel;
 import vn.giapha.genealogy.domain.port.TreeGraphPort;
 import vn.giapha.shared.vo.Gender;
@@ -55,7 +56,10 @@ final class PersonFixtures {
         private Integer generation;
         private UUID branchId;
         private PrivacyLevel privacy = PrivacyLevel.DEFAULT;
+        private PrivacyConsent consent;
         private boolean withContact = true;
+        private String occupation = "Giao vien";
+        private String province = "Ha Noi";
 
         private Builder(String fullName, boolean alive) {
             this.fullName = fullName;
@@ -87,8 +91,21 @@ final class PersonFixtures {
             return this;
         }
 
+        /**
+         * Gieo một <b>hàng di sản đã qua V8</b>: cột {@code privacy_level} giữ giá trị cũ và
+         * {@code privacy_consent} được suy ra bằng chính hàm SQL mà migration dùng
+         * ({@code privacy_consent_from_legacy}). Nhờ vậy mọi ca dùng fixture này cũng đang kiểm
+         * luôn phép di trú, thay vì kiểm một mô hình lý tưởng không tồn tại trong CSDL thật.
+         */
         Builder privacy(PrivacyLevel value) {
             this.privacy = value;
+            this.consent = null;
+            return this;
+        }
+
+        /** Gieo bản đồng thuận tường minh theo mô hình mới (từng nhóm trường một mức). */
+        Builder consent(PrivacyConsent value) {
+            this.consent = value;
             return this;
         }
 
@@ -103,13 +120,33 @@ final class PersonFixtures {
             return this;
         }
 
+        /**
+         * Nghề nghiệp — nhóm trường {@code OCCUPATION}.
+         *
+         * <p>Có giá trị mặc định chung cho mọi fixture, nên ca test nào cần <b>phân biệt</b> các
+         * giá trị (facet của danh bạ chẳng hạn) phải đặt tường minh; để mặc định thì facet chỉ có
+         * đúng một dòng và ca test sẽ xanh vì lý do sai.</p>
+         */
+        Builder occupation(String value) {
+            this.occupation = value;
+            return this;
+        }
+
+        /** Nơi ở cấp tỉnh — nhóm trường {@code RESIDENCE_PROVINCE}. Xem {@link #occupation}. */
+        Builder province(String value) {
+            this.province = value;
+            return this;
+        }
+
         UUID seed(JdbcTemplate jdbc, TreeGraphPort graph) {
             UUID id = UUID.randomUUID();
             jdbc.update("INSERT INTO person (id, gender, generation, birth_solar, birth_lunar,"
                             + " death_solar, death_lunar, is_alive, native_place, current_place,"
-                            + " primary_branch_id, lineage_status, attributes, privacy_level)"
+                            + " primary_branch_id, lineage_status, attributes, privacy_level,"
+                            + " privacy_consent)"
                             + " VALUES (?, ?, ?, ?, CAST(? AS jsonb), ?, CAST(? AS jsonb), ?, ?, ?, ?,"
-                            + " 'NORMAL', CAST(? AS jsonb), ?)",
+                            + " 'NORMAL', CAST(? AS jsonb), ?,"
+                            + " COALESCE(CAST(? AS jsonb), public.privacy_consent_from_legacy(?)))",
                     id,
                     gender.name(),
                     generation,
@@ -122,6 +159,8 @@ final class PersonFixtures {
                     "So 12 ngo 3 phuong Lang Ha, Ha Noi",
                     branchId,
                     attributesJson(),
+                    privacy.dbValue(),
+                    consent == null ? null : toJson(consent.toJson()),
                     privacy.dbValue());
 
             insertName(jdbc, id, "THUONG_GOI", fullName, true);
@@ -148,9 +187,9 @@ final class PersonFixtures {
         /** Khớp đúng bố cục {@code _profile} mà {@code PersonMapper} đọc lại. */
         private String attributesJson() {
             Map<String, Object> profile = new LinkedHashMap<>();
-            profile.put("occupation", "Giao vien");
+            profile.put("occupation", occupation);
             profile.put("biography", "Tieu su chi tiet - du lieu Tang 3");
-            profile.put("currentPlaceProvince", "Ha Noi");
+            profile.put("currentPlaceProvince", province);
             profile.put("avatarKey", "portraits/" + fullName.hashCode() + ".jpg");
             if (withContact) {
                 profile.put("contact", Map.of("phone", "0900000001",

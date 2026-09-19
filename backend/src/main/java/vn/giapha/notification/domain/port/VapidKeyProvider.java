@@ -1,6 +1,7 @@
 package vn.giapha.notification.domain.port;
 
 import java.util.Optional;
+import vn.giapha.notification.domain.WebPushConfigStatus;
 
 /**
  * Cổng đọc <b>khoá công khai</b> VAPID để phục vụ {@code GET /api/v1/push/public-key}.
@@ -17,4 +18,14 @@ public interface VapidKeyProvider {
 
     /** @return rỗng khi chưa cấu hình VAPID, nghĩa là kênh Web Push đang tắt */
     Optional<String> publicKeyBase64Url();
+
+    /**
+     * Trạng thái cấu hình để người vận hành tự chẩn đoán.
+     *
+     * <p>Tách khỏi {@link #publicKeyBase64Url()} vì hai câu hỏi khác nhau: người dùng cuối cần
+     * <i>khoá</i> để đăng ký, còn người quản trị cần <i>biết vì sao chưa có khoá</i>. Không có
+     * đường thứ hai này thì câu "xin báo quản trị viên" trên giao diện dẫn tới một người không có
+     * chỗ nào để nhìn.</p>
+     */
+    WebPushConfigStatus configStatus();
 }

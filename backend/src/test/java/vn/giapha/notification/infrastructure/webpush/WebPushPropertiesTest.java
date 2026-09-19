@@ -97,6 +97,27 @@ class WebPushPropertiesTest {
         }
     }
 
+    @Test
+    @DisplayName("Tep mau infra/webpush-dev.example.txt chi chua cho danh san, khong chua khoa that")
+    void tepMauKhongMangKhoaThat() throws IOException {
+        // Tệp mẫu là thứ duy nhất của Web Push nằm trong kho mã. Nếu một ngày có người "tiện tay"
+        // dán cặp khoá dev thật vào đó cho đỡ phải sinh lại, khoá sẽ vào lịch sử Git và ở đó vĩnh
+        // viễn. Đường dẫn tương đối hợp lệ vì Surefire chạy với thư mục làm việc là `backend/`.
+        java.nio.file.Path tepMau = java.nio.file.Path.of("..", "infra", "webpush-dev.example.txt");
+        assertThat(tepMau).as("README tro toi tep nay - xoa no la tai lieu gay").exists();
+
+        for (String dong : java.nio.file.Files.readAllLines(tepMau, StandardCharsets.UTF_8)) {
+            String sach = dong.trim();
+            if (sach.startsWith("#") || !sach.startsWith("GIAPHA_WEBPUSH_")) {
+                continue;
+            }
+            String giaTri = sach.substring(sach.indexOf('=') + 1).trim();
+            assertThat(giaTri)
+                    .as("dong '%s' trong tep mau trong nhu mot khoa THAT", sach)
+                    .doesNotMatch("^[A-Za-z0-9_-]{40,}$");
+        }
+    }
+
     private static WebPushProperties bind(Map<String, ?> bienMoiTruong) {
         StandardEnvironment environment = new StandardEnvironment();
         Map<String, Object> nguon = new HashMap<>(bienMoiTruong);

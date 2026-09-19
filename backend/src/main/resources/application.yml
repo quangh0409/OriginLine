@@ -133,6 +133,28 @@ spring:
     graphiql:
       enabled: false
 
+  servlet:
+    multipart:
+      # =============================================================================
+      # BAY SO 3 - TRAN MULTIPART MAC DINH CUA SPRING LA 1 MB
+      #
+      # Khong khai bao thi Spring Boot chan moi tep > 1 MB TRUOC KHI controller chay,
+      # trong khi tran nghiep vu (ImportLimits.MAX_FILE_BYTES) la 10 MB. Hau qua:
+      # mot tep .xlsx 2 MB hoan toan hop le cua mot chi 400 nguoi bi tu choi, va vi
+      # tang api DA co handler cho MaxUploadSizeExceededException nen no ra dung ma
+      # 413 kem dung cau "vuot tran 10 MB" - tuc la mot thong bao SAI ma trong nhu
+      # dung. Kieu lech hang so am tham nay ton nhieu gio nhat de truy.
+      #
+      # HAI CON SO NAY PHAI KHOP vn.giapha.dataimport.domain.ImportLimits:
+      #   max-file-size    == ImportLimits.MAX_FILE_BYTES        (10 MB)
+      #   max-request-size >  max-file-size                      (phan bao multipart:
+      #       boundary, header cua tung phan, va tham so branchId/force di kem)
+      # ImportMultipartLimitTest ghim rang chung khong troi khoi nhau. Doi mot ben ma
+      # khong doi ben kia se lam bo test do ngay, dung y do.
+      # =============================================================================
+      max-file-size: 10MB
+      max-request-size: 12MB
+
   mvc:
     problemdetails:
       # Bat de ca ngoai le san co cua Spring MVC cung tra ve RFC 7807.
@@ -185,6 +207,33 @@ giapha:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
   security:
     client-id: ${KEYCLOAK_CLIENT_ID:giapha-backend}
+  keycloak:
+    admin:
+      # =============================================================================
+      # TAI KHOAN DICH VU DE LAP TAI KHOAN CHO NGUOI DUOC MOI
+      #
+      # KHONG CO DONG `client-secret` O DAY, VA DO LA CO Y. Bi mat nay mo quyen tao
+      # nguoi dung trong realm; mot chuoi nhu the lot vao lich su Git la lot vinh vien
+      # (xoa o commit sau khong xoa duoc o commit truoc, va moi ban clone deu da co).
+      # No duoc doc THANG tu bien moi truong nho rang buoc ten long cua Spring Boot:
+      #
+      #     GIAPHA_KEYCLOAK_ADMIN_CLIENT_SECRET -> giapha.keycloak.admin.client-secret
+      #
+      # Cung khuon mau voi GIAPHA_WEBPUSH_PRIVATE_KEY. Xem
+      # infra/keycloak-admin-dev.example.txt. `KeycloakAdminPropertiesTest` lam do bo
+      # test neu bi mat xuat hien trong tep nay.
+      #
+      # Thieu bien moi truong thi cong danh tinh TU TAT: ung dung van khoi dong, loi
+      # nhan loi moi bang token san co van chay, chi loi "nguoi chua co tai khoan" tra
+      # 503 IDENTITY_PROVIDER_UNAVAILABLE.
+      # =============================================================================
+      enabled: ${GIAPHA_KEYCLOAK_ADMIN_ENABLED:true}
+      server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8081}
+      realm: ${KEYCLOAK_REALM:giapha}
+      client-id: ${GIAPHA_KEYCLOAK_ADMIN_CLIENT_ID:giapha-provisioner}
+      # {token} la cho danh san; tro toi TRANG cua frontend, khong toi API.
+      set-password-url: ${GIAPHA_SET_PASSWORD_URL:http://localhost:3000/vi/dat-mat-khau?token={token}}
+      link-ttl: ${GIAPHA_SET_PASSWORD_LINK_TTL:30m}
   openapi:
     server-url: ${OPENAPI_SERVER_URL:http://localhost:8080}
   graph:

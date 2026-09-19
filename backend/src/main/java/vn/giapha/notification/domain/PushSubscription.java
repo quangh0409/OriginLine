@@ -42,6 +42,16 @@ public record PushSubscription(UUID id,
      */
     public String audience() {
         java.net.URI uri = java.net.URI.create(endpoint);
+        // `URI.create` nhận cả URI tương đối, và khi đó scheme/host đều null. Không chặn ở đây thì
+        // `new StringBuilder(null)` ném NullPointerException từ trong lòng vòng lặp gửi — mà
+        // NotificationProvider có hợp đồng "không được ném cho lỗi gửi thông thường", nên một dòng
+        // endpoint bẩn sẽ quay đủ 5 lượt retry rồi nằm lại trong `notify.dlq`, làm nghẽn đúng cái
+        // hàng đợi mà người vận hành cần nhìn. IllegalArgumentException thì adapter đã bắt sẵn và
+        // xử lý đúng: xoá bản ghi chết, không thử lại.
+        if (uri.getScheme() == null || uri.getHost() == null) {
+            throw new IllegalArgumentException(
+                    "Endpoint Web Push phai la URL tuyet doi (scheme://host), nhan duoc: " + endpoint);
+        }
         StringBuilder audience = new StringBuilder(uri.getScheme()).append("://").append(uri.getHost());
         if (uri.getPort() > 0) {
             audience.append(':').append(uri.getPort());

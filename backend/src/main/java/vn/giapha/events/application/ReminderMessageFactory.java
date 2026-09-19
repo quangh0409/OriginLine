@@ -142,10 +142,13 @@ public class ReminderMessageFactory {
             case GIO -> "gio";
             case GIO_TO -> "gio To";
             case TE_LE -> "te le";
+            case TIEU_TUONG -> "gio dau";
+            case DAI_TUONG -> "gio het";
             case TAO_MO -> "chap ma";
             case KHANH_THANH -> "le khanh thanh";
             case HOP_HO -> "buoi hop ho";
             case SINH_NHAT -> "sinh nhat";
+            case MUNG_THO -> "le mung tho";
             case CUOI_HOI -> "le cuoi";
             case KHAC -> "su kien dong ho";
         };

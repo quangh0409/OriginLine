@@ -15,7 +15,10 @@ import vn.giapha.genealogy.application.SoftDeletePersonService;
 import vn.giapha.genealogy.application.VisibleTier;
 import vn.giapha.genealogy.application.view.PersonView;
 import vn.giapha.genealogy.domain.DatePrecision;
+import vn.giapha.genealogy.domain.PrivacyConsent;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
 import vn.giapha.genealogy.domain.PrivacyLevel;
+import vn.giapha.genealogy.domain.ShareScope;
 import vn.giapha.shared.vo.Gender;
 
 /**
@@ -88,7 +91,12 @@ class PrivacyTierIT extends AbstractIntegrationTest {
         anhAt = seed(PersonFixtures.living("Nguyễn Văn Ất")
                 .birthYear(1985).branch(chiAt).generation(4));
         chuGiap = seed(PersonFixtures.living("Nguyễn Văn Chú")
-                .birthYear(1970).branch(chiGiap).generation(3).tabooName("Nguyễn Văn Tị"));
+                .birthYear(1970).branch(chiGiap).generation(3).tabooName("Nguyễn Văn Tị")
+                // Mo hai nhom nhe cho nguoi cung chi — du de quan sat muc T2 ma khong cham
+                // toi nhom nhay cam nao.
+                .consent(PrivacyConsent.allPrivate()
+                        .with(PrivacyFieldGroup.OCCUPATION, ShareScope.BRANCH)
+                        .with(PrivacyFieldGroup.RESIDENCE_PROVINCE, ShareScope.BRANCH)));
         beGiap = seed(PersonFixtures.living("Nguyễn Văn Bé")
                 .birthYear(Year.now().getValue() - 10).branch(chiGiap).generation(5)
                 .privacy(PrivacyLevel.RESTRICTED));
@@ -229,45 +237,47 @@ class PrivacyTierIT extends AbstractIntegrationTest {
         assertThat(view.biography()).isNull();
         assertThat(view.avatarKey()).isNull();
         assertThat(view.contact()).isNull();
-        assertThat(view.privacyLevel()).as("mức riêng tư của người khác không phải việc của người xem")
+        assertThat(view.privacyConsent())
+                .as("bảng đồng thuận của người khác không phải việc của người xem")
                 .isNull();
     }
 
     @Test
-    @DisplayName("thành viên cùng chi nhận Tầng 2: năm sinh làm tròn theo năm, nghề, tỉnh — không có địa chỉ đầy đủ")
-    void thanhVienCungChi_nhanTang2_namSinhLamTronTheoNam() {
+    @DisplayName("thành viên cùng chi chỉ nhận đúng những nhóm trường chủ thể đã mở cho chi")
+    void thanhVienCungChi_chiNhanDungNhomDaMo() {
         authenticateAs("sub-giap", "MEMBER");
 
         PersonView view = personQuery.byId(chuGiap);
 
         assertThat(view.access().visibleTier()).isEqualTo(VisibleTier.T2);
-        assertThat(view.birth()).isNotNull();
-        assertThat(view.birth().precision())
-                .as("Tầng 2 chỉ được thấy NĂM sinh, ngày đầy đủ là Tầng 3")
-                .isEqualTo(DatePrecision.YEAR);
-        assertThat(view.birth().year()).contains(1970);
-        assertThat(view.birth().solar().getDayOfMonth()).isEqualTo(1);
-        assertThat(view.occupation()).isNotNull();
+        assertThat(view.occupation()).as("đúng hai nhóm chủ thể đã mở cho người cùng chi").isNotNull();
         assertThat(view.currentPlaceProvince()).isNotNull();
-        assertThat(view.nativePlace()).isNotNull();
-        assertThat(view.names()).as("từ Tầng 2 trở lên thấy đủ các lớp tên").hasSize(2);
 
-        assertThat(view.currentPlaceFull()).as("địa chỉ đầy đủ là Tầng 3").isNull();
+        // Ba mảnh dưới đây KHÔNG thuộc nhóm trường nào nên chủ thể không mở được, và luật cố định
+        // cho chúng là kín nhất có thể — nếu không, một người từng chọn RESTRICTED trước V8 sẽ bị
+        // lộ thêm sau di trú. Xem PrivacyConsentMigrationIT.
+        assertThat(view.nativePlace()).isNull();
+        assertThat(view.birth()).isNull();
+        assertThat(view.names()).as("tên húy là dữ liệu lễ nghi, không mở theo chi").hasSize(1);
+
+        assertThat(view.currentPlaceFull()).as("nhóm địa chỉ đầy đủ vẫn đóng").isNull();
         assertThat(view.biography()).isNull();
         assertThat(view.avatarKey()).isNull();
         assertThat(view.contact()).isNull();
     }
 
     @Test
-    @DisplayName("Hội đồng Tộc biểu nhận Tầng 2 với mọi người trong họ, không phụ thuộc chi")
-    void hoiDongTocBieu_nhanTang2_ngoaiPhamViChi() {
+    @DisplayName("Hội đồng Tộc biểu đọc được cả nhóm Riêng tư — đó chính là định nghĩa của mức đó")
+    void hoiDongTocBieu_docDuocCaNhomRiengTu() {
         authenticateAs("sub-hoidong", "COUNCIL");
 
         PersonView view = personQuery.byId(anhGiap);
 
-        assertThat(view.access().visibleTier()).isEqualTo(VisibleTier.T2);
-        assertThat(view.occupation()).isNotNull();
-        assertThat(view.contact()).as("Hội đồng vẫn không mặc nhiên được Tầng 3").isNull();
+        // THAY DOI CO Y so voi mo hinh cu (truoc V8): khi do COUNCIL bi ket o T2 va khong doc duoc
+        // khoi lien he cua nguoi con song. Mo hinh dong thuan dinh nghia muc PRIVATE la
+        // "chi chinh chu + Hoi dong", nen day la he qua truc tiep cua chinh dinh nghia ay.
+        assertThat(view.access().visibleTier()).isEqualTo(VisibleTier.T3);
+        assertThat(view.contact()).isNotNull();
     }
 
     @Test
@@ -308,7 +318,7 @@ class PrivacyTierIT extends AbstractIntegrationTest {
         assertThat(view.avatarKey()).isNotNull();
         assertThat(view.birth().precision()).as("chính chủ thấy ngày sinh đầy đủ")
                 .isEqualTo(DatePrecision.DAY);
-        assertThat(view.privacyLevel()).isNotNull();
+        assertThat(view.privacyConsent()).isNotNull();
     }
 
     @Test

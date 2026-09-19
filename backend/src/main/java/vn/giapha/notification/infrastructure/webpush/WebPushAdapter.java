@@ -20,6 +20,7 @@ import vn.giapha.notification.domain.NotificationMessage;
 import vn.giapha.notification.domain.PushSubscription;
 import vn.giapha.notification.domain.port.NotificationProvider;
 import vn.giapha.notification.domain.port.PushSubscriptionRepository;
+import vn.giapha.notification.domain.WebPushConfigStatus;
 import vn.giapha.notification.domain.port.VapidKeyProvider;
 
 /**
@@ -87,6 +88,24 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
         return keys == null ? Optional.empty() : Optional.of(keys.publicKeyBase64Url());
     }
 
+    /**
+     * Ảnh chụp cấu hình cho màn hình chẩn đoán của quản trị viên.
+     *
+     * <p>{@code publicKey} chỉ được điền khi cặp khoá đã giải mã xong và đã qua phép tự kiểm cùng
+     * cặp — nghĩa là "sẵn sàng" ở đây là sẵn sàng thật, không phải "hai biến môi trường khác
+     * rỗng". Khoá riêng chỉ xuất hiện dưới dạng một cờ boolean.</p>
+     */
+    @Override
+    public WebPushConfigStatus configStatus() {
+        return new WebPushConfigStatus(
+                properties.isEnabled(),
+                properties.getPublicKey() != null && !properties.getPublicKey().isBlank(),
+                properties.getPrivateKey() != null && !properties.getPrivateKey().isBlank(),
+                keys == null ? null : keys.publicKeyBase64Url(),
+                properties.getSubject(),
+                properties.getTtlSeconds());
+    }
+
     @Override
     public Channel channel() {
         return Channel.WEBPUSH;
@@ -108,12 +127,14 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
         byte[] payload = buildPayload(message);
         boolean anySent = false;
         boolean anyRetryable = false;
+        boolean anyRejected = false;
         String lastDetail = null;
 
         for (PushSubscription device : devices) {
             Outcome outcome = sendTo(device, payload);
             anySent |= outcome.sent();
             anyRetryable |= outcome.retryable();
+            anyRejected |= outcome.rejected();
             if (outcome.detail() != null) {
                 lastDetail = outcome.detail();
             }
@@ -123,7 +144,16 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
             return DeliveryResult.sent();
         }
         if (anyRetryable) {
+            // Còn một máy đáng cứu thì cứu; lượt retry sau vẫn bỏ qua những máy đã bị từ chối.
             return DeliveryResult.retryable(lastDetail);
+        }
+        if (anyRejected) {
+            // Push service TỪ CHỐI (400/401/403) — gần như luôn là cấu hình VAPID sai. Đây phải là
+            // FAILED, không phải SKIPPED: `SKIPPED` là kết quả bình thường và không ai đi soi nó,
+            // nên một khoá VAPID lệch sẽ làm toàn bộ thông báo đẩy biến mất trong im lặng mà không
+            // một con số nào trong `notification_log` báo động. PERMANENT thì không retry (retry
+            // không sửa được cấu hình) nhưng vẫn hiện ra là hỏng.
+            return DeliveryResult.permanent(lastDetail);
         }
         // Tất cả thiết bị đều đã bị thu hồi và vừa bị xoá: không còn gì để gửi, và cũng không có gì
         // để sửa. SKIPPED chứ không FAILED — đây là trạng thái bình thường của một người đã gỡ app.
@@ -137,14 +167,15 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
             authorization = signer.authorizationHeader(keys, device.audience(), properties.getSubject(),
                     properties.getJwtValidity());
             if (authorization == null) {
-                return new Outcome(false, false, "Khong ky duoc JWT VAPID");
+                return new Outcome(false, false, true, "Khong ky duoc JWT VAPID");
             }
             body = cipher.encrypt(payload, device.p256dh(), device.auth());
         } catch (GeneralSecurityException | IllegalArgumentException ex) {
-            // Khoá của client hỏng: thiết bị này không bao giờ nhận được. Xoá luôn cho gọn.
-            log.warn("Khoa client hong o dang ky {} - xoa: {}", device.id(), ex.getMessage());
+            // Khoá hoặc endpoint của client hỏng: thiết bị này không bao giờ nhận được. Xoá luôn cho
+            // gọn — đây là dữ liệu chết, không phải sự cố cần người nhìn.
+            log.warn("Dang ky {} co khoa/endpoint hong - xoa: {}", device.id(), ex.getMessage());
             subscriptions.deleteByEndpoint(device.endpoint());
-            return new Outcome(false, false, "Khoa client khong hop le");
+            return new Outcome(false, false, false, "Khoa client khong hop le");
         }
 
         HttpRequest request = HttpRequest.newBuilder(URI.create(device.endpoint()))
@@ -163,33 +194,36 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
             return interpret(device, response.statusCode(), response.body());
         } catch (java.io.IOException ex) {
             subscriptions.recordFailure(device.id());
-            return new Outcome(false, true, "Loi mang toi push service: " + ex.getMessage());
+            return new Outcome(false, true, false, "Loi mang toi push service: " + ex.getMessage());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            return new Outcome(false, true, "Bi ngat khi goi push service");
+            return new Outcome(false, true, false, "Bi ngat khi goi push service");
         }
     }
 
     private Outcome interpret(PushSubscription device, int status, String responseBody) {
         if (status >= 200 && status < 300) {
             subscriptions.touchLastUsed(device.id(), Instant.now());
-            return new Outcome(true, false, null);
+            return new Outcome(true, false, false, null);
         }
         if (status == HTTP_NOT_FOUND || status == HTTP_GONE) {
             subscriptions.deleteByEndpoint(device.endpoint());
             log.info("Dang ky {} bi thu hoi (HTTP {}) - da xoa, khong retry", device.id(), status);
-            return new Outcome(false, false, "Subscription bi thu hoi (HTTP " + status + ")");
+            // Không đếm vào `failure_count`: thu hồi là trạng thái bình thường của một người đã gỡ
+            // ứng dụng, và bản ghi vừa bị xoá nên không còn gì để đếm.
+            return new Outcome(false, false, false, "Subscription bi thu hoi (HTTP " + status + ")");
         }
         if (status == HTTP_TOO_MANY_REQUESTS || status >= 500) {
             subscriptions.recordFailure(device.id());
-            return new Outcome(false, true, "Push service tra HTTP " + status);
+            return new Outcome(false, true, false, "Push service tra HTTP " + status);
         }
         // 400/401/403: gần như luôn là VAPID sai (claim `aud`, khoá lệch giữa server và client, hoặc
-        // thiếu `sub`). Retry không sửa được cấu hình — ghi ERROR để có người nhìn.
+        // thiếu `sub`). Retry không sửa được cấu hình — ghi ERROR để có người nhìn, và trả `rejected`
+        // để lượt gửi kết thúc ở FAILED chứ không phải SKIPPED.
         log.error("Push service tu choi (HTTP {}) o dang ky {}: {}", status, device.id(),
                 abbreviate(responseBody));
         subscriptions.recordFailure(device.id());
-        return new Outcome(false, false, "Push service tu choi (HTTP " + status + ")");
+        return new Outcome(false, false, true, "Push service tu choi (HTTP " + status + ")");
     }
 
     /**
@@ -204,9 +238,17 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
         json.put("title", message.title());
         json.put("body", message.body() == null ? "" : message.body());
         json.put("url", message.deepLink() == null ? "/" : message.deepLink());
-        // `tag` để hệ điều hành gộp các thông báo của cùng một lịch nhắc thay vì chồng đống.
-        if (message.reminderJobId() != null) {
-            json.put("tag", "gio-" + message.reminderJobId());
+        // `tag` để hệ điều hành gộp các thông báo của cùng MỘT ĐÁM GIỖ thay vì chồng đống.
+        //
+        // KHÔNG dùng `reminderJobId`: khoá duy nhất `ux_reminder_job_occurrence` là
+        // (event_id, occurrence_year, offset_days), nên mỗi mốc 7 / 3 / 1 ngày là một job RIÊNG
+        // với id riêng. Lấy id job làm tag thì ra ba tag khác nhau cho cùng một đám giỗ, và hệ
+        // điều hành không gộp gì cả — đúng thứ tag sinh ra để tránh. Người dùng nhận ba thông báo
+        // xếp chồng trên màn hình khoá cho một cái giỗ.
+        //
+        // `eventId` + `dueSolarDate` mới là "lần giỗ này": cả ba mốc nhắc đều mang cùng một cặp.
+        if (message.eventId() != null && message.dueSolarDate() != null) {
+            json.put("tag", "gio-" + message.eventId() + "-" + message.dueSolarDate());
         }
         if (message.eventId() != null) {
             json.put("eventId", message.eventId().toString());
@@ -222,7 +264,14 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
         return flat.length() <= 200 ? flat : flat.substring(0, 200);
     }
 
-    /** Kết quả gửi tới <b>một</b> thiết bị. */
-    private record Outcome(boolean sent, boolean retryable, String detail) {
+    /**
+     * Kết quả gửi tới <b>một</b> thiết bị.
+     *
+     * <p>Ba cờ, không phải hai. {@code rejected} tách "push service từ chối máy chủ này" (400/401/403
+     * — cấu hình sai, phải có người sửa) khỏi "đăng ký đã chết" (404/410 — bình thường, tự dọn).
+     * Gộp hai ca đó lại thì một khoá VAPID lệch sẽ được ghi nhật ký là {@code SKIPPED} y hệt một
+     * người vừa gỡ ứng dụng, và không ai phát hiện ra rằng cả kênh đẩy đã tắt.</p>
+     */
+    private record Outcome(boolean sent, boolean retryable, boolean rejected, String detail) {
     }
 }

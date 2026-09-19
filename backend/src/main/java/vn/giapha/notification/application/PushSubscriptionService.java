@@ -60,6 +60,8 @@ public class PushSubscriptionService {
         return vapidKeys.publicKeyBase64Url().orElseThrow(() -> new DomainException(
                 CODE_WEBPUSH_NOT_CONFIGURED,
                 "May chu chua cau hinh khoa VAPID nen chua bat duoc Web Push."
+                        + " Quan tri vien xem GET /api/v1/admin/notifications/webpush"
+                        + " de biet dang thieu gi va cac buoc sua."
                         + " Thong bao in-app van hoat dong binh thuong."));
     }
 
