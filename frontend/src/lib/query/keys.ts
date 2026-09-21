@@ -33,6 +33,8 @@ export const queryKeys = {
     ["kinship", fromId, toId] as const,
   kinshipRules: (branchId: string) => ["kinship-rules", branchId] as const,
   events: () => ["events"] as const,
+  /** Một sự kiện đơn (F7 form sửa) — tách khỏi `events()` vì đây giữ cả `ETag`. */
+  event: (id: string) => ["event", id] as const,
   notifications: () => ["notifications"] as const,
   /** Chi/ngành tree, used by the F6 search filter. Read via GraphQL
    * (`Query.branches`) because the REST contract has no /branches endpoint. */

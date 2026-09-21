@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderWithProviders } from "../setup/render";
 import { TestLink, resetRouterMock, routerMock } from "../setup/next-navigation-mock";
 import type { EventDto } from "@/types/api";
@@ -60,6 +60,12 @@ beforeEach(() => {
   resetRouterMock();
   searchParams = new URLSearchParams();
 });
+
+// jsdom không cài `scrollIntoView` — gap môi trường có thật, không phải lỗi
+// của màn hình. Trước Đợt 2 không ca nào từng đi qua nhánh cuộn-tới-thẻ
+// (`?event=`) nên khoảng trống này chưa lộ ra; nay ca "mở thẳng vào danh
+// sách" chạy đúng nhánh đó.
+Element.prototype.scrollIntoView ??= vi.fn();
 
 describe("ngày âm và ngày dương trên một thẻ giỗ", () => {
   it("hiện ngày âm bằng chữ đầy đủ 'Ngày 22 tháng 9 âm lịch'", () => {
@@ -199,42 +205,127 @@ describe("thẻ giỗ — phạm vi dòng họ / chi", () => {
   });
 });
 
-describe("màn hình sự kiện", () => {
-  it("hiện danh sách sắp tới và lịch mười hai tháng từ cùng một lần tải", async () => {
+/**
+ * Chuyển kiểu xem qua `<EventsViewSwitcher>` (role="radiogroup"/"radio").
+ * Dùng `fireEvent` chứ không `userEvent`: các nút này là `<button>` trần,
+ * không có gì đặc biệt để `userEvent` phải mô phỏng, và `fireEvent` nhanh hơn
+ * đáng kể trên một bộ dữ liệu giả gần trăm sự kiện.
+ */
+function switchView(name: "Lịch tháng" | "Lịch năm" | "Danh sách") {
+  fireEvent.click(screen.getByRole("radio", { name }));
+}
+
+describe("màn hình sự kiện — kiểu xem mặc định (Đợt 2)", () => {
+  it("mặc định là LỊCH THÁNG, không phải danh sách hay lịch năm", async () => {
+    renderWithProviders(<EventsScreen />, { role: "member" });
+
+    // Bộ chuyển kiểu xem phải có mặt và đúng lựa chọn ban đầu là "Lịch tháng".
+    const monthRadio = await screen.findByRole("radio", { name: "Lịch tháng" }, { timeout: 15_000 });
+    expect(monthRadio).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Lịch năm" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("radio", { name: "Danh sách" })).toHaveAttribute("aria-checked", "false");
+
+    // Lịch tháng thật sự được vẽ ra, chứ không chỉ nút bấm nói vậy. Thẻ
+    // `<section aria-label="Lịch tháng">` có tên khả truy cập nên mang vai
+    // "region" — `findBy`, không `getBy`, vì `<EventMonthCalendar>` tự có
+    // thêm một nhịp `useEffect` (đọc "hôm nay") trước khi vẽ xong lưới thật.
+    expect(await screen.findByRole("region", { name: "Lịch tháng" })).toBeInTheDocument();
+    // Hai kiểu xem kia không cùng có mặt — chúng loại trừ nhau.
+    expect(screen.queryByRole("heading", { name: "Lịch mười hai tháng tới" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Sắp tới" })).not.toBeInTheDocument();
+  });
+
+  it("bấm 'Lịch năm' thì chuyển hẳn sang lịch năm, lịch tháng biến mất", async () => {
+    renderWithProviders(<EventsScreen />, { role: "member" });
+
+    await screen.findByRole("radio", { name: "Lịch năm" }, { timeout: 15_000 });
+    switchView("Lịch năm");
+
+    expect(await screen.findByRole("heading", { name: "Lịch mười hai tháng tới" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Lịch tháng" })).not.toBeInTheDocument();
+  });
+
+  it("bấm 'Danh sách' thì chuyển hẳn sang danh sách 'Sắp tới'", async () => {
+    renderWithProviders(<EventsScreen />, { role: "member" });
+
+    await screen.findByRole("radio", { name: "Danh sách" }, { timeout: 15_000 });
+    switchView("Danh sách");
+
+    expect(await screen.findByRole("heading", { name: "Sắp tới" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Lịch tháng" })).not.toBeInTheDocument();
+  });
+
+  it("có `?event=` từ một lời nhắc thì mở thẳng vào DANH SÁCH — nơi duy nhất đã biết cuộn tới đúng thẻ", async () => {
+    searchParams = new URLSearchParams("event=ev-hop-ho");
     renderWithProviders(<EventsScreen />, { role: "member" });
 
     expect(
       await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 })
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Lịch mười hai tháng tới" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Danh sách" })).toHaveAttribute("aria-checked", "true");
   });
+});
 
-  it("lịch năm có đủ 12 ô tháng", async () => {
+describe("song lịch âm–dương ở CẢ BA kiểu xem (Đợt 2)", () => {
+  // Lịch tháng chỉ vẽ chi tiết (cả hai lịch) cho NGÀY ĐANG CHỌN, mặc định là
+  // hôm nay — mà "hôm nay có việc họ hay không" phụ thuộc đồng hồ thật lúc
+  // test chạy. Ca xác định — ghim đồng hồ hệ thống rồi kiểm cả hai lịch cùng
+  // lúc trên một sự kiện đã biết trước — nằm ở
+  // `tests/component/event-month-calendar.test.tsx`, tách khỏi bộ dữ liệu giả
+  // ngẫu nhiên-theo-ngày ở đây.
+  it("lịch năm: mỗi dòng việc họ mang cả ngày âm lẫn ngày dương", async () => {
     renderWithProviders(<EventsScreen />, { role: "member" });
 
-    const calendar = await screen.findByLabelText("Lịch mười hai tháng tới", undefined, {
-      timeout: 15_000,
-    });
-    const monthLabels = within(calendar)
-      .getAllByText(/^Tháng \d+$/)
-      .map((el) => el.textContent);
-    expect(monthLabels).toHaveLength(12);
+    await screen.findByRole("radio", { name: "Lịch năm" }, { timeout: 15_000 });
+    switchView("Lịch năm");
+
+    const calendar = await screen.findByLabelText("Lịch mười hai tháng tới");
+    expect(within(calendar).getAllByText(/Ngày \d+ tháng \d+ âm lịch/).length).toBeGreaterThan(0);
   });
 
-  it("mỗi ngày giỗ trong danh sách đều mang cả ngày âm lẫn ngày dương", async () => {
+  it("danh sách: mỗi thẻ việc họ mang cả ngày âm lẫn ngày dương", async () => {
     renderWithProviders(<EventsScreen />, { role: "member" });
 
-    const list = await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
+    await screen.findByRole("radio", { name: "Danh sách" }, { timeout: 15_000 });
+    switchView("Danh sách");
+
+    const list = await screen.findByRole("heading", { name: "Sắp tới" });
     const section = list.closest("section")!;
     const lunar = within(section).getAllByText(/Ngày \d+ tháng \d+ âm lịch/);
     expect(lunar.length).toBeGreaterThan(0);
     expect(within(section).getAllByText(/^Dương lịch: /).length).toBeGreaterThan(0);
   });
+});
 
+describe("nút 'Tạo việc họ' — chỉ Trưởng cành/chi/họ thấy được (Đợt 2)", () => {
+  it.each([["guest"], ["member"]] as const)(
+    "vai '%s' không thấy nút tạo sự kiện",
+    async (role) => {
+      renderWithProviders(<EventsScreen />, { role });
+
+      await screen.findByRole("radio", { name: "Lịch tháng" }, { timeout: 15_000 });
+      expect(screen.queryByRole("link", { name: "Tạo việc họ" })).not.toBeInTheDocument();
+    }
+  );
+
+  it.each([["branch-head"], ["admin"]] as const)(
+    "vai '%s' thấy nút tạo sự kiện, dẫn tới /events/new",
+    async (role) => {
+      renderWithProviders(<EventsScreen />, { role });
+
+      const link = await screen.findByRole("link", { name: "Tạo việc họ" }, { timeout: 15_000 });
+      expect(link).toHaveAttribute("href", "/events/new");
+    }
+  );
+});
+
+describe("màn hình sự kiện", () => {
   it("khách vãng lai không thấy sự kiện của người còn sống (mừng thọ)", async () => {
     renderWithProviders(<EventsScreen />, { role: "guest" });
 
-    await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
+    await screen.findByRole("radio", { name: "Danh sách" }, { timeout: 15_000 });
+    switchView("Danh sách");
+    await screen.findByRole("heading", { name: "Sắp tới" });
     await waitFor(() => {
       expect(screen.queryByText(/Mừng thọ/)).not.toBeInTheDocument();
     });
@@ -298,7 +389,9 @@ describe("SINH_NHAT chịu phân tầng chặt hơn MUNG_THO", () => {
   it("khách không thấy sinh nhật của người còn sống", async () => {
     renderWithProviders(<EventsScreen />, { role: "guest" });
 
-    await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
+    await screen.findByRole("radio", { name: "Danh sách" }, { timeout: 15_000 });
+    switchView("Danh sách");
+    await screen.findByRole("heading", { name: "Sắp tới" });
     await waitFor(() => {
       expect(screen.queryByText(/Sinh nhật/)).not.toBeInTheDocument();
     });
@@ -311,7 +404,9 @@ describe("SINH_NHAT chịu phân tầng chặt hơn MUNG_THO", () => {
     // ấy — nên một thành viên khác không được nhận sự kiện này.
     renderWithProviders(<EventsScreen />, { role: "member" });
 
-    await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
+    await screen.findByRole("radio", { name: "Danh sách" }, { timeout: 15_000 });
+    switchView("Danh sách");
+    await screen.findByRole("heading", { name: "Sắp tới" });
     await waitFor(() => {
       expect(screen.queryByText(/Sinh nhật Nguyễn Văn An/)).not.toBeInTheDocument();
     });
@@ -319,6 +414,9 @@ describe("SINH_NHAT chịu phân tầng chặt hơn MUNG_THO", () => {
 
   it("mừng thọ thì thành viên vẫn thấy — hai mã, hai luật", async () => {
     renderWithProviders(<EventsScreen />, { role: "member" });
+
+    await screen.findByRole("radio", { name: "Danh sách" }, { timeout: 15_000 });
+    switchView("Danh sách");
 
     expect(
       await screen.findByText(/Mừng thọ Nguyễn Văn An/, undefined, { timeout: 15_000 })
@@ -330,9 +428,9 @@ describe("việc họ không gắn với cá nhân nào", () => {
   it("họp họ, khánh thành và cưới hỏi đều tới được màn hình", async () => {
     renderWithProviders(<EventsScreen />, { role: "member" });
 
-    await screen.findByRole("heading", { name: "Sắp tới" }, { timeout: 15_000 });
-    // Mỗi sự kiện xuất hiện hai lần — một ô trong lịch năm, một thẻ trong danh
-    // sách "Sắp tới" — nên đếm theo `AllBy`.
+    await screen.findByRole("radio", { name: "Danh sách" }, { timeout: 15_000 });
+    switchView("Danh sách");
+    await screen.findByRole("heading", { name: "Sắp tới" });
     expect((await screen.findAllByText("Họp họ đầu xuân")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Khánh thành tu bổ từ đường").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Lễ cưới con cháu Chi Nhất").length).toBeGreaterThan(0);

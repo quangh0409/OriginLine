@@ -14,6 +14,14 @@ export interface SearchFilterValues {
 export interface SearchFiltersProps {
   value: SearchFilterValues;
   onChange: (next: SearchFilterValues) => void;
+  /**
+   * Khách vãng lai — `/public/persons/search` không nhận `branchId` lẫn
+   * `nativePlace` (chỉ `q`/`generation`/`page`, xem `searchApi.persons`).
+   * Hiện hai ô lọc ấy cho Khách rồi để chúng lặng lẽ không có tác dụng gì là
+   * đúng loại "hỏng thầm lặng" cả dự án đang tránh, nên chúng bị ẨN HẲN thay
+   * vì disable — một ô bị mờ đi vẫn mời người dùng bấm rồi thất vọng.
+   */
+  restricted?: boolean;
 }
 
 /**
@@ -32,17 +40,19 @@ const MAX_GENERATION_OPTION = 20;
  * entitled to and hiding them in the browser, which is the exact inversion of
  * how the tiering is supposed to work (BA v2 §10).
  */
-export function SearchFilters({ value, onChange }: SearchFiltersProps) {
+export function SearchFilters({ value, onChange, restricted = false }: SearchFiltersProps) {
   const t = useTranslations("search");
   const { data: branches, isLoading: branchesLoading } = useBranches();
 
   const hasAnyFilter =
     value.generation !== undefined ||
-    value.branchId !== undefined ||
-    (value.nativePlace ?? "").length > 0;
+    (!restricted && value.branchId !== undefined) ||
+    (!restricted && (value.nativePlace ?? "").length > 0);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div
+      className={`grid grid-cols-1 gap-3 ${restricted ? "sm:max-w-xs" : "sm:grid-cols-3"}`}
+    >
       <label className="block" htmlFor="search-filter-generation">
         <span className="mb-1 block text-than text-text-muted">{t("filters.generation")}</span>
         <Select<number>
@@ -62,55 +72,59 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
         />
       </label>
 
-      <label className="block" htmlFor="search-filter-branch">
-        <span className="mb-1 block text-than text-text-muted">{t("filters.branch")}</span>
-        <Select<string>
-          id="search-filter-branch"
-          className="w-full"
-          size="large"
-          allowClear
-          showSearch
-          optionFilterProp="label"
-          loading={branchesLoading}
-          placeholder={t("filters.anyBranch")}
-          value={value.branchId}
-          onChange={(next) => onChange({ ...value, branchId: next ?? undefined })}
-          options={(branches ?? []).map((branch) => ({
-            value: branch.id,
-            label: branch.name,
-            // Indent by ltree depth so ngành/nhánh read as children of a chi.
-            title: branch.path,
-            depth: branchDepth(branch),
-          }))}
-          optionRender={(option) => (
-            <span
-              style={{ paddingLeft: `${(option.data as { depth: number }).depth * 12}px` }}
-            >
-              {option.label}
-            </span>
-          )}
-        />
-      </label>
+      {!restricted && (
+        <>
+          <label className="block" htmlFor="search-filter-branch">
+            <span className="mb-1 block text-than text-text-muted">{t("filters.branch")}</span>
+            <Select<string>
+              id="search-filter-branch"
+              className="w-full"
+              size="large"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              loading={branchesLoading}
+              placeholder={t("filters.anyBranch")}
+              value={value.branchId}
+              onChange={(next) => onChange({ ...value, branchId: next ?? undefined })}
+              options={(branches ?? []).map((branch) => ({
+                value: branch.id,
+                label: branch.name,
+                // Indent by ltree depth so ngành/nhánh read as children of a chi.
+                title: branch.path,
+                depth: branchDepth(branch),
+              }))}
+              optionRender={(option) => (
+                <span
+                  style={{ paddingLeft: `${(option.data as { depth: number }).depth * 12}px` }}
+                >
+                  {option.label}
+                </span>
+              )}
+            />
+          </label>
 
-      <label className="block" htmlFor="search-filter-native-place">
-        <span className="mb-1 block text-than text-text-muted">
-          {t("filters.nativePlace")}
-        </span>
-        <Input
-          id="search-filter-native-place"
-          size="large"
-          allowClear
-          autoCorrect="off"
-          placeholder={t("filters.nativePlacePlaceholder")}
-          value={value.nativePlace ?? ""}
-          onChange={(e) =>
-            onChange({ ...value, nativePlace: e.target.value || undefined })
-          }
-        />
-      </label>
+          <label className="block" htmlFor="search-filter-native-place">
+            <span className="mb-1 block text-than text-text-muted">
+              {t("filters.nativePlace")}
+            </span>
+            <Input
+              id="search-filter-native-place"
+              size="large"
+              allowClear
+              autoCorrect="off"
+              placeholder={t("filters.nativePlacePlaceholder")}
+              value={value.nativePlace ?? ""}
+              onChange={(e) =>
+                onChange({ ...value, nativePlace: e.target.value || undefined })
+              }
+            />
+          </label>
+        </>
+      )}
 
       {hasAnyFilter && (
-        <div className="sm:col-span-3">
+        <div className={restricted ? "" : "sm:col-span-3"}>
           <Button
             type="link"
             size="small"

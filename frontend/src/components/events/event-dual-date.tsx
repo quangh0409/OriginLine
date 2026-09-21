@@ -22,7 +22,11 @@ export function EventDualDate({ event }: { event: EventDto }) {
   const lunar = event.lunarDate;
 
   return (
-    <span className="inline-flex flex-col gap-0.5">
+    // `max-w-full` is load-bearing: an `inline-flex` box sizes to max-content, so one long
+    // value pushes the box itself past the `<dd>` around it. The `min-w-0` on that `<dd>`
+    // cannot help — the overflow is in the CHILD box. Cap the box that overflows, and the
+    // `overflow-wrap: break-word` floor then wraps the text as usual.
+    <span className="inline-flex max-w-full flex-col gap-0.5">
       <span className="text-than font-medium text-text-main">
         {t("lunarDayMonth", { day: lunar.day, month: lunar.month })}
         {lunar.leap && <span className="ml-1 font-semibold text-accent">{t("lunarLeap")}</span>}

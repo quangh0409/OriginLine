@@ -50,7 +50,11 @@ export function PersonPicker({
     return () => clearTimeout(timer);
   }, [rawQuery]);
 
-  const { data, isFetching } = usePersonSearch({ q: query, size: 20 });
+  // Đây luôn là một biểu mẫu của thành viên đã đăng nhập (thêm/sửa nhân khẩu,
+  // link quan hệ) — Khách không bao giờ tới được màn này, nên audience cố
+  // định `"member"` thay vì hỏi `useTreeAudience()` cho một câu đã biết trước
+  // câu trả lời.
+  const { data, isFetching } = usePersonSearch("member", { q: query, size: 20 });
 
   const options = useMemo(() => {
     const items = [...(data?.items ?? [])];

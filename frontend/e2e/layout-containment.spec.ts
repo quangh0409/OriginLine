@@ -122,6 +122,27 @@ async function lang(page: Page): Promise<void> {
   // Ant Design tiêm CSS-in-JS vào <head> LÚC CHẠY; đo trước lượt tiêm ấy là đo một trang
   // chưa có nửa số quy tắc của nó.
   await page.waitForTimeout(400);
+
+  // ...và chờ mọi con quay TẮT. Ô "Chi/Ngành" ở màn tìm kiếm bật `loading` trong lúc
+  // `useBranches()` còn bay; trong khoảnh khắc ấy Ant Design đặt một glyph 22px vào cái khe
+  // mũi tên 16px của CHÍNH NÓ, và bộ thu thập ghi lại 3px tràn. Đó không phải lỗi bố cục của
+  // sản phẩm: khe ấy là nội thất Ant Design, nó `absolute` nên không đẩy gì ra, không sinh
+  // cuộn ngang, và nó biến mất sau chưa tới ba giây. Đo một khung hình như thế là đo một
+  // trạng thái người dùng gần như không thấy — và tệ hơn, kết quả phụ thuộc vào việc bộ giả
+  // lập trả lời nhanh hay chậm, tức là một cái đỏ nhấp nháy.
+  await page
+    .waitForFunction(
+      () =>
+        document.querySelectorAll(
+          "#noi-dung-chinh .anticon-loading, #noi-dung-chinh .ant-spin-spinning"
+        ).length === 0,
+      undefined,
+      { timeout: 10_000 }
+    )
+    .catch(() => {
+      /* Còn quay sau 10s là trang thật sự kẹt tải — để phép đo bên dưới nói ra điều đó bằng
+         thứ nó thấy, thay vì chết ở đây bằng một timeout không nói gì về bố cục. */
+    });
 }
 
 export interface TranVien {
@@ -244,15 +265,31 @@ async function cuonNgang(page: Page): Promise<number> {
   return doc();
 }
 
-/** Lề trái/phải của khung trang so với mép khung nhìn. `null` khi màn không có khung trang. */
+/**
+ * Lề trái/phải của **nội dung** so với mép khung nhìn. `null` khi màn không có khung trang.
+ *
+ * <h2>Phải cộng cả `padding` của khung, không chỉ đo hộp viền</h2>
+ * `KhungTrang` cài lề bằng `px-4` — tức **padding**, không phải margin. Trên máy rộng thì
+ * `max-w-3xl` chặn lại và `mx-auto` đẩy hộp vào giữa, nên hộp viền có mép trái dương và một
+ * phép đo chỉ nhìn `getBoundingClientRect().left` vẫn ra số đúng. Trên điện thoại thì
+ * `max-w-*` không ràng buộc gì: hộp viền trải hết bề rộng, `left` bằng **0**, và phép đo ấy
+ * báo "lề trái 0px" trên **mọi** màn — trong khi người dùng đang nhìn đúng 16px khoảng thở.
+ *
+ * <p>Đó là một cái đỏ tệ hơn cả một cái xanh sai: nó đỏ ở 13 màn cùng lúc, nên người đọc kết
+ * luận "vỏ ứng dụng hỏng" và đi sửa vỏ, trong khi cả 13 màn đều đúng. Thứ cần đo là khoảng
+ * cách từ mép màn hình tới **hộp nội dung**, và đó là `left + paddingLeft`.</p>
+ */
 async function leTrang(page: Page): Promise<{ trai: number; phai: number } | null> {
   return page.evaluate(() => {
     const khung = document.querySelector("[data-khung-trang]");
     if (!khung) return null;
     const r = khung.getBoundingClientRect();
+    const cs = getComputedStyle(khung);
     return {
-      trai: Math.round(r.left),
-      phai: Math.round(document.documentElement.clientWidth - r.right),
+      trai: Math.round(r.left + parseFloat(cs.paddingLeft || "0")),
+      phai: Math.round(
+        document.documentElement.clientWidth - r.right + parseFloat(cs.paddingRight || "0")
+      ),
     };
   });
 }
@@ -360,8 +397,17 @@ test.describe("bố cục · chuỗi máy dài, thứ bộ giả lập không c�
     // Tiêm vào MỌI đoạn chữ trong thân trang, chứ không dựng một hộp mới: mục đích là đo
     // đúng những thẻ sản phẩm đang có, với dữ liệu có hình dạng của máy chủ thật.
     const soCho = await page.evaluate((chuoi) => {
+      // Quét cả `dt`, `li` và **con cháu** `span` của `dd`, không chỉ `p, dd`. Mẫu hẹp hơn
+      // thì đủ thứ đoạn chữ thật nằm ngoài tầm với: trên hồ sơ `p-001` chỉ có 5 thẻ `dd`, và
+      // hai trong số đó bọc nội dung trong thẻ con (cặp ngày dương/âm) nên hết là "lá" — mẫu
+      // tụt xuống 3, tức phép kiểm gần như rỗng mà vẫn xanh. Điều kiện "lá" được giữ: tiêm
+      // vào một thẻ còn con là xoá mất cây con ấy, và khi đó ta đo một trang đã bị chính
+      // phép kiểm phá.
       const doan = Array.from(
-        document.querySelectorAll<HTMLElement>("#noi-dung-chinh p, #noi-dung-chinh dd")
+        document.querySelectorAll<HTMLElement>(
+          "#noi-dung-chinh p, #noi-dung-chinh dd, #noi-dung-chinh dt," +
+            " #noi-dung-chinh li, #noi-dung-chinh dd span"
+        )
       ).filter((p) => p.children.length === 0 && (p.innerText ?? "").trim().length > 0);
       doan.forEach((p, i) => {
         p.textContent = `${p.textContent} ${chuoi[i % chuoi.length] ?? ""}`;
@@ -477,36 +523,130 @@ test.describe("bố cục · bảng cuộn riêng, trang thì không", () => {
    ════════════════════════════════════════════════════════════════════════════ */
 
 test.describe("chống xanh giả · bộ thu thập trên trình duyệt phải kêu", () => {
+  /**
+   * Mồi nhử: một "từ" **dài hơn mọi hộp chứa hợp lý**, dựng tại chỗ theo bề rộng thật.
+   *
+   * <p>Bản đầu của hai ca dưới đây dùng một chuỗi 73 ký tự cố định. Nó từng tràn, rồi thôi:
+   * thẻ `<article>` của hồ sơ rộng <b>736px</b> còn chuỗi ấy vẽ ra khoảng 620px, nên con
+   * chim hoàng yến im lặng — và một con chim hoàng yến im lặng vì mồi hết tác dụng trông y
+   * hệt một con chim hoàng yến im lặng vì mỏ than sạch. Đó đúng là kiểu xanh giả mà cả mục
+   * này sinh ra để chặn, chỉ là nó xảy ra với chính nó.</p>
+   *
+   * <p>Nên mồi nay được tính từ `clientWidth` của hộp nhận: lặp UUID cho tới khi bề rộng
+   * ước lượng vượt hộp một quãng an toàn. Đổi bố cục rộng hẹp thế nào mồi vẫn đủ dài, và
+   * ca "KHÔNG bắt nhầm" dùng <b>đúng chuỗi ấy</b> nên hai vế vẫn đối xứng — chỉ khác một
+   * thứ duy nhất: `overflow-wrap`.</p>
+   */
+  // MỒI KHÔNG CÓ DẤU GẠCH NGANG, và đó là nửa còn lại của lý do con chim hoàng yến đã câm.
+  // Bản đầu dùng `7a1d4c60-9f3b-4e21-…` — nhưng dấu gạch ngang là một CHỖ NGẮT DÒNG hợp lệ
+  // trong CSS, và `overflow-wrap: normal` không tắt nó đi: thuộc tính ấy chỉ nói có được ngắt
+  // GIỮA MỘT TỪ hay không, còn ở đây trình duyệt vẫn có sẵn bảy chỗ ngắt tử tế. Nên "chuỗi
+  // không ngắt được" ấy ngắt đẹp như thường và chẳng tràn đi đâu cả. Bỏ hết gạch ngang thì
+  // nó mới thật sự là MỘT từ.
+  //
+  // Phép tính nằm TRONG `page.evaluate` ở cả hai ca chứ không gom thành hàm dùng chung:
+  // `evaluate` chạy trong trình duyệt và không đóng bao được một hàm phía Node. Hai bản sao
+  // ba dòng, giống nhau từng ký tự, đổi một chỗ là phải đổi cả hai — và ca "KHÔNG bắt nhầm"
+  // sẽ đỏ ngay nếu chúng lệch nhau, nên sự trùng lặp này có người canh.
+  // (~8.5px mỗi ký tự ở 16px Be Vietnam Pro; lấy 7 cho chắc rồi nhân đôi quãng an toàn.)
+
+  /**
+   * Lỗi cũ có <b>hai</b> triệu chứng, và hai bộ đo khác nhau bắt chúng.
+   *
+   * <p>Một chuỗi không ngắt được nằm trong một khối thường <b>không</b> làm hộp của nó to ra
+   * — hộp vẫn 736px, chỉ có chữ chạy tràn ra ngoài. Bộ thu thập {@link timTranVien} so
+   * <i>hộp con với hộp cha</i> nên nó không thấy gì cả; thứ bắt được ca ấy là
+   * {@link cuonNgang}, vì chữ chạy quá mép khung nhìn thì tài liệu cuộn ngang được.</p>
+   *
+   * <p>Hộp <b>có</b> to ra khi đoạn chữ ấy là con của một hàng {@code flex} thiếu
+   * {@code min-w-0}: bề rộng nội tại của "từ" đẩy chính hộp con rộng hơn hộp cha. Đó là
+   * nguyên nhân số (2) trong danh sách gợi ý của chính bộ thu thập, và là ca duy nhất trong
+   * hai ca mà nó có cơ chế để nhìn thấy.</p>
+   *
+   * <p>Ghim cả hai, vì khẳng định một mình vế nào cũng để lọt nửa còn lại — và bản đầu của
+   * ca này khẳng định đúng vế mà bộ thu thập <b>không</b> nhìn được.</p>
+   */
   test("bắt được đúng lỗi cũ: một hộp từ chối ngắt chuỗi dài", async ({ page }) => {
     await moMan(page, { path: "/persons/p-001", name: "hồ sơ nhân khẩu", vai: "member" });
 
     // Dựng lại NGUYÊN trạng thái trước bản vá: `overflow-wrap: normal` là giá trị mặc
     // định của CSS, và sàn ở `globals.css` chính là thứ đang ghi đè nó.
-    await page.evaluate(() => {
+    const daTran = await page.evaluate(() => {
+      const the = (document.querySelector("#noi-dung-chinh section, #noi-dung-chinh article") ??
+        document.querySelector("#noi-dung-chinh")) as HTMLElement;
+      const UUID = "7a1d4c609f3b4e21b8d40c5e1a2f7b93";
+      const moi = UUID.repeat(
+        Math.max(2, Math.ceil((Math.ceil(the.clientWidth / 7) * 2) / UUID.length))
+      );
+
+      // Vế 1 — khối thường: CHỮ tràn, hộp thì không.
       const chu = document.createElement("p");
       chu.style.overflowWrap = "normal";
       chu.style.wordBreak = "normal";
-      chu.textContent = "7a1d4c60-9f3b-4e21-b8d4-0c5e1a2f7b93-7a1d4c60-9f3b-4e21-b8d4-0c5e1a2f7b93";
-      const the = document.querySelector("#noi-dung-chinh section, #noi-dung-chinh article");
-      (the ?? document.querySelector("#noi-dung-chinh"))!.appendChild(chu);
+      chu.textContent = moi;
+      the.appendChild(chu);
+
+      // Vế 2 — hàng flex thiếu `min-w-0`: chính HỘP CON bị đẩy rộng hơn hộp cha.
+      const hang = document.createElement("div");
+      hang.style.display = "flex";
+      const o = document.createElement("p");
+      o.style.overflowWrap = "normal";
+      o.style.wordBreak = "normal";
+      o.textContent = moi;
+      hang.appendChild(o);
+      the.appendChild(hang);
+
+      return { rongHop: the.clientWidth, rongChu: chu.scrollWidth };
     });
+
+    // Mồi phải THẬT SỰ tràn trước đã. Không có dòng này thì hai lời khẳng định bên dưới chỉ
+    // chứng minh được rằng mồi vô hại, chứ không chứng minh được gì về hai bộ đo.
+    expect(
+      daTran.rongChu,
+      `mồi nhử (${daTran.rongChu}px) không rộng hơn hộp nhận (${daTran.rongHop}px) — ` +
+        "phép kiểm chống-xanh-giả tự nó đã thành xanh giả"
+    ).toBeGreaterThan(daTran.rongHop);
 
     const tran = await timTranVien(page);
     expect(
       tran.length,
-      "bộ thu thập KHÔNG thấy một đoạn chữ 74 ký tự không ngắt được nằm trong một thẻ — " +
-        "tức là mọi lời khẳng định 'không tràn viền' ở tệp này đều vô nghĩa"
+      "bộ thu thập KHÔNG thấy một hộp con rộng hơn hộp cha trong hàng flex thiếu `min-w-0` " +
+        "— tức là mọi lời khẳng định 'không tràn viền' ở tệp này đều vô nghĩa"
     ).toBeGreaterThan(0);
+
+    expect(
+      await cuonNgang(page),
+      "chữ chạy quá mép khung nhìn mà tài liệu vẫn không cuộn ngang được — `cuonNgang` " +
+        "không còn phân biệt được đạt với không đạt"
+    ).toBeGreaterThan(1);
   });
 
   test("KHÔNG bắt nhầm cùng đoạn chữ ấy khi nó theo sàn của sản phẩm", async ({ page }) => {
     await moMan(page, { path: "/persons/p-001", name: "hồ sơ nhân khẩu", vai: "member" });
 
+    // ĐÚNG hai cấu trúc của ca trên, khác một thứ duy nhất: không đặt `overflow-wrap`, tức là
+    // chúng thừa hưởng sàn `break-word` ở `body` — và hàng flex có `min-w-0` như sản phẩm
+    // vẫn viết. Nếu ca này cũng đỏ thì phép đo không phân biệt được đạt với không đạt, và cả
+    // tệp mất nghĩa.
     await page.evaluate(() => {
+      const the = (document.querySelector("#noi-dung-chinh section, #noi-dung-chinh article") ??
+        document.querySelector("#noi-dung-chinh")) as HTMLElement;
+      const UUID = "7a1d4c609f3b4e21b8d40c5e1a2f7b93";
+      const moi = UUID.repeat(
+        Math.max(2, Math.ceil((Math.ceil(the.clientWidth / 7) * 2) / UUID.length))
+      );
+
       const chu = document.createElement("p");
-      chu.textContent = "7a1d4c60-9f3b-4e21-b8d4-0c5e1a2f7b93-7a1d4c60-9f3b-4e21-b8d4-0c5e1a2f7b93";
-      const the = document.querySelector("#noi-dung-chinh section, #noi-dung-chinh article");
-      (the ?? document.querySelector("#noi-dung-chinh"))!.appendChild(chu);
+      chu.textContent = moi;
+      the.appendChild(chu);
+
+      const hang = document.createElement("div");
+      hang.style.display = "flex";
+      const o = document.createElement("p");
+      o.style.minWidth = "0";
+      o.textContent = moi;
+      hang.appendChild(o);
+      the.appendChild(hang);
     });
 
     const tran = await timTranVien(page);

@@ -23,6 +23,13 @@ function props(overrides: Partial<React.ComponentProps<typeof TreeToolbar>> = {}
     onDirectionChange: vi.fn(),
     visibleCount: 47,
     loadedCount: 312,
+    // Ô tìm trên canvas gọi `/persons/search` theo `audience`; "member" là ca thường gặp nhất và
+    // không có mạng nào bị chạm tới ở đây, vì các ca dưới không gõ vào ô ấy.
+    audience: "member" as const,
+    onJumpToPerson: vi.fn(),
+    // `null` = "chưa ghép vào phả" ⇒ không vẽ nút "Về chỗ tôi". Mặc định như vậy để các ca cũ
+    // không phải biết gì về nút mới.
+    onGoToSelf: null,
     ...overrides,
   };
 }

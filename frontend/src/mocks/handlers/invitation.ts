@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { API_BASE_URL } from "@/lib/api/http";
+import { resolveMockRole } from "./role";
 import type {
   InvitationAcceptedDto,
   InvitationPreviewDto,
@@ -19,16 +20,20 @@ import type { Problem, ProblemCode } from "@/types/api";
  *       xác thực) và <b>không</b> trả `relationToInviter` (danh xưng không tính
  *       được cho một khách không token ở Giai đoạn 1);</li>
  *   <li>`inviter.displayName` là tên <b>trần</b>, không kính ngữ;</li>
- *   <li>`/accept` <b>đòi token</b> và <b>không</b> trả `setPasswordUrl` — đúng
- *       khoảng trống thật của backend hôm nay;</li>
+ *   <li>`/accept` <b>KHÔNG đòi token</b> (`security: []`), và khi người gọi
+ *       không mang token thì <b>bắt buộc</b> có {@code loginId} — đúng luật
+ *       {@code LoginIdentifier.of} phía máy chủ, kể cả thông điệp lỗi (chép
+ *       nguyên văn, không dấu, như chính máy chủ Java trả về);</li>
  *   <li>bốn ca hỏng giữ bốn mã riêng, `410`/`409`/`404` chứ không gộp về `400`.</li>
  * </ul>
  *
  * <h2>Chỉ `/accept` đọc `x-mock-role`</h2>
  * `/lookup` và `/decline` phục vụ người **chưa có tài khoản**, nên vai của
  * người gọi không có nghĩa gì ở đó — mã mời là chứng chỉ duy nhất. `/accept`
- * thì ngược lại: nó là endpoint duy nhất của nhóm đòi token, nên ở đây "khách"
- * đóng vai "không mang token" và phải nhận `401`.
+ * thì ngược lại: nó là endpoint <b>duy nhất</b> của nhóm mà vai người gọi
+ * quyết định hình dạng phản hồi — "khách" đóng vai "không mang token", và ở
+ * ĐÓ (không phải ở một mã `401`) là nơi luật "phải khai `loginId`" chạy, đúng
+ * như `InvitationService.acceptAsNewAccount` phía máy chủ.
  */
 
 /**
@@ -57,10 +62,24 @@ function problem(
   code: ProblemCode,
   title: string,
   instance: string,
+  detail?: string | Record<string, string>,
   headers?: Record<string, string>
 ): HttpResponse<Problem> {
-  const body: Problem = { type: "about:blank", title, status, code, instance };
-  return HttpResponse.json(body, { status, headers });
+  // `detail` chồng lấp với vị trí cũ của `headers` (mọi lời gọi trước đợt này
+  // truyền một `Record<string,string>` ở đúng chỗ ấy để đặt `Retry-After`).
+  // Phân biệt bằng KIỂU thay vì đổi vị trí mọi lời gọi cũ: chuỗi là `detail`,
+  // object là `headers`.
+  const detailText = typeof detail === "string" ? detail : undefined;
+  const headersArg = typeof detail === "object" ? detail : headers;
+  const body: Problem = {
+    type: "about:blank",
+    title,
+    status,
+    code,
+    instance,
+    ...(detailText !== undefined ? { detail: detailText } : {}),
+  };
+  return HttpResponse.json(body, { status, headers: headersArg });
 }
 
 /**
@@ -87,6 +106,22 @@ export const MOCK_INVITATION_CODE_SERVER_DOWN = "MAY500";
 
 /** Mã làm máy chủ trả `429` kèm `Retry-After`. */
 export const MOCK_INVITATION_CODE_RATE_LIMITED = "NHANH429";
+
+/**
+ * **Không phải một mã mời — một `loginId`.** Định danh này đã thuộc về một tài
+ * khoản đang tồn tại trong realm, nên `POST /invitations/accept` **không kèm
+ * token** trả `422 IDENTITY_ALREADY_REGISTERED`.
+ *
+ * <h2>Vì sao lối nhận lời mời cũng có phép chặn này</h2>
+ * Cùng một lỗ hổng, cùng một bản vá: `/accept` không đòi đăng nhập, nên chuỗi
+ * người gọi tự gõ **không chứng minh** họ sở hữu định danh ấy. Nếu định danh đã
+ * có chủ thì mọi bước sau — đúc liên kết đặt mật khẩu, làm tươi hồ sơ, và ở lối
+ * này còn là **ghép vào một nhân khẩu trong phả** — là thao tác trên tài sản
+ * của người khác. Một tài khoản dựng qua đăng nhập Google **không có mật khẩu**,
+ * nên "chưa có mật khẩu" không hề có nghĩa là "chưa có chủ"; đó chính là ca mà
+ * lỗ hổng cũ khai thác.
+ */
+export const MOCK_INVITATION_LOGIN_ID_TAKEN = "da-co-tai-khoan@ho-nguyen.vn";
 
 /**
  * Lời mời mẫu, chép theo hình 5 của bản thiết kế **và theo contract**.
@@ -190,38 +225,106 @@ export const invitationHandlers = [
 
   http.post(`${API_BASE_URL}/api/v1/invitations/accept`, async ({ request }) => {
     const instance = "/api/v1/invitations/accept";
-    const body = (await request.json().catch(() => ({}))) as { code?: unknown };
+    const body = (await request.json().catch(() => ({}))) as {
+      code?: unknown;
+      loginId?: unknown;
+      email?: unknown;
+    };
     const code = normalizeCode(body.code);
-
-    // `POST /invitations/accept` KHÔNG đòi token — chính mã mời là chứng chỉ.
-    // Đòi token ở đây là đóng cửa với đúng người mà cả luồng sinh ra để phục vụ:
-    // người CHƯA có tài khoản nào để đăng nhập bằng.
-    //
-    // Hai ca, phân biệt bằng việc CÓ hay KHÔNG có `setPasswordUrl`:
-    //
-    //   · người chưa có tài khoản (`MOCK_INVITATION_CODE_NEW_ACCOUNT`) — máy chủ
-    //     tạo tài khoản Keycloak rồi phát liên kết đặt mật khẩu;
-    //   · người đã có tài khoản — máy chủ **cố ý không phát** liên kết, vì nếu
-    //     phát thì ai cầm được một mã mời cộng với đoán đúng email của một thành
-    //     viên cũ sẽ đổi được mật khẩu của người ta. Giao diện đưa họ tới màn
-    //     đăng nhập.
-    const nguoiChuaCoTaiKhoan = code === MOCK_INVITATION_CODE_NEW_ACCOUNT;
+    const role = resolveMockRole(request);
 
     const rejection = rejectionFor(code, instance);
     if (rejection) return rejection;
 
-    if (nguoiChuaCoTaiKhoan) {
+    // `POST /invitations/accept` KHÔNG đòi token — chính mã mời là chứng chỉ.
+    // Đòi token ở đây là đóng cửa với đúng người mà cả luồng sinh ra để phục vụ:
+    // người CHƯA có tài khoản nào để đăng nhập bằng.
+    if (role === "guest") {
+      // Không mang token ⇒ máy chủ đọc `loginId` (tên cũ `email`, đánh dấu bỏ
+      // dần) để tìm-hoặc-tạo tài khoản Keycloak — `IdentityEnroller.readIdentifier`
+      // / `LoginIdentifier.of`. Thiếu nó là `422 VALIDATION_FAILED`, và câu chữ
+      // dưới đây CHÉP NGUYÊN VĂN thông điệp của lớp Java ấy (không dấu, đúng quy
+      // ước ghi log nội bộ của nó) — đây chính là ca `isInvitationValidationError`
+      // ở `invitation.ts` sinh ra để bắt.
+      const loginId =
+        typeof body.loginId === "string" && body.loginId.trim().length > 0
+          ? body.loginId.trim()
+          : typeof body.email === "string"
+            ? body.email.trim()
+            : "";
+      if (loginId.length === 0) {
+        return problem(
+          422,
+          "VALIDATION_FAILED",
+          "Dữ liệu gửi lên không hợp lệ",
+          instance,
+          "Phai cho biet dia chi thu dien tu hoac so dien thoai de lap tai khoan"
+        );
+      }
+
+      // ĐỊNH DANH ĐÃ CÓ CHỦ THÌ DỪNG LẠI — TRƯỚC khi tiêu mã, trước khi ghép
+      // vào nhân khẩu nào. Xem {@link MOCK_INVITATION_LOGIN_ID_TAKEN}.
+      //
+      // `detail` CHÉP NGUYÊN VĂN câu của `InvitationService`, kể cả việc nó là
+      // tiếng Việt không dấu: contract dặn giao diện in câu này ra, nên một bản
+      // "đã bỏ dấu giúp" ở đây sẽ giấu mất thứ màn hình thật đang hiện.
+      if (loginId === MOCK_INVITATION_LOGIN_ID_TAKEN) {
+        return problem(
+          422,
+          "IDENTITY_ALREADY_REGISTERED",
+          "Định danh này đã có tài khoản",
+          instance,
+          "Dia chi nay co the da duoc dung de dang nhap truoc day, ke ca bang Google."
+            + " Hay dang nhap truoc roi nhap lai ma moi. Neu ban khong dang nhap duoc, hay dua"
+            + " ma moi nay cho Truong chi de duoc ho tro."
+        );
+      }
+
+      // `MOCK_INVITATION_CODE_NEW_ACCOUNT` dựng lại đúng ca người CHƯA có tài
+      // khoản Keycloak nào — nhận được liên kết đặt mật khẩu, bất kể `loginId`
+      // gõ vào là gì, để ca kiểm khỏi phải biết trước bộ sinh danh tính giả lập
+      // nghĩ gì.
+      //
+      // MỌI MÃ KHÁC ⇒ 422. Định danh gõ vào trùng một tài khoản ĐÃ có từ trước,
+      // và sau bản vá lỗ hổng chiếm tài khoản thì máy chủ thật **từ chối** ca ấy
+      // — nó không còn trả `200` kèm một màn "đăng nhập như thường lệ" nữa.
+      //
+      // Bản đầu của tệp này để nhánh mặc định trả `200`, và đó chính là mẫu hình
+      // đã cắn dự án này BỐN LẦN: bộ giả lập mô phỏng một API **dễ hơn** API
+      // thật. Một màn hình xanh trên bộ giả lập rồi gãy khi gặp máy chủ là thứ
+      // đắt hơn nhiều một bài kiểm đỏ hôm nay.
+      if (code !== MOCK_INVITATION_CODE_NEW_ACCOUNT) {
+        return problem(
+          422,
+          "IDENTITY_ALREADY_REGISTERED",
+          "Định danh này đã có tài khoản",
+          instance,
+          "Dia chi nay co the da duoc dung de dang nhap truoc day, ke ca bang Google."
+            + " Hay dang nhap truoc roi nhap lai ma moi. Neu ban khong dang nhap duoc, hay dua"
+            + " ma moi nay cho Truong chi de duoc ho tro."
+        );
+      }
+
       consumed.add(code);
-      return HttpResponse.json({
-        ...ACCEPTED,
-        appUserId: "u-vua-lap",
-        // Đường dẫn TƯƠNG ĐỐI trong chính ứng dụng này — khuôn mặc định của
-        // backend. Giao diện phải đi tới URL MÁY CHỦ TRẢ VỀ chứ không tự ghép.
-        setPasswordUrl: `/vi/dat-mat-khau?token=${MOCK_SET_PASSWORD_TOKEN}`,
-        setPasswordExpiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
-      });
+
+      {
+        return HttpResponse.json({
+          ...ACCEPTED,
+          appUserId: "u-vua-lap",
+          // Đường dẫn TƯƠNG ĐỐI trong chính ứng dụng này — khuôn mặc định của
+          // backend. Giao diện phải đi tới URL MÁY CHỦ TRẢ VỀ chứ không tự ghép.
+          setPasswordUrl: `/vi/dat-mat-khau?token=${MOCK_SET_PASSWORD_TOKEN}`,
+          setPasswordExpiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+        });
+      }
+
+      return HttpResponse.json(ACCEPTED);
     }
 
+    // Có token: danh tính lấy từ đó, `loginId` bị bỏ qua — không phát liên kết
+    // đặt mật khẩu, vì họ vừa đăng nhập được thì hiển nhiên đã có cách đăng
+    // nhập rồi.
+    //
     // Tiêu mã NGAY: lần gọi thứ hai với cùng mã phải ra `409`, kể cả khi người
     // dùng bấm hai lần vì mạng chậm. Đó là bất biến "mã dùng một lần"; mock
     // không giữ nó thì giao diện sẽ được dựng với một giả định sai.

@@ -192,11 +192,28 @@ test("expanding a branch re-lays out and repaints within the budget", async ({ p
   const nodeId = await card.getAttribute("data-id");
   const toggle = page.locator(`.react-flow__node[data-id="${nodeId}"] button`);
 
+  const visibleBefore = Number(
+    await page.getByTestId("tree-node-count").getAttribute("data-visible-count")
+  );
+
   const started = Date.now();
   await toggle.click();
   // "Rendered" here means the expand actually took effect on the canvas, not
   // merely that a state flag flipped.
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  //
+  // Đo bằng SỐ NGƯỜI ĐANG HIỆN, không bằng `aria-expanded` của chính cái nút vừa bấm: bung một
+  // nhánh làm cả bố cục dãn ra dưới một máy quay đứng yên, nên tấm thẻ vừa bấm thường trôi khỏi
+  // khung và `onlyRenderVisibleElements` xoá nó khỏi DOM — lời chờ khi ấy hết giờ với thông báo
+  // "không tìm thấy phần tử", nói về một thứ không phải nguyên nhân. Con số trên thanh công cụ
+  // thì không bao giờ bị xén, và nó là kết quả của `computeVisibleSubgraph`, tức đúng "phép bung
+  // đã có hiệu lực trên canvas".
+  await expect
+    .poll(
+      async () =>
+        Number(await page.getByTestId("tree-node-count").getAttribute("data-visible-count")),
+      { timeout: 15_000 }
+    )
+    .toBeGreaterThan(visibleBefore);
   await expect(page.locator(".react-flow__node").first()).toBeVisible();
   const ms = Date.now() - started;
 
@@ -214,7 +231,7 @@ test("switching view mode re-lays out within the budget", async ({ page }) => {
   await page.goto("/tree");
   await waitForTreeReady(page);
 
-  for (const mode of ["Tỏa tròn", "Ma trận đời"]) {
+  for (const mode of ["Tỏa tròn", "Ma trận"]) {
     const started = Date.now();
     await segmented(page, mode).click();
     await waitForTreeReady(page);

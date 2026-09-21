@@ -9,6 +9,8 @@ import enMessages from "../../messages/en.json";
 import { antdTheme } from "@/styles/antd-theme";
 import { setDevRole, type DevRole } from "@/lib/api/dev-role";
 import { setApiLocale } from "@/lib/api/http";
+import { AuthContext, type AuthContextValue } from "@/lib/auth/auth-context";
+import type { AppRole } from "@/lib/auth/roles";
 
 export type TestLocale = "vi" | "en";
 
@@ -19,8 +21,76 @@ const MESSAGES: Record<TestLocale, AbstractIntlMessages> = {
 
 export interface RenderWithProvidersOptions extends Omit<RenderOptions, "wrapper"> {
   locale?: TestLocale;
-  /** Pins the `x-mock-role` header for every request this render makes. */
+  /**
+   * Pins the `x-mock-role` header for every request this render makes — **and**
+   * the session the component tree sees through `useAuth()`.
+   */
   role?: DevRole;
+  /**
+   * Overrides individual fields of the fake session, for the rare test that
+   * needs a shape `role` cannot express (an authenticated account with no
+   * roles, a mid-flight `loading`, a display name asserted on screen).
+   */
+  auth?: Partial<AuthContextValue>;
+}
+
+/**
+ * Vai ứng dụng tương ứng với mỗi vai giả của bộ mô phỏng.
+ *
+ * `admin` mang **cả** `ADMIN` lẫn `COUNCIL`, đúng như tài khoản dev
+ * `admin.giapha` mà `roles.ts` mô tả — nếu chỉ gán `ADMIN` thì mọi màn hỏi
+ * `hasRole("COUNCIL")` sẽ lặng lẽ đi nhánh sai trong test mà vẫn xanh.
+ */
+const VAI_UNG_DUNG: Record<DevRole, AppRole[]> = {
+  guest: [],
+  member: ["MEMBER"],
+  "branch-head": ["BRANCH_HEAD"],
+  admin: ["ADMIN", "COUNCIL"],
+};
+
+/**
+ * Dựng một phiên giả **khớp với vai đã ghim cho bộ mô phỏng**.
+ *
+ * <h2>Vì sao phải có, và vì sao nó từng thiếu mà không ai thấy</h2>
+ * `useAuth()` cố ý rơi về "khách" khi đứng ngoài cây provider — đúng cho sản
+ * phẩm (không màn nào đáng sập vì thiếu thông tin đăng nhập), nhưng trong test
+ * thì nó biến **mọi** lượt dựng thành một người chưa đăng nhập. Trước bản vá
+ * này, `renderWithProviders({ role: "member" })` chỉ đặt header `x-mock-role`:
+ * máy chủ giả trả dữ liệu của một thành viên, còn giao diện vẫn tin mình đang
+ * phục vụ khách. Hai nguồn sự thật lệch nhau, và không có gì kêu.
+ *
+ * <p>Hệ quả: mọi bài kiểm dạng "thành viên thấy X" mà X được canh bằng
+ * `isAuthenticated` đều xanh vì lý do sai. Lỗi này lộ ra khi màn nhận lời mời
+ * trở thành màn đầu tiên vừa rẽ nhánh theo `isAuthenticated` vừa phụ thuộc
+ * `role` để lấy dữ liệu giả.</p>
+ *
+ * <p>Tên hiển thị cố ý để **rỗng** trừ khi test tự đặt: một chuỗi bịa sẵn sẽ
+ * lọt vào DOM và làm hỏng đúng những bài kiểm đang khẳng định "không có tên
+ * người còn sống nào trên màn này".</p>
+ */
+function phienGia(role: DevRole, ghiDe?: Partial<AuthContextValue>): AuthContextValue {
+  const roles = VAI_UNG_DUNG[role];
+  const daDangNhap = role !== "guest";
+  const value: AuthContextValue = {
+    status: daDangNhap ? "authenticated" : "guest",
+    isAuthenticated: daDangNhap,
+    displayName: "",
+    username: "",
+    roles,
+    role: roles[0] ?? null,
+    hasRole: (r: AppRole) => roles.includes(r),
+    login: () => undefined,
+    logout: () => undefined,
+    ...ghiDe,
+  };
+  // `hasRole` phải trả lời theo danh sách CUỐI CÙNG. Không có dòng này thì một
+  // test ghi đè `roles` sẽ có `hasRole` vẫn trả lời theo danh sách cũ — đúng
+  // kiểu lệch âm thầm mà cả bản vá này sinh ra để dẹp.
+  if (ghiDe?.roles && !ghiDe.hasRole) {
+    const cuoi = ghiDe.roles;
+    value.hasRole = (r: AppRole) => cuoi.includes(r);
+  }
+  return value;
 }
 
 /**
@@ -35,7 +105,7 @@ export interface RenderWithProvidersOptions extends Omit<RenderOptions, "wrapper
  */
 export function renderWithProviders(
   ui: ReactElement,
-  { locale = "vi", role, ...options }: RenderWithProvidersOptions = {}
+  { locale = "vi", role, auth, ...options }: RenderWithProvidersOptions = {}
 ): RenderResult & { user: ReturnType<typeof userEvent.setup>; queryClient: QueryClient } {
   if (role) setDevRole(role);
   // Giống <Providers>: lớp API phải biết ngôn ngữ đang hiển thị để gửi
@@ -59,7 +129,11 @@ export function renderWithProviders(
       >
         <ConfigProvider theme={antdTheme}>
           <AntdApp>
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+            <QueryClientProvider client={queryClient}>
+              <AuthContext.Provider value={phienGia(role ?? "guest", auth)}>
+                {children}
+              </AuthContext.Provider>
+            </QueryClientProvider>
           </AntdApp>
         </ConfigProvider>
       </NextIntlClientProvider>

@@ -32,23 +32,39 @@ describe("layout constants", () => {
   });
 
   /**
-   * layout-constants.ts says "Keep in sync with the actual rendered card size
-   * in components/tree/person-node.tsx". PersonNode currently hard-codes the
-   * numbers instead of importing them, so nothing but this test stops the two
-   * from drifting — and a drift makes every layout position subtly wrong
-   * (overlapping cards, wrong fitView bounds) with no error anywhere.
+   * Cỡ thẻ phải là MỘT nguồn, không phải hai chỗ chép cho khớp nhau.
+   *
+   * <p>Trước đây `person-node.tsx` ghi thẳng `width: 208` / `minHeight: 96` và ca kiểm này đọc mã
+   * nguồn bằng biểu thức chính quy để canh cho hai con số khỏi lệch. Cách ấy chỉ phát hiện được
+   * độ lệch <em>sau khi</em> nó đã xảy ra, và nó im lặng hỏng theo một kiểu khác: sửa hằng số mà
+   * quên sửa component thì mọi toạ độ bố cục sai đi (thẻ chồng nhau, `fitView` canh nhầm khung) mà
+   * không có lỗi nào ở đâu cả.</p>
+   *
+   * <p>Nay component IMPORT hằng số, nên độ lệch không còn là trạng thái biểu diễn được. Ca kiểm
+   * đổi vai theo: nó không so hai con số nữa, nó ghim rằng **không còn con số nào để mà so** —
+   * tức `person-node.tsx` không được phép quay lại lối ghi thẳng số đo.</p>
    */
-  it("matches the card size PersonNode actually renders", () => {
+  it("khai cỡ thẻ bằng cách IMPORT hằng số, không chép tay con số vào component", () => {
     const source = readFileSync(
       resolve(__dirname, "../../../src/components/tree/person-node.tsx"),
       "utf8"
     );
-    const widthMatch = /width:\s*(\d+)/.exec(source);
-    const heightMatch = /minHeight:\s*(\d+)/.exec(source);
 
-    expect(widthMatch, "PersonNode should declare an explicit card width").not.toBeNull();
-    expect(heightMatch, "PersonNode should declare an explicit card min-height").not.toBeNull();
-    expect(Number(widthMatch?.[1])).toBe(NODE_WIDTH);
-    expect(Number(heightMatch?.[1])).toBe(NODE_HEIGHT);
+    expect(source, "person-node.tsx phải lấy cỡ thẻ từ layout-constants").toMatch(
+      /style=\{\{\s*width:\s*NODE_WIDTH,\s*minHeight:\s*NODE_HEIGHT\s*\}\}/
+    );
+    expect(source).toContain("NODE_WIDTH");
+    expect(source).toContain("NODE_HEIGHT");
+
+    // Và không còn một con số đo đạc nào chép tay ở chỗ khai cỡ thẻ.
+    expect(/width:\s*\d+/.test(source), "person-node.tsx đang ghi thẳng bề ngang thẻ").toBe(false);
+    expect(
+      /minHeight:\s*\d+/.test(source),
+      "person-node.tsx đang ghi thẳng chiều cao thẻ"
+    ).toBe(false);
+
+    // Hai hằng số vẫn phải thoả ràng buộc mà vùng chạm đặt ra (xem toggle-hit-area.test.ts).
+    expect(NODE_WIDTH).toBeGreaterThan(80);
+    expect(NODE_HEIGHT).toBeGreaterThan(80);
   });
 });

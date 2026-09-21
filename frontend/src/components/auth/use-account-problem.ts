@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api/http";
 import { MOCKING_ENABLED, getDevRole } from "@/lib/api/dev-role";
 import { useAuth } from "@/lib/auth/auth-context";
+import type { ProblemCode } from "@/types/api";
 
 /**
  * Hai trạng thái tài khoản mà giao diện phải nói ra thành lời thay vì để người
@@ -38,7 +39,12 @@ export type AccountProblem = "NOT_PROVISIONED" | "NOT_ACTIVE";
  * và cụ thể hơn một màn toàn trang. Thêm nó vào bảng này là chiếm quyền của
  * một thành phần đang xử lý đúng, và làm mất một câu chữ tốt hơn.
  */
-const MA_LOI: Readonly<Record<string, AccountProblem>> = {
+// `Partial<Record<ProblemCode | "UNKNOWN", …>>` chứ không `Record<string, …>` — cùng cái bẫy
+// contracts/README §3 đã bắt ở nơi khác (xem `lib/api/membership-admin.ts`, javadoc
+// `clanInviteFailureOf`): nới kiểu về `string` thì gõ sai MỘT chữ trong khoá bên dưới biên dịch
+// vẫn xanh và bản đồ lặng lẽ mất một nhánh. Giữ khoá đúng kiểu `ProblemCode` thì trình biên dịch
+// tự bắt lỗi gõ, không cần một bài kiểm riêng để canh chuyện đó.
+const MA_LOI: Readonly<Partial<Record<ProblemCode | "UNKNOWN", AccountProblem>>> = {
   ACCOUNT_NOT_PROVISIONED: "NOT_PROVISIONED",
   ACCOUNT_NOT_ACTIVE: "NOT_ACTIVE",
 };
@@ -57,9 +63,9 @@ const MA_LOI: Readonly<Record<string, AccountProblem>> = {
  */
 export function accountProblemOf(error: unknown): AccountProblem | null {
   if (!(error instanceof ApiError)) return null;
-  // `ApiError.code` khai theo enum đóng của contract; tra bằng chuỗi để bảng
-  // trên là nguồn sự thật duy nhất.
-  return MA_LOI[error.code as string] ?? null;
+  // Không còn ép kiểu `as string`: `error.code` đã đúng kiểu `ProblemCode | "UNKNOWN"`,
+  // và bảng trên khai đúng kiểu ấy nên tra thẳng được, không cần nới.
+  return MA_LOI[error.code] ?? null;
 }
 
 /**

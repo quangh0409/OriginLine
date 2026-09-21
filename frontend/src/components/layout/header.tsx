@@ -9,8 +9,10 @@ import { LanguageSwitcher } from "./language-switcher";
 import { MoreMenu } from "./more-menu";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { CorrectionQueueLink } from "@/components/correction/correction-queue-link";
+import { ManagementQueueLink } from "@/components/membership";
 import { MockRoleSwitcher } from "@/components/dev/mock-role-switcher";
 import { AuthMenu } from "./auth-menu";
+import { useMe } from "@/hooks/use-me";
 
 const { Header: AntHeader } = Layout;
 
@@ -18,13 +20,28 @@ const { Header: AntHeader } = Layout;
  * Desktop nav. Every entry is a real route now that F6 (search) and F7
  * (events, notifications) have landed — the placeholder <Tag>s are gone. On
  * phones these are hidden and <MobileNav> + <MoreMenu> take over.
+ *
+ * `posts` and `honours` were missing here until this fix, and the gap was
+ * real: `<MoreMenu>` — the only other place either route was linked from —
+ * has a trigger that is `md:hidden`, so on a computer the sole way back to
+ * `/bai-viet` or `/vinh-danh` was the "Xem tất cả" link on the home page.
+ * Leave the home page, and both screens become unreachable again until the
+ * next visit home. These are two of the product's four main content areas
+ * (design 07 §2's "trang chủ thật": posts · honours · upcoming events ·
+ * tree/kinship) — the other two (`events`, and tree/kinship) already had a
+ * permanent nav entry; these two did not.
  */
 const NAV_ITEMS = [
   { key: "tree", href: "/tree" },
-  { key: "kinship", href: "/kinship" },
+  // Khách bớt: `/kinship` đòi một tài khoản (xem `KinshipGuestNotice`) —
+  // trước bản sửa này mục này hiện cho mọi người, kể cả khách, và bộ chọn
+  // người của màn ấy chỉ lặng lẽ báo "không tìm thấy" ở mọi lượt gõ của họ.
+  { key: "kinship", href: "/kinship", membersOnly: true },
   { key: "search", href: "/search" },
   { key: "directory", href: "/danh-ba" },
   { key: "events", href: "/events" },
+  { key: "posts", href: "/bai-viet" },
+  { key: "honours", href: "/vinh-danh" },
 ] as const;
 
 /**
@@ -42,6 +59,9 @@ const NAV_LINK =
 export function Header() {
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const { data: me } = useMe();
+  const hasAccount = Boolean(me?.appUserId);
+  const navItems = NAV_ITEMS.filter((item) => !("membersOnly" in item) || hasAccount);
 
   return (
     // `!leading-normal` — nhỏ mà quyết định, và nó là số ĐO ĐƯỢC.
@@ -80,7 +100,7 @@ export function Header() {
           `hidden` đặt thẳng lên <Space> không bao giờ có tác dụng. */}
       <div className="flex flex-wrap items-center justify-end gap-2">
         <div className="hidden items-center gap-1 md:flex">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link key={item.key} href={item.href} className={NAV_LINK}>
               {t(item.key)}
             </Link>
@@ -89,12 +109,21 @@ export function Header() {
 
         <MockRoleSwitcher />
 
-        {/* Ba điều khiển dưới đây CHỈ có trên máy tính (`hidden md:flex`).
+        {/* Bốn điều khiển dưới đây CHỈ có trên máy tính (`hidden md:flex`).
             Trên điện thoại: chuông thông báo đã có mặt trên thanh tab dưới, còn
-            Yêu cầu đính chính và Cài đặt chuyển sang <MoreMenu> — nơi chúng có
-            chỗ cho nhãn chữ đầy đủ và một hàng cao 44px. Giữ chúng ở đây dưới
-            dạng biểu tượng câm 18×20px là giữ nguyên cả hai lỗi cùng lúc. */}
+            Quản lý, Yêu cầu đính chính và Cài đặt chuyển sang <MoreMenu> — nơi
+            chúng có chỗ cho nhãn chữ đầy đủ và một hàng cao 44px. Giữ chúng ở
+            đây dưới dạng biểu tượng câm 18×20px là giữ nguyên cả hai lỗi cùng
+            lúc.
+
+            <ManagementQueueLink> là bản sửa: trước nó, `/quan-ly` (hàng chờ
+            đơn tự nhận + màn phát mã) không có lối vào nào trên máy tính —
+            <MoreMenu> là nơi DUY NHẤT trỏ tới, và nút mở ngăn kéo ấy tự khai
+            `md:hidden`. Tự ẩn/hiện theo `canReview`, giống hệt
+            <CorrectionQueueLink>, nên Khách và thành viên thường không thấy
+            gì thêm. */}
         <div className="hidden items-center gap-2 md:flex">
+          <ManagementQueueLink />
           <CorrectionQueueLink />
           <NotificationBell />
           <Link href="/settings" className={NAV_LINK} data-testid="header-settings">

@@ -84,6 +84,108 @@ export function buildCalendarYear(
   return { months, unscheduled };
 }
 
+/** Zero-padded `YYYY-MM-DD` from parts already known to be a valid Gregorian date. */
+function isoOfParts(year: number, month: number, day: number): string {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/**
+ * `startYear`/`startMonth` shifted by `deltaMonths` (may be negative).
+ *
+ * Pure Gregorian calendar arithmetic — the same kind `buildCalendarYear`
+ * already does to walk from a start month to the next twelve. Nothing here
+ * touches the lunar calendar; see the module javadoc.
+ */
+export function addMonths(
+  year: number,
+  month: number,
+  deltaMonths: number
+): { year: number; month: number } {
+  const total = year * 12 + (month - 1) + deltaMonths;
+  return { year: Math.floor(total / 12), month: (((total % 12) + 12) % 12) + 1 };
+}
+
+export interface CalendarDay {
+  /** Solar day-of-month, 1-31. */
+  day: number;
+  /** ISO date (`YYYY-MM-DD`) of this cell — stable key and lookup. */
+  iso: string;
+  /** Falls inside the requested month, as opposed to a leading/trailing filler day. */
+  inMonth: boolean;
+  events: EventDto[];
+}
+
+export interface CalendarMonthGrid {
+  year: number;
+  /** 1-12. */
+  month: number;
+  /** Sunday-first weeks of exactly 7 days each, always full weeks. */
+  weeks: CalendarDay[][];
+}
+
+/**
+ * One month as a day grid — lịch tháng (plan §4 F7, Đợt 2).
+ *
+ * Placement uses only `nextOccurrenceSolar`, exactly like `buildCalendarYear`
+ * — this function does not know what a lunar month is. An event with no
+ * computable solar date simply does not appear in any day cell; count it
+ * with {@link countUnscheduled} and show that count next to the grid so a
+ * giỗ awaiting conversion never disappears without a trace.
+ *
+ * Leading/trailing days from the adjacent month are included so every week
+ * row has exactly 7 cells (`inMonth: false` for those), which is what lets
+ * the caller render a rectangular grid without special-casing the first and
+ * last rows.
+ */
+export function buildCalendarMonth(events: EventDto[], year: number, month: number): CalendarMonthGrid {
+  const byIso = new Map<string, EventDto[]>();
+  for (const event of events) {
+    const solar = parseSolar(event.nextOccurrenceSolar);
+    if (!solar) continue;
+    const iso = isoOfParts(solar.year, solar.month, solar.day);
+    const bucket = byIso.get(iso);
+    if (bucket) bucket.push(event);
+    else byIso.set(iso, [event]);
+  }
+
+  const firstOfMonthUtc = Date.UTC(year, month - 1, 1);
+  const firstWeekday = new Date(firstOfMonthUtc).getUTCDay(); // 0 = CN (Sunday)
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  const cells: CalendarDay[] = [];
+  for (let i = 0; i < totalCells; i += 1) {
+    const date = new Date(firstOfMonthUtc + (i - firstWeekday) * DAY_MS);
+    const cellYear = date.getUTCFullYear();
+    const cellMonth = date.getUTCMonth() + 1;
+    const cellDay = date.getUTCDate();
+    const iso = isoOfParts(cellYear, cellMonth, cellDay);
+    cells.push({
+      day: cellDay,
+      iso,
+      inMonth: cellYear === year && cellMonth === month,
+      events: byIso.get(iso) ?? [],
+    });
+  }
+
+  const weeks: CalendarDay[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+
+  return { year, month, weeks };
+}
+
+/**
+ * Sự kiện KHÔNG có ngày dương kế tiếp (chưa quy đổi được — `LUNAR_CONVERSION_FAILED`
+ * hoặc tương tự). `buildCalendarMonth` không đặt được các sự kiện này vào ô
+ * nào, nên đếm riêng để màn hình còn một chỗ nói "còn N việc chưa có ngày",
+ * đúng nguyên tắc "không bao giờ để một giỗ biến mất trong im lặng" của
+ * `buildCalendarYear`'s `unscheduled`.
+ */
+export function countUnscheduled(events: EventDto[]): number {
+  return events.filter((event) => !parseSolar(event.nextOccurrenceSolar)).length;
+}
+
 /**
  * Urgency bucket for a `daysUntil`, used only to pick a visual emphasis.
  * Mirrors the reminder offsets in FR-2.2 (7 / 3 / 1 days) so what the screen

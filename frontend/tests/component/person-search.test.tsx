@@ -214,6 +214,77 @@ describe("khách vãng lai tìm kiếm (BA v2 §10)", () => {
   });
 });
 
+/**
+ * Đợt 2 — lỗi thật: trước bản sửa này, MỌI lượt tìm (kể cả của Khách) gọi
+ * thẳng `/api/v1/persons/search`, đòi phiên đăng nhập thật. Trên backend
+ * thật (khác bộ giả lập ở trên, vốn chỉ LỌC theo vai chứ không từ chối truy
+ * cập) endpoint đó trả `401` cho một yêu cầu không mang token — Khách bấm Tìm
+ * kiếm là nhận lỗi, đúng lúc trang đăng nhập/landing đang hứa điều ngược lại.
+ * Ba ca dưới đây ghim đúng bản sửa: Khách chỉ chạm lối công khai, không bao
+ * giờ chạm lối thành viên.
+ */
+describe("Khách chỉ gọi lối công khai — không bao giờ chạm endpoint thành viên (Đợt 2)", () => {
+  it("phiên khách: không một lời gọi nào tới /persons/search, chỉ /public/persons/search", async () => {
+    const spy = vi.spyOn(globalThis, "fetch");
+    renderSearch("q=thuy to", "guest");
+
+    await waitForResults();
+
+    const urls = spy.mock.calls.map((call) => String(call[0]));
+    expect(urls.some((url) => url.includes("/api/v1/public/persons/search"))).toBe(true);
+    expect(urls.some((url) => url.includes("/api/v1/persons/search"))).toBe(false);
+    spy.mockRestore();
+  });
+
+  it("phiên thành viên: gọi lối thành viên, không phải lối công khai", async () => {
+    const spy = vi.spyOn(globalThis, "fetch");
+    renderSearch("q=thuy to", "member");
+
+    await waitForResults();
+
+    const urls = spy.mock.calls.map((call) => String(call[0]));
+    expect(urls.some((url) => url.includes("/api/v1/persons/search"))).toBe(true);
+    expect(urls.some((url) => url.includes("/api/v1/public/persons/search"))).toBe(false);
+    spy.mockRestore();
+  });
+
+  it("khách thấy lời nói rõ đây là tra cứu công khai, chỉ gồm người đã khuất", async () => {
+    renderSearch("q=thuy to", "guest");
+
+    expect(
+      await screen.findByText(/Tra cứu công khai: chỉ hiện những vị đã khuất/)
+    ).toBeInTheDocument();
+  });
+
+  it("thành viên thì KHÔNG thấy lời nhắc ấy — họ không ở bề mặt công khai", () => {
+    renderSearch("q=thuy to", "member");
+
+    expect(
+      screen.queryByText(/Tra cứu công khai: chỉ hiện những vị đã khuất/)
+    ).not.toBeInTheDocument();
+  });
+
+  it("ẩn hai ô lọc chi/ngành và quê quán với khách — bề mặt công khai không nhận hai tham số này", () => {
+    // `getByText` trên đúng nhãn hiển thị, không `getByLabelText`: nhãn ở đây
+    // là một `<label>` BỌC quanh cả ô `<Select>`, nên "tên khả truy cập" của
+    // nó gồm cả chữ đặt-chỗ bên trong (ví dụ "Mọi đời") — khớp CHÍNH XÁC
+    // "Đời thứ" qua `getByLabelText` sẽ trượt dù mắt người đọc thấy đúng.
+    renderSearch("", "guest");
+
+    expect(screen.queryByText("Chi / Ngành")).not.toBeInTheDocument();
+    expect(screen.queryByText("Quê quán")).not.toBeInTheDocument();
+    // Đời thứ vẫn còn — đây là tham số duy nhất bề mặt công khai có nhận.
+    expect(screen.getByText("Đời thứ")).toBeInTheDocument();
+  });
+
+  it("thành viên vẫn thấy đủ ba ô lọc như trước", () => {
+    renderSearch("", "member");
+
+    expect(screen.getByText("Chi / Ngành")).toBeInTheDocument();
+    expect(screen.getByText("Quê quán")).toBeInTheDocument();
+  });
+});
+
 describe("trạng thái nằm trên URL", () => {
   it("nhận từ khoá sẵn có từ ?q= để một đường link chia sẻ được mở ra đúng kết quả", async () => {
     renderSearch("q=thuy to");

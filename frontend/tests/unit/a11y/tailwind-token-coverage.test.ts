@@ -52,6 +52,24 @@ const CLASS_CANDIDATE = new RegExp(
   "g"
 );
 
+/**
+ * Một lớp Tailwind **không bao giờ chứa dấu `=`** — dấu ấy nói rằng thứ vừa bắt
+ * được là một **thuộc tính đánh dấu**, không phải một lớp.
+ *
+ * <p>Ca thật đã dựng ra phép lọc này: `src/mocks/handlers/posts.ts` vẽ ảnh mẫu
+ * bằng một chuỗi SVG nội tuyến, trong đó có `text-anchor="middle"`. Bộ quét đọc
+ * mọi chuỗi trong tệp (vì `className` hay được ghép từ mảng và từ biểu thức ba
+ * ngôi, nên không thể chỉ đọc đúng thuộc tính `className`), và `text-` lại đúng
+ * là một tiền tố màu — nên nó báo `text-anchor=` là một lớp chết.</p>
+ *
+ * <p>Đây là nới phép quét, nên phải nói rõ nó KHÔNG nới cái gì: một lớp viết sai
+ * thật, như `bg-bg-deceased`, không có dấu `=` nào và vẫn bị bắt như cũ. Phép
+ * lọc này chỉ loại đúng thứ mà cú pháp đã chứng minh là không phải lớp.</p>
+ */
+function laLopThat(className: string): boolean {
+  return !className.includes("=");
+}
+
 interface Usage {
   readonly className: string;
   readonly file: string;
@@ -82,6 +100,7 @@ function collectUsages(): Usage[] {
         const body = literal[2] ?? "";
         for (const match of ` ${body} `.matchAll(CLASS_CANDIDATE)) {
           const className = match[1]!;
+          if (!laLopThat(className)) continue;
           usages.push({ className, file, line: index + 1 });
         }
       }
@@ -196,6 +215,7 @@ describe("chống xanh giả · phép kiểm lớp Tailwind", () => {
     const stripped = stripComments(source, "ts");
     const found = [...stripped.matchAll(/(["'`])((?:\\.|(?!\1)[^\\])*)\1/g)]
       .flatMap((m) => [...` ${m[2] ?? ""} `.matchAll(CLASS_CANDIDATE)])
+      .filter((m) => laLopThat(m[1] ?? ""))
       .map((m) => m[1]);
     expect(found).toEqual(["bg-primary"]);
   });

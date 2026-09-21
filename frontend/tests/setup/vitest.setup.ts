@@ -72,6 +72,20 @@ if (!window.scrollTo) {
   Object.defineProperty(window, "scrollTo", { writable: true, value: vi.fn() });
 }
 
+// jsdom does not implement Blob URLs at all — components that preview a
+// locally chosen file before upload (`posts/media`) call `createObjectURL`
+// synchronously on file selection, and an unstubbed call throws
+// "URL.createObjectURL is not a function" straight out of a render.
+if (!window.URL.createObjectURL) {
+  Object.defineProperty(window.URL, "createObjectURL", {
+    writable: true,
+    value: vi.fn(() => `blob:mock-${Math.random().toString(36).slice(2)}`),
+  });
+}
+if (!window.URL.revokeObjectURL) {
+  Object.defineProperty(window.URL, "revokeObjectURL", { writable: true, value: vi.fn() });
+}
+
 // antd's `rc-motion` / `rc-virtual-list` use these.
 if (!(globalThis as unknown as Record<string, unknown>).requestIdleCallback) {
   (globalThis as unknown as Record<string, unknown>).requestIdleCallback = (cb: () => void) =>

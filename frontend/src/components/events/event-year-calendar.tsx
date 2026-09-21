@@ -119,28 +119,51 @@ export function EventYearCalendar({ events, onSelectEvent }: EventYearCalendarPr
                     const day = parseSolar(event.nextOccurrenceSolar)?.day;
                     return (
                       <li key={event.id}>
+                        {/*
+                          Hai dòng, không một: dòng đầu là ô ngày DƯƠNG + tên, dòng
+                          sau là ngày ÂM — bắt buộc có mặt ở MỌI kiểu xem (Đợt 2).
+                          Trước đây hàng này chỉ có ngày dương, và đó là chỗ duy nhất
+                          của cả màn hình vi phạm "song lịch âm–dương ở mọi nơi": một
+                          Trưởng chi lướt lịch năm sẽ chỉ thấy ngày Gregory, đúng thứ
+                          `EventDualDate` ở nơi khác đang cố tránh. Chiều cao hàng vì
+                          thế cao hơn sàn 44px một chút — sàn là mức TỐI THIỂU, không
+                          phải mức cố định, nên việc "cao hơn sàn" không vi phạm gì.
+                        */}
                         <button
                           type="button"
                           onClick={() => onSelectEvent?.(event.id)}
-                          className="flex min-h-11 w-full items-center gap-2 rounded border-0 bg-transparent px-1 text-left text-than text-text-muted hover:bg-primary-light hover:text-primary"
+                          className="flex min-h-11 w-full flex-col gap-0.5 rounded border-0 bg-transparent px-1 py-1 text-left text-than text-text-muted hover:bg-primary-light hover:text-primary"
                         >
-                          {isPresent(day) && (
-                            // Ô ngày cũng phải đạt sàn chữ: nó là DỮ LIỆU (ngày mấy),
-                            // không phải một nhãn trang trí.
-                            <span
-                              className="min-w-7 shrink-0 rounded px-1 text-center text-than font-semibold"
-                              style={{
-                                background: colorVars.primaryLight,
-                                color: colorVars.primary,
-                              }}
-                            >
-                              {day}
+                          <span className="flex items-center gap-2">
+                            {isPresent(day) && (
+                              // Ô ngày cũng phải đạt sàn chữ: nó là DỮ LIỆU (ngày mấy),
+                              // không phải một nhãn trang trí.
+                              <span
+                                className="min-w-7 shrink-0 rounded px-1 text-center text-than font-semibold"
+                                style={{
+                                  background: colorVars.primaryLight,
+                                  color: colorVars.primary,
+                                }}
+                              >
+                                {day}
+                              </span>
+                            )}
+                            <span className="truncate">
+                              {isPresent(event.title)
+                                ? event.title
+                                : t(`eventType.${event.eventType}`)}
                             </span>
-                          )}
-                          <span className="truncate">
-                            {isPresent(event.title)
-                              ? event.title
-                              : t(`eventType.${event.eventType}`)}
+                          </span>
+                          <span className="pl-1 text-than text-text-muted">
+                            {t("lunarDayMonth", {
+                              day: event.lunarDate.day,
+                              month: event.lunarDate.month,
+                            })}
+                            {event.lunarDate.leap && (
+                              <span className="ml-1 font-semibold text-accent">
+                                {t("lunarLeap")}
+                              </span>
+                            )}
                           </span>
                         </button>
                       </li>

@@ -6,9 +6,13 @@ import {
   ApartmentOutlined,
   BorderOuterOutlined,
   CompressOutlined,
+  OrderedListOutlined,
   RadarChartOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
+import { TreeJumpSearch } from "./tree-jump-search";
+import type { TreeAudience } from "@/lib/api/tree";
 import type { TreeDirection } from "@/types/api";
 import type { TreeViewMode } from "@/types/tree-ui";
 
@@ -50,6 +54,22 @@ export interface TreeToolbarProps {
    * được qua màn "không tìm thấy gốc", tức chỉ khi có gì đó hỏng.
    */
   onChangeRoot?: () => void;
+  /** Bản nào của phả đồ — quyết định ô tìm gọi `/persons/search` hay `/public/persons/search`. */
+  audience: TreeAudience | null;
+  /**
+   * Người dùng chọn một cái tên ở ô tìm trên canvas.
+   *
+   * Đây là bề mặt mà bước "tự nhận mình" của luồng đăng ký chạy trên đó, nên nó **không** phải
+   * tuỳ chọn: thiếu nó thì người mới phải tìm chính mình trong 1.500 người bằng mắt.
+   */
+  onJumpToPerson: (personId: string) => void;
+  /**
+   * "Về chỗ tôi" — `null` thì không vẽ nút.
+   *
+   * `null` với khách và với thành viên **chưa được ghép vào phả** (`/me` → `personId` rỗng). Cả
+   * hai đều là trạng thái hợp lệ, và một cái nút bấm vào báo lỗi thì tệ hơn hẳn không có nút.
+   */
+  onGoToSelf: (() => void) | null;
 }
 
 /**
@@ -66,19 +86,56 @@ export function TreeToolbar({
   loadedCount,
   onFitWholeTree,
   onChangeRoot,
+  audience,
+  onJumpToPerson,
+  onGoToSelf,
 }: TreeToolbarProps) {
   const t = useTranslations("tree");
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-card px-3 py-2">
+    // `py-1.5` và `gap-1.5` chứ không phải `py-2`/`gap-2`: trên Pixel 5 thanh này ngốn 261px
+    // trong một khung 502px, tức phả đồ chỉ còn 206px. Mỗi pixel lấy đi ở đây là một pixel phả đồ,
+    // và dưới ~200px thì canvas không còn thao tác được — đã đo được.
+    <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border bg-bg-card px-3 py-1.5">
+      {/* Ô tìm đứng ĐẦU thanh công cụ, trước cả bộ chọn chế độ xem: với người mở phả đồ lần đầu —
+          nay là mọi người vừa đăng ký — việc đầu tiên không phải là chọn kiểu vẽ mà là tìm một cái
+          tên. Trên điện thoại nó chiếm trọn một dòng (`w-full`), vì gõ tên bằng một ô hẹp 140px là
+          thao tác không ai làm. */}
+      <div className="order-first w-full sm:w-auto sm:flex-1 sm:min-w-[14rem] sm:max-w-sm">
+        <TreeJumpSearch audience={audience} onJump={onJumpToPerson} />
+      </div>
       <Space size="middle" wrap>
         <Segmented
           value={viewMode}
           onChange={(v) => onViewModeChange(v as TreeViewMode)}
+          // Biểu tượng BIẾN MẤT dưới `sm`, nhãn chữ thì không.
+          //
+          // Số đo: với bốn lựa chọn, bộ chọn này rộng 414px trên khung nhìn 393px của Pixel 5 —
+          // cả trang cuộn ngang, và `e2e/mobile.spec.ts` bắt đúng chỗ đó. Ẩn bằng CSS ở chính
+          // phần tử BỌC biểu tượng (`.ant-segmented-item-icon`) chứ không ẩn bên trong nó: phần
+          // bọc mang `margin-inline-end: 8px` của Ant Design, nên chỉ `display: none` ở đúng nó
+          // mới thu lại cả lề. Bốn lựa chọn × (14px biểu tượng + 8px lề) ≈ 88px — vừa đủ để về
+          // dưới 393px.
+          //
+          // Nguyên tắc 3 của tài liệu 00 vẫn nguyên: biểu tượng chỉ để TĂNG TỐC nhận diện, chữ
+          // mới là thứ mang nghĩa. Bỏ biểu tượng không bỏ mất chữ nào.
+          //
+          // Và lề ngang của mỗi ô thu từ 11px xuống 8px dưới `sm` — bốn ô × 6px = 24px nữa, đủ
+          // để bộ chọn về dưới bề ngang nội dung của thanh công cụ (393 − 2×12 = 369px). Chiều
+          // CAO không đụng tới: nó đến từ `controlHeight: 44` của bộ chủ đề, tức sàn chạm vẫn
+          // nguyên. Bề ngang mỗi ô sau khi thu vẫn ~88px, gấp đôi sàn 44px.
+          className={
+            "[&_.ant-segmented-item-icon]:!hidden sm:[&_.ant-segmented-item-icon]:!inline-block " +
+            "[&_.ant-segmented-item-label]:!px-2 sm:[&_.ant-segmented-item-label]:!px-3"
+          }
           options={[
             { value: "hierarchical", label: t("viewMode.hierarchical"), icon: <ApartmentOutlined /> },
             { value: "radial", label: t("viewMode.radial"), icon: <RadarChartOutlined /> },
             { value: "matrix", label: t("viewMode.matrix"), icon: <BorderOuterOutlined /> },
+            // Danh sách theo đời: KHÔNG phải một cách vẽ khác của cùng bức tranh mà là một lối đi
+            // khác hẳn — xem `<TreeGenerationList>`. Nó nằm chung bộ chọn vì với người dùng đó
+            // vẫn là câu hỏi "tôi muốn nhìn phả đồ kiểu nào".
+            { value: "list", label: t("viewMode.list"), icon: <OrderedListOutlined /> },
           ]}
         />
         <Segmented
@@ -92,6 +149,19 @@ export function TreeToolbar({
         />
       </Space>
       <Space size="small" wrap>
+        {onGoToSelf && (
+          // Cùng lý do với hai nút dưới: không bọc <Tooltip>.
+          <Button
+            icon={<UserOutlined />}
+            onClick={onGoToSelf}
+            data-testid="tree-go-to-self"
+            aria-label={t("goToSelf")}
+            title={t("goToSelfHint")}
+            className="!min-h-11 !min-w-11"
+          >
+            <span className="hidden sm:inline">{t("goToSelf")}</span>
+          </Button>
+        )}
         {/* Nút nằm TRONG thanh công cụ, không phải một lớp phủ trên canvas: ba góc canvas đã có
             <Controls> (trên-phải), <MiniMap> (dưới-phải) và <TreeLegend> (dưới-trái), thêm một
             lớp phủ nữa là lại tái diễn đúng lỗi cũ — lớp phủ nuốt thao tác chạm của người dùng
@@ -108,10 +178,15 @@ export function TreeToolbar({
             icon={<CompressOutlined />}
             onClick={onFitWholeTree}
             data-testid="tree-fit-whole"
+            aria-label={t("fitWholeTree")}
             title={t("fitWholeTreeHint")}
-            className="!min-h-11"
+            className="!min-h-11 !min-w-11"
           >
-            {t("fitWholeTree")}
+            {/* Nhãn chữ ẩn dưới `sm`, cùng lý do và cùng cách với nút "Chọn người khác làm gốc"
+                ngay dưới: trên Pixel 5 hàng nút này tràn xuống dòng thứ hai, và mỗi dòng thanh
+                công cụ lấy thêm ~50px là ~50px phả đồ mất đi. `aria-label` vẫn mang đủ câu nên
+                tên gọi cho trình đọc màn hình không đổi theo bề rộng màn hình. */}
+            <span className="hidden sm:inline">{t("fitWholeTree")}</span>
           </Button>
         )}
         {onChangeRoot && (

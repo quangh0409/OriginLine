@@ -94,6 +94,16 @@ export function PrivacySharingCard({ person, etag }: PrivacySharingCardProps) {
     residenceFull: isPresent(person.currentPlaceFull),
     contact: isPresent(person.contact),
     birthDetailAndPhoto: isPresent(person.birth) || isPresent(person.avatarUrl),
+    // `honour` luôn báo "đã điền": năm nhóm kia đọc thẳng một trường trên
+    // CHÍNH `PersonDto` này, nhưng vinh danh là một danh sách bản ghi riêng
+    // (`GET /honours?personId=`) mà lá thẻ này không tải — và không nên tải
+    // thêm chỉ để tô một dấu tích. Hệ quả của lựa chọn `false` mặc định của
+    // `PrivacyGroupRow` tệ hơn nhiều: nó chỉ tới `editHref` =
+    // `/persons/{id}/edit`, biểu mẫu KHÔNG có chỗ nào để khai một vinh danh
+    // (đường đúng là `/vinh-danh`) — tức một liên kết "điền ngay" dẫn thẳng
+    // vào ngõ cụt. Báo "đã điền" bỏ lỡ một lời nhắc tốt nhưng không nói dối
+    // ai; báo "chưa điền" thì gài sẵn một cú bấm hỏng.
+    honour: true,
   };
 
   const save = () => {

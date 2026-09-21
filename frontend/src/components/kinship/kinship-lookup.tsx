@@ -7,9 +7,11 @@ import { SwapOutlined } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useKinship } from "@/hooks/use-kinship";
+import { useMe } from "@/hooks/use-me";
 import { usePerson } from "@/hooks/use-person";
 import { ApiError } from "@/lib/api/http";
 import { PersonPicker } from "@/components/person/person-picker";
+import { KinshipGuestNotice } from "./kinship-guest-notice";
 import { KinshipResultCard } from "./kinship-result-card";
 import type { PersonDto, PersonSummaryDto } from "@/types/api";
 
@@ -25,6 +27,12 @@ import type { PersonDto, PersonSummaryDto } from "@/types/api";
  * The pair lives in the URL (`?from=&to=`) so an answer can be shared or
  * bookmarked — useful when someone asks the clan's group chat "tôi phải gọi
  * bác ấy là gì" — and so a profile can deep-link in with `from` prefilled.
+ *
+ * Guests get `<KinshipGuestNotice>` instead of the pickers — see its javadoc.
+ * `/api/v1/kinship` requires a session and has no public counterpart, and
+ * `<PersonPicker>` searches with a hard-coded `"member"` audience, so without
+ * this gate a guest's every keystroke would silently read as "no match"
+ * rather than as the login wall it actually is.
  */
 export function KinshipLookup() {
   const t = useTranslations("kinship");
@@ -61,6 +69,22 @@ export function KinshipLookup() {
   }, [fromId, toId, fromPerson, toPerson]);
 
   const { data: result, isFetching, error } = useKinship(fromId, toId);
+
+  /**
+   * Cổng khách — xem javadoc `<KinshipGuestNotice>` cho lý do đầy đủ.
+   *
+   * Đặt SAU mọi hook khác trong hàm (Rules of Hooks: nhánh trả sớm không được
+   * đứng trước một lệnh gọi hook nào), nhưng TRƯỚC khi vẽ `<PersonPicker>` —
+   * bộ chọn ấy gọi cứng `usePersonSearch("member", …)` nên với khách nó sẽ
+   * lặng lẽ báo "không tìm thấy ai" ở MỌI lượt gõ, chứ không báo lỗi.
+   */
+  const me = useMe();
+  if (me.isPending) {
+    return <Skeleton active paragraph={{ rows: 4 }} />;
+  }
+  if (!me.data?.appUserId) {
+    return <KinshipGuestNotice />;
+  }
 
   return (
     <div className="space-y-4">

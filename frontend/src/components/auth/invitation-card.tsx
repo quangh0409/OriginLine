@@ -4,17 +4,32 @@ import { useState } from "react";
 import { Button, Modal } from "antd";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useFormatter, useTranslations } from "next-intl";
-import type { InvitationPreviewDto } from "@/lib/api/invitation";
+import type { AcceptInvitationAccount, InvitationPreviewDto } from "@/lib/api/invitation";
 import { colorVars } from "@/styles/tokens";
+import { InvitationAccountForm } from "./invitation-account-form";
 
 export interface InvitationCardProps {
   readonly preview: InvitationPreviewDto;
+  /**
+   * Người gọi đã có phiên đăng nhập (Google/Zalo, hoặc một tài khoản dòng họ
+   * chưa ghép nhân khẩu). Quyết định khối nào thay cho nút "Đúng là tôi":
+   * đã đăng nhập thì token là danh tính; chưa thì phải xin {@code loginId}
+   * trước — xem javadoc {@link InvitationAccountForm}.
+   */
+  readonly isAuthenticated: boolean;
+  /** Đã đăng nhập: nhận lời mời bằng token, không kèm gì thêm. */
   readonly onAccept: () => void;
+  /** Chưa đăng nhập: lập tài khoản bằng `loginId` tự khai rồi nhận lời mời. */
+  readonly onAcceptWithAccount: (values: AcceptInvitationAccount) => void;
+  /** "Tôi đã có tài khoản rồi" — đưa người chưa đăng nhập sang màn đăng nhập. */
+  readonly onLoginInstead: () => void;
   readonly onDecline: () => void;
   readonly accepting?: boolean;
   readonly declining?: boolean;
   /** Câu lỗi tại chỗ khi một trong hai thao tác không đi được. */
   readonly actionError?: string | null;
+  /** Câu máy chủ nói về CHÍNH `loginId` vừa gửi — chỉ có nghĩa khi chưa đăng nhập. */
+  readonly identifierFieldError?: string | null;
 }
 
 /**
@@ -56,11 +71,15 @@ export interface InvitationCardProps {
  */
 export function InvitationCard({
   preview,
+  isAuthenticated,
   onAccept,
+  onAcceptWithAccount,
+  onLoginInstead,
   onDecline,
   accepting,
   declining,
   actionError,
+  identifierFieldError,
 }: InvitationCardProps) {
   const t = useTranslations("auth.invitation");
   const format = useFormatter();
@@ -166,16 +185,36 @@ export function InvitationCard({
           </p>
         )}
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button
-            type="primary"
-            icon={<CheckCircleOutlined />}
-            loading={accepting}
-            onClick={onAccept}
-            data-invitation-action="accept"
-          >
-            {accepting ? t("accepting") : t("accept")}
-          </Button>
+        {isAuthenticated ? (
+          // Đã đăng nhập: token là danh tính. Nút chính gọi `accept` suông.
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              loading={accepting}
+              onClick={onAccept}
+              data-invitation-action="accept"
+            >
+              {accepting ? t("accepting") : t("accept")}
+            </Button>
+          </div>
+        ) : (
+          // Chưa đăng nhập: `POST /invitations/accept` không còn đòi token,
+          // nhưng đòi biết LẤY DANH TÍNH TỪ ĐÂU để lập tài khoản — xin
+          // `loginId` ngay tại đây thay vì gọi suông rồi nhận một
+          // `VALIDATION_FAILED` không ai đọc được ý nghĩa.
+          <InvitationAccountForm
+            onSubmit={onAcceptWithAccount}
+            onLoginInstead={onLoginInstead}
+            submitting={accepting}
+            fieldError={identifierFieldError}
+          />
+        )}
+
+        {/* "Không phải tôi" có mặt bất kể trạng thái đăng nhập — người bấm nó
+            CHÍNH LÀ người không chắc mình có tài khoản gì ở đây, nên nút này
+            không được phép biến mất theo `isAuthenticated`. */}
+        <div className="mt-3">
           <Button
             icon={<CloseCircleOutlined />}
             danger
@@ -185,11 +224,10 @@ export function InvitationCard({
           >
             {t("decline")}
           </Button>
+          <p className="m-0 mt-2 max-w-prose text-than leading-relaxed text-text-muted">
+            {t("declineHint")}
+          </p>
         </div>
-
-        <p className="m-0 mt-3 max-w-prose text-than leading-relaxed text-text-muted">
-          {t("declineHint")}
-        </p>
       </section>
 
       <Modal

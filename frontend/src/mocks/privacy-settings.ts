@@ -21,13 +21,21 @@ import { pathIsWithin, type MockIdentity } from "./identity";
 
 export type AudienceMap = PrivacySettings;
 
-/** Trường của `PersonDto` mà mỗi nhóm chi phối. */
+/**
+ * Trường của `PersonDto` mà mỗi nhóm chi phối.
+ *
+ * `honour` cố ý ánh xạ tới một mảng RỖNG: nó không giữ Riêng một trường nào
+ * trên `PersonDto` — nó khoá việc đọc `personDisplayName` trên các bản ghi
+ * `HonourDto` gắn với người này (`GET /honours`), một tài nguyên khác hẳn.
+ * Không có gì trên `PersonDto` để liệt kê ở đây.
+ */
 export const PRIVACY_GROUP_FIELDS: Record<keyof PrivacySettings, string[]> = {
   occupation: ["occupation"],
   residenceProvince: ["currentPlaceProvince"],
   residenceFull: ["currentPlaceFull"],
   contact: ["contact.phone", "contact.email", "contact.zaloId"],
   birthDetailAndPhoto: ["birth", "avatarUrl"],
+  honour: [],
 };
 
 /** **Mặc định là KÍN.** Một nhóm chưa từng được đặt luôn đọc ra `PRIVATE`. */
@@ -40,6 +48,7 @@ export function allPrivate(): PrivacySettings {
     residenceFull: DEFAULT_SCOPE,
     contact: DEFAULT_SCOPE,
     birthDetailAndPhoto: DEFAULT_SCOPE,
+    honour: DEFAULT_SCOPE,
   };
 }
 

@@ -26,8 +26,28 @@ const URGENCY_STYLE: Record<string, { background: string; color: string }> = {
  * "Giỗ " + a person's name, which would print the name of someone the caller
  * is not entitled to see. When `title` is absent we fall back to the event
  * type label alone, never to a name we assembled ourselves.
+ *
+ * `showManageLink` is an AFFORDANCE ONLY — the caller (`EventsScreen`)
+ * derives it from `useMe().role`, exactly like `CorrectionQueueLink`. It does
+ * not mean this particular event is inside the caller's branch scope:
+ * `EventDto` carries no such flag yet (the contract has no `meta.canEdit` for
+ * events), so a Trưởng chi may still see the link on an event outside their
+ * chi and get a `403` from the server on `PATCH` — the real gate, never
+ * bypassed by this link being visible (Việc 2: "phạm vi do máy chủ cắt").
+ *
+ * `adjustmentNote` — khi máy chủ đã LÙI một ngày âm không tồn tại (tháng
+ * nhuận biến mất, ngày 30 ở tháng thiếu) về một ngày gần nhất — PHẢI hiện,
+ * không được coi là chi tiết phụ: người xem cần biết ngày trên màn hình khác
+ * ngày họ đã gõ, nếu không sẽ tưởng hệ thống ghi sai. Đặt ngay cạnh
+ * `EventDualDate`, không gộp chung với `note` chung chung ở cuối thẻ.
  */
-export function EventCard({ event }: { event: EventDto }) {
+export function EventCard({
+  event,
+  showManageLink = false,
+}: {
+  event: EventDto;
+  showManageLink?: boolean;
+}) {
   const t = useTranslations("events");
   const urgency = eventUrgency(event.daysUntil);
   const urgencyStyle = URGENCY_STYLE[urgency] ?? URGENCY_STYLE.LATER;
@@ -44,6 +64,17 @@ export function EventCard({ event }: { event: EventDto }) {
           <div className="mt-1.5">
             <EventDualDate event={event} />
           </div>
+          {isPresent(event.adjustmentNote) && (
+            <p
+              className="mb-0 mt-1 text-than font-medium"
+              style={{ color: colorVars.accentText }}
+            >
+              {event.adjustmentNote}
+            </p>
+          )}
+          {isPresent(event.location) && (
+            <p className="mb-0 mt-1 text-than text-text-muted">{event.location}</p>
+          )}
         </div>
 
         {isPresent(event.daysUntil) && (
@@ -81,6 +112,15 @@ export function EventCard({ event }: { event: EventDto }) {
             className="inline-flex min-h-11 items-center rounded px-1 text-than text-primary no-underline hover:bg-primary-light hover:underline"
           >
             {t("viewPerson")}
+          </Link>
+        )}
+
+        {showManageLink && (
+          <Link
+            href={`/events/${event.id}/edit`}
+            className="inline-flex min-h-11 items-center rounded px-1 text-than text-primary no-underline hover:bg-primary-light hover:underline"
+          >
+            {t("editEvent")}
           </Link>
         )}
       </div>

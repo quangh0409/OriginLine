@@ -65,7 +65,15 @@ export function InvitationProblem({ failure, onRetry, retrying }: InvitationProb
   // Chỉ mời đăng nhập khi người này thật sự chưa đăng nhập. Một người ĐÃ đăng
   // nhập mà vẫn nhận 401 đang gặp chuyện khác (phiên chết, đồng hồ lệch), và
   // một nút "Đăng nhập" ở đó là một vòng tròn.
-  const canLogin = failure === "NEEDS_ACCOUNT" && !isAuthenticated;
+  //
+  // `IDENTITY_TAKEN` dùng CHUNG nút ấy, và đó là cả điểm của nhánh này: định
+  // danh người dùng tự khai đã có chủ, nên lối đi tiếp duy nhất đúng là vào
+  // bằng chính tài khoản ấy rồi mở lại liên kết mời — nhánh "đã có token" lấy
+  // danh tính từ Keycloak nên không đi qua phép chặn. TUYỆT ĐỐI không thêm nút
+  // "Thử lại" cho nhánh này: máy chủ tính mỗi lần từ chối vào giới hạn tần suất
+  // của chính người dùng ngay tình.
+  const canLogin =
+    (failure === "NEEDS_ACCOUNT" || failure === "IDENTITY_TAKEN") && !isAuthenticated;
 
   return (
     <div className="space-y-4">
@@ -84,10 +92,16 @@ export function InvitationProblem({ failure, onRetry, retrying }: InvitationProb
         >
           {t(`problem.${failure}.title`)}
         </h1>
-        <p className="m-0 mt-3 max-w-prose text-dan leading-relaxed text-text-main">
+        <p
+          data-problem-copy="body"
+          className="m-0 mt-3 max-w-prose text-dan leading-relaxed text-text-main"
+        >
           {t(`problem.${failure}.body`)}
         </p>
-        <p className="m-0 mt-3 max-w-prose text-dan leading-relaxed text-text-main">
+        <p
+          data-problem-copy="next"
+          className="m-0 mt-3 max-w-prose text-dan leading-relaxed text-text-main"
+        >
           {t(`problem.${failure}.next`)}
         </p>
 

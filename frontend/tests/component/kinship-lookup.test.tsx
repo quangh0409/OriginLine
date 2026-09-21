@@ -55,7 +55,10 @@ describe("before two people are chosen", () => {
 
   it("offers a picker for each side of the address pair", async () => {
     renderLookup("");
-    expect(screen.getByText("Người xưng hô (tôi là…)")).toBeInTheDocument();
+    // `await find*`, not `getBy*`: the screen now gates on `useMe()` first
+    // (see `<KinshipGuestNotice>`), so the pickers appear one tick later than
+    // the initial render, not synchronously with it.
+    expect(await screen.findByText("Người xưng hô (tôi là…)")).toBeInTheDocument();
     expect(screen.getByText("Người được gọi")).toBeInTheDocument();
   });
 });
@@ -142,14 +145,37 @@ describe("non-RESOLVED statuses are answers, not errors", () => {
 });
 
 describe("privacy on the kinship screen", () => {
-  it("tells a guest asking about a living person only that they were not found", async () => {
-    // Either endpoint being a hidden living person is a 404, not a 403 —
-    // otherwise the error itself confirms that person exists.
+  /**
+   * Trước bản sửa này, một khách gõ thẳng
+   * `/kinship?from=p-001&to=p-100` vào thanh địa chỉ sẽ THẤY được các ô chọn
+   * và nhận về "Không tìm thấy một trong hai người" — một câu đúng riêng tư
+   * (không xác nhận ai đang sống) nhưng SAI so với bản thật: `GET
+   * /api/v1/kinship` không có lối `permitAll` nào, nó rơi vào
+   * `anyRequest().authenticated()` ở `SecurityConfig`, nên một khách nhận
+   * `401` chứ không phải `404` — bất kể cả hai người có đã khuất hay không.
+   * Bộ giả lập cũ mô phỏng một API "mềm" hơn bản thật, đúng cái bẫy mà
+   * `tests/unit/privacy/field-visibility-api.test.ts` đã đặt tên.
+   *
+   * Ca ấy không còn xảy ra được nữa: `<KinshipGuestNotice>` chặn khách lại
+   * TRƯỚC khi bất kỳ id nào trong URL được dùng tới — xem javadoc
+   * `kinship-lookup.tsx`. Ca "một người còn sống bị giấu trả về 404, không
+   * phải 403" vẫn đúng và vẫn được enforce ở máy chủ; nó không còn kiểm được
+   * qua vai "khách" ở màn này nữa vì khách không bao giờ chạm tới bước gọi
+   * API — thuộc phạm vi kiểm của backend, không phải màn hình này.
+   */
+  it("khách mở thẳng một liên kết đã điền sẵn hai người vẫn thấy lời mời đăng nhập, không thấy ô chọn hay danh xưng", async () => {
     renderLookup("from=p-001&to=p-100", "guest");
 
-    expect(await screen.findByText("Không tìm thấy một trong hai người.")).toBeInTheDocument();
+    expect(await screen.findByText("Cần đăng nhập để tra danh xưng")).toBeInTheDocument();
+    expect(screen.queryByText("Người xưng hô (tôi là…)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Không tìm thấy một trong hai người.")).not.toBeInTheDocument();
+    // Không tên nào của p-001/p-100 rò ra màn hình — dù tên có ở trong URL,
+    // khách không bao giờ nhận được một phản hồi RIÊNG cho cặp id ấy: khối
+    // này là một câu chung cho MỌI khách, không phải câu trả lời cho câu hỏi
+    // "hai người này có quan hệ gì". (Không kiểm `/quyền/i` như bản test cũ —
+    // câu hợp lệ ở đây có nhắc "quyền đọc phả đồ" theo nghĩa quyền truy cập
+    // TÍNH NĂNG nói chung, không phải một lời từ chối về MỘT người cụ thể.)
     expect(document.body.textContent).not.toContain("Nguyễn Văn An");
-    expect(document.body.textContent).not.toMatch(/quyền/i);
   });
 
   it("never renders a MISSING_MESSAGE placeholder for any status", async () => {
@@ -163,6 +189,8 @@ describe("choosing two people through the pickers", () => {
   it("resolves the danh xưng after both are picked by search", async () => {
     const { user } = renderLookup("");
 
+    // Wait for the `useMe()` gate to resolve before the comboboxes exist.
+    await screen.findByText("Người xưng hô (tôi là…)");
     const [fromBox, toBox] = screen.getAllByRole("combobox");
     await user.click(fromBox!);
     await user.type(fromBox!, "Nguyen Van Hien"); // unaccented on purpose: FTS is server-side

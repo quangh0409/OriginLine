@@ -231,3 +231,64 @@ export function getMockEvents(): EventDto[] {
   );
   return cached;
 }
+
+// ============================================================================
+// TẠO / SỬA / XOÁ (Đợt 2) — bộ nhớ trong của mock cho `handlers/events.ts`.
+// ============================================================================
+//
+// `cached` ở trên là một mảng module-scope: một khi đã dựng, `getMockEvents()`
+// luôn trả về ĐÚNG tham chiếu ấy, nên `push`/mutate tại chỗ là đủ để lần `GET`
+// kế tiếp thấy ngay thay đổi — không cần một kho dữ liệu thứ hai.
+//
+// Xoá dùng một `Set` id riêng thay vì bỏ phần tử khỏi mảng: đúng nguyên tắc
+// "soft delete only" của CLAUDE.md (áp cho nhân khẩu, và mock này áp lại cho
+// sự kiện vì hợp đồng ghi rõ `DELETE /events/{id}` là "xoá mềm").
+
+const deletedEventIds = new Set<string>();
+const eventVersions = new Map<string, number>();
+
+/** `"vN"`, dùng làm `ETag` — N tăng sau mỗi lần `update`. */
+export function mockEventVersion(id: string): number {
+  return eventVersions.get(id) ?? 1;
+}
+
+export function isMockEventDeleted(id: string): boolean {
+  return deletedEventIds.has(id);
+}
+
+export function findMockEvent(id: string): EventDto | undefined {
+  if (deletedEventIds.has(id)) return undefined;
+  return getMockEvents().find((event) => event.id === id);
+}
+
+let nextGeneratedId = 1;
+
+/**
+ * Cấp id TRƯỚC khi dựng phần còn lại của `EventDto` — một số trường (ngày
+ * dương giả lập, xem `fakeNextOccurrence` ở `handlers/events.ts`) dùng chính
+ * id làm hạt giống băm, nên id phải có sẵn trước khi build, không phải sau.
+ */
+export function nextMockEventId(): string {
+  return `ev-new-${nextGeneratedId++}`;
+}
+
+export function addMockEvent(event: EventDto): EventDto {
+  getMockEvents().push(event);
+  eventVersions.set(event.id, 1);
+  return event;
+}
+
+export function updateMockEvent(id: string, patch: Partial<EventDto>): EventDto | undefined {
+  const event = getMockEvents().find((e) => e.id === id);
+  if (!event || deletedEventIds.has(id)) return undefined;
+  Object.assign(event, patch);
+  eventVersions.set(id, mockEventVersion(id) + 1);
+  return event;
+}
+
+export function softDeleteMockEvent(id: string): boolean {
+  if (!findMockEvent(id)) return false;
+  deletedEventIds.add(id);
+  eventVersions.set(id, mockEventVersion(id) + 1);
+  return true;
+}

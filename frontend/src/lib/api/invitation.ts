@@ -12,14 +12,21 @@ import type { BranchRef } from "@/types/api";
  *
  * <h2>Bốn chỗ contract KHÁC bản đề xuất — đọc trước khi sửa lại</h2>
  * <ol>
- *   <li><b>`accept` CÒN đòi token, và KHÔNG trả `setPasswordUrl`.</b> Đây là một
- *       khoảng trống thật, không phải lựa chọn: backend là resource server
- *       thuần — tiêu thụ JWT, không tạo người dùng, không phát token. Sinh một
- *       execute-actions token của Keycloak đòi Keycloak Admin REST API, đang
- *       được dựng. Khi xong thì `accept` bỏ yêu cầu token và trả thêm đúng
- *       trường <b>`setPasswordUrl`</b>. Vì thế trường ấy được khai <b>tuỳ
- *       chọn</b> ở đây và giao diện phải chạy đúng ở cả hai phía của đợt sửa —
- *       xem {@code invitation-screen.tsx}.</li>
+ *   <li><b>`accept` KHÔNG còn đòi token — điểm này đã ĐỔI LẦN THỨ HAI, đọc kỹ
+ *       trước khi tin dòng nào nói khác.</b> Bản đề xuất giả định `accept` cần
+ *       token đăng nhập sẵn. Đợt trước đã sửa một phần: `InvitationController`
+ *       gắn {@code @SecurityRequirements} và `SecurityConfig` liệt kê
+ *       `/invitations/accept` trong danh sách `permitAll()` — endpoint **không
+ *       đòi token nữa**, còn `AcceptInvitationRequest` thì thêm hẳn hai trường
+ *       {@code loginId}/{@code email} để người **chưa có tài khoản** tự khai.
+ *       Máy chủ tìm-hoặc-tạo tài khoản Keycloak bằng định danh ấy rồi trả về
+ *       {@code setPasswordUrl} — một liên kết một lần để tự đặt mật khẩu.
+ *       <b>Không có trường mật khẩu nào ở `/accept`</b>: mật khẩu luôn đặt ở
+ *       bước sau, qua {@code setPasswordUrl}, giống hệt cơ chế mã dòng họ ở
+ *       {@code clan-invite.ts}. Giao diện phải thu {@link AcceptInvitationAccount}
+ *       từ người dùng <b>trước</b> khi gọi `accept` khi họ chưa đăng nhập, chứ
+ *       không còn gọi suông rồi đợi một `401` — xem
+ *       {@code invitation-account-form.tsx}.</li>
  *   <li><b>`inviter.displayName` là tên TRẦN, không kính ngữ.</b> Bản đề xuất
  *       đoán ngược. Kết luận thì không đổi và nay có chỗ dựa trong contract:
  *       giao diện <b>không được</b> tự thêm "ông"/"bà", vì kính ngữ phụ thuộc
@@ -81,15 +88,48 @@ export type InvitationFailure =
   | "RATE_LIMITED"
   | "UNAVAILABLE"
   /**
-   * `401` ở `/accept`. **Không phải lỗi của người dùng và không phải lỗi của
-   * mã** — hôm nay `/accept` còn đòi token vì backend chưa phát được tài khoản
-   * (xem javadoc đầu tệp). Nhánh này biến mất khi adapter Keycloak Admin lên.
+   * `401 UNAUTHENTICATED` ở `/accept`. **Không còn xảy ra với máy chủ hôm
+   * nay** — `/accept` đã bỏ yêu cầu token (xem javadoc đầu tệp) và một người
+   * chưa đăng nhập giờ được phục vụ bằng {@link InvitationAccountForm}
+   * ({@code invitation-account-form.tsx}), không phải bằng một câu từ chối.
+   * Nhánh này ở lại làm <b>lưới an toàn cho một bản máy chủ cũ hơn</b> — mã
+   * mời vẫn tốt, chỉ là chưa đăng nhập, và điều PHẢI giữ là không đọc nó
+   * thành "mã sai". Ca kiểm tương ứng dựng `401` bằng tay
+   * ({@code server.use(...)}) thay vì tin bộ giả lập nói dối về API thật.
    */
   | "NEEDS_ACCOUNT"
   /** `422 ACCOUNT_ALREADY_LINKED` — tài khoản đang gọi đã gắn người khác. */
   | "ACCOUNT_ALREADY_LINKED"
   /** `422 PERSON_ALREADY_LINKED` — nhân khẩu đã bị một tài khoản khác nhận. */
-  | "PERSON_ALREADY_LINKED";
+  | "PERSON_ALREADY_LINKED"
+  /**
+   * `422 IDENTITY_ALREADY_REGISTERED` — định danh tự khai ở `/accept` **đã
+   * thuộc về một tài khoản đang tồn tại**.
+   *
+   * <h2>Cùng một mã, cùng một cách xử, ở CẢ HAI lối vào không cần đăng nhập</h2>
+   * `POST /invitations/accept` và `POST /clan-invites/register` đều nhận một
+   * chuỗi người gọi **tự gõ** mà không chứng minh được quyền sở hữu. Nếu định
+   * danh ấy đã có chủ thì mọi bước sau — đúc liên kết đặt mật khẩu, làm tươi hồ
+   * sơ, và ở lối này còn là <b>ghép vào một nhân khẩu trong phả</b> — là thao
+   * tác trên tài sản của người khác. Chủ dự án đã chốt bịt cả hai.
+   *
+   * <p><b>Lưu ý dễ hiểu sai:</b> một tài khoản dựng qua đăng nhập Google/Zalo
+   * <b>không có mật khẩu</b>, nên "chưa có mật khẩu" không hề có nghĩa là "chưa
+   * có chủ". Đó chính là ca mà lỗ hổng cũ khai thác.</p>
+   *
+   * <p><b>Không tự thử lại.</b> Mỗi lần từ chối được máy chủ tính vào giới hạn
+   * tần suất như một lần thất bại — cố ý, để tín hiệu còn sót không thành máy
+   * dò tài khoản. Lối đi tiếp là <b>đăng nhập rồi mở lại liên kết mời</b>.</p>
+   *
+   * <p><b>`detail` của mã này KHÔNG in ra màn hình</b>, cùng luật với lối mã
+   * dòng họ. Câu của máy chủ chỉ có tiếng Việt, nên in nó ra là dán một đoạn
+   * tiếng Việt không dấu xuống dưới một đoạn tiếng Anh hoàn chỉnh. Hai tình
+   * tiết đáng giá của nó (đã từng đăng nhập bằng Google · đưa mã cho Trưởng
+   * chi) đã nằm sẵn trong `auth.invitation.problem.IDENTITY_TAKEN` ở cả hai
+   * ngôn ngữ — đó chính là lý do hợp đồng dùng một mã <b>đóng</b> cộng bộ dịch
+   * phía client. `detail` dành cho nhật ký và cho người hỗ trợ đọc log.</p>
+   */
+  | "IDENTITY_TAKEN";
 
 /**
  * `unknown` bắt được từ React Query → nhánh giao diện.
@@ -118,6 +158,8 @@ export function invitationFailureOf(error: unknown): InvitationFailure {
       return "ACCOUNT_ALREADY_LINKED";
     case "PERSON_ALREADY_LINKED":
       return "PERSON_ALREADY_LINKED";
+    case "IDENTITY_ALREADY_REGISTERED":
+      return "IDENTITY_TAKEN";
     default:
       break;
   }
@@ -128,6 +170,37 @@ export function invitationFailureOf(error: unknown): InvitationFailure {
   if (error.status === 429) return "RATE_LIMITED";
   if (error.status === 401) return "NEEDS_ACCOUNT";
   return "UNAVAILABLE";
+}
+
+/**
+ * `true` khi lỗi là một `VALIDATION_FAILED` trần ở `/accept` — thân yêu cầu
+ * sai hình dạng, gần như luôn là {@code loginId} đọc không ra thành email lẫn
+ * số điện thoại (xem {@code LoginIdentifier.of} phía máy chủ).
+ *
+ * Dùng để rẽ nhánh <b>trước</b> khi gọi {@link invitationFailureOf}: đây là lỗi
+ * người dùng SỬA ĐƯỢC NGAY tại ô định danh, không phải một trong chín nhánh
+ * ở trên — thay cả màn cho ca này sẽ ném đi tên hiển thị họ vừa gõ.
+ *
+ * Cùng cách rẽ mà {@code isClanInviteValidationError} đã dùng cho
+ * `/clan-invites/register` — chép lại nguyên si.
+ */
+export function isInvitationValidationError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === "VALIDATION_FAILED";
+}
+
+/**
+ * Câu máy chủ nói về CHÍNH định danh vừa gửi — `detail` của một
+ * `VALIDATION_FAILED` trần ở `/accept`.
+ *
+ * Cùng khuôn với {@code clanInviteValidationDetail}: trả {@code null} khi máy
+ * chủ không nói gì — lúc ấy màn hình dùng câu dự phòng
+ * {@code auth.register.identifierEmpty} sẵn có, KHÔNG bịa ra một câu mới.
+ */
+export function invitationValidationDetail(error: unknown): string | null {
+  if (!(error instanceof ApiError)) return null;
+  if (error.code !== "VALIDATION_FAILED") return null;
+  const detail = error.problem?.detail?.trim();
+  return detail && detail.length > 0 ? detail : null;
 }
 
 // ============================================================================
@@ -205,6 +278,27 @@ export interface InvitationPreviewDto {
 }
 
 /**
+ * Hai trường chỉ cần khi backend phải **tạo tài khoản Keycloak** cho người được
+ * mời — `AcceptInvitationRequest` ngoài `code`.
+ *
+ * <h2>`loginId` nhận EMAIL HOẶC SỐ ĐIỆN THOẠI</h2>
+ * Luồng này dành cho **các cụ lớn tuổi** (Trưởng chi chọn người trong phả, in
+ * phiếu, đưa tận tay), tức đúng nhóm thường *không có* email — nên đây là lối
+ * cần nhận số điện thoại **nhất**, không phải ít nhất. Số Việt Nam được máy chủ
+ * chuẩn hoá về dạng `0…`; gửi nguyên văn.
+ *
+ * Bắt buộc khi người gọi **chưa có** tài khoản. Khi lời gọi mang token của một
+ * tài khoản đã có, các trường này bị bỏ qua.
+ *
+ * Contract còn nhận tên cũ `email`, đã đánh dấu **bỏ dần** — đừng dùng ở mã mới.
+ */
+export interface AcceptInvitationAccount {
+  loginId?: string;
+  /** Tên hiển thị của tài khoản. Vắng thì lấy tên nhân khẩu trong lời mời. */
+  displayName?: string;
+}
+
+/**
  * `AcceptedInvitation`.
  *
  * `status: "ACTIVE"` cùng `personId` khác rỗng **ngay trong phản hồi này** là
@@ -244,6 +338,28 @@ export type InvitationStatus = "PENDING" | "ACCEPTED" | "REVOKED";
 export type InvitationUsability = "USABLE" | "EXPIRED" | "ALREADY_USED" | "REVOKED";
 
 /**
+ * `InviteeSummary` — người được mời, nhìn từ **danh sách quản trị**.
+ *
+ * <h2>Không phải cùng một kiểu với {@link InvitationInviteeDto}</h2>
+ * Hai schema riêng trong contract, và khác nhau ở đúng một chỗ có nghĩa:
+ * {@code InvitationInvitee} (màn nhận lời mời) chở nguyên một `BranchRef`, vì
+ * `PublicPersonDto` của cổng công khai vốn đã chở `BranchRef` cho cả Khách. Còn
+ * khối này chỉ chở **tên chi dưới dạng chuỗi** — danh sách quản trị chỉ cần đọc
+ * ra, không cần một khoá để đi tiếp. Gộp hai kiểu lại là tự cấp cho mình thêm
+ * một trường ở mỗi bên.
+ *
+ * Ba trường, và đúng ba: không năm sinh, không nghề nghiệp, không nơi ở, không
+ * điện thoại, không ảnh.
+ */
+export interface InviteeSummaryDto {
+  displayName?: string;
+  /** Thuỷ tổ = 1. */
+  generation?: number;
+  /** **Chuỗi**, không phải `BranchRef` — xem javadoc của kiểu. */
+  branchName?: string;
+}
+
+/**
  * Một lời mời nhìn từ phía người phát. **Không có mã, và cũng không có băm của
  * mã** — băm là bí mật dẫn xuất: một bản băm lọt ra ngoài cho phép kiểm chứng
  * offline xem một mã đoán được có đúng không, tức bẻ mất lớp giới hạn tần suất.
@@ -251,6 +367,27 @@ export type InvitationUsability = "USABLE" | "EXPIRED" | "ALREADY_USED" | "REVOK
 export interface InvitationDto {
   id: string;
   personId: string;
+  /**
+   * `InviteeSummary` — **đúng đủ để nhận ra ai** trong một danh sách.
+   *
+   * Không năm sinh, không nghề nghiệp, không nơi ở, không điện thoại, không
+   * ảnh: cùng ranh giới mà màn nhận lời mời đã đặt, vì đây là cùng một dữ liệu
+   * đi ra ngoài.
+   *
+   * <h2>Vì sao đưa ra ở đây là an toàn</h2>
+   * `POST /invitations/lookup` vốn đã hiện đúng cái tên ấy cho **bất kỳ ai cầm
+   * mã**, kể cả người chưa đăng nhập. Người đọc danh sách này thì chặt hơn
+   * nhiều: đã đăng nhập, đã qua kiểm phạm vi chi, và thường chính là người vừa
+   * phát lời mời.
+   *
+   * Không có khối này thì màn "lời mời đã phát" là một cột UUID, và giao diện
+   * buộc phải gọi `GET /persons/&#123;id&#125;` một lượt cho mỗi dòng — một bài
+   * toán N+1 sinh ra chỉ vì thiếu ba trường. {@code invitation-row.tsx} từng
+   * làm đúng thế; nay không còn.
+   *
+   * Cả khối **có thể vắng**; giao diện phải dựng được khi chỉ có `personId`.
+   */
+  invitee?: InviteeSummaryDto;
   branchId?: string;
   invitedBy: string;
   status: InvitationStatus;
@@ -309,10 +446,10 @@ export const invitationApi = {
    * UNAUTHENTICATED`, và đó là một nhánh giao diện riêng (`NEEDS_ACCOUNT`),
    * không phải "mã sai".
    */
-  accept: (code: string) =>
+  accept: (code: string, account?: AcceptInvitationAccount) =>
     apiFetch<InvitationAcceptedDto>(`${BASE}/accept`, {
       method: "POST",
-      body: { code },
+      body: { code, ...account },
     }),
 
   /**

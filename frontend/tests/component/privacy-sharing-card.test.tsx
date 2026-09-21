@@ -75,7 +75,7 @@ beforeEach(() => {
 });
 
 describe("khối chỉ hiện với chính chủ", () => {
-  it("chính chủ thấy đủ năm nhóm, mỗi nhóm ba mức", async () => {
+  it("chính chủ thấy đủ sáu nhóm, mỗi nhóm ba mức", async () => {
     const { container } = await renderProfile(SELF_ID, "member");
 
     const block = card(container);
@@ -87,13 +87,18 @@ describe("khối chỉ hiện với chính chủ", () => {
       "Địa chỉ đầy đủ",
       "Liên hệ: điện thoại · thư điện tử · Zalo",
       "Ngày sinh đầy đủ & ảnh",
+      // Nhóm thứ sáu (V17) — trước bản vá này giao diện chỉ khai năm nhóm gốc,
+      // nên KHÔNG có công tắc nào để chính chủ mở vinh danh của mình cho cả
+      // họ xem, dù backend đã lọc `HonourDto.personDisplayName` theo đúng
+      // nhóm này từ trước.
+      "Vinh danh: đỗ đạt · chức tước · thành tích · khen thưởng",
     ]) {
       expect(within(block!).getByRole("heading", { name: label })).toBeInTheDocument();
     }
 
-    // Ba mức × năm nhóm = 15 nút chọn, và chúng là radio thật chứ không phải
+    // Ba mức × sáu nhóm = 18 nút chọn, và chúng là radio thật chứ không phải
     // nhãn tô màu — trình đọc màn hình phải đọc được trạng thái đã chọn.
-    expect(within(block!).getAllByRole("radio")).toHaveLength(15);
+    expect(within(block!).getAllByRole("radio")).toHaveLength(18);
   });
 
   it("người KHÁC mở cùng hồ sơ thì không có khối nào, kể cả Quản trị", async () => {
@@ -242,6 +247,42 @@ describe("đổi mức rồi lưu", () => {
 
     await waitFor(() => expect(block.textContent).toContain("Đã lưu."), { timeout: 8000 });
     expect(save).toBeDisabled();
+  });
+});
+
+describe("nhóm vinh danh (thứ sáu, V17) có công tắc thật", () => {
+  const NHAN_NHOM = "Vinh danh: đỗ đạt · chức tước · thành tích · khen thưởng";
+
+  it("mở vinh danh cho cả họ, lưu, và giá trị thật đã ghi xuống máy chủ — không chỉ ở state React", async () => {
+    const { container, user } = await renderProfile(SELF_ID, "member");
+    const block = card(container)!;
+
+    await user.click(muc(nhom(block, NHAN_NHOM), /Cả họ xem/));
+
+    const save = within(block).getByRole("button", { name: "Lưu mức chia sẻ" });
+    await waitFor(() => expect(save).toBeEnabled());
+    await user.click(save);
+    await waitFor(() => expect(block.textContent).toContain("Đã lưu."), { timeout: 8000 });
+
+    // Dựng lại toàn bộ màn — nếu giá trị chỉ nằm trong state của lượt dựng
+    // trước thì một `GET /persons/{id}` mới sẽ trả lại `PRIVATE` như cũ.
+    const { container: reloaded } = await renderProfile(SELF_ID, "member");
+    const chosen = within(nhom(card(reloaded)!, NHAN_NHOM)).getByRole("radio", {
+      name: /Cả họ xem/,
+    });
+    expect(chosen).toBeChecked();
+  });
+
+  it("không mời bấm vào một liên kết hỏng: nhóm vinh danh không hiện 'chưa điền, điền ngay'", async () => {
+    const { container } = await renderProfile(SELF_ID, "member");
+    const group = nhom(card(container)!, NHAN_NHOM);
+
+    // `PrivacyGroupRow` chỉ vẽ lời mời này khi `filledIn === false`, và
+    // `editHref` của nó LUÔN là `/persons/{id}/edit` — biểu mẫu ấy không có ô
+    // nào để khai một vinh danh (đường đúng là `/vinh-danh`, qua
+    // `HonourFormModal`). Nhóm vinh danh không được phép mời một cú bấm dẫn
+    // vào ngõ cụt như vậy.
+    expect(within(group).queryByText(/Điền ngay/)).toBeNull();
   });
 });
 

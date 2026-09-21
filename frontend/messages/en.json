@@ -16,6 +16,8 @@
     "search": "Search",
     "directory": "Directory",
     "events": "Events & anniversaries",
+    "posts": "Clan posts",
+    "honours": "Honours",
     "notifications": "Notifications",
     "login": "Log in",
     "primary": "Main navigation",
@@ -35,6 +37,95 @@
       "COUNCIL": "Clan council",
       "BRANCH_HEAD": "Branch head",
       "MEMBER": "Member"
+    },
+    "register": {
+      "pageTitle": "Register with a clan invitation code",
+      "pageDescription": "Account registration for the clan portal, using a clan invitation code.",
+      "codeTitle": "Enter the phả with your clan invitation code",
+      "codeIntro": "This portal belongs to one particular dòng họ, so accounts open only with an invitation code. The Hội đồng Tộc biểu issues one code for the whole clan — you will have received it in a message, or read it from a printed invitation card.",
+      "codeLabel": "Clan invitation code",
+      "codeHint": "Type it exactly as printed. Hyphens, spaces and lower case are all fine — the system ignores them. So are the letter O and the digit 0.",
+      "codePlaceholder": "K7M2Q-D9HFX",
+      "codeEmpty": "Please type your clan invitation code.",
+      "codeSubmit": "Check the code",
+      "codeChecking": "Checking the code…",
+      "codeWhyFirst": "The code is checked first and the account is created afterwards. Getting the code wrong creates nothing at all, so you can try as often as you need.",
+      "noCodeTitle": "No code yet?",
+      "noCodeBody": "The clan issues accounts person by person; there is no open sign-up. Ask your Trưởng chi, or anyone in the family who is already in — the code is issued to the whole clan, so anyone holding it can pass it on. Meanwhile the public part of the phả stays open to you.",
+      "haveAccount": "I already have an account — sign in",
+      "alreadySignedIn": "You are already signed in. Entering a code above opens the phả for the account you are using; it does not create a second one.",
+      "accountTitle": "The code works — now create your account",
+      "accountForClan": "This code opens the portal of {clan}.",
+      "accountForClanUnknown": "This code opens the clan portal.",
+      "accountExpiresOn": "The code stays usable until {date}.",
+      "identifierLabel": "Email address or phone number",
+      "identifierHint": "This is what you will sign in with from now on — an email address or a phone number, either works. Any format of a Vietnamese number is accepted: 0912 345 678, 0912.345.678 and +84912345678 are the same number. Please use your own, not one shared with someone else in the household — one account per person is what lets the genealogy record who changed what.",
+      "identifierEmpty": "Please give your email address or phone number.",
+      "nameLabel": "What we should call you (optional)",
+      "nameHint": "A name for the system to greet you by, and for the Trưởng chi to see who has just registered. It is not your name in the phả: the system never uses it to guess who you are — you point that out yourself in the next step, and the Trưởng chi approves it.",
+      "accountSubmit": "Create my account",
+      "accountSubmitting": "Creating your account…",
+      "editCode": "Type the code again",
+      "retry": "Try again",
+      "problem": {
+        "NOT_FOUND": {
+          "title": "No invitation matches this code",
+          "body": "The code you typed does not match any clan invitation. The usual causes are a link cut short when a message was forwarded, or one missing character — the letter O and the digit 0 look nearly alike in print, and so do I and 1.",
+          "next": "Please type it again, checking it character by character against the card or the message. If it still does not open, the code is not for this clan — ask whoever gave it to you."
+        },
+        "EXPIRED": {
+          "title": "This invitation code has expired",
+          "body": "A clan invitation code only works for a limited time, so that a card forgotten in a drawer cannot open the phả years later. Yours was right once; it is simply old now.",
+          "next": "Typing it again will not help here. Ask whoever gave you the code for a new one — the Hội đồng Tộc biểu can issue one in minutes, and you will not have to start over."
+        },
+        "REVOKED": {
+          "title": "This invitation code has been withdrawn",
+          "body": "This is different from expiry: somebody closed this code deliberately. Usually it is because the code spread beyond the clan, and the Hội đồng Tộc biểu closed it to protect the records of living people. It is not aimed at you, and nobody who already joined with it is affected.",
+          "next": "Ask whoever gave you the code, or your Trưởng chi, for the code that is current now."
+        },
+        "EXHAUSTED": {
+          "title": "This invitation code has run out of uses",
+          "body": "The code is still in date and has not been withdrawn. But the Hội đồng Tộc biểu set a ceiling on how many people may register with it — that ceiling is how the council can tell whether a code is leaking — and it has just been reached.",
+          "next": "This is the one case that reopens without a new code: message whoever gave it to you. Raising the ceiling or issuing a fresh code both take a few minutes."
+        },
+        "RATE_LIMITED": {
+          "title": "Please try again in a few minutes",
+          "body": "Too many code attempts have come from this device in a short time, so the system has paused — this is the layer that stops codes being guessed by machine. It is not your fault, and your code is still perfectly good.",
+          "next": "Please wait a few minutes and type it again. While you wait, the public part of the phả is open just below.",
+          "nextAfter": "Please wait about {minutes} minutes and type it again. While you wait, the public part of the phả is open just below."
+        },
+        "PROVIDER_DOWN": {
+          "title": "The account could not be created just now",
+          "body": "Your invitation code is right and is still intact. The trouble is in the sign-in account service, on our side — and the part that matters most: the code has not been counted as used.",
+          "next": "Please wait a moment, then press “Try again”. You do not need a new code, and you do not have to start over."
+        },
+        "UNAVAILABLE": {
+          "title": "The invitation code could not be checked",
+          "body": "This is a connection problem between your device and the system, not a wrong code.",
+          "next": "Please check your network, then press “Try again”. Your invitation code is still good."
+        },
+        "IDENTITY_TAKEN": {
+          "title": "Please sign in, then enter the code again",
+          "body": "The email address or phone number you entered may already have been used to sign in before — including through Google or Zalo, which set no password at all, so it is easy to forget you have an account. Signing up with a clan code does not ask for a password, so the system stops here rather than touching an account it cannot be sure is yours. Your invitation code is still valid and still has uses left.",
+          "next": "Press “Sign in, then enter the code”, sign in with that same identifier — it may be the Google or Zalo button — then come back and type the clan code once more; by then the system knows who you are and will carry on. If you cannot sign in at all, give this invitation code to your chi head or the Hội đồng Tộc biểu and they will help. And please do not press create-account repeatedly: every attempt counts against the anti-probing limit for the device you are on."
+        }
+      },
+      "doneTitle": "Your account is ready",
+      "doneBody": "You are through the clan's front door. This account is not yet tied to anyone in the phả, and that is correct rather than unfinished: the code is issued to the whole clan, so the system does not know which person in it you are — guessing by matching names is the quickest way to hand one family's record to somebody else.",
+      "donePasswordTitle": "One thing left: set a password",
+      "donePasswordBody": "The password link works once and expires after thirty minutes. If it lapses you can ask for another; nothing is lost.",
+      "donePasswordCta": "Set a password",
+      "doneHasPasswordTitle": "This account already has a password",
+      "doneHasPasswordBody": "The email address or phone number you entered already has an account with a password, so no reset link is issued — issuing one would let anyone holding a clan code change someone else's password. Just sign in as usual.",
+      "doneSignInCta": "Sign in",
+      "doneNextTitle": "Next: point out who you are in the phả",
+      "doneNextBody": "Open the phả đồ, find your own place in it and send a claim. Your Trưởng chi checks it against the records and approves it; only after that can you correct your family's part and receive giỗ reminders for your chi.",
+      "doneNextNote": "You can browse the phả đồ before that approval — you have to see the phả in order to find yourself in it.",
+      "doneNextCta": "Who am I in the phả",
+      "donePasswordPhoneRecovery": "You registered with a phone number, so please remember the password you just set: password-reset links are sent by email, and this account has no email address. If you forget it, call your branch head — they can reopen it for you.",
+      "signInThenCode": "Sign in, then enter the code",
+      "doneAlreadySignedInTitle": "You were already signed in — no password to set",
+      "doneAlreadySignedInBody": "You entered the code while signed in, so the system opened the gate for the account you are already using rather than creating a second one. That is also why there is no set-password link: you already have a way in. Next time, just sign in as usual."
     },
     "invitation": {
       "pageTitle": "An invitation to join the phả",
@@ -56,6 +147,12 @@
       "accept": "That is me — accept the invitation",
       "accepting": "Opening your account…",
       "acceptFailed": "The invitation could not be accepted. This is a connection problem, not a problem with your code. Please press again.",
+      "needsAccountLead": "You are not signed in yet. Give an email address or phone number so the system can open an account and link it to the profile above right away — no approval needed.",
+      "needsAccountSubmit": "That is me — open an account",
+      "needsAccountHaveOne": "I already have an account — sign in",
+      "createdTitle": "Account opened — one thing left: set a password",
+      "createdBody": "Your account is already linked to the profile above; nobody needs to approve it. Press the button below to set a password; the link works once and expires after thirty minutes.",
+      "createdCta": "Set a password",
       "decline": "This is not me",
       "declineHint": "Pressing “This is not me” cancels this invitation code and tells the person who sent it. After that, nobody can use the code.",
       "declineConfirmTitle": "Cancel this invitation code?",
@@ -113,6 +210,11 @@
           "title": "Someone has already accepted this invitation",
           "body": "The profile in the phả that this invitation points to has already been claimed by another account.",
           "next": "If that was not you, please call the person who invited you right away: the invitation may have reached the wrong person, and they need to know."
+        },
+        "IDENTITY_TAKEN": {
+          "title": "Please sign in, then open the invitation again",
+          "body": "The invitation code is still perfectly good — the problem is not the code. The email address or phone number you entered may already have been used to sign in before, including through Google or Zalo, which set no password at all, so it is easy to forget you have an account. Accepting an invitation does not ask for a password, so the system stops rather than linking the invitation to an account it cannot be sure is yours.",
+          "next": "Press “Sign in”, sign in with that same identifier — it may be the Google or Zalo button — then reopen the link from your message; by then the system knows who you are and can accept the invitation. If you cannot sign in at all, give this invitation code to your chi head and they will help. And please do not press accept repeatedly: every attempt counts against the anti-probing limit for the device you are on."
         }
       },
       "acceptedTitle": "Done — you are now in the phả",
@@ -207,8 +309,12 @@
   "home": {
     "heading": "Clan Genealogy",
     "subheading": "Preserving our roots, connecting descendants near and far",
-    "welcomeBody": "The portal is under construction. The interactive family tree, kinship lookup, and anniversary reminders are coming soon.",
-    "cards": {
+    "pendingNotice": {
+      "title": "Your profile is awaiting approval",
+      "body": "While a branch head or the Clan Council reviews your request, you can already see the tree at name-and-generation level, plus every deceased ancestor's profile. The posts and honours below look the same to everyone.",
+      "link": "Check my request status"
+    },
+    "quickLinks": {
       "tree": {
         "title": "Family tree",
         "desc": "Browse the multi-generation tree, collapse or expand each branch."
@@ -222,7 +328,312 @@
         "desc": "Never miss an ancestor's death anniversary, wherever you live."
       }
     },
-    "comingSoon": "Coming soon"
+    "posts": {
+      "title": "Latest posts",
+      "viewAll": "View all",
+      "writeAction": "Write a post",
+      "empty": "No posts have been published yet."
+    },
+    "honours": {
+      "title": "Honours",
+      "viewAll": "View all",
+      "empty": "No honours have been recorded yet."
+    },
+    "upcomingEvents": {
+      "title": "Upcoming clan events",
+      "viewAll": "View all",
+      "empty": "No upcoming clan events."
+    }
+  },
+  "posts": {
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING": "Pending review",
+      "PUBLISHED": "Published",
+      "WITHDRAWN": "Withdrawn"
+    },
+    "card": {
+      "byline": "By {author}"
+    },
+    "reviewMeta": {
+      "approvedAt": "Approved on {date}",
+      "approvedAtBy": "Approved by {name} on {date}",
+      "reviewedAt": "Reviewed on {date}",
+      "reviewedAtBy": "Reviewed by {name} on {date}"
+    },
+    "gate": {
+      "needLoginTitle": "Sign in to write a post",
+      "needLoginBody": "Writing a post is a voice of someone in the clan. If you already have an account, sign in; if not, register with the clan's invite code before composing.",
+      "loginAction": "Sign in",
+      "registerAction": "Register with the clan invite code",
+      "notLinkedTitle": "Not yet approved into the family tree",
+      "notLinkedBody": "Writing a post is a voice of someone in the clan, so only members already approved into the tree can write one. You can identify yourself in the tree, or check your request's status if you already sent one.",
+      "claimStart": "Identify myself in the tree",
+      "claimPending": "Check my submitted request"
+    },
+    "compose": {
+      "newTitle": "Write a new post",
+      "editTitle": "Edit post",
+      "returnedTitle": "This post was sent back for revision",
+      "returnedAt": "Returned on {date}",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g. Asking the clan about the year-end gathering date",
+      "bodyLabel": "Content",
+      "bodyPlaceholder": "Write it as if telling the story to your grandchildren…",
+      "draftSaving": "Saving draft…",
+      "draftSaved": "Draft saved at {time}",
+      "draftSaveFailed": "The last autosave didn't go through. It will retry automatically — what you've typed is still here on screen.",
+      "conflictTitle": "This post was changed elsewhere",
+      "conflictBody": "It looks like this post is open in another window or device and was saved from there. What you typed here is still on screen, but autosave has paused to avoid overwriting that other save. You can load the latest version from the server (this will discard what's typed here), or copy this text elsewhere first.",
+      "conflictReload": "Load the latest version (discard what's typed here)",
+      "sessionExpiredTitle": "Your session has expired",
+      "sessionExpiredBody": "What you typed is still here on screen. Please sign in again, then press the button below to keep saving.",
+      "sessionRetry": "Signed in again, keep saving",
+      "submitForReview": "Submit for review",
+      "openStableLink": "Open this post at its own link",
+      "pendingNotice": "This post is awaiting review by a branch head or the Clan Council.",
+      "publishedNotice": "Published on {date}.",
+      "withdraw": "Take down",
+      "withdrawnNotice": "This post has been taken down from the homepage.",
+      "errors": {
+        "loadFailed": "Couldn't load this post. Please try again.",
+        "notAuthor": "This post isn't yours, so it can't be edited here.",
+        "forbidden": "You don't have permission to edit this post in its current state.",
+        "staleRecord": "This post was changed elsewhere.",
+        "missingPrecondition": "Missing sync information needed to save. Please reload the page.",
+        "sessionExpired": "Your session has expired.",
+        "validation": "A post needs both a title and content before it can be submitted for review.",
+        "notFound": "This post could not be found.",
+        "unknown": "Couldn't submit for review. Please try again."
+      }
+    },
+    "queue": {
+      "title": "Review posts",
+      "subtitle": "Posts submitted by members, awaiting review by a branch head or the Clan Council before appearing on the homepage.",
+      "scopeNote": "{n, plural, other {# post(s)}} awaiting your review.",
+      "empty": "No posts awaiting review.",
+      "emptyNoScope": "The Council hasn't assigned you any branch to review yet.",
+      "submittedAt": "Submitted on {date}",
+      "rejectReasonLabel": "Why send this post back?",
+      "rejectReasonPlaceholder": "e.g. please give the exact meeting date before publishing.",
+      "approve": "Approve",
+      "editThenApprove": "Edit, then publish",
+      "reject": "Send back",
+      "saveAndApprove": "Save & publish",
+      "cancelEdit": "Cancel",
+      "confirmReject": "Confirm send-back",
+      "errors": {
+        "notProvisioned": "Your account hasn't been fully provisioned yet.",
+        "noReviewRight": "You don't have permission to review posts.",
+        "loadFailed": "Couldn't load the review queue. Please try again.",
+        "missingEtag": "Couldn't fetch the latest version of this post to edit it. Please try again.",
+        "staleRecord": "This post was changed elsewhere. Please reload and try again.",
+        "missingPrecondition": "Missing sync information needed to save. Please reload the page.",
+        "sessionExpired": "Your session has expired. Please sign in again and try again.",
+        "selfReview": "You can't review your own post. Ask another member of the Council or branch to review it.",
+        "forbidden": "You don't have permission to do this with the post in its current state.",
+        "validation": "Some required information is missing.",
+        "notFound": "This post could not be found.",
+        "unknown": "Couldn't save your edits. Please try again."
+      },
+      "cannotReviewSelf": "This is your own post — another member of the Council or branch needs to review it."
+    },
+    "detail": {
+      "notFound": "This post could not be found.",
+      "loadFailed": "Couldn't load this post. Please try again."
+    },
+    "list": {
+      "title": "Clan posts",
+      "lead": "News, clan business, and stories that have been reviewed and published.",
+      "myPosts": "My posts",
+      "writeAction": "Write a new post",
+      "loadFailed": "Couldn't load the list of posts. Please try again.",
+      "empty": "No posts have been published yet.",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "pageOf": "Page {page}/{total}"
+    },
+    "mine": {
+      "title": "My posts",
+      "lead": "Drafts in progress and posts already submitted, in one place — no need to remember a link.",
+      "writeAction": "Write a new post",
+      "notLinked": "Only members already approved into the family tree have posts here.",
+      "loadFailed": "Couldn't load your posts. Please try again.",
+      "draftsTitle": "Drafts in progress ({n})",
+      "draftsEmpty": "No drafts in progress.",
+      "othersTitle": "Submitted ({n})",
+      "othersEmpty": "No posts submitted for review yet.",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "pageOf": "Page {page}/{total}"
+    },
+    "media": {
+      "label": "Photos, video",
+      "hint": "Add a few photos or a short video to bring the post to life — optional.",
+      "pick": "Choose photo/video",
+      "dropHint": "Or drag files here.",
+      "limits": "Photos up to {imageMb} MiB, video up to {videoMb} MiB and {videoSeconds} seconds. Up to {max} files per post.",
+      "loadingPolicy": "Loading upload limits…",
+      "policyLoadFailed": "Couldn't load the upload limits. Please reload the page.",
+      "needsDraftFirst": "Please type a title and move to the next field to save a draft first — photos/video need a saved post to attach to.",
+      "atCap": "This post already has {max} files, no more can be added. Please remove one before adding another.",
+      "readOnlyCount": "{n, plural, one {# attachment} other {# attachments}}.",
+      "moveLeft": "Move this photo earlier",
+      "moveRight": "Move this photo later",
+      "remove": "Remove this file from the post",
+      "altLabel": "Alt text",
+      "altPlaceholder": "e.g. The clan hall's roof after restoration",
+      "altWhy": "Required — this is the sentence a screen reader speaks instead of showing the photo, and also what shows if the photo fails to load.",
+      "altConfirm": "Done, attach this photo",
+      "confirming": "Attaching to the post…",
+      "retry": "Retry",
+      "rejected": {
+        "type": "Not a photo (jpg/png/webp) or video (mp4/webm) the system accepts. Please choose another file.",
+        "count": "This post already has {max} files — this one couldn't be added.",
+        "size": "This file is {actual}, over the {maxMb} MiB limit. Please compress it or choose another file.",
+        "duration": "This video is longer than {maxSeconds} seconds. Trim it or split it into shorter clips before uploading.",
+        "unknown": "Couldn't accept this file. Please try again.",
+        "named": {
+          "heic": "This is a HEIC photo (the iPhone default). Go to Settings > Camera > Formats and choose \"Most Compatible\" to save photos as JPEG — or open this photo, tap Share > Save as Compatible, then upload again.",
+          "gif": "Animated GIFs aren't supported yet. Save it as a still photo (JPEG/PNG) if you only need one frame, or convert it to a short MP4 video if you need to keep the motion.",
+          "mov": "MOV videos (the iPhone default) aren't supported yet. On iPhone: open Photos, pick the video, tap Share > Save as Compressed Video to convert it to MP4, then upload again.",
+          "mkv": "MKV videos aren't supported yet. Convert it to MP4 with a video converter tool before uploading."
+        }
+      },
+      "uploadingProgress": "Uploading {file}: {percent}%",
+      "videoAttachmentLabel": "Video attached to this post",
+      "openImage": "View photo from the post {title} full-size",
+      "openVideo": "View video from the post {title}",
+      "lightboxTitle": "Photo/video {current}/{total}",
+      "prevImage": "Previous photo",
+      "nextImage": "Next photo",
+      "videoUnsupported": "This browser can't play this video. Please try another browser.",
+      "noCaption": "No caption.",
+      "report": {
+        "action": "Report this file",
+        "reasonLabel": "Why does this file need a second look?",
+        "reasonPlaceholder": "Choose a reason",
+        "reasons": {
+          "RIENG_TU": "Privacy concern",
+          "SAI_NGUOI": "Wrong person shown/tagged",
+          "KHONG_PHU_HOP": "Not appropriate for this post",
+          "BAN_QUYEN": "Copyright issue",
+          "KHAC": "Other"
+        },
+        "noteLabelRequired": "Please explain why (required for \"Other\")",
+        "noteLabelOptional": "Additional note (optional)",
+        "notePlaceholder": "e.g. this isn't a photo of clan business, or it shows someone who didn't want to appear.",
+        "failed": "Couldn't send this report. Please try again.",
+        "alreadyReported": "You already reported this file and that report is still pending — it couldn't be sent again.",
+        "submit": "Send report",
+        "cancel": "Cancel",
+        "thanks": "Noted — a reviewer in this branch's scope will look into it."
+      }
+    },
+    "mediaReportQueue": {
+      "title": "Review photo/video reports",
+      "subtitle": "Reported photos/video needing a second look, within your assigned branch scope.",
+      "scopeNote": "{n, plural, other {# report(s)}} awaiting action in your scope.",
+      "empty": "No reports awaiting action.",
+      "reportedAt": "Reported on {date}",
+      "byReporter": " — by {name}",
+      "reasons": {
+        "RIENG_TU": "Privacy concern",
+        "SAI_NGUOI": "Wrong person shown/tagged",
+        "KHONG_PHU_HOP": "Not appropriate for this post",
+        "BAN_QUYEN": "Copyright issue",
+        "KHAC": "Other"
+      },
+      "noteLabel": "Reviewer's note (optional)",
+      "takedownWarning": "Taking this down deletes the file IMMEDIATELY, with no grace period and no undo. Make sure before confirming.",
+      "confirmTakedown": "Confirm takedown — cannot be undone",
+      "takedownAction": "Take down permanently",
+      "dismissAction": "Dismiss report",
+      "cancel": "Cancel",
+      "errors": {
+        "notProvisioned": "Your account hasn't been fully provisioned yet.",
+        "noReviewRight": "You don't have permission to review photo/video reports.",
+        "loadFailed": "Couldn't load the review queue. Please try again.",
+        "forbidden": "You don't have permission to act on this report.",
+        "alreadyHandled": "This report has already been handled elsewhere.",
+        "actionFailed": "Couldn't complete this action. Please try again."
+      }
+    }
+  },
+  "honours": {
+    "pageTitle": "Honours",
+    "pageSubtitle": "Academic honours, titles, achievements and awards of people in the clan — searchable by kind and by branch.",
+    "kind": {
+      "DO_DAT": "Academic honour",
+      "CHUC_TUOC": "Title",
+      "THANH_TICH": "Achievement",
+      "KHEN_THUONG": "Award"
+    },
+    "status": {
+      "PENDING": "Pending review",
+      "PUBLISHED": "Approved",
+      "WITHDRAWN": "Rejected"
+    },
+    "card": {
+      "person": "Honouree: {name}",
+      "issuer": "Issued by: {issuer}",
+      "reviewedAt": "Approved on {date}",
+      "reviewedAtBy": "Approved by {name} on {date}"
+    },
+    "pendingSharingHint": "Approving doesn't turn on sharing by itself: if the honouree is living and hasn't shared this yet, only they (and a reviewer in scope) will see the name attached — that's by design, not a bug.",
+    "filters": {
+      "kind": "Kind",
+      "anyKind": "Any kind",
+      "branch": "Branch",
+      "anyBranch": "Any branch"
+    },
+    "proposeAction": "Propose an honour",
+    "empty": "No honours yet.",
+    "errors": {
+      "loadFailed": "Couldn't load the honours list. Please try again."
+    },
+    "pendingSectionTitle": "Pending review",
+    "approvedSectionTitle": "Approved",
+    "review": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "cancel": "Cancel",
+      "confirmReject": "Confirm rejection",
+      "reasonPlaceholder": "Why reject this honour?",
+      "cannotReviewSelf": "This honour is about you — another member of the Council or branch needs to review it.",
+      "errors": {
+        "selfReview": "You can't review your own honour.",
+        "forbidden": "You don't have permission to review this honour.",
+        "staleRecord": "This record was changed elsewhere. Please reload and try again.",
+        "validation": "Some required information is missing.",
+        "notFound": "This honour could not be found.",
+        "unknown": "That action didn't go through. Please try again."
+      }
+    },
+    "form": {
+      "title": "Propose an honour",
+      "forSelf": "Proposing this for yourself{name}.",
+      "notLinked": "You need to be approved into the family tree before proposing an honour for yourself.",
+      "otherPersonLabel": "Honouree (if not yourself)",
+      "otherPersonPlaceholder": "Type a name to search…",
+      "otherPersonSearching": "Searching…",
+      "otherPersonHint": "Search by name, accents optional — results are already privacy-filtered.",
+      "kindLabel": "Kind",
+      "titleLabel": "Title",
+      "yearLabel": "Year",
+      "issuerLabel": "Issued by",
+      "descriptionLabel": "Description",
+      "cancel": "Cancel",
+      "submit": "Submit proposal",
+      "errors": {
+        "selfReview": "That action isn't available for yourself.",
+        "forbidden": "You don't have permission to propose an honour for this person.",
+        "staleRecord": "This record was changed elsewhere. Please reload and try again.",
+        "validation": "Some required information is missing.",
+        "notFound": "This person could not be found.",
+        "unknown": "Couldn't submit the proposal. Please try again."
+      }
+    }
   },
   "notifications": {
     "title": "Notification center",
@@ -271,7 +682,8 @@
     "viewMode": {
       "hierarchical": "Hierarchical",
       "radial": "Radial",
-      "matrix": "Generation matrix"
+      "matrix": "Matrix",
+      "list": "By đời"
     },
     "direction": {
       "descendants": "Descendants",
@@ -314,6 +726,40 @@
       "generation": "Generation {n}",
       "changeRoot": "Start from someone else",
       "useDefault": "Open the clan's default tree"
+    },
+    "expandBranchCount": "Expand this branch — {count} children",
+    "youAreHere": "Me",
+    "goToSelf": "Back to me",
+    "goToSelfHint": "Bring the phả đồ back to your own card and open the line from the root down to it.",
+    "jump": {
+      "label": "Find a person on the phả đồ",
+      "placeholder": "Type a name, with or without diacritics",
+      "generation": "Đời {n}",
+      "tooShort": "Please type at least {min} characters.",
+      "noMatch": "Nobody matches that name.",
+      "searchError": "Search is unavailable right now. Please try again in a moment."
+    },
+    "rootBanner": {
+      "withBranch": "Showing {branch}, from {name}",
+      "withoutBranch": "Showing the phả đồ from {name}",
+      "generation": "Đời {n}",
+      "changeRoot": "Open another chi"
+    },
+    "list": {
+      "title": "List by đời (generation)",
+      "trail": "Path taken through the phả đồ",
+      "unknownPerson": "Not loaded",
+      "openProfile": "Open profile",
+      "childrenHeading": "Next đời — {count} people",
+      "noChildren": "Nobody is recorded as this person's child yet.",
+      "descend": "Go down",
+      "descendTo": "See the descendants of {name}"
+    },
+    "focusMissing": "Could not open the phả đồ at that person. The rest of the phả đồ still works as usual.",
+    "claim": {
+      "thisIsMe": "This is me — {name}",
+      "notInTree": "I am not in the phả yet",
+      "deceasedCannotBeClaimed": "This card belongs to someone who has passed away, so it cannot be claimed."
     }
   },
   "person": {
@@ -410,21 +856,24 @@
       "residenceProvince": "Where I live (province/city)",
       "residenceFull": "Full address",
       "contact": "Contact: phone · email · Zalo",
-      "birthDetailAndPhoto": "Full date of birth & photo"
+      "birthDetailAndPhoto": "Full date of birth & photo",
+      "honour": "Honours: exam titles · offices · achievements · commendations"
     },
     "groupShort": {
       "occupation": "occupation",
       "residenceProvince": "province where I live",
       "residenceFull": "full address",
       "contact": "contact details",
-      "birthDetailAndPhoto": "date of birth & photo"
+      "birthDetailAndPhoto": "date of birth & photo",
+      "honour": "honours"
     },
     "groupBenefit": {
       "occupation": "So relatives in the same trade can find each other, and so younger family members studying or working far from home have someone in the clan to ask.",
       "residenceProvince": "So family in the same province know about each other — most useful right after a move, or when coming home for the ancestral anniversary.",
       "residenceFull": "Only needed when the clan posts invitations, giỗ offerings or the newsletter by mail.",
       "contact": "The only way for relatives to reach you directly instead of asking around.",
-      "birthDetailAndPhoto": "A photo helps relatives recognise each other at a giỗ; a full birth date lets them wish you well on the right day."
+      "birthDetailAndPhoto": "A photo helps relatives recognise each other at a giỗ; a full birth date lets them wish you well on the right day.",
+      "honour": "So your exam titles, offices or achievements show your real name on the clan's Honours page once approved, instead of staying visible only to you and the council."
     },
     "notFilledYet": "You have not filled this in yet, so there is nothing to share.",
     "fillItIn": "Fill it in",
@@ -501,6 +950,11 @@
   "kinship": {
     "title": "Kinship lookup",
     "subtitle": "Pick two people in the clan to see how they should properly address each other.",
+    "guest": {
+      "title": "Sign in to look up kinship terms",
+      "body": "Kinship lookup has to look at records of people in the clan, including living ones, so only signed-in members can use it. This differs from reading the family tree — the tree still opens for guests at the generation-and-relations level, but kinship lookup needs a clan account.",
+      "viewTree": "View the family tree (no account needed)"
+    },
     "fromLabel": "Speaker (I am…)",
     "toLabel": "Person being addressed",
     "swap": "Swap the two people",
@@ -790,7 +1244,13 @@
     "noResults": "No one matched that search.",
     "loadError": "Search failed. Please try again.",
     "resultCount": "{count, plural, one {# result} other {# results}}",
+    "resultCountUnknown": "Search results are shown below.",
     "matchedOn": "Matched on {layer}",
+    "publicNotice": "Public lookup: only deceased members of the clan are listed here; living descendants do not appear in this search.",
+    "pager": {
+      "prev": "Previous page",
+      "next": "Next page"
+    },
     "filters": {
       "generation": "Generation",
       "anyGeneration": "Any generation",
@@ -843,7 +1303,100 @@
       "CUOI_HOI": "Wedding",
       "KHAC": "Other clan event"
     },
-    "showLessInMonth": "Show less"
+    "showLessInMonth": "Show less",
+    "createEvent": "Create event",
+    "editEvent": "Edit",
+    "viewMode": {
+      "label": "View",
+      "month": "Month",
+      "year": "Year",
+      "list": "List"
+    },
+    "monthView": {
+      "title": "Month view",
+      "prev": "Previous month",
+      "next": "Next month",
+      "gridLabel": "Grid of days in the month",
+      "weekday": {
+        "sun": "Su",
+        "mon": "Mo",
+        "tue": "Tu",
+        "wed": "We",
+        "thu": "Th",
+        "fri": "Fr",
+        "sat": "Sa"
+      },
+      "dayAriaWithEvents": "Day {day}: {count} event(s)",
+      "dayAriaEmpty": "Day {day}: no events",
+      "dayEmpty": "No giỗ on this day.",
+      "selectPrompt": "Pick a day to see its detail."
+    }
+  },
+  "eventForm": {
+    "createTitle": "Create clan event",
+    "editTitle": "Edit clan event",
+    "editGapWarning": "The server does not yet report whether this event repeats annually, so 'Repeats annually' below is pre-filled as YES. Double-check it before saving.",
+    "sections": {
+      "basics": "Basics",
+      "lunarDate": "Lunar date",
+      "recurrence": "Recurrence",
+      "scope": "Scope"
+    },
+    "eventType": "Event type",
+    "eventTypeGioHoHiddenHint": "\"Giỗ họ\" is not in this list: that type is always a whole-clan matter, and only the Clan Council / clan head can send a reminder at that scope. For a giỗ that belongs to your own branch, choose \"Giỗ chi\" instead.",
+    "title": "Title",
+    "titlePlaceholder": "e.g. Founding ancestor's giỗ",
+    "description": "Description",
+    "descriptionHint": "Extra notes shown alongside the event on the calendar — optional.",
+    "location": "Location",
+    "person": "This giỗ is for",
+    "personHint": "An ordinary giỗ always belongs to one person — the server checks the lunar date here against that person's recorded date of death.",
+    "lunarDateHint": "The lunar date is the source of truth. For an annually repeating event, the server computes each next solar occurrence itself — never convert it yourself and type the result here.",
+    "lunarDay": "Day (lunar)",
+    "lunarMonth": "Month (lunar)",
+    "lunarYear": "Year (lunar)",
+    "lunarLeap": "Leap month",
+    "lunarLeapHint": "Check this if the clan record places the date in a leap month.",
+    "yes": "Yes",
+    "no": "No",
+    "recurringAnnually": "Repeats annually",
+    "recurringAnnuallyHint": "On for giỗ, grave-tending and other recurring rites; off for a one-off occasion.",
+    "recurringYes": "Repeats annually",
+    "recurringNo": "One-off",
+    "solarDate": "Solar date (reference)",
+    "solarDateHint": "Only for a ONE-OFF event — type it exactly as recorded, never derived from the lunar date.",
+    "scopeHint": "Scope decides WHO GETS REMINDED about this event. Reminding the whole clan about a single branch's occasion is the fastest way people turn notifications off — pick the right scope before saving.",
+    "scopeBranch": "One branch",
+    "scopeClan": "Whole clan",
+    "scopeClanDisabledHint": "Only the clan council / clan head can send a whole-clan reminder.",
+    "scopeForcedByType": "The event type “{type}” always has this scope — the server ties the two together. To change the scope, change the event type above first.",
+    "scopeBranchLabel": "Branch to notify",
+    "scopeClanNote": "Every member of the clan will be reminded about this event.",
+    "save": "Save",
+    "create": "Create",
+    "cancel": "Cancel",
+    "savedCreate": "Event created.",
+    "savedEdit": "Changes saved.",
+    "errors": {
+      "titleRequired": "Enter a title for this event.",
+      "lunarDay": "The lunar day must be between 1 and 30.",
+      "lunarMonth": "The lunar month must be between 1 and 12.",
+      "solarDate": "The solar date must be in YEAR-MONTH-DAY form.",
+      "scopeRequired": "Pick a branch to notify.",
+      "personRequired": "Pick the person this giỗ belongs to.",
+      "lunarYear": "A one-off event must have a lunar year.",
+      "notAllowedToCreate": "Only a branch, chi or clan head can create a new event.",
+      "notAllowedToEdit": "Only a branch, chi or clan head can edit an event.",
+      "notFound": "This event could not be found.",
+      "loadFailed": "Could not load. Please try again.",
+      "missingEtag": "Could not fetch the latest version of this event to edit it safely. Reload the page.",
+      "staleRecord": "This event was just changed by someone else. Reload the page and edit again.",
+      "forbidden": "You do not have permission over the scope you chose.",
+      "serverValidation": "The server rejected some of the values you entered. Check the fields.",
+      "gioDateFromPerson": "The giỗ date comes from the person's record and does not match the date of death recorded there. To change it, edit that person's profile.",
+      "submitFailed": "Could not save. Please try again.",
+      "eventDeleted": "This event has been deleted. A deleted record cannot be edited — ask your chi head to restore it first if you need it back."
+    }
   },
   "push": {
     "inAppAlways": "Either way, every giỗ reminder is waiting in full in your notification centre when you open the app.",
@@ -1460,6 +2013,392 @@
       "hint": "The workbook has three sheets: Overview, Must fix, Worth reviewing. Fix it in Excel — where you are at home — then upload the corrected file again.",
       "failed": "The file could not be downloaded",
       "fallbackName": "Issues-{batchId}.xlsx"
+    }
+  },
+  "claim": {
+    "pageTitle": "Find myself in the phả",
+    "pageDescription": "Pick your own node on the phả đồ, then send a request for the Trưởng chi to check.",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "start": {
+      "title": "Find myself in the phả",
+      "lead": "You have registered and you can see the phả đồ (the clan tree). What is left is to point at your own node, so that the Trưởng chi (head of your chi, a lineage branch) can link this account to it.",
+      "stepsTitle": "Three steps",
+      "step1": "Open the phả đồ and look for yourself — type your name into the search box on the tree.",
+      "step2": "Tap your own node, then choose “This is me”.",
+      "step3": "Give a phone number and a few lines about yourself, then send it to the Trưởng chi.",
+      "openTree": "Open the phả đồ and look for myself",
+      "openTreeHint": "The search box sits on the tree itself. Typing with or without Vietnamese accents both work.",
+      "notInTree": "I am not in the phả yet",
+      "notInTreeHint": "For a newly married con dâu or con rể (daughter- or son-in-law), a newborn, or a branch abroad that the paper phả stopped recording.",
+      "pendingTitle": "You have already sent a request",
+      "pendingLink": "See the request awaiting approval"
+    },
+    "target": {
+      "heading": "The node you picked",
+      "generation": "Đời {n} (generation {n})",
+      "confirm": "Is this really you? If not, please go back to the phả đồ and pick another node.",
+      "back": "Pick another node on the phả đồ"
+    },
+    "quota": {
+      "remaining": "You have {n} requests left.",
+      "lastOne": "This is your last request. Please write the part about yourself carefully.",
+      "why": "The number of requests is capped so that nobody can work through the clan one person at a time."
+    },
+    "form": {
+      "title": "Send a request to claim this node",
+      "lead": "The Trưởng chi will read what you write to check it against what they know, then call this number to confirm.",
+      "phone": "Phone number",
+      "phoneHint": "The Trưởng chi calls this number to confirm. Once the request is approved the number is saved to your hồ sơ (person record) but stays closed — you decide who may see it.",
+      "introduction": "A few lines about yourself",
+      "introductionHint": "Whose son or daughter are you? Where is your quê quán (ancestral home)? This is what the Trưởng chi actually checks against — the phone number only lets them call you.",
+      "introductionPlaceholder": "I am the second child of Nguyễn Văn Cẩn and Trần Thị Lan, from Đại Lan, Nam Định. I was born in 1992 and live in Hà Nội.",
+      "submit": "Send the request to the Trưởng chi",
+      "submitting": "Sending…",
+      "errors": {
+        "phoneRequired": "Please give a phone number so the Trưởng chi can call you back.",
+        "phoneTooShort": "This phone number looks too short. Please check it.",
+        "introductionRequired": "Please write a few lines about yourself. Without them the Trưởng chi has nothing to check against.",
+        "introductionTooShort": "Please write a little more — at least whose child you are and where your quê quán is.",
+        "introductionTooLong": "This is longer than {max} characters. Please shorten it."
+      }
+    },
+    "newPerson": {
+      "title": "I am not in the phả yet",
+      "lead": "This is normal and it happens often: the phả has not caught up with a new member. Fill in the fields below and the Trưởng chi will review them and write you into the phả.",
+      "casesTitle": "Who this is for",
+      "caseSpouse": "A newly married con dâu or con rể (daughter- or son-in-law) — the wedding happened before anyone updated the phả.",
+      "caseChild": "A newborn — the parents are in the phả, the child is not yet.",
+      "caseFar": "A branch abroad for generations — the chi's paper phả stopped recording it, so the whole branch is missing.",
+      "notCreatedTitle": "Sending a request is not the same as being in the phả",
+      "notCreatedBody": "Nothing has been created for you yet — this is only a request. Your hồ sơ (person record) is written, and you appear in the phả, only once the Trưởng chi approves it.",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Nguyễn Thị Lan",
+      "birthYear": "Year of birth",
+      "birthYearHint": "Gregorian year. It is the easiest thing for the Trưởng chi to check against.",
+      "gender": "Gender",
+      "genderMale": "Male",
+      "genderFemale": "Female",
+      "genderUnknown": "Not stated",
+      "relativeTitle": "A relative already in the phả",
+      "relativeWhyTitle": "Why this one is required",
+      "relativeWhy": "The phả is a tree: everyone is attached to it through a relative. With nobody named, a new record would sit outside the tree — no đời (generation) could be counted, no danh xưng (kinship term) could be looked up, and no chi would know the request is theirs to approve. That is why this is required, not merely starred.",
+      "relative": "Who that relative is",
+      "relativePlaceholder": "Type a name to search the phả",
+      "relation": "This person is",
+      "relationFather": "My father",
+      "relationMother": "My mother",
+      "relationSpouse": "My husband / wife",
+      "relationHint": "One relative is enough. The Trưởng chi will ask for more if they need it.",
+      "submit": "Send the request to the Trưởng chi",
+      "errors": {
+        "fullNameRequired": "Please give your full name.",
+        "birthYearRequired": "Please give your year of birth.",
+        "birthYearRange": "The year of birth must be between {min} and {max}.",
+        "relativeRequired": "Please name one relative already in the phả — father, mother, or spouse. Without a relative the new record cannot be attached to the tree.",
+        "relationRequired": "Please say whether that person is your father, your mother, or your spouse."
+      },
+      "introTitle": "A few lines about you",
+      "formTitle": "The person to add to the phả",
+      "duplicateTitle": "Request sent — you may already be in the phả",
+      "duplicateBody": "We found {count} record(s) in the phả that could be you. The Trưởng chi will check before approving — if you know exactly which node is yours on the phả đồ, please go back and pick that one instead of sending an “I am not in the phả yet” request.",
+      "duplicateContinue": "See the request awaiting approval",
+      "duplicateBack": "Back to the phả đồ to pick the right node"
+    },
+    "block": {
+      "deceased": {
+        "title": "This node belongs to someone who has died",
+        "body": "{name} has died, so this is not your node. Please go back to the phả đồ and find your own.",
+        "action": "Back to the phả đồ"
+      },
+      "personUnavailable": {
+        "title": "You cannot send a request for this person",
+        "body": "This node is not taking further requests. If you are certain it is you, please call your Trưởng chi and explain.",
+        "action": "Pick another node on the phả đồ"
+      },
+      "alreadyPending": {
+        "title": "You have already sent a request",
+        "body": "It is waiting for the Trưởng chi. Only one request can be open at a time, so please wait for an answer before sending another.",
+        "action": "See the request awaiting approval"
+      },
+      "accountAlreadyLinked": {
+        "title": "This account is already in the phả",
+        "body": "Your account is already linked to a hồ sơ (person record) in the phả, so there is nothing left to request.",
+        "action": "Open the phả đồ"
+      },
+      "needsAccount": {
+        "title": "Please sign in first",
+        "body": "Only someone who registered with a clan invitation code can send this request."
+      },
+      "rateLimited": {
+        "title": "Please wait a moment and try again",
+        "body": "Too many attempts have come from this device. Please wait a few minutes and try again."
+      },
+      "unavailable": {
+        "title": "Cannot send it right now",
+        "body": "The connection to the server is failing. Nothing you wrote has been lost — please try again."
+      },
+      "limitReached": {
+        "title": "You have used all your requests",
+        "body": "The number of requests is capped so that nobody can work through the clan one person at a time. Please call your Trưởng chi, or whoever gave you the invitation code, and ask them to do it for you."
+      },
+      "relativeUnusable": {
+        "title": "The relative you named cannot be used yet",
+        "body": "That relative has not been placed in any chi (lineage branch) in the phả, so the system does not yet know which Trưởng chi this request belongs to. Please name a different relative already in the phả, or call your Trưởng chi — placing someone in a chi is their work, not something you can fix.",
+        "action": "Name a different relative"
+      }
+    },
+    "pending": {
+      "title": "Your request",
+      "statusPending": "Awaiting approval",
+      "statusRejected": "Not approved",
+      "statusApproved": "Approved",
+      "submittedAt": "Sent on {date}",
+      "reviewedAt": "Answered on {date}",
+      "kindExisting": "Claiming to be {name}",
+      "kindNew": "Asking to be written into the phả as {name}",
+      "waitingForTitle": "Who it is waiting for",
+      "waitingFor": "The request sits with {branch}, waiting for the {title} to read and check it.",
+      "waitingForBranchOnly": "The request sits with {branch}, waiting for the Trưởng chi to read and check it.",
+      "waitingForUnknown": "The request is waiting for the Trưởng chi of the chi concerned, or for the Hội đồng Tộc biểu (the clan council), to read and check it.",
+      "waitingHint": "They do clan work in their own time, so please allow a few days. If it takes much longer, call your Trưởng chi.",
+      "notCreatedYet": "Your hồ sơ (person record) has not been created. It is written, and you appear in the phả, only once the request is approved.",
+      "meanwhileTitle": "What you can see while you wait",
+      "canTree": "The phả đồ — names, đời (generation) and relations of the people in the clan.",
+      "canDeceased": "The full records of ancestors who have died.",
+      "cannotWrite": "You cannot write posts yet. Posts on the home page are the voice of people recorded in the phả, so they wait for approval.",
+      "cannotPrivate": "You cannot see the phone number, address or full date of birth of living people.",
+      "rejectedReasonTitle": "What the Trưởng chi replied",
+      "resubmit": "Send a different request",
+      "resubmitRemaining": "You have {n} requests left.",
+      "resubmitExhausted": "You have used all your requests. Please call your Trưởng chi and ask them to do it for you.",
+      "approvedBody": "The Trưởng chi has approved it. Your account is now linked to a record in the phả.",
+      "approvedOpenProfile": "Open my hồ sơ",
+      "emptyTitle": "You have not sent any request",
+      "emptyBody": "To appear in the phả, point at your own node on the phả đồ, or fill in a new record if you are not there yet.",
+      "emptyAction": "Start finding myself in the phả",
+      "statusCancelled": "Withdrawn",
+      "kindExistingUnknown": "Claiming the node you picked on the phả đồ",
+      "cancel": "Withdraw this request",
+      "cancelHint": "Withdrawing costs you nothing. Once withdrawn you can send a different request straight away.",
+      "cancelling": "Withdrawing…",
+      "cancelFailed": "Could not withdraw the request right now. Please try again."
+    }
+  },
+  "membership": {
+    "nav": {
+      "label": "Membership",
+      "labelWithCount": "Membership — {count} self-claims awaiting review",
+      "tooltip": "Membership — self-claims and invite codes"
+    },
+    "hub": {
+      "title": "Clan administration",
+      "subtitle": "For branch heads and the Clan Council."
+    },
+    "common": {
+      "cancel": "Close"
+    },
+    "errors": {
+      "notProvisioned": "You need to sign in with a clan account to see this section.",
+      "noReviewRight": "Only branch heads and the Clan Council can review requests to join the phả.",
+      "noIssueRight": "Only branch heads and the Clan Council can issue invitation codes.",
+      "noScope": "The Clan Council has not assigned you a branch yet, so there is nobody you can invite. Please contact the Council."
+    },
+    "queue": {
+      "title": "Requests to join the phả",
+      "subtitle": "Relatives point at their own node on the phả đồ, or ask to be written into the phả. Review, verify, then approve or decline.",
+      "empty": "No requests are waiting in your scope.",
+      "emptyNoScope": "The Clan Council has not assigned you a branch yet, so no request falls in your scope. Please contact the Council.",
+      "scopeNote": "{n, plural, one {# request} other {# requests}} waiting in your scope.",
+      "contestedTitle": "{n, plural, one {# person claims} other {# people claim}} to be {name}",
+      "contestedAria": "Several people claim the record {name}",
+      "contestedLead": "Look at both before choosing. Whoever sent first is not necessarily the right one — shared names are ordinary within a clan. Phoning each of them is the surest check.",
+      "contestedMissing": "{n, plural, one {# more request} other {# more requests}} claim this record but did not load. Please reload the page before deciding."
+    },
+    "kind": {
+      "EXISTING": "Claiming an existing record",
+      "NEW_PERSON": "Asking to be added to the phả"
+    },
+    "status": {
+      "PENDING": "Waiting",
+      "APPROVED": "Approved",
+      "REJECTED": "Declined",
+      "CANCELLED": "Withdrawn by sender"
+    },
+    "card": {
+      "requester": "Applicant",
+      "requesterUnnamed": "Applicant left the name blank",
+      "introduction": "How the applicant describes themselves",
+      "attemptNo": "This is attempt number {n} from this person.",
+      "generation": "Generation {n}",
+      "birthYear": "Born {year}",
+      "submittedAt": "Sent {at}",
+      "unknownPerson": "A record in the phả",
+      "unnamedProposal": "Applicant left the full name blank",
+      "reviewNote": "Reviewer note: {note}",
+      "deceasedClaimWarning": "This request points at a deceased person. The system should have blocked it at the selection step — please tell an administrator before deciding.",
+      "writesToTree": "Approving this writes a new person into the phả",
+      "writesToTreeDetail": "Unlike a claim on an existing record, there is no record here yet. Approving creates one and links it into the tree. The phả never hard-deletes, so a person entered by mistake stays in the tree.",
+      "relativeTitle": "Relative already in the phả",
+      "relativeKind": {
+        "FATHER": "Applicant's father",
+        "MOTHER": "Applicant's mother",
+        "SPOUSE": "Applicant's spouse"
+      }
+    },
+    "duplicate": {
+      "notScanned": "No duplicate scan was run for this request. Please check carefully before approving — the applicant may already be in the phả under a different name.",
+      "none": "The whole clan was scanned and nobody resembling the applicant was found.",
+      "title": "This may be the same person — {n, plural, one {# close match} other {# close matches}}",
+      "lead": "The applicant may already be in the phả under a taboo name or a familiar name. Open each record and compare before creating a new person.",
+      "score": "{score}% match",
+      "unreadablePerson": "A record in the phả",
+      "signal": {
+        "TEN_TRUNG_CO_DAU": "Same name with diacritics",
+        "TEN_TRUNG_KHONG_DAU": "Same name without diacritics",
+        "GIO_TRUNG_KHIT": "Same death anniversary",
+        "NAM_SINH_KHOP": "Same birth year",
+        "NAM_SINH_LECH_IT": "Birth year off by a little",
+        "NAM_MAT_KHOP": "Same year of death",
+        "CUNG_CHI": "Same branch",
+        "CUNG_DOI": "Same generation",
+        "KHAC_DOI": "Different generation",
+        "CUNG_NGUYEN_QUAN": "Same ancestral home",
+        "KHAC_GIOI": "Different gender"
+      }
+    },
+    "review": {
+      "approveClaim": "Approve — link account",
+      "approveNewPerson": "Approve — create new record",
+      "reject": "Decline",
+      "approveClaimTitle": "Approve this claim",
+      "approveNewPersonTitle": "Approve and write a new person into the phả",
+      "rejectTitle": "Decline this request",
+      "approveClaimLead": "Link the applicant's account to the record {name}. From now on they can edit that record and read its private fields.",
+      "approveNewPersonLead": "Approving creates a new record named {name} in the phả.",
+      "newPersonConsequence1": "The system creates the record and links it into the tree through the relative named above.",
+      "newPersonConsequence2": "The phả never hard-deletes, so this person will stay in the tree.",
+      "newPersonConsequence3": "Please re-read the close matches above — the applicant may already be in the phả under a different name.",
+      "contestedApproveWarning": "Someone else also claims this record. Approving this one declines the others, because a record can hold only one account.",
+      "rejectLead": "Say plainly why. The sender will read this reason, and they have only a few attempts left — a curt answer makes the next attempt just as wrong.",
+      "noteLabel": "Note for the record (optional)",
+      "noteLabelRequired": "Reason for declining (required)",
+      "noteRequired": "Please give a reason. The sender has a right to know why.",
+      "noteReachesSender": "This reason will be sent to the applicant.",
+      "rejectNotePlaceholder": "For example: I rang this number and the person who answered is not Mr Tư's child. Please look again and point at your own node.",
+      "approveNotePlaceholder": "For example: confirmed by phone with uncle Tư on 18 Sept.",
+      "approved": "Request approved.",
+      "rejected": "Request declined and the reason sent to the applicant.",
+      "errors": {
+        "BRANCH_SCOPE": "This request belongs to another branch, outside your assigned scope. Please pass it to that branch head or to the Clan Council.",
+        "CLOSED": "This request has already been handled. Reload the page to see the outcome.",
+        "SELF_REVIEW": "Nobody reviews their own request. Please ask the Clan Council to decide this one.",
+        "PERSON_ALREADY_LINKED": "This record already holds another account. Please reload the page.",
+        "ACCOUNT_ALREADY_LINKED": "The applicant is already linked to a different record in the phả.",
+        "STALE": "Someone has just handled this request. Reload the page and decide again.",
+        "NOTE_REQUIRED": "Declining a request needs a reason.",
+        "FORBIDDEN": "You are not allowed to decide this request.",
+        "UNAVAILABLE": "Could not reach the server. Please try again — the request is untouched."
+      }
+    },
+    "invite": {
+      "title": "Issue codes and invitations",
+      "subtitle": "The Clan Council issues a code for the whole clan; branch heads invite individual elders by name."
+    },
+    "code": {
+      "onceWarning": "The code is shown once. Closing this panel means you cannot read it again — copy it or write it down now.",
+      "copy": "Copy code",
+      "copyAgain": "Copy again",
+      "copied": "Code copied. Paste it into your message now.",
+      "copyFailed": "This device would not copy automatically. Please write the code above down by hand.",
+      "reissueHint": "If the code is lost, issue a new one; the old one keeps its own usage counter.",
+      "done": "I have copied it"
+    },
+    "clan": {
+      "tab": "Clan invitation code",
+      "title": "Clan invitation code",
+      "lead": "This code is issued to the whole clan and can be used many times. Anyone holding it can register and view the phả đồ, so watch the usage counter and revoke it as soon as something looks wrong.",
+      "issueTitle": "Issue a new code",
+      "labelLabel": "Which channel is this for?",
+      "labelPlaceholder": "For example: Nguyễn clan Zalo group 2026",
+      "ttlLabel": "Valid for (days)",
+      "maxUsesLabel": "Usage cap",
+      "maxUsesPlaceholder": "Leave blank for no cap",
+      "maxUsesHint": "Set it to roughly the number of people in the clan. With a cap, the code closes itself once used up.",
+      "issue": "Issue code",
+      "listTitle": "Codes issued",
+      "empty": "No clan invitation code has been issued yet.",
+      "untitled": "Unnamed code",
+      "issuedAt": "Issued {at}",
+      "useCountLabel": "Used",
+      "useCountUnit": "times (no cap set)",
+      "useCountOfMax": "of {max} allowed",
+      "compareToClan": "{used} uses, while the clan has {living} living members.",
+      "noMaxWarning": "This code has no usage cap. Watch the counter closely.",
+      "expiresAt": "Expires",
+      "remainingLabel": "Remaining",
+      "remainingValue": "{n} uses",
+      "revoke": "Revoke code",
+      "revokeTitle": "Revoke clan invitation code",
+      "revokeLead": "From now on nobody can register with this code. People who already joined with it are unaffected.",
+      "revokeReasonLabel": "Reason (optional, Council only)",
+      "revokeReasonPlaceholder": "For example: the code was forwarded outside the clan.",
+      "revoked": "Code revoked.",
+      "revokedAt": "Revoked on {at}.",
+      "revokedWithReason": "Revoked on {at} — {reason}",
+      "usability": {
+        "USABLE": "Usable",
+        "EXPIRED": "Expired",
+        "EXHAUSTED": "Used up",
+        "REVOKED": "Revoked"
+      },
+      "errors": {
+        "FORBIDDEN": "Only the Clan Council can issue and revoke clan codes.",
+        "ALREADY_REVOKED": "This code has already been revoked. Please reload the page.",
+        "RATE_LIMITED": "Too many actions too quickly. Please wait a moment and try again.",
+        "UNAVAILABLE": "Could not reach the server. Please try again."
+      }
+    },
+    "personal": {
+      "tab": "Personal invitation",
+      "title": "Personal invitation",
+      "lead": "Pick one elder in your own branch and issue a code. It names that person, is single-use, and the recipient needs no approval — because you already named them when issuing it.",
+      "issueTitle": "Issue an invitation",
+      "personLabel": "Who are you inviting?",
+      "personPlaceholder": "Type a name to search the phả",
+      "personRequired": "Please choose the person to invite.",
+      "scopeHint": "You can only invite people inside the branch assigned to you.",
+      "ttlLabel": "Valid for (days)",
+      "noteLabel": "Note to yourself (optional)",
+      "notePlaceholder": "For example: read the code out over the phone, she does not use Zalo.",
+      "issue": "Issue invitation",
+      "codeFor": "Code for {name}",
+      "listTitle": "Invitations issued",
+      "empty": "You have not issued any invitation yet.",
+      "unknownPerson": "A record in the phả",
+      "expiresAt": "Expires {at}",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke invitation",
+      "revokeLead": "From now on this code will not open anything. If the person still needs access, issue a new one.",
+      "revokeReasonPlaceholder": "For example: issued to the wrong person.",
+      "revoked": "Invitation revoked.",
+      "usability": {
+        "USABLE": "Usable",
+        "EXPIRED": "Expired",
+        "ALREADY_USED": "Already used",
+        "REVOKED": "Revoked"
+      },
+      "errors": {
+        "EXPIRED": "The invitation has expired.",
+        "ALREADY_USED": "The invitation has already been used.",
+        "REVOKED": "The invitation has been revoked.",
+        "NOT_FOUND": "That invitation could not be found.",
+        "RATE_LIMITED": "Too many actions too quickly. Please wait a moment and try again.",
+        "UNAVAILABLE": "Could not reach the server. Please try again.",
+        "NEEDS_ACCOUNT": "Please sign in again and retry.",
+        "ACCOUNT_ALREADY_LINKED": "This account is already linked to a different record in the phả.",
+        "PERSON_ALREADY_LINKED": "This person already has an account, so no further invitation can be issued."
+      }
     }
   }
 }

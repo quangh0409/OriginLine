@@ -32,8 +32,31 @@ export const kinshipHandlers = [
       return problem(400, "Thiếu tham số from/to", "VALIDATION_FAILED", "/api/v1/kinship");
     }
 
-    // Either endpoint being a hidden living person is a 404, not a 403 —
-    // otherwise the error itself confirms that person exists.
+    // Khách: 401, không phải một câu trả lời riêng tư nào.
+    //
+    // Bản trước của handler này coi "khách" chỉ như MỘT nhánh của bộ lọc
+    // riêng tư (`endpointHidden` bên dưới) — với một cặp toàn người ĐÃ KHUẤT,
+    // khách vẫn nhận `200` kèm kết quả đầy đủ. Đó là bộ giả lập đang mô phỏng
+    // một API DỄ HƠN bản thật: `SecurityConfig.apiSecurityFilterChain` không
+    // có lối `permitAll` nào cho `/api/v1/kinship` — nó rơi thẳng vào
+    // `anyRequest().authenticated()`, nên MỌI yêu cầu không kèm JWT hợp lệ đều
+    // nhận `401` trước khi bất kỳ câu hỏi riêng tư nào được xét tới, bất kể cả
+    // hai người có đã khuất hay không. `<KinshipGuestNotice>` chặn khách lại
+    // từ trước khi màn hình gọi tới endpoint này, nhưng handler vẫn phải nói
+    // đúng sự thật cho một yêu cầu gọi thẳng (DevTools, ca kiểm, một client
+    // khác trong tương lai).
+    if (role === "guest") {
+      return problem(401, "Cần đăng nhập để tra danh xưng", "UNAUTHENTICATED", "/api/v1/kinship");
+    }
+
+    // Ghi chú phạm vi: mô hình giả lập này chỉ phân hai hạng "khách"/"đã đăng
+    // nhập" cho MỌI vai đã đăng nhập (`canSeeLivingPersons` trả `true` như
+    // nhau cho member/branch-head/admin) — nó KHÔNG mô phỏng việc một thành
+    // viên vẫn có thể bị giấu một người còn sống ngoài phạm vi của mình. Nhánh
+    // dưới đây vì vậy không còn ca nào chạy tới trong bộ giả lập hôm nay; giữ
+    // lại vì đúng nghiệp vụ thật (404 chứ không phải 403, để không xác nhận
+    // sự tồn tại) và vì việc mô hình hoá phạm vi chi/ngành cho endpoint này là
+    // một việc khác, chưa làm ở đây.
     const endpointHidden = [fromId, toId].some(
       (id) => isAliveMock(id) === true && !canSeeLivingPersons(role)
     );

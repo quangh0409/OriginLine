@@ -1,6 +1,11 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { ApiError } from "@/lib/api/http";
-import { invitationApi, invitationFailureOf } from "@/lib/api/invitation";
+import {
+  invitationApi,
+  invitationFailureOf,
+  invitationValidationDetail,
+  isInvitationValidationError,
+} from "@/lib/api/invitation";
 import { setDevRole } from "@/lib/api/dev-role";
 import type { Problem, ProblemCode } from "@/types/api";
 import { http, HttpResponse } from "msw";
@@ -25,12 +30,13 @@ import {
  * dạng, chỗ đỏ đầu tiên nằm ở đây, không phải ở một màn hình.
  */
 
-function apiError(status: number, code: string): ApiError {
+function apiError(status: number, code: string, detail?: string): ApiError {
   const problem: Problem = {
     type: "about:blank",
     title: "...",
     status,
     code: code as ProblemCode,
+    ...(detail !== undefined ? { detail } : {}),
   };
   return new ApiError(status, problem);
 }
@@ -78,6 +84,31 @@ describe("bốn ca mã hỏng ánh xạ đúng nhánh giao diện", () => {
     expect(invitationFailureOf(new ApiError(404))).toBe("NOT_FOUND");
     expect(invitationFailureOf(new ApiError(429))).toBe("RATE_LIMITED");
     expect(invitationFailureOf(new ApiError(401))).toBe("NEEDS_ACCOUNT");
+  });
+});
+
+describe("invitationValidationDetail — câu của máy chủ về CHÍNH `loginId` vừa gửi", () => {
+  it("chỉ đọc `detail` ở VALIDATION_FAILED", () => {
+    expect(
+      invitationValidationDetail(apiError(422, "VALIDATION_FAILED", "Dia chi thu khong hop le"))
+    ).toBe("Dia chi thu khong hop le");
+  });
+
+  it("không đọc `detail` của một mã lỗi khác", () => {
+    expect(
+      invitationValidationDetail(apiError(410, "INVITATION_EXPIRED", "Ma het han"))
+    ).toBeNull();
+  });
+
+  it("detail rỗng → null, để giao diện dùng câu dự phòng của mình", () => {
+    expect(invitationValidationDetail(apiError(422, "VALIDATION_FAILED", "   "))).toBeNull();
+    expect(invitationValidationDetail(apiError(422, "VALIDATION_FAILED"))).toBeNull();
+  });
+
+  it("isInvitationValidationError chỉ đúng với đúng một mã", () => {
+    expect(isInvitationValidationError(apiError(422, "VALIDATION_FAILED"))).toBe(true);
+    expect(isInvitationValidationError(apiError(401, "UNAUTHENTICATED"))).toBe(false);
+    expect(isInvitationValidationError(new TypeError("Failed to fetch"))).toBe(false);
   });
 });
 
@@ -203,15 +234,34 @@ describe("hợp đồng `/accept` — KHÔNG đòi token, chính mã mời là c
     expect(accepted.setPasswordUrl).toBeUndefined();
   });
 
-  it("khách KHÔNG bị chặn — đây là đúng người mà cả luồng sinh ra để phục vụ", async () => {
+  it("khách KHÔNG bị chặn khi kèm `loginId` — đây là đúng người mà cả luồng sinh ra để phục vụ", async () => {
     // Hợp đồng: `security: []`. Người chưa có tài khoản thì cũng chưa có mật khẩu nào
-    // để đăng nhập bằng; đòi token ở đây là đóng cửa với đúng họ.
+    // để đăng nhập bằng; đòi token ở đây là đóng cửa với đúng họ. Nhưng KHÔNG mang
+    // token thì máy chủ phải biết lập tài khoản bằng định danh nào — đây là chỗ
+    // {@link AcceptInvitationAccount} vào cuộc.
     setDevRole("guest");
 
-    const accepted = await invitationApi.accept(MOCK_INVITATION_CODE_NEW_ACCOUNT);
+    const accepted = await invitationApi.accept(MOCK_INVITATION_CODE_NEW_ACCOUNT, {
+      loginId: "ba.lan@example.com",
+    });
 
     expect(accepted.status).toBe("ACTIVE");
     expect(accepted.setPasswordUrl).toBeTruthy();
+  });
+
+  it("khách KHÔNG kèm `loginId` → `VALIDATION_FAILED`, không phải `401`", async () => {
+    // Đúng luật `LoginIdentifier.of` phía máy chủ: thiếu định danh là lỗi
+    // HÌNH DẠNG thân yêu cầu, người dùng sửa được ngay tại ô — không phải một
+    // trong chín nhánh nghiệp vụ của `InvitationFailure`.
+    setDevRole("guest");
+
+    const error = (await invitationApi
+      .accept(MOCK_INVITATION_CODE_NEW_ACCOUNT)
+      .catch((e) => e)) as ApiError;
+
+    expect(error.status).toBe(422);
+    expect(error.problem?.code).toBe("VALIDATION_FAILED");
+    expect(error.problem?.detail).toBeTruthy();
   });
 
   it("máy chủ cũ trả 401 thì đọc ra CẦN ĐĂNG NHẬP, không phải 'mã sai'", async () => {

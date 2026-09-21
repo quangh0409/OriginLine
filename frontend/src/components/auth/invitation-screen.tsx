@@ -7,13 +7,19 @@ import { CheckCircleOutlined } from "@ant-design/icons";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { Button } from "antd";
+import { KeyOutlined } from "@ant-design/icons";
 import {
   invitationApi,
   invitationFailureOf,
+  invitationValidationDetail,
+  isInvitationValidationError,
+  type AcceptInvitationAccount,
   type InvitationAcceptedDto,
   type InvitationFailure,
   type InvitationPreviewDto,
 } from "@/lib/api/invitation";
+import { loginIdentifierKind } from "@/lib/api/clan-invite";
 import { colorVars } from "@/styles/tokens";
 import { ContactInviterNotice } from "./contact-inviter-notice";
 import { InvitationCard } from "./invitation-card";
@@ -74,12 +80,33 @@ export interface InvitationScreenProps {
  */
 export function InvitationScreen({ code, onLeaveForPasswordSetup }: InvitationScreenProps) {
   const t = useTranslations("auth.invitation");
+  const tRegister = useTranslations("auth.register");
   const { isAuthenticated, login } = useAuth();
 
   const [declined, setDeclined] = useState(false);
   const [accepted, setAccepted] = useState<InvitationAcceptedDto | null>(null);
   const [acceptFailure, setAcceptFailure] = useState<InvitationFailure | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  /**
+   * Câu máy chủ nói về CHÍNH `loginId` vừa gửi — ở lại TRONG biểu mẫu, không
+   * thay cả màn: đây là lỗi hình dạng dữ liệu người dùng sửa được ngay tại ô,
+   * không phải một trong chín nhánh nghiệp vụ mà {@link InvitationProblem} vẽ.
+   */
+  const [identifierFieldError, setIdentifierFieldError] = useState<string | null>(null);
+  /**
+   * Tài khoản vừa được LẬP MỚI bằng {@code loginId} tự khai (không phải người
+   * đã có token) và máy chủ trả về {@code setPasswordUrl}. Dừng lại một nhịp ở
+   * đây thay vì rời SPA ngay lập tức: đúng lý do {@code register-done.tsx} nêu
+   * — một cú chuyển hướng tự động lấy mất khoảnh khắc đọc được rằng việc đã
+   * xong, và ĐÂY còn là chỗ duy nhất nhắc "nhớ mật khẩu" cho người vừa gõ số
+   * điện thoại (không có email để nhận thư khôi phục).
+   */
+  const [pendingPasswordSetup, setPendingPasswordSetup] = useState<{
+    url: string;
+    loginIdIsPhone: boolean;
+  } | null>(null);
+
+  const leave = onLeaveForPasswordSetup ?? ((url: string) => window.location.assign(url));
 
   const preview = useQuery<InvitationPreviewDto>({
     // Khoá truy vấn KHÔNG chứa mã mời: khoá của React Query đi vào DevTools và
@@ -96,30 +123,57 @@ export function InvitationScreen({ code, onLeaveForPasswordSetup }: InvitationSc
   });
 
   const accept = useMutation({
-    mutationFn: () => invitationApi.accept(code),
-    onSuccess: (result) => {
+    mutationFn: (account?: AcceptInvitationAccount) => invitationApi.accept(code, account),
+    onSuccess: (result, account) => {
       setActionError(null);
       setAcceptFailure(null);
+      setIdentifierFieldError(null);
       if (result.setPasswordUrl) {
-        const leave = onLeaveForPasswordSetup ?? ((url: string) => window.location.assign(url));
-        // Đi tới URL MÁY CHỦ TRẢ VỀ. Không ghép URL Keycloak ở client: chỗ ấy
-        // mang token hành động một lần, và một URL tự ghép thì hoặc sai realm,
-        // hoặc thiếu token, hoặc cả hai.
+        if (account) {
+          // Vừa lập tài khoản MỚI bằng `loginId` tự khai: dừng lại, nhắc mật
+          // khẩu trước khi rời SPA — xem javadoc `pendingPasswordSetup`.
+          setPendingPasswordSetup({
+            url: result.setPasswordUrl,
+            loginIdIsPhone: loginIdentifierKind(account.loginId ?? "") === "PHONE",
+          });
+          return;
+        }
+        // Hình dạng của người ĐÃ có token (Google/Zalo) mà vẫn nhận được liên
+        // kết — chưa xảy ra ở máy chủ hôm nay, nhưng nếu có thì rời ngay là
+        // đúng: không có `loginId` nào để nhắc, và không có gì để đọc thêm.
         leave(result.setPasswordUrl);
         return;
       }
       setAccepted(result);
     },
     onError: (error: unknown) => {
+      // `VALIDATION_FAILED` TRẦN — gần như luôn là `loginId` đọc không ra
+      // thành email lẫn số điện thoại. Ở lại TRONG biểu mẫu, không thay cả
+      // màn: người dùng sửa được ngay bằng cách gõ lại đúng một ô.
+      if (isInvitationValidationError(error)) {
+        setIdentifierFieldError(invitationValidationDetail(error) ?? tRegister("identifierEmpty"));
+        return;
+      }
+
       const failure = invitationFailureOf(error);
 
-      // Ba ca của riêng bước nhận: người dùng chưa đăng nhập, hoặc một trong
-      // hai đầu của mối nối đã bị chiếm. Cả ba đều cần câu chữ riêng và một
-      // lối đi tiếp — và KHÔNG được đọc thành "mã của ông/bà sai".
+      // Bốn ca của riêng bước nhận: người dùng chưa đăng nhập (lưới an toàn
+      // cho một máy chủ cũ — xem {@link InvitationFailure.NEEDS_ACCOUNT}), một
+      // trong hai đầu của mối nối đã bị chiếm, hoặc định danh tự khai đã có
+      // chủ. Cả bốn đều cần câu chữ riêng và một lối đi tiếp — và KHÔNG được
+      // đọc thành "mã của ông/bà sai".
+      //
+      // `IDENTITY_TAKEN` PHẢI nằm ở đây, không được rơi xuống nhánh dưới:
+      // nhánh ấy gọi `preview.refetch()`, tức một lượt mạng thứ hai. Máy chủ
+      // tính mỗi lần từ chối mã này vào giới hạn tần suất của chính người dùng
+      // ngay tình, nên một lượt gọi "để xem lại trạng thái" là một lượt đốt hạn
+      // mức của họ mà không đổi được gì — trạng thái của mã có thay đổi đâu,
+      // thứ đã có chủ là định danh.
       if (
         failure === "NEEDS_ACCOUNT" ||
         failure === "ACCOUNT_ALREADY_LINKED" ||
-        failure === "PERSON_ALREADY_LINKED"
+        failure === "PERSON_ALREADY_LINKED" ||
+        failure === "IDENTITY_TAKEN"
       ) {
         setAcceptFailure(failure);
         return;
@@ -167,6 +221,48 @@ export function InvitationScreen({ code, onLeaveForPasswordSetup }: InvitationSc
 
   if (acceptFailure) {
     return <InvitationProblem failure={acceptFailure} />;
+  }
+
+  if (pendingPasswordSetup) {
+    return (
+      <section
+        data-invitation-state="ACCOUNT_CREATED"
+        role="status"
+        aria-labelledby="invitation-created-title"
+        className="rounded-lg border px-4 py-5 sm:px-6"
+        style={{ background: colorVars.successBg, borderColor: colorVars.borderDark }}
+      >
+        <h1
+          id="invitation-created-title"
+          className="m-0 flex items-center gap-2 font-serif text-de font-bold text-text-main"
+        >
+          <CheckCircleOutlined aria-hidden style={{ color: colorVars.successText }} />
+          {t("createdTitle")}
+        </h1>
+        <p className="m-0 mt-3 max-w-prose text-dan leading-relaxed text-text-main">
+          {t("createdBody")}
+        </p>
+        {pendingPasswordSetup.loginIdIsPhone && (
+          // Câu ĐÃ TỒN TẠI ở `auth.register.donePasswordPhoneRecovery` — dùng
+          // lại nguyên văn, không viết câu thứ hai cho cùng một giới hạn thật
+          // (tài khoản lập bằng số điện thoại không nhận được thư khôi phục).
+          <p
+            data-register-recovery="PHONE"
+            className="m-0 mt-2 max-w-prose text-than leading-relaxed text-text-main"
+          >
+            {tRegister("donePasswordPhoneRecovery")}
+          </p>
+        )}
+        <Button
+          type="primary"
+          icon={<KeyOutlined />}
+          onClick={() => leave(pendingPasswordSetup.url)}
+          className="mt-4 min-h-[44px] text-than font-semibold"
+        >
+          {t("createdCta")}
+        </Button>
+      </section>
+    );
   }
 
   if (accepted) {
@@ -273,11 +369,15 @@ export function InvitationScreen({ code, onLeaveForPasswordSetup }: InvitationSc
   return (
     <InvitationCard
       preview={preview.data}
-      onAccept={() => accept.mutate()}
+      isAuthenticated={isAuthenticated}
+      onAccept={() => accept.mutate(undefined)}
+      onAcceptWithAccount={(values) => accept.mutate(values)}
+      onLoginInstead={() => login()}
       onDecline={() => decline.mutate()}
       accepting={accept.isPending}
       declining={decline.isPending}
       actionError={actionError}
+      identifierFieldError={identifierFieldError}
     />
   );
 }

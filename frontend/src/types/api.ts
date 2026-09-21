@@ -63,8 +63,18 @@ export type NameType = "HUY" | "TU" | "HIEU" | "THUY" | "THUONG_GOI" | "PHAP_DAN
 export type ShareScope = "PRIVATE" | "BRANCH" | "CLAN";
 
 /**
- * Năm nhóm trường, mỗi nhóm một mức độc lập
+ * Sáu nhóm trường, mỗi nhóm một mức độc lập
  * (contracts/openapi.yaml → `PrivacySettings`).
+ *
+ * <h2>`honour` — nhóm thứ sáu, thêm ở V17, và từng thiếu Ở ĐÂY</h2>
+ * Backend đã có `PrivacyFieldGroup.HONOUR` và `HonourService` đã bắt mọi lượt
+ * đọc một vinh danh `PUBLISHED` của người còn sống đi qua nó từ trước — nhưng
+ * kiểu này (và theo đó, `<PrivacySharingCard>`) chỉ khai năm nhóm gốc. Hệ quả:
+ * không có công tắc nào trên giao diện để chính chủ mở nhóm `honour`, nên MỌI
+ * vinh danh của người còn sống vĩnh viễn chỉ hiện với chính chủ và Hội đồng —
+ * đúng lúc `claim.pending.*`/`honours.pendingSharingHint` đang nói với người
+ * duyệt rằng "chính chủ tự bật chia sẻ nếu muốn". Contract đã có sẵn `honour`
+ * trong `PrivacySettings` từ trước; đây là phần giao diện bắt kịp.
  *
  * **Ai đọc được khối này:** chỉ **chính chủ** và `ADMIN`. Với mọi người gọi
  * khác nó **vắng mặt hoàn toàn** khỏi JSON — biết người khác đang siết quyền
@@ -73,8 +83,8 @@ export type ShareScope = "PRIVATE" | "BRANCH" | "CLAN";
  * **Ngữ nghĩa khi ghi:**
  *  - `POST /persons` — nhóm vắng mặt ⇒ `PRIVATE`.
  *  - `PATCH /persons/{id}` — **hợp nhất, không thay thế** (khác hẳn `names` và
- *    `attributes`): nhóm vắng mặt giữ nguyên mức hiện có, nên giao diện năm
- *    công tắc chỉ cần gửi đúng công tắc vừa gạt. Đóng cả năm thì đưa
+ *    `attributes`): nhóm vắng mặt giữ nguyên mức hiện có, nên giao diện sáu
+ *    công tắc chỉ cần gửi đúng công tắc vừa gạt. Đóng cả sáu thì đưa
  *    `"privacy"` vào `clearFields`.
  *
  * `contact` là **một** công tắc cho cả điện thoại + email + Zalo. Ba giá trị ấy
@@ -86,15 +96,17 @@ export interface PrivacySettings {
   residenceFull: ShareScope;
   contact: ShareScope;
   birthDetailAndPhoto: ShareScope;
+  honour: ShareScope;
 }
 
-/** Khoá của năm nhóm, theo thứ tự hiển thị: từ ít nhạy cảm tới nhạy cảm nhất. */
+/** Khoá của sáu nhóm, theo thứ tự hiển thị: từ ít nhạy cảm tới nhạy cảm nhất. */
 export const PRIVACY_GROUPS = [
   "occupation",
   "residenceProvince",
   "residenceFull",
   "contact",
   "birthDetailAndPhoto",
+  "honour",
 ] as const satisfies readonly (keyof PrivacySettings)[];
 
 export type PrivacyGroup = (typeof PRIVACY_GROUPS)[number];
@@ -647,12 +659,85 @@ export interface EventDto {
   reminderOffsets?: number[]; // default [7, 3, 1]
   graveId?: string | null;
   note?: string | null;
+  /**
+   * Mốc dương THẬT đã lưu cho một việc MỘT LẦN (`recurringAnnually: false`) —
+   * ĐÚNG như người tạo đã gõ, khác `nextOccurrenceSolar` (luôn là ngày của
+   * LẦN KẾ TIẾP, máy chủ tính). Với việc lặp hằng năm, trường này vắng.
+   */
+  solarDate?: string | null;
+  /** Việc này có tính theo lịch âm không (ngược với một mốc dương thuần tuý). */
+  lunarBased?: boolean;
+  recurringAnnually?: boolean;
+  /** Optimistic locking — cùng số với `ETag` (`"v{version}"`). */
+  version?: number;
+  location?: string | null;
+  /**
+   * Máy chủ nói ra rằng ngày hiển thị ĐÃ BỊ DỜI so với ngày âm gốc — tháng
+   * nhuận biến mất thì rơi về tháng thường cùng số, ngày 30 ở tháng thiếu thì
+   * về 29. Luôn LÙI SỚM, không bao giờ đẩy muộn. Có mặt thì PHẢI hiện lên
+   * giao diện (`EventCard`) — người lo việc họ cần biết ngày hiện ra không
+   * phải ngày họ đã nhập, nếu không họ sẽ tưởng hệ thống ghi sai.
+   */
+  adjustmentNote?: string | null;
 }
 
 export interface EventPage {
   items: EventDto[];
   page: PageMeta;
 }
+
+/**
+ * Ngày âm cho form tạo/sửa sự kiện — KHÔNG phải `LunarDate` (bản đọc, có
+ * `canChi`/`yearLabel`). `year` là TUỲ CHỌN nhưng BẮT BUỘC khi
+ * `recurringAnnually === false` (ràng buộc CSDL `ck_event_oneoff_lunar_year`)
+ * — một việc một lần theo lịch âm mà không có năm thì không định vị được.
+ * Với việc lặp hằng năm thì năm không có nghĩa (máy chủ tự tính
+ * `nextOccurrenceSolar` của mỗi lần kế tiếp bằng thuật toán Hồ Ngọc Đức), nên
+ * bỏ trống.
+ */
+export interface EventLunarDateInput {
+  day: number;
+  month: number;
+  year?: number;
+  leap?: boolean;
+}
+
+/**
+ * Thân yêu cầu tạo/sửa sự kiện. Không tự thêm trường nào ngoài danh sách này
+ * — hợp đồng OpenAPI cho `POST`/`PATCH /events` chưa lên lúc màn hình này
+ * được viết đợt đầu; danh sách dưới đây đã được PO cập nhật một lần sau khi
+ * backend chốt xong (xem javadoc `eventsApi.create`).
+ *
+ * `lunarDate` là gốc — form không có ô nhập ngày dương để tự quy đổi.
+ * `solarDate` (nếu có) chỉ là một mốc dương tham chiếu cho một việc XẢY RA
+ * MỘT LẦN (`recurringAnnually: false`, ví dụ ngày khánh thành thật); với một
+ * việc lặp hằng năm, ngày dương của MỌI lần kế tiếp là do máy chủ tính, nên
+ * gửi kèm `solarDate` ở đó vừa thừa vừa có thể mâu thuẫn với kết quả quy đổi.
+ *
+ * Phạm vi là BẮT BUỘC: đúng một trong hai — `clanWide: true`, hoặc
+ * `scopeBranchId` có giá trị. Thiếu cả hai bị `400` ngay tại cửa (máy chủ:
+ * thiếu phạm vi thì `NotificationDispatchService` sẽ nhắc CẢ HỌ).
+ *
+ * `personId` BẮT BUỘC khi `eventType === "GIO_THUONG"` (ràng buộc CSDL
+ * `ck_event_gio_has_person`) — một giỗ thường luôn là giỗ của MỘT người. Gửi
+ * `lunarDate` khác `person.death_lunar` của người đó bị từ chối `409`
+ * (`GIO_DATE_FROM_PERSON`), không được nhận rồi không có tác dụng.
+ */
+export interface EventCreateRequest {
+  eventType: EventType;
+  title: string;
+  description?: string | null;
+  lunarDate: EventLunarDateInput;
+  solarDate?: string | null;
+  recurringAnnually: boolean;
+  scopeBranchId?: string | null;
+  clanWide: boolean;
+  /** Bắt buộc khi `eventType === "GIO_THUONG"`. */
+  personId?: string | null;
+  location?: string | null;
+}
+
+export type EventUpdateRequest = EventCreateRequest;
 
 // ============================================================================
 // NOTIFICATIONS (in-app inbox)
@@ -766,6 +851,16 @@ export type ProblemCode =
   | "RULE_SET_CYCLE"
   | "DUPLICATE_RULE"
   | "LUNAR_CONVERSION_FAILED"
+  /** `GIO_THUONG` mà `lunarDate` gửi lên khác `person.death_lunar` — sửa ngày giỗ
+   * phải sửa ở hồ sơ nhân khẩu, không sửa lệch ở riêng sự kiện. `409`. */
+  | "GIO_DATE_FROM_PERSON"
+  /**
+   * Sự kiện đã bị **xoá mềm** thì không sửa tiếp. `409`, cố ý **không** `404`: người gọi đã
+   * biết id này có thật (họ vừa đọc nó trước khi bấm sửa), và "đã bị xoá" chính là thông tin
+   * họ cần. Khác `OPTIMISTIC_LOCK_CONFLICT` — ở đó bản ghi còn sống, tải lại rồi sửa lại thì
+   * được; ở đây tải lại cũng không cứu được.
+   */
+  | "EVENT_DELETED"
   | "DEPTH_LIMIT_EXCEEDED"
   | "QUERY_TOO_COMPLEX"
   // --- membership / luồng duyệt yêu cầu sửa (contracts/openapi.yaml) --------
@@ -804,6 +899,79 @@ export type ProblemCode =
    * bị dùng** và người dùng thử lại được — câu chữ phải nói đúng điều đó.
    */
   | "IDENTITY_PROVIDER_UNAVAILABLE"
+  /**
+   * Định danh (thư điện tử / số điện thoại) tự khai ở màn **đăng ký bằng mã dòng họ** đã có
+   * tài khoản trong realm. `422`.
+   *
+   * **Đây là một phép chặn an ninh, không phải một phép kiểm dữ liệu.** Lối ấy không đòi đăng
+   * nhập, nên chuỗi người dùng tự gõ **không chứng minh** họ sở hữu địa chỉ đó; mọi thao tác
+   * tiếp theo trên một tài khoản đã có chủ (đúc liên kết đặt mật khẩu, làm tươi hồ sơ) là thao
+   * tác trên tài sản của người khác.
+   *
+   * **Giao diện TUYỆT ĐỐI không được tự thử lại.** Mỗi lần gặp mã này được máy chủ tính vào
+   * giới hạn tần suất như một lần thất bại — cố ý, để tín hiệu còn sót lại ("địa chỉ này đã là
+   * thành viên") không biến endpoint thành máy dò tài khoản. Một vòng lặp thử lại đốt hạn mức
+   * của chính người dùng ngay tình. Lối đi tiếp: đưa họ sang màn **đăng nhập**, rồi sau khi có
+   * phiên thì nhập lại mã — nhánh "đã có token" lấy danh tính từ Keycloak nên không đi qua
+   * phép chặn này.
+   */
+  | "IDENTITY_ALREADY_REGISTERED"
+  // --- mã mời DÒNG HỌ (contracts/openapi.yaml, nhóm `clan-invites`) ---------
+  /**
+   * Mã mời dòng họ đã dùng hết trần lượt Hội đồng đặt. `409`, **không** `410`:
+   * trạng thái này đổi được (nâng trần là mã dùng lại được), nên lời khuyên cho
+   * người dùng khác hẳn một mã quá hạn.
+   *
+   * **Chỉ có đúng một mã riêng cho mã dòng họ.** Hai ca còn lại (hết hạn · đã
+   * thu hồi) **dùng lại** `INVITATION_EXPIRED` / `INVITATION_REVOKED` ở trên —
+   * quyết định của contract, với lý do: người dùng chỉ cầm một dãy mười ký tự
+   * và không phân biệt được hai loại mã, nên hai tập mã song song chỉ bắt giao
+   * diện viết hai nhánh giống hệt nhau. Đừng "sửa" bằng cách thêm
+   * `CLAN_INVITE_EXPIRED`.
+   */
+  | "CLAN_INVITE_EXHAUSTED"
+  // --- đơn tự nhận mình trong phả (nhóm `person-claims`) --------------------
+  /**
+   * Đơn tự nhận đã được duyệt/từ chối/rút — không xử lại được. `409`.
+   *
+   * Contract cố ý **không** dùng lại `CHANGE_REQUEST_CLOSED`: hai thực thể khác
+   * nhau, hai màn hình khác nhau.
+   */
+  | "CLAIM_CLOSED"
+  /**
+   * Người gửi đã bị từ chối quá số lần cho phép. `422`.
+   *
+   * Ngưỡng nằm ở cấu hình máy chủ (`giapha.membership.claim.max-rejected`) nên
+   * giao diện **không được đoán** con số; đọc `quota` của `GET
+   * /person-claims/mine`. Lối đi tiếp thật của người dùng là gọi Trưởng chi,
+   * nên câu chữ phải nói ra điều đó chứ đừng chỉ nói "không được".
+   */
+  | "CLAIM_LIMIT_REACHED"
+  /**
+   * Nhân khẩu được nhận không nhận đơn được. `422`.
+   *
+   * **MỘT mã cho BA lý do** — đã khuất · đã có tài khoản · đã xoá mềm — và đó
+   * là *điểm* của nó: gộp lại là thứ giữ cho màn tự nhận không thành công cụ
+   * liệt kê ai đã có tài khoản. Giao diện **không được** cố suy ra lý do thật
+   * từ `detail`, và **không có** endpoint kiểm trước.
+   */
+  | "CLAIM_TARGET_UNAVAILABLE"
+  /**
+   * Người thân được chỉ ra trong đơn `NEW_PERSON` không nối được: thiếu, đã xoá
+   * mềm, hoặc chưa được gắn vào chi nào. `422`.
+   *
+   * Tách khỏi `CLAIM_TARGET_UNAVAILABLE` vì hai luồng dẫn tới hai màn hình khác
+   * nhau — một bên là "chọn ô khác trên phả đồ", bên kia là "chọn người thân khác".
+   */
+  | "CLAIM_RELATIVE_UNUSABLE"
+  /**
+   * Người gửi đang có một đơn chờ duyệt. `409`.
+   *
+   * Hành động tiếp theo rất cụ thể và **giao diện làm hộ được**: rút đơn cũ qua
+   * `POST /person-claims/{id}/cancel` rồi gửi lại. Rút **không** tính vào giới
+   * hạn gửi lại.
+   */
+  | "CLAIM_ALREADY_OPEN"
   // --- events / notification ------------------------------------------------
   | "REMINDER_GENERATION_IN_PROGRESS"
   /** Máy chủ chưa cấu hình khoá VAPID: giao diện phải nói thẳng thay vì để người dùng bấm vào
@@ -841,6 +1009,55 @@ export type ProblemCode =
    * gian. Thân lỗi mang `blockers[]` tiếng Việt.
    */
   | "IMP_ROLLBACK_REFUSED"
+  // --- nội dung: bài viết & vinh danh (contracts/openapi.yaml, nhóm `content`) --
+  /**
+   * Tài khoản **chưa được duyệt vào phả** (`app_user.person_id` rỗng) nên chưa đăng bài /
+   * khai vinh danh được. `403`.
+   *
+   * **Đây là trạng thái bình thường của một người mới, không phải lỗi hệ thống** — một người
+   * vừa đăng ký bằng mã mời dòng họ đã xem được phả đồ nhưng chưa được ai xác nhận là người
+   * trong họ. Giao diện phải nói ra lối đi tiếp: mở màn "tôi là ai trong phả" rồi chờ Trưởng
+   * chi duyệt. Phân biệt với `ACCOUNT_NOT_PROVISIONED` ("hãy đăng nhập lại") và `FORBIDDEN`
+   * ("bạn không có quyền này") — ba tình huống, ba lối đi khác hẳn nhau.
+   */
+  | "AUTHOR_NOT_IN_PHA"
+  /**
+   * Bài viết / vinh danh đã ở trạng thái cuối, hoặc mũi tên chuyển trạng thái không tồn tại.
+   * `409`.
+   *
+   * **Một mã cho cả hai** vì cả hai dẫn tới cùng một lối đi: **tải lại rồi xem trạng thái hiện
+   * tại**. Gần như mọi lần gặp mã này là do hai người mở cùng một bài và người kia bấm trước —
+   * bấm lại không giúp gì, nhìn lại thì có. Cố ý **không** dùng lại `CHANGE_REQUEST_CLOSED`.
+   */
+  | "CONTENT_CLOSED"
+  // --- kho đối tượng: ảnh, video (contracts/openapi.yaml, nhóm `media`) --------
+  /** Nội dung tệp không khớp đuôi — nhận bằng **chữ ký tệp**, không bằng tên. `400`. */
+  | "MEDIA_BAD_SIGNATURE"
+  /** Vượt trần dung lượng. **`413`**. Lối đi tiếp: nén hoặc xuất lại ở độ phân giải thấp hơn. */
+  | "MEDIA_TOO_LARGE"
+  /** Video dài quá trần. `422`. Lối đi tiếp: cắt ngắn clip. */
+  | "MEDIA_TOO_LONG"
+  /**
+   * Không đọc được thời lượng từ header container, nên trần thời lượng không kiểm được. `422`.
+   *
+   * Tách khỏi `MEDIA_TOO_LONG`: nói "video dài quá" cho một tệp chưa đo được là nói sai, và
+   * người dùng sẽ đi cắt ngắn một clip vốn đã đủ ngắn.
+   */
+  | "MEDIA_DURATION_UNKNOWN"
+  /** Gọi xác nhận khi tệp chưa thật sự lên kho. `422`. Tải lên URL đã ký **rồi mới** xác nhận. */
+  | "MEDIA_NOT_UPLOADED"
+  /** Phiếu tải lên đã quá hạn, đã xác nhận rồi, hoặc tệp đã bị gỡ. `409`. */
+  | "MEDIA_TICKET_CLOSED"
+  /** Gắn quá số tệp cho phép vào một bài. `422`. */
+  | "MEDIA_TOO_MANY"
+  /** Tệp không do người gọi tải lên — không gắn được vào bài của mình. `403`. */
+  | "MEDIA_NOT_OWNED"
+  /** Kho đối tượng (MinIO) không với tới được. `503` — "thử lại sau", không phải lỗi dữ liệu. */
+  | "MEDIA_STORAGE_UNAVAILABLE"
+  /** Đơn báo gỡ đã đóng. `409`. */
+  | "REPORT_CLOSED"
+  /** Người này đã có một đơn đang mở cho đúng tệp ấy. `409`. */
+  | "REPORT_DUPLICATE"
   | "RATE_LIMITED"
   | "INTERNAL_ERROR";
 

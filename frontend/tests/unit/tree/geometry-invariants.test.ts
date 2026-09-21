@@ -57,7 +57,7 @@ import {
  *   <li><b>Bố cục dựng tay</b> — mỗi kịch bản gia phả được xếp chỗ bằng toạ độ tính tay theo đúng
  *       quy tắc trong javadoc của {@code family-layout-types.ts}. Đây là "bản mẫu vàng": nó chứng
  *       minh bộ bất biến là thoả mãn được, và nó nói rõ một phả đồ ĐÚNG thì hình học trông ra sao.</li>
- *   <li><b>Kiểm ngược</b> — dựng lại đúng lỗi cũ (đường vợ chồng người–người dài 464px, đường
+ *   <li><b>Kiểm ngược</b> — dựng lại đúng lỗi cũ (đường vợ chồng người–người chạy suốt hai tấm thẻ, đường
  *       huyết thống chéo) rồi khẳng định bộ kiểm BẮT được. Không có phần này thì một hàm kiểm hỏng
  *       sẽ khiến mọi bất biến xanh một cách vô nghĩa.</li>
  * </ol>
@@ -67,12 +67,23 @@ import {
  * giả lập — tức đúng dữ liệu mà màn hình phả đồ đang chạy trên đó.</p>
  */
 
-const W = NODE_WIDTH; // 208
-const H = NODE_HEIGHT; // 96
+const W = NODE_WIDTH;
+const H = NODE_HEIGHT;
 /** Khoảng cách giữa hai đời, tính từ đỉnh thẻ đời trên tới đỉnh thẻ đời dưới. */
-const ROW_PITCH = H + FAMILY_RANK_SEP; // 224
+const ROW_PITCH = H + FAMILY_RANK_SEP;
 /** Bước ngang giữa hai anh em ruột kề nhau. */
-const SIBLING_PITCH = W + HIERARCHICAL_NODE_SEP; // 240
+const SIBLING_PITCH = W + HIERARCHICAL_NODE_SEP;
+
+/**
+ * Điểm nối của một cặp vợ chồng có thẻ trái đặt tại {@code x = 0}: đúng giữa khe
+ * {@link COUPLE_GAP}.
+ *
+ * <p>SUY RA từ hằng số, không chép tay. Bản trước ghi thẳng {@code 232} — con số đúng khi thẻ còn
+ * rộng 208px. Khi thẻ thu xuống 160px thì mọi kịch bản dựng tay lệch đi 54px so với chỗ bố cục
+ * thật đặt điểm nối, và hai ca kiểm đỏ lên với thông báo nói về "thanh anh em" chứ không nói gì
+ * về nguyên nhân. Một bản mẫu vàng chép tay số đo thì nó chỉ vàng cho đúng một bộ hằng số.</p>
+ */
+const COUPLE_JUNCTION_X = W + COUPLE_GAP / 2;
 
 const rowY = (generation: number): number => generation * ROW_PITCH;
 const centerOf = (x: number): number => x + W / 2;
@@ -242,7 +253,7 @@ interface Scenario extends LayoutUnderTest {
 
 /** 1 · Cặp vợ chồng có ba người con — hình dạng thường gặp nhất trong phả đồ. */
 function coupleWithThreeChildren(): Scenario {
-  const junctionX = centerOf(0) + (W + COUPLE_GAP) / 2; // 232
+  const junctionX = COUPLE_JUNCTION_X;
   const { layout, units } = assemble([
     {
       id: "u-vc",
@@ -279,11 +290,11 @@ function coupleWithThreeChildren(): Scenario {
  */
 function polygamyThreeWives(): Scenario {
   const xBaHai = 0;
-  const xOng = xBaHai + W + COUPLE_GAP; // 256
-  const xBaCa = xOng + W + COUPLE_GAP; // 512
-  const xBaBa = xBaCa + W + COUPLE_GAP; // 768
-  const junctionBaHai = xBaHai + W + COUPLE_GAP / 2; // 232
-  const junctionBaCa = xOng + W + COUPLE_GAP / 2; // 488
+  const xOng = xBaHai + W + COUPLE_GAP;
+  const xBaCa = xOng + W + COUPLE_GAP;
+  const xBaBa = xBaCa + W + COUPLE_GAP;
+  const junctionBaHai = xBaHai + W + COUPLE_GAP / 2;
+  const junctionBaCa = xOng + W + COUPLE_GAP / 2;
 
   const { layout, units } = assemble(
     [
@@ -380,7 +391,7 @@ function singleFather(): Scenario {
 
 /** 4 · Con nuôi — nét đứt CHỈ ở đoạn rơi xuống người con ấy, không đứt cả thanh anh em. */
 function adoptedChild(): Scenario {
-  const junctionX = 232;
+  const junctionX = COUPLE_JUNCTION_X;
   const { layout, units } = assemble([
     {
       id: "u-con-nuoi",
@@ -407,7 +418,7 @@ function adoptedChild(): Scenario {
 
 /** 5 · Hôn phối đã ly hôn — vẫn ở trên cây, thanh hôn phối nét đứt. */
 function divorcedCouple(): Scenario {
-  const junctionX = 232;
+  const junctionX = COUPLE_JUNCTION_X;
   const { layout, units } = assemble([
     {
       id: "u-ly-hon",
@@ -439,11 +450,11 @@ function divorcedCouple(): Scenario {
  */
 function remarriage(): Scenario {
   const xVoCu = 0;
-  const xOng = xVoCu + W + COUPLE_GAP; // 256
+  const xOng = xVoCu + W + COUPLE_GAP;
   // Vợ sau đứng ngay bên phải ông (x = 512) — do planFamily tự xếp từ x của đơn vị.
   const xVoXa = 900;
-  const junctionCu = xVoCu + W + COUPLE_GAP / 2; // 232
-  const junctionSau = xOng + W + COUPLE_GAP / 2; // 488
+  const junctionCu = xVoCu + W + COUPLE_GAP / 2;
+  const junctionSau = xOng + W + COUPLE_GAP / 2;
 
   const { layout, units } = assemble(
     [
@@ -517,7 +528,7 @@ function remarriage(): Scenario {
 
 /** 7 · Con một — không có thanh anh em, rơi thẳng một mạch. */
 function onlyChild(): Scenario {
-  const junctionX = 232;
+  const junctionX = COUPLE_JUNCTION_X;
   const { layout, units } = assemble([
     {
       id: "u-con-mot",
@@ -537,13 +548,13 @@ function onlyChild(): Scenario {
 
 /** 8 · Cây bốn đời — đời nào cũng phải giữ nguyên bất biến, không chỉ đời đầu. */
 function fourGenerations(): Scenario {
-  const junction0 = 232;
-  const xConTruong = junction0 - W / 2 - SIBLING_PITCH / 2; // 8
-  const xConThu = junction0 - W / 2 + SIBLING_PITCH / 2; // 248
-  const junction1 = xConThu + W + COUPLE_GAP / 2; // 480
-  const xChau = junction1 - W / 2; // 376
-  const junction2 = xChau + W + COUPLE_GAP / 2; // 608
-  const xChat = junction2 - W / 2; // 504
+  const junction0 = COUPLE_JUNCTION_X;
+  const xConTruong = junction0 - W / 2 - SIBLING_PITCH / 2;
+  const xConThu = junction0 - W / 2 + SIBLING_PITCH / 2;
+  const junction1 = xConThu + W + COUPLE_GAP / 2;
+  const xChau = junction1 - W / 2;
+  const junction2 = xChau + W + COUPLE_GAP / 2;
+  const xChat = junction2 - W / 2;
 
   const { layout, units } = assemble([
     {
@@ -657,7 +668,8 @@ describe("bộ dụng cụ hình học", () => {
 describe("bộ bất biến bắt được đúng lỗi người dùng phàn nàn", () => {
   /**
    * Dựng lại nguyên văn lỗi cũ: đường vợ chồng đi từ neo TRÁI người này sang neo PHẢI người kia,
-   * dài 464px mà 416px nằm khuất dưới hai tấm thẻ. Người dùng chỉ thấy một mẩu 48px ở khe giữa.
+   * tức dài {@code 2×W + COUPLE_GAP} mà {@code 2×W} nằm khuất dưới hai tấm thẻ — người dùng chỉ
+   * thấy một mẩu bằng đúng khe {@link COUPLE_GAP} ở giữa.
    */
   it("bắt được đường vợ chồng người–người kiểu cũ chui dưới cả hai tấm thẻ", () => {
     const layout: FamilyLayout = {
@@ -668,9 +680,9 @@ describe("bộ bất biến bắt được đúng lỗi người dùng phàn nà
       junctions: [
         {
           unitId: "u-cu",
-          x: 232,
-          y: 48,
-          // Neo trái thẻ ông (x=0) → neo phải thẻ bà (x=464): đúng đường 464px của bản cũ.
+          x: COUPLE_JUNCTION_X,
+          y: H / 2,
+          // Neo trái thẻ ông (x=0) → neo phải thẻ bà: đúng đường người–người của bản cũ.
           marriageBar: { x1: 0, x2: W + COUPLE_GAP + W, y: H / 2 },
           siblingBar: null,
           stem: null,

@@ -7,7 +7,10 @@ import {
   ContactsOutlined,
   FileSyncOutlined,
   MenuOutlined,
+  ReadOutlined,
   SettingOutlined,
+  TeamOutlined,
+  TrophyOutlined,
 } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -56,6 +59,9 @@ import { useMe } from "@/hooks/use-me";
 export function MoreMenu() {
   const t = useTranslations("nav");
   const tCorrection = useTranslations("correction");
+  const tMembership = useTranslations("membership");
+  const tPosts = useTranslations("posts");
+  const tHonours = useTranslations("honours");
   const [open, setOpen] = useState(false);
   const { data: me } = useMe();
 
@@ -66,7 +72,31 @@ export function MoreMenu() {
   const badgeCount = canReview ? pendingCount : 0;
 
   const rows = [
-    { key: "kinship", href: "/kinship", icon: <ApartmentOutlined />, label: t("kinship"), count: 0 },
+    // Khách bớt: `/kinship` đòi một tài khoản (xem `KinshipGuestNotice`) —
+    // trước bản sửa này mục này hiện cho MỌI người, kể cả khách, và bộ chọn
+    // người của màn ấy chỉ lặng lẽ báo "không tìm thấy" ở mọi lượt gõ của họ,
+    // thay vì báo rằng họ cần đăng nhập.
+    ...(hasAccount
+      ? [{ key: "kinship", href: "/kinship", icon: <ApartmentOutlined />, label: t("kinship"), count: 0 }]
+      : []),
+    // Bài viết và Vinh danh vào đây dù trang chủ đã có liên kết "Xem tất cả" tới cả hai.
+    // Không phải hai lối vào cho cùng một chỗ theo nghĩa mà chú thích trên đầu tệp này cấm:
+    // liên kết ở trang chủ là một lối đi NGỮ CẢNH, nằm dưới ba dòng tin mới nhất và cuộn
+    // khỏi màn hình ngay khi có bài thứ tư. Nó trả lời câu "xem thêm cái vừa đọc", không
+    // trả lời câu "vào mục bài viết". Với hai mục nội dung chính của sản phẩm thì phải có
+    // lối vào không phụ thuộc việc hôm nay trang chủ có gì.
+    //
+    // "Bài của tôi" KHÔNG vào đây: nó nằm ngay trên `/bai-viet`, và một mục con được
+    // quảng lên ngang hàng với mục cha là cách danh sách này phình ra cho tới lúc không ai
+    // tìm được gì nữa.
+    { key: "posts", href: "/bai-viet", icon: <ReadOutlined />, label: tPosts("list.title"), count: 0 },
+    {
+      key: "honours",
+      href: "/vinh-danh",
+      icon: <TrophyOutlined />,
+      label: tHonours("pageTitle"),
+      count: 0,
+    },
     // Danh bạ vào ĐÂY chứ không vào thanh tab dưới: thanh ấy đã kín 5 ô, và ô thứ sáu bóp
     // mỗi ô xuống dưới ngưỡng chạm 44px — đổi một lối tắt lấy năm lối tắt khó bấm.
     {
@@ -84,6 +114,24 @@ export function MoreMenu() {
             icon: <FileSyncOutlined />,
             label: tCorrection("nav.label"),
             count: badgeCount,
+          },
+        ]
+      : []),
+    // Chỉ người DUYỆT được mới thấy. Với thành viên thường thì hai màn này là
+    // nhiễu; với người chưa gắn nhân khẩu thì chúng còn gây hiểu nhầm rằng họ
+    // tự duyệt được cho chính mình.
+    //
+    // Đây là lối vào DUY NHẤT tới hàng chờ duyệt và màn phát mã. Không có nó
+    // thì lặp lại đúng mẫu hình checklist §4 đã gọi tên: một tính năng làm xong
+    // mà không ai tìm thấy.
+    ...(hasAccount && canReview
+      ? [
+          {
+            key: "membership",
+            href: "/quan-ly",
+            icon: <TeamOutlined />,
+            label: tMembership("nav.label"),
+            count: 0,
           },
         ]
       : []),

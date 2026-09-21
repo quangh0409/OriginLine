@@ -3,6 +3,15 @@
 import { createContext, useContext } from "react";
 
 /**
+ * Mức chi tiết của tấm thẻ nhân khẩu, suy từ **mức phóng của máy quay**.
+ *
+ * <p>Tính một lần ở `<TreeCanvasInner>` và phát xuống qua context, KHÔNG đọc ở từng thẻ: đọc mức
+ * phóng trong `<PersonNode>` sẽ dựng lại hàng nghìn nút mỗi nấc lăn chuột. Giá trị này chỉ đổi khi
+ * **vượt ngưỡng**, tức vài lần trong cả một phiên làm việc.</p>
+ */
+export type TreeDetailLevel = "compact" | "full";
+
+/**
  * Lets <PersonNode> (a React Flow custom node, re-rendered independently by
  * React Flow's internal store) reach the expand/collapse controller without
  * a callback function living inside every node's `data` — that would change
@@ -21,6 +30,19 @@ export interface TreeCanvasContextValue {
   /** Ids currently being fetched via expand() — drives the small spinner on a node's toggle button. */
   loadingIds: ReadonlySet<string>;
   toggle: (nodeId: string) => void;
+  /**
+   * Hồ sơ nhân khẩu của **chính người đang đăng nhập** (`/me` → `personId`).
+   *
+   * `null` với khách, và với thành viên chưa được ghép vào phả — hai trạng thái hợp lệ, không phải
+   * lỗi. Dùng để tô đậm đúng một tấm thẻ; không dùng để quyết định quyền gì cả.
+   */
+  selfPersonId: string | null;
+  /**
+   * Người đang là **tâm điểm**: vừa được nhảy tới bằng ô tìm trên canvas, hoặc bằng nút
+   * "Về chỗ tôi". Khác `selfPersonId` ở chỗ nó đổi theo thao tác, còn `selfPersonId` thì không.
+   */
+  focusId: string | null;
+  detail: TreeDetailLevel;
 }
 
 const noop = () => {};
@@ -30,6 +52,9 @@ export const TreeCanvasContext = createContext<TreeCanvasContextValue>({
   expandedIds: new Set(),
   loadingIds: new Set(),
   toggle: noop,
+  selfPersonId: null,
+  focusId: null,
+  detail: "full",
 });
 
 export function useTreeCanvasContext(): TreeCanvasContextValue {

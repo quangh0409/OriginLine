@@ -63,7 +63,19 @@ const GUEST: Omit<AuthContextValue, "hasRole" | "login" | "logout"> = {
   role: null,
 };
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+/**
+ * Ngữ cảnh phiên. **Được công bố chỉ để test dựng được một phiên giả** — mã
+ * sản phẩm luôn dùng {@link useAuth}, không bao giờ `useContext` thẳng vào đây.
+ *
+ * <p>Vì sao phải công bố: `useAuth()` cố ý rơi về "khách" khi đứng ngoài cây
+ * provider (xem javadoc của nó), nên trong test component, **mọi** màn hình đều
+ * thấy một người chưa đăng nhập — kể cả khi test đã ghim vai bằng
+ * `renderWithProviders({ role: "member" })`, vì tuỳ chọn ấy chỉ đặt header
+ * `x-mock-role` cho MSW. Hai nguồn sự thật lệch nhau mà không ai kêu, nên một
+ * bài kiểm "thành viên thấy nút Viết bài" có thể xanh trong khi nó đang kiểm
+ * một người khách.</p>
+ */
+export const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
  * Do provider gán; cầu nối ở phạm vi module gọi ngược lên khi phiên chết giữa

@@ -4,9 +4,24 @@
  * glance which types are "ours to change freely" vs. "change only via
  * contracts/".
  */
-export type TreeViewMode = "hierarchical" | "radial" | "matrix";
+export type TreeViewMode = "hierarchical" | "radial" | "matrix" | "list";
 
-export const TREE_VIEW_MODES: readonly TreeViewMode[] = ["hierarchical", "radial", "matrix"];
+export const TREE_VIEW_MODES: readonly TreeViewMode[] = [
+  "hierarchical",
+  "radial",
+  "matrix",
+  "list",
+];
+
+/**
+ * Ba chế độ vẽ trên **canvas**. `"list"` không nằm trong số đó — nó thay hẳn canvas bằng một danh
+ * sách HTML, nên mọi chỗ hỏi "thuật toán bố cục nào" phải loại nó ra trước.
+ */
+export const CANVAS_VIEW_MODES: readonly TreeViewMode[] = ["hierarchical", "radial", "matrix"];
+
+export function isCanvasViewMode(mode: TreeViewMode): boolean {
+  return mode !== "list";
+}
 
 /**
  * Mã chế độ xem dùng trên URL (`/tree?view=…`).
@@ -28,6 +43,8 @@ export const VIEW_MODE_SLUG: Record<TreeViewMode, string> = {
   hierarchical: "doc",
   radial: "toa",
   matrix: "matran",
+  /** Danh sách theo đời — kiểu xem dành cho điện thoại. `?view=doi`. */
+  list: "doi",
 };
 
 const SLUG_TO_MODE = new Map<string, TreeViewMode>(
