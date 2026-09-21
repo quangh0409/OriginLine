@@ -406,14 +406,45 @@ body {
      ───
      112px  → còn dư 8px
 
-   Nếu bật lại "Quên mật khẩu?" (realm `resetPasswordAllowed`), liên kết ấy chèn
-   vào GIỮA và cộng thêm 44 + 8 = 52 → 156px, VƯỢT TRẦN. Ghi ra đây vì lúc bật
-   SMTP sẽ không ai nhớ: khi ấy phải gộp "Quên mật khẩu?" và "Ghi nhớ đăng nhập"
-   vào cùng MỘT hàng, hoặc bỏ hàng ghi nhớ. Con số 156 là ĐO THẬT, không ước
-   lượng: đã bật `resetPasswordAllowed` lên rồi đo lại trên khung 400.
+   ── CHUYỆN ĐÃ XẢY RA KHI BẬT "QUÊN MẬT KHẨU" ────────────────────────────────
+   Bản trước ghi: đặt liên kết "Quên mật khẩu?" vào GIỮA ô mật khẩu và nút thì
+   phép đo thành 156px — VƯỢT TRẦN — và dặn "khi ấy phải gộp nó với hàng ghi
+   nhớ, hoặc bỏ hàng ghi nhớ".
+
+   Đã bật SMTP và `resetPasswordAllowed`, và KHÔNG chọn hai cách ấy. Gộp hai
+   thứ vào một hàng thì ở khung 400 chúng xuống dòng — hàng lại thành 88px và
+   trần vỡ lần nữa, chỉ là muộn hơn. Bỏ hàng ghi nhớ thì mất một tiện ích đúng
+   nhóm người cần nó nhất.
+
+   Cách đã làm: liên kết lên CÙNG HÀNG VỚI NHÃN "Mật khẩu" (`.gp-nhan-hang`),
+   tức nằm PHÍA TRÊN ô mật khẩu. Bàn phím ảo che từ DƯỚI lên, nên chiều cao
+   thêm vào ở phía trên không tính vào ngân sách. Phép đo giữ nguyên 112px với
+   liên kết đã hiện — đo thật trên khung 400, cả sáng lẫn tối, bằng
+   `infra/keycloak/do-chieu-cao.mjs`.
    ───────────────────────────────────────────────────────────────────────────── */
 .gp-nhom--cuoi {
   margin-bottom: 8px;
+}
+
+/* ── Hàng nhãn có liên kết đi kèm ────────────────────────────────────────────
+   Dùng ở ô mật khẩu: nhãn "Mật khẩu" bên trái, "Quên mật khẩu?" bên phải.
+
+   `align-items: baseline` chứ không `center`: nhãn 16px và liên kết 16px phải
+   nằm trên cùng một đường chữ, nếu không mắt đọc thấy hai dòng lệch nhau.
+   `flex-wrap: wrap` để khung hẹp xuống dòng thay vì tràn — và xuống dòng ở đây
+   không tốn ngân sách, vì phần này nằm TRÊN ô mật khẩu.
+
+   Lề dưới lấy từ `.gp-nhan` (6px) nên khối này không tự thêm lề nào. */
+.gp-nhan-hang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.gp-nhan-hang .gp-nhan {
+  margin-bottom: 0;
 }
 
 .gp-nhan {
@@ -459,6 +490,43 @@ body {
 .gp-o[aria-invalid="true"] {
   border-color: var(--color-danger);
   border-width: 2px;
+}
+
+/* ── Câu lỗi của MỘT ô ───────────────────────────────────────────────────────
+   Màn đăng ký có sáu ô. Một hộp lỗi ở đầu thẻ nói "có chỗ chưa đúng" mà không
+   chỉ ô nào là bắt người dùng làm việc của phần mềm — nên mỗi ô sai tự mang câu
+   của nó, ngay dưới ô, trước câu gợi ý.
+
+   `aria-live="polite"` để trình đọc màn hình đọc câu này lên khi trang tải lại
+   sau một lượt gửi hỏng. Màu `--color-danger` là màu ĐỎ LỖI, khác đỏ trầm của
+   thương hiệu — 06 §7.2 luật 4 cấm dùng đỏ lỗi cho thứ đang chạy đúng, và luật
+   ấy cũng có chiều ngược: lỗi thật thì phải dùng đúng màu lỗi. */
+.gp-loi-o {
+  margin: 6px 0 0;
+  font-size: 16px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--color-danger);
+}
+
+/* Nhãn "(không bắt buộc)" cạnh tên ô. Viết CHỮ chứ không đánh dấu ô bắt buộc
+   bằng hoa thị: một hoa thị là một ký hiệu phải học, và trên màn đăng ký này
+   gần như mọi ô đều bắt buộc — nên nói ra ngoại lệ ngắn hơn nói ra thông lệ. */
+.gp-tuy-chon {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* Danh sách "sau khi đăng ký thì chuyện gì xảy ra" — ba bước có thứ tự. */
+.gp-buoc {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.gp-buoc li {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 6px;
 }
 
 /* Câu trợ giúp dưới ô. Đây là câu DUY NHẤT trên màn hình nói với người không có

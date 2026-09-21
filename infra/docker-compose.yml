@@ -160,6 +160,50 @@ services:
     networks: [giapha-net]
 
   # -------------------------------------------------------------------------
+  # Mailpit — MÁY CHỦ THƯ CỦA MÁY PHÁT TRIỂN. Bắt thư, KHÔNG gửi ra ngoài.
+  #
+  # Vì sao phải có: `resetPasswordAllowed` chỉ bật lại được khi realm có
+  # `smtpServer` THẬT. Trước đây cờ ấy bật mà không có SMTP, nên Keycloak in
+  # liên kết "Quên mật khẩu?", người dùng bấm, nhập email, nhận màn "đã gửi",
+  # rồi ngồi đợi một lá thư không bao giờ tồn tại (design/06-dang-nhap §1.2 #1).
+  #
+  # Mailpit nhận SMTP ở 1025 và cho xem thư ở giao diện web 8025. Thư KHÔNG đi
+  # ra Internet — đó là điểm mấu chốt: một địa chỉ gõ nhầm trong dữ liệu thử
+  # không thể làm phiền một người thật, và không cần tài khoản SendGrid/SES nào
+  # để chạy luồng đặt lại mật khẩu từ đầu đến cuối trên máy phát triển.
+  #
+  # KHÔNG gắn volume: thư thử nghiệm là rác, và một hộp thư trống mỗi lần dựng
+  # lại là thứ giúp phép kiểm "bắt được thư" nói đúng sự thật.
+  #
+  # Production KHÔNG dùng container này — xem README.md mục "Máy chủ thư".
+  # -------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: giapha-mailpit
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+      # Giữ tối đa 500 thư rồi tự xoá cái cũ nhất. Hộp thư dev không cần hơn.
+      MP_MAX_MESSAGES: "500"
+      # Không đòi xác thực và không đòi TLS: đây là mạng nội bộ của compose,
+      # và bắt Keycloak phải có chứng chỉ để gửi thư cho một container bắt thư
+      # là dựng một hàng rào không bảo vệ gì. Staging/production thì NGƯỢC LẠI
+      # — xem README.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"   # SMTP — Keycloak gửi vào đây
+      - "${MAILPIT_UI_PORT:-8025}:8025"     # Giao diện xem thư + API đọc thư
+    healthcheck:
+      # Mailpit không có curl/wget trong image; nó tự phơi /readyz cho việc này.
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks: [giapha-net]
+
+  # -------------------------------------------------------------------------
   # Keycloak — OAuth2/OIDC. Cổng 8081 (8080 dành cho backend Spring Boot).
   # Container nghe thẳng 8081 để issuer trong JWT khớp http://localhost:8081.
   # Dev mode: H2 nhúng, KHÔNG gắn volume → realm import lại mỗi lần `up`.
@@ -176,6 +220,27 @@ services:
       KC_HEALTH_ENABLED: "true"
       KC_HOSTNAME_STRICT: "false"
       TZ: ${TZ:-Asia/Ho_Chi_Minh}
+
+      # ── KHÔNG có biến SMTP hay biến mã mời ở đây, và đó là một PHÁT HIỆN ──
+      #
+      # `realm-giapha.json` từng viết `"host": "${env.KEYCLOAK_SMTP_HOST:mailpit}"`
+      # với ý "lấy từ môi trường, mặc định là mailpit". Đã đo trên Keycloak
+      # 26.7.2 và điều đó KHÔNG xảy ra:
+      #
+      #   ${env.X:mặc định}  →  LUÔN ra "mặc định", kể cả khi biến X có thật
+      #                          trong container (đã kiểm bằng `docker exec env`)
+      #   ${env.X}           →  giữ nguyên NGUYÊN VĂN chuỗi "${env.X}"
+      #
+      # Đúng với cả biến có tiền tố `KC_`. Nghĩa là cú pháp ấy là một cái BẪY:
+      # nó trông như đọc biến môi trường, không bao giờ đọc, và lặng lẽ trả về
+      # đúng giá trị đã commit. Realm giờ ghi giá trị dev THẲNG (mailpit:1025,
+      # không xác thực, không bí mật nào) — thật thà hơn là giả vờ.
+      #
+      # Staging/production cấu hình SMTP bằng admin console hoặc Admin API, với
+      # mật khẩu lấy từ vault. README.md mục "Máy chủ thư" ghi đủ.
+      #
+      # Mã mời dòng họ cũng đi đường Admin API, không đi đường realm file:
+      #   node infra/keycloak/phat-ma-moi.mjs --phat
     ports:
       - "${KEYCLOAK_PORT:-8081}:8081"
     volumes:
@@ -194,6 +259,12 @@ services:
       # ngay, không phải khởi động lại container. Ở chế độ `start` (sản xuất)
       # thì ngược lại — xem README.md mục Keycloak.
       - ./keycloak/themes/giapha:/opt/keycloak/themes/giapha:ro
+    depends_on:
+      # Keycloak chỉ NỐI tới SMTP khi thực sự gửi thư, nên đây không phải ràng
+      # buộc khởi động cứng — nhưng nếu Mailpit chưa lên thì lá thư đầu tiên
+      # rơi vào khoảng trống và người thử kết luận sai rằng cấu hình SMTP hỏng.
+      mailpit:
+        condition: service_healthy
     networks: [giapha-net]
 
 volumes:

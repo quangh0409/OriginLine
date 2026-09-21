@@ -7,10 +7,10 @@
   "registrationAllowed": false,
   "registrationEmailAsUsername": false,
   "rememberMe": true,
-  "verifyEmail": false,
+  "verifyEmail": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
-  "resetPasswordAllowed": false,
+  "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "permanentLockout": false,
@@ -310,6 +310,15 @@
       "defaultAction": false,
       "priority": 30,
       "config": {}
+    },
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Xac minh dia chi thu",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 10,
+      "config": {}
     }
   ],
   "clientScopeMappings": {
@@ -322,5 +331,34 @@
       }
     ]
   },
-  "passwordPolicy": "length(8) and notUsername and notEmail"
+  "passwordPolicy": "length(8) and notUsername and notEmail",
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "khong-tra-loi@giapha.local",
+    "fromDisplayName": "Gia Pha Dong Ho",
+    "replyTo": "",
+    "replyToDisplayName": "",
+    "envelopeFrom": "",
+    "ssl": "false",
+    "starttls": "false",
+    "auth": "false",
+    "user": "",
+    "password": ""
+  },
+  "emailTheme": "giapha",
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "name": "declarative-user-profile",
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"maMoiDongHo\",\"displayName\":\"${giaphaRegInviteCode}\",\"validations\":{\"length\":{\"min\":4,\"max\":64},\"pattern\":{\"pattern\":\"(?!)\",\"error-message\":\"giaphaInviteCodeWrong\"}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"annotations\":{\"inputHelperTextAfter\":\"${giaphaRegInviteCodeHelp}\",\"inputTypeSize\":\"20\",\"inputTypeMaxlength\":\"64\"},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${giaphaRegLastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"annotations\":{\"inputHelperTextAfter\":\"${giaphaRegLastNameHelp}\"},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${giaphaRegFirstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${giaphaRegEmail}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"annotations\":{\"inputHelperTextAfter\":\"${giaphaRegEmailHelp}\"},\"multivalued\":false},{\"name\":\"username\",\"displayName\":\"${giaphaRegPhone}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"annotations\":{\"inputHelperTextAfter\":\"${giaphaRegPhoneHelp}\"},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ]
+  }
 }

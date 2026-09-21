@@ -109,7 +109,37 @@
         </#if>
 
         <div class="gp-nhom gp-nhom--cuoi">
-          <label class="gp-nhan" for="password">${msg("password")}</label>
+          <#--
+            "Quên mật khẩu?" nằm CÙNG HÀNG với nhãn "Mật khẩu", tức NGAY TRÊN ô
+            mật khẩu — không phải dưới nó. Đây là chỗ khác bản thiết kế, và nó
+            có một con số đứng sau.
+
+            06 §9 đặt trần: đáy nút chính cách đáy ô mật khẩu ≤ 120px, nếu không
+            nút rơi xuống dưới bàn phím ảo. Bố cục cũ (chưa có liên kết) đo được
+            112px. Đặt liên kết GIỮA ô mật khẩu và nút — đúng chữ của §9 — thì
+            nó chiếm thêm một hàng chạm 44px cộng lề, và phép đo thành **164px**:
+            VƯỢT TRẦN, tức nút "Đăng nhập" tụt xuống dưới bàn phím trên điện
+            thoại. (README cũ dự báo 156px; đo thật còn tệ hơn dự báo. Biến thể
+            "gộp với hàng ghi nhớ" mà README cũ đề nghị đo được 168px và hàng ấy
+            xuống dòng thành 100px cao ở khung 400 — tức cách chữa cũ không chữa
+            được gì. Cả ba con số đo bằng `infra/keycloak/do-chieu-cao.mjs`.)
+
+            Đưa liên kết lên hàng nhãn thì nó vẫn nằm giữa ô mật khẩu và nút về
+            mặt THỊ GIÁC KHI BÀN PHÍM MỞ (cả cụm ô + nút cùng nằm trong vùng còn
+            thấy được), vẫn ở đúng chỗ người dùng nghi ngờ mình quên mật khẩu,
+            và ngân sách giữ nguyên 112px. Chiều cao nó thêm vào nằm ở PHÍA
+            TRÊN ô mật khẩu, mà §9 không tính phần ấy — vì bàn phím che từ dưới
+            lên.
+
+            Hàng này được phép xuống dòng ở khung hẹp; xuống dòng cũng chỉ ăn
+            chỗ phía trên ô, nên không phá trần.
+          -->
+          <div class="gp-nhan-hang">
+            <label class="gp-nhan" for="password">${msg("password")}</label>
+            <#if realm.resetPasswordAllowed>
+              <a class="gp-lien-ket" href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a>
+            </#if>
+          </div>
           <div class="gp-o-boc">
             <input class="gp-o" id="password" name="password" type="password"
                    autocomplete="current-password"
@@ -129,25 +159,10 @@
           </div>
         </div>
 
-        <#--
-          "Quên mật khẩu?" bị ẩn vì `resetPasswordAllowed` đang là FALSE trong
-          realm — và cờ ấy tắt là có lý do: realm KHÔNG có `smtpServer`, nên bật
-          cờ lên thì Keycloak in liên kết, người dùng bấm, nhập email, nhận màn
-          "đã gửi", rồi ngồi đợi một lá thư không tồn tại. 06 §1.2 #1 gọi đó là
-          "tệ hơn là không có liên kết ấy".
-
-          Điều kiện bật lại: cấu hình SMTP xong và gửi thử thành công. README.md
-          mục Keycloak ghi đủ các bước.
-
-          Khối này CÓ ĐIỀU KIỆN chứ không bị xoá: bật cờ trong realm là liên kết
-          hiện lại đúng chỗ §9 tính toán (GIỮA ô mật khẩu và nút, không nằm dưới
-          nút, để đáy nút chính vẫn cách đáy ô mật khẩu ≤ 120px khi bàn phím mở).
-        -->
-        <#if realm.resetPasswordAllowed>
-          <p style="margin:0 0 8px">
-            <a class="gp-lien-ket" href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a>
-          </p>
-        </#if>
+        <#-- "Quên mật khẩu?" đã in ở hàng nhãn ô mật khẩu phía trên. KHÔNG in
+             lại ở đây: hai liên kết cùng đích trên một màn là hai lần người
+             dùng phải quyết xem chúng có khác nhau không. Xem chú thích dài ở
+             hàng nhãn để biết vì sao nó chuyển chỗ. -->
 
         <#if realm.rememberMe && !usernameHidden??>
           <label class="gp-chon" for="rememberMe">
@@ -209,6 +224,52 @@
     </#if>
     <#if duongKhach?has_content>
       <a class="gp-nut gp-nut--phu" href="${duongKhach}">${msg("giaphaGuestButton")}</a>
+    </#if>
+
+    <#--
+      ── LỐI VÀO ĐĂNG KÝ ─────────────────────────────────────────────────────
+      HAI loại mã, và checklist §1.1 dặn thẳng: "đừng trộn làm một".
+
+      · MÃ MỜI DÒNG HỌ — cấp cho cả họ, nhiều người dùng chung. Dẫn tới trang
+        đăng ký của Keycloak (`register.ftl`), nơi ô mã mời được kiểm TRƯỚC khi
+        tài khoản ra đời. Chỉ in khi realm thật sự bật `registrationAllowed`:
+        một liên kết "Đăng ký" trỏ vào một realm đã tắt đăng ký thì Keycloak
+        trả trang lỗi, và người dùng đọc nó như "họ không nhận tôi".
+
+      · MÃ MỜI CÁ NHÂN — trỏ đích danh một nhân khẩu, dùng một lần, không cần
+        duyệt. Đó là tuyến `/moi/[token]` của Next.js, khai bằng
+        `giaphaInviteUrl`. Hai lối này KHÔNG thay thế nhau: mã cá nhân dành cho
+        các cụ lớn tuổi (Trưởng chi làm hộ từ đầu tới cuối), mã dòng họ dành cho
+        người trẻ và người ở xa.
+
+      Cả hai đều là LIÊN KẾT CHỮ chứ không phải nút tô nền: màn này đã có hai
+      nút cùng chiều cao ("Đăng nhập" và "Xem phần công khai"), và một nút thứ
+      ba biến ba lựa chọn ngang hàng thành một câu đố.
+    -->
+    <#--
+      Đích của liên kết mã dòng họ có HAI khả năng, và `theme.properties` chọn:
+        · `giaphaRegisterUrl` rỗng  → trang đăng ký của Keycloak (`register.ftl`)
+        · `giaphaRegisterUrl` có    → màn Next.js gọi `POST /clan-invites/register`
+      Xem khối chú thích dài ở `theme.properties` để biết vì sao và khi nào đổi.
+    -->
+    <#--
+      `{lang}` được thay bằng ngôn ngữ người dùng vừa chọn TRÊN CHÍNH TRANG NÀY,
+      giống `giaphaGuestPath` ở trên. Không thay thì ai vừa bấm "English" sẽ rơi
+      vào bản tiếng Việt của màn đăng ký — tức mất đúng lựa chọn họ vừa làm, ngay
+      ở bước đầu tiên. Khoá không chứa `{lang}` thì `replace` không đổi gì, nên
+      cấu hình cũ vẫn chạy y nguyên.
+    -->
+    <#assign duongDangKy = "">
+    <#if properties.giaphaRegisterUrl?has_content>
+      <#assign duongDangKy = properties.giaphaRegisterUrl?replace("{lang}", lang)>
+    <#elseif realm.registrationAllowed && !registrationDisabled??>
+      <#assign duongDangKy = url.registrationUrl>
+    </#if>
+    <#if duongDangKy?has_content>
+      <p style="margin:16px 0 0">
+        ${msg("giaphaNoAccountClan")}
+        <a class="gp-lien-ket" href="${duongDangKy}">${msg("giaphaHaveClanCode")}</a>
+      </p>
     </#if>
 
     <#-- Tuyến /moi/[token] chưa tồn tại trong frontend; `giaphaInviteUrl` để

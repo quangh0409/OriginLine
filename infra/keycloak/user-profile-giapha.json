@@ -1,0 +1,156 @@
+{
+  "attributes": [
+    {
+      "name": "maMoiDongHo",
+      "displayName": "${giaphaRegInviteCode}",
+      "validations": {
+        "length": {
+          "min": 4,
+          "max": 64
+        },
+        "pattern": {
+          "pattern": "(?!)",
+          "error-message": "giaphaInviteCodeWrong"
+        }
+      },
+      "required": {
+        "roles": [
+          "user"
+        ]
+      },
+      "permissions": {
+        "view": [
+          "admin",
+          "user"
+        ],
+        "edit": [
+          "admin",
+          "user"
+        ]
+      },
+      "annotations": {
+        "inputHelperTextAfter": "${giaphaRegInviteCodeHelp}",
+        "inputTypeSize": "20",
+        "inputTypeMaxlength": "64"
+      },
+      "multivalued": false
+    },
+    {
+      "name": "lastName",
+      "displayName": "${giaphaRegLastName}",
+      "validations": {
+        "length": {
+          "max": 255
+        },
+        "person-name-prohibited-characters": {}
+      },
+      "required": {
+        "roles": [
+          "user"
+        ]
+      },
+      "permissions": {
+        "view": [
+          "admin",
+          "user"
+        ],
+        "edit": [
+          "admin",
+          "user"
+        ]
+      },
+      "annotations": {
+        "inputHelperTextAfter": "${giaphaRegLastNameHelp}"
+      },
+      "multivalued": false
+    },
+    {
+      "name": "firstName",
+      "displayName": "${giaphaRegFirstName}",
+      "validations": {
+        "length": {
+          "max": 255
+        },
+        "person-name-prohibited-characters": {}
+      },
+      "required": {
+        "roles": [
+          "user"
+        ]
+      },
+      "permissions": {
+        "view": [
+          "admin",
+          "user"
+        ],
+        "edit": [
+          "admin",
+          "user"
+        ]
+      },
+      "multivalued": false
+    },
+    {
+      "name": "email",
+      "displayName": "${giaphaRegEmail}",
+      "validations": {
+        "email": {},
+        "length": {
+          "max": 255
+        }
+      },
+      "required": {
+        "roles": [
+          "user"
+        ]
+      },
+      "permissions": {
+        "view": [
+          "admin",
+          "user"
+        ],
+        "edit": [
+          "admin",
+          "user"
+        ]
+      },
+      "annotations": {
+        "inputHelperTextAfter": "${giaphaRegEmailHelp}"
+      },
+      "multivalued": false
+    },
+    {
+      "name": "username",
+      "displayName": "${giaphaRegPhone}",
+      "validations": {
+        "length": {
+          "min": 3,
+          "max": 255
+        },
+        "username-prohibited-characters": {},
+        "up-username-not-idn-homograph": {}
+      },
+      "permissions": {
+        "view": [
+          "admin",
+          "user"
+        ],
+        "edit": [
+          "admin",
+          "user"
+        ]
+      },
+      "annotations": {
+        "inputHelperTextAfter": "${giaphaRegPhoneHelp}"
+      },
+      "multivalued": false
+    }
+  ],
+  "groups": [
+    {
+      "name": "user-metadata",
+      "displayHeader": "User metadata",
+      "displayDescription": "Attributes, which refer to user metadata"
+    }
+  ]
+}

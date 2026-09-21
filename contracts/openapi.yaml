@@ -39,7 +39,7 @@ info:
     ### Phân tầng riêng tư — đọc kỹ trước khi code FE (Nghị định 13/2023, BA v2 §10)
 
     Cùng một `PersonDto` nhưng **tập trường trả về khác nhau** theo vai người gọi, `isAlive`
-    và **bản đồng thuận riêng tư** (`PrivacySettings`) của chính người đó — năm nhóm trường,
+    và **bản đồng thuận riêng tư** (`PrivacySettings`) của chính người đó — **sáu** nhóm trường,
     mỗi nhóm một mức `PRIVATE` / `BRANCH` / `CLAN` do chủ thể tự chọn:
 
     | Đối tượng | Trường | Ai thấy |
@@ -48,6 +48,7 @@ info:
     | Người sống — Tầng 1 | tên, đời/vai vế, quan hệ cha–con–vợ–chồng | **thành viên đã đăng nhập**; Khách KHÔNG thấy |
     | Người sống — Tầng 2 | năm sinh, nghề nghiệp, nơi ở cấp tỉnh | thành viên cùng chi/ngành hoặc được cấp quyền |
     | Người sống — Tầng 3 | SĐT, email, địa chỉ đầy đủ, ngày sinh đầy đủ, ảnh | bản thân + Admin + người được opt-in |
+    | Người sống — vinh danh | các bản ghi `HonourDto` | nhóm trường thứ sáu (`honour`), **mặc định kín** — chính chủ tự mở |
 
     **Quy tắc kỹ thuật bắt buộc — cả BE và FE phải theo:**
 
@@ -111,6 +112,10 @@ tags:
     description: |-
       Vận hành đường ống nhắc giỗ (chạy tay job sinh/đẩy lịch nhắc). **Chỉ System Admin.**
       / Reminder pipeline operations, system admin only.
+  - name: admin-events
+    description: |-
+      Dọn dữ liệu sự kiện cũ (gán phạm vi người nhận). **System Admin hoặc Hội đồng Tộc biểu** —
+      không mở cho Trưởng chi. / Backfill of legacy event data; admin or clan council only.
   - name: admin-webpush
     description: |-
       Chẩn đoán cấu hình Web Push (VAPID). **Chỉ System Admin**, và **chỉ đọc** — không có đường
@@ -126,6 +131,38 @@ tags:
       tư vào được hệ thống**: dòng họ mời người vào, không ai tự đăng ký.
       Hai đường (`/lookup`, `/decline`) **không cần token** — người bấm chính là người chưa
       có tài khoản. / Invitation flow: the only door in; two endpoints need no token.
+  - name: clan-invites
+    description: |-
+      **Mã mời dòng họ** — cấp cho cả họ, dùng nhiều lần, chỉ mở cửa đăng ký và xem phả đồ.
+      Cơ chế riêng, **không phải biến thể** của mã mời cá nhân: nó không trỏ vào nhân khẩu nào,
+      nên người dùng nó vẫn phải tự nhận mình rồi chờ Trưởng chi duyệt.
+      Vì mã cấp cho cả họ nên **mã mời là ranh giới an toàn thật sự, không phải bước duyệt** —
+      kèm bốn chốt bắt buộc: có hạn · thu hồi được · đếm lượt dùng · giới hạn tần suất.
+      / Clan-wide multi-use invite codes; four mandatory safeguards.
+  - name: person-claims
+    description: |-
+      **Tự nhận mình trong phả.** Hai loại đơn: nhận một nhân khẩu đã có (`EXISTING`), và xin được
+      thêm vào phả (`NEW_PERSON` — con dâu mới về, cháu mới sinh, nhánh ở xa). Trưởng chi của chi
+      mà đơn trỏ tới duyệt; Hội đồng duyệt được cả họ.
+      / Claiming your node in the tree, and asking to be added to it.
+  - name: content
+    description: |-
+      **Bài viết và vinh danh.** Hai thứ khác nhau dùng chung **một máy trạng thái duyệt**
+      (`ContentStatus`) và một luật phạm vi `ltree`.
+      Bài viết là văn bản tự do của một người; **vinh danh là bản ghi gắn với nhân khẩu**
+      (đỗ đạt · chức tước · thành tích · khen thưởng), nên nó tra cứu và thống kê được theo chi —
+      *"chi nào có bao nhiêu người đỗ đạt"*.
+      **Người chưa được duyệt vào phả không viết bài được**, và **không ai tự duyệt nội dung của
+      chính mình**. Xoá mềm tuyệt đối: gỡ bài là đổi trạng thái, không phải `DELETE`.
+      / Clan posts and person-attached honours; one review state machine, soft delete only.
+  - name: media
+    description: >-
+      **Kho đối tượng (MinIO)** — ảnh & video của bài viết, ảnh chân dung nhân khẩu.
+      Tệp **không đi qua backend**: client xin một URL `PUT` đã ký, tải thẳng lên kho, rồi gọi
+      xác nhận. Một tệp chỉ được coi là **có thật** sau khi máy chủ tự `statObject` và đọc
+      **chữ ký byte** của nó. Bucket riêng tư — lối đọc duy nhất là một URL ký lại sau khi kiểm
+      quyền, nên **một khoá không phải giấy thông hành**.
+      / Object storage: presigned direct upload, server-side byte-signature verification.
   - name: graphql
     description: Điểm vào GraphQL cho cây lồng sâu. / GraphQL entry point.
 
@@ -1588,7 +1625,173 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+    post:
+      tags: [events]
+      operationId: createEvent
+      summary: Tạo sự kiện dòng họ / Create clan event
+      description: |-
+        Trưởng cành/chi/họ cấu hình việc họ: lễ Tết, chạp mả, họp họ, khánh thành. Dùng đủ 13 mã
+        của `EventType` — từ V10 phép quy đổi mã là song ánh, nên **họp họ phân biệt được với đám
+        cưới** (trước đây cả hai đều rơi vào `KHAC`).
+
+        **Phân quyền theo `ltree`, không chỉ theo vai.** Trưởng chi Ất tạo sự kiện cho chi Bính
+        nhận `403` với `code = BRANCH_SCOPE_VIOLATION`; Trưởng chi đặt sự kiện cấp dòng họ nhận
+        `403` với `code = FORBIDDEN`.
+
+        **Lịch nhắc (mốc 7/3/1 ngày) được dựng ngay trong cùng transaction**, không chờ job 01:30 —
+        một sự kiện đặt cho ngày kia thì mốc D-1 đã trôi mất nếu phải chờ tới đêm. Sự kiện **một
+        lần** cũng được nhắc.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Đã tạo. / Created.
+          headers:
+            Location:
+              schema: { type: string }
+            ETag:
+              description: Dùng cho `If-Match` khi `PATCH` (optimistic locking).
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: |-
+            * `GIO_DATE_FROM_PERSON` — ngày giỗ lấy theo `person.death_lunar`; sửa trên hồ sơ nhân
+              khẩu, không sửa ở đây (sửa ở đây sẽ **không có tác dụng nào**).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /events/{id}:
+    patch:
+      tags: [events]
+      operationId: updateEvent
+      summary: Sửa sự kiện dòng họ / Update clan event
+      description: |-
+        Sửa từng phần. Trường **vắng mặt** giữ nguyên giá trị cũ; trường có mặt và `null` thì xoá
+        giá trị.
+
+        **Đồng thời (optimistic locking)**: bắt buộc gửi `If-Match` với `ETag` lấy từ `GET`. Thiếu
+        header → `412`; phiên bản cũ → `409`. Trước mỗi mùa giỗ chạp, lịch việc họ là thứ nhiều
+        người cùng ngồi sửa.
+
+        **Đổi ngày hoặc đổi phạm vi sẽ dọn các `reminder_job` chưa bắn của sự kiện rồi dựng lại.**
+        Không dọn thì cả chi vẫn được nhắc theo ngày cũ — không lỗi, không log, người ta chỉ đến
+        nhầm ngày. Lời nhắc **đã phát** không bị đụng tới.
+
+        **Đổi phạm vi đòi quyền ghi ở cả hai đầu** (chi nguồn và chi đích): chỉ kiểm một đầu thì
+        Trưởng chi này "cướp" được sự kiện của chi kia.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: |-
+            * `OPTIMISTIC_LOCK_CONFLICT` — bản ghi đã đổi kể từ `ETag` gửi lên.
+            * `EVENT_DELETED` — sự kiện đã bị xoá mềm.
+            * `GIO_DATE_FROM_PERSON` — ngày giỗ lấy theo hồ sơ nhân khẩu.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '412':
+          description: Thiếu hoặc sai `If-Match` (`code = PRECONDITION_REQUIRED`). / Precondition failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [events]
+      operationId: deleteEvent
+      summary: Xoá mềm sự kiện dòng họ / Soft-delete clan event
+      description: |-
+        **Xoá mềm: cờ, không phải lệnh xoá.** Bản ghi ở lại vì ba thứ còn trỏ vào nó — `reminder_job`
+        đã phát, `notification_log` của những lần đã gửi, và `audit_log`. Xoá cứng thì
+        `ON DELETE CASCADE` của `reminder_job` kéo theo cả lịch sử gửi, và người trong họ bấm vào
+        một thông báo cũ sẽ rơi vào trang trắng.
+
+        Lịch nhắc **chưa bắn** bị dọn đi; lịch đã `QUEUED`/`SENT` giữ nguyên. Sau đó `GET` trả `404`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: reason
+          in: query
+          description: Lý do, ghi vào `audit_log`. / Reason, recorded in the audit log.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Đã xoá mềm. / Soft-deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
     get:
       tags: [events]
       operationId: getEvent
@@ -1980,6 +2183,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReminderDispatchResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # DỌN PHẠM VI SỰ KIỆN CŨ / LEGACY EVENT SCOPE BACKFILL (Admin + Hội đồng)
+  # ---------------------------------------------------------------------------
+  /admin/events/backfill-scope:
+    post:
+      tags: [admin-events]
+      operationId: backfillEventScope
+      summary: Gán phạm vi cho sự kiện cũ không có chi lẫn cấp dòng họ / Backfill event scope
+      description: |-
+        Gán **phạm vi người nhận** cho những dòng `event` không nói được mình thuộc về ai.
+
+        **Vì sao endpoint này tồn tại.** `ck_event_scope` (V4) chỉ cấm đặt *cả hai*
+        (`is_clan_level` và `target_branch_id`); nó **không** bắt buộc phải có *một*. Lối ghi thủ
+        công (V18 trở đi) đóng cửa ấy cho bản ghi **mới**, nhưng những dòng có **trước V18** thì vẫn
+        nằm đó — và khi tới giờ nhắc, bộ phát lời nhắc mở một sự kiện không phạm vi ra **cả dòng
+        họ**: với một họ 1.500 người, mỗi dòng như thế là 1.500 thông báo cho một việc của một chi.
+        Lựa chọn "nhắc rộng còn hơn nhắc thiếu" ở chỗ gửi là **đúng** và không đổi; endpoint này là
+        nửa còn lại của lựa chọn ấy — đi **sửa dữ liệu**, để lối gửi không phải đoán mãi.
+
+        **Vì sao là lệnh quản trị chứ không phải migration.** Một migration siết ràng buộc
+        (`CHECK (is_clan_level OR target_branch_id IS NOT NULL)`) sẽ chặn luôn cả **lượt xoá mềm**
+        một dòng cũ: xoá mềm là một câu `UPDATE`, và ràng buộc chạy lại trên cả dòng — nên Hội đồng
+        sẽ không gỡ được đúng những bản ghi hỏng mà ràng buộc ấy sinh ra để chỉ mặt. Ngoài ra phép
+        sửa ở đây **đọc hồ sơ nhân khẩu** để suy ra chi, việc mà SQL trong migration làm được nhưng
+        làm bằng một bản sao thứ hai của luật.
+
+        **Hai luật suy ra, theo đúng thứ tự.** (1) Sự kiện **gắn nhân khẩu** và nhân khẩu ấy có chi
+        → lấy chi của nhân khẩu; đây là ca của mọi cái giỗ, tức tuyệt đại đa số. (2) Còn lại → đánh
+        dấu **cấp dòng họ** tường minh. Vế (2) không phải một phỏng đoán mới: nó đúng bằng hành vi
+        mà lối gửi đang làm hôm nay — khác biệt là sau lượt chạy này nó nằm **trong dữ liệu**, đọc
+        được, sửa được, và có vết trong `audit_log`, thay vì nằm trong một câu `if` không ai đọc.
+
+        **Chạy lại được nhiều lần mà không hỏng.** Điều kiện lọc chính là điều kiện vi phạm, nên
+        **lượt chạy thứ hai trả `changed = 0`**. Mỗi dòng sửa đều ghi `audit_log` (trước/sau của
+        `isClanLevel` và `targetBranchId`).
+
+        **Thứ tự đúng:** gọi `dryRun=true` để đọc con số, đối chiếu với danh sách sự kiện, rồi mới
+        gọi thật. `changed` luôn `0` khi `dryRun` — nó tách khỏi `scanned` chính vì một lượt thử
+        quét thì có mà sửa thì không, và gộp làm một sẽ khiến người vận hành tin rằng mình đã sửa
+        xong.
+
+        **Ai được chạy: System Admin (`ADMIN`) hoặc Hội đồng Tộc biểu (`COUNCIL`).** Khác
+        `/admin/reminders/**` (chỉ `ADMIN`): lượt chạy này đổi **ai được nhắc** — một câu hỏi nội
+        dung của dòng họ, không phải một nút vận hành — nên Hội đồng cũng phải bấm được.
+        **Không mở cho Trưởng chi**: các dòng nó chạm vào hôm nay đang nhắc *cả họ*, nên hậu quả
+        vượt khỏi mọi phạm vi chi và **không có `ltree` nào giới hạn được nó**.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: dryRun
+          in: query
+          description: |-
+            `true` thì **chỉ đếm, không ghi** — hãy chạy nó trước. Mặc định `false`.
+          schema:
+            type: boolean
+            default: false
+          example: true
+      responses:
+        '200':
+          description: Đã chạy xong (kể cả khi không có dòng nào để sửa).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventScopeBackfillResult'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -3386,7 +3660,10 @@ paths:
         '422':
           description: |-
             Tài khoản đang gọi đã gắn một nhân khẩu khác (`ACCOUNT_ALREADY_LINKED`), hoặc nhân khẩu
-            vừa bị một tài khoản khác chiếm (`PERSON_ALREADY_LINKED`).
+            vừa bị một tài khoản khác chiếm (`PERSON_ALREADY_LINKED`), hoặc định danh tự khai đã
+            thuộc về một tài khoản đang tồn tại (`IDENTITY_ALREADY_REGISTERED` — xem
+            `x-code-notes`; **FE không được tự thử lại**, mỗi lần từ chối tính vào giới hạn tần
+            suất).
           content:
             application/problem+json:
               schema:
@@ -3504,6 +3781,1549 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ---------------------------------------------------------------------------
+  # MÃ MỜI DÒNG HỌ / CLAN INVITE CODES
+  # ---------------------------------------------------------------------------
+  /clan-invites:
+    post:
+      tags: [clan-invites]
+      operationId: issueClanInvite
+      summary: Phát mã mời cho cả dòng họ / Issue a clan-wide invite code
+      description: |-
+        Phản hồi chứa **mã thô**, và đó là **lần duy nhất** mã xuất hiện: CSDL chỉ lưu băm SHA-256.
+        Màn hình phát mã phải cho Hội đồng chép hoặc in ngay, và nói rõ rằng đóng màn là mất mã.
+
+        **Quyền**: `COUNCIL` · `ADMIN`. Khác `POST /invitations`, nơi `BRANCH_HEAD` phát được
+        trong chi mình — và khác **có chủ ý**: một mã cá nhân rò ra mở đúng một hồ sơ, còn một mã
+        dòng họ rò ra mở **cả dòng họ**. Quyền phát phải đi cùng phạm vi hậu quả.
+
+        ### Không thu hồi mã cũ, khác hẳn mã cá nhân
+
+        Mã cá nhân phải thu hồi khi phát lại vì hai mã cùng mở được *một hồ sơ* thì "thu hồi" mất
+        nghĩa. Mã dòng họ không mở hồ sơ nào, và **nhiều mã song song chính là cách Hội đồng biết
+        mã nào đã rò**: một mã cho nhóm Zalo, một mã phát tại lễ giỗ tổ, và bộ đếm của từng mã nói
+        cho họ biết kênh nào đang chảy.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueClanInviteRequest'
+      responses:
+        '201':
+          description: Đã phát. Thân phản hồi chứa mã thô — lần duy nhất. / Created, raw code inside.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Đường dẫn tới bản ghi mã; bản ghi này **không** chứa mã.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuedClanInvite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [clan-invites]
+      operationId: listClanInvites
+      summary: Danh sách mã dòng họ kèm bộ đếm / List clan invite codes with usage counters
+      description: |-
+        **Đây là màn hình làm chốt "đếm lượt dùng" có tác dụng.** Hội đồng thấy `useCount` = 400
+        trên một dòng họ 600 người thì *biết* mà thu hồi; không có bộ đếm thì mã rò ra và mọi thứ
+        trông vẫn bình thường.
+
+        Giao diện hiển thị `usability` chứ **không** phải `status`: `ACTIVE` của một mã đã quá hạn
+        hoặc đã hết lượt không nói lên điều gì cho người đang nhìn danh sách.
+
+        **Quyền**: `COUNCIL` · `ADMIN`. Mã dòng họ không có chi để lọc theo, nên không có "phạm vi"
+        nào để cắt danh sách này cho Trưởng chi.
+
+        ### Phản hồi BỌC danh sách, và đó là chỗ duy nhất trong nhóm này làm thế
+
+        `clanLivingPersonCount` **không thuộc về mã nào** trong danh sách. Lập luận của quyết định
+        "cấp mã cho cả họ" là *"mã đã dùng 400 lần trong khi dòng họ có 600 người"* — không có vế
+        thứ hai thì vế thứ nhất không nói lên điều gì, và chốt được gọi là quan trọng nhất trở thành
+        một con số trang trí. Gắn nó vào từng phần tử là lặp một giá trị toàn cục lên n dòng rồi để
+        chúng có cơ hội lệch nhau; tách ra một endpoint thứ hai là bắt màn hình gọi hai lượt cho một
+        câu trả lời.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanInviteList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /clan-invites/{id}:
+    delete:
+      tags: [clan-invites]
+      operationId: revokeClanInvite
+      summary: Thu hồi một mã dòng họ / Revoke a clan invite code
+      description: |-
+        **Người đã vào bằng mã này không bị ảnh hưởng**: tài khoản của họ đã tồn tại và không treo
+        vào mã. Đó chính là yêu cầu "đóng lại ngay mà không ảnh hưởng người đã vào".
+
+        Thu hồi một mã **đã hết hạn** là hợp lệ và không lỗi — đó là điều Hội đồng làm khi dọn danh
+        sách. **Không có phép mở lại**: cần mã mới thì phát mã mới, còn mã cũ ở lại với bộ đếm của
+        nó, vì chính con số ấy là thứ đáng giữ.
+
+        **Quyền**: `COUNCIL` · `ADMIN`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Định danh mã (UUID). / Clan invite id.
+          schema:
+            type: string
+            format: uuid
+        - name: reason
+          in: query
+          required: false
+          description: Lý do thu hồi, ghi vào `audit_log`. / Revocation reason.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Đã thu hồi. / Revoked.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /clan-invites/{id}/redemptions:
+    get:
+      tags: [clan-invites]
+      operationId: listClanInviteRedemptions
+      summary: Ai đã dùng mã này / Who redeemed this code
+      description: |-
+        Bộ đếm nói **bao nhiêu** lượt; danh sách này nói **ai**. Khi mã lan ra ngoài, đây là thứ
+        duy nhất truy được nguồn — và với 1.500 người thì đó là câu hỏi Hội đồng *sẽ* hỏi khi bộ
+        đếm nhảy bất thường, không phải có thể hỏi.
+
+        Mỗi dòng chỉ có `appUserId` và thời điểm. Cố ý **không** mang email hay tên: `appUserId`
+        trỏ tới đủ mọi thứ ấy và bản thân nó đi qua bộ lọc riêng tư khi hiển thị; chép lại ở đây là
+        tạo một bản sao dữ liệu cá nhân nằm ngoài mọi bộ lọc.
+
+        **Quyền**: `COUNCIL` · `ADMIN`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClanInviteRedemption'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /clan-invites/lookup:
+    post:
+      tags: [clan-invites]
+      operationId: lookupClanInvite
+      summary: Kiểm mã dòng họ — KHÔNG cần token / Check a clan code (no token)
+      description: |-
+        Màn đăng ký gọi đường này **trước** khi thu thập email: mã phải được kiểm *trước khi* tài
+        khoản được tạo, không phải tạo rồi mới hỏi. Tạo trước thì một lần gõ sai mã cũng để lại một
+        tài khoản Keycloak mồ côi, và realm đặt `duplicateEmailsAllowed: false` nên lần thử lại của
+        chính người ấy sẽ hỏng.
+
+        ### Khác `POST /invitations/lookup` ở điểm quan trọng nhất
+
+        Đường kia trả về **tên một người đang sống** — ngoại lệ có chủ ý của BA v2 §10. Đường này
+        **không**: mã dòng họ không trỏ vào ai, nên nó chỉ trả tên dòng họ (dữ liệu công khai, đã
+        nằm trong `BranchRef` mà Khách vẫn đọc được) và hạn dùng.
+
+        Bộ đếm và nhãn mã **cố ý vắng mặt**: chúng là công cụ giám sát của Hội đồng, không phải
+        thông tin cho người cầm mã. Nói "mã này còn 3 lượt" cho một người chưa đăng nhập là nói cho
+        kẻ dò biết mình đang ở đâu.
+
+        Mã đi trong **thân** của một `POST` kể cả ở đường chỉ đọc này: đặt nó vào đường dẫn là đặt
+        nó vào access log của reverse proxy, lịch sử trình duyệt và header `Referer`.
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedeemClanInviteRequest'
+      responses:
+        '200':
+          description: Mã còn dùng được. / Code is usable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanInvitePreview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/InvitationNotFound'
+        '409':
+          $ref: '#/components/responses/ClanInviteExhausted'
+        '410':
+          $ref: '#/components/responses/ClanInviteGone'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /clan-invites/register:
+    post:
+      tags: [clan-invites]
+      operationId: registerWithClanInvite
+      summary: Đăng ký bằng mã dòng họ — KHÔNG cần token / Register with a clan code
+      description: |-
+        Lập tài khoản đăng nhập và tiêu **một lượt** của mã. Trả về `setPasswordUrl`, một liên kết
+        một lần dẫn tới `POST /invitations/set-password` — **cố ý dùng lại** endpoint ấy: liên kết
+        là cùng một token ký HMAC, cùng hạn, cùng luật, và hai endpoint cho cùng một việc là hai
+        chỗ để lệch nhau.
+
+        ### Tài khoản ra khỏi đây CHƯA gắn nhân khẩu nào
+
+        Đây là khác biệt lớn nhất với `POST /invitations/accept`. Mã dòng họ không trỏ vào ai nên
+        không có gì để ghép, và **không được suy đoán**: gắn theo trùng tên là cách nhanh nhất để
+        trao cho một người quyền xem dữ liệu Tầng 3 của người khác. `status` là `PENDING` và
+        `personId` **không có trong phản hồi**.
+
+        Đó là trạng thái đúng, không phải bước dang dở: người này **xem được phả đồ ngay** (quyết
+        định đã chốt — phải nhìn thấy phả mới tự nhận mình được), rồi gửi đơn qua
+        `POST /person-claims/existing` hoặc `POST /person-claims/new-person`.
+
+        ### Gọi kèm token cũng hợp lệ, và đó là lối của người đăng nhập Google/Zalo
+
+        Realm cho phép social login, nên một người con cháu hoàn toàn có thể có tài khoản Keycloak
+        trước khi có mã mời. Lúc ấy danh tính lấy từ token, `email` trong thân **bị bỏ qua**, và
+        `setPasswordUrl` **vắng mặt** — họ vừa đăng nhập được thì đã có cách đăng nhập, và phát
+        liên kết đổi mật khẩu cho một tài khoản đang dùng được là mở lối ấy cho bất kỳ ai cầm mã
+        dòng họ. Mà mã ấy thì cả họ đang cầm.
+
+        ### Bấm hai lần không đếm thành hai lượt
+
+        Một tài khoản đếm **một** lượt trên một mã (`ux_clan_redemption_once`). Bấm lại, mạng chập
+        chờn, tải lại trang — tất cả ra cùng một kết quả. Không có điều đó thì bộ đếm phồng lên vì
+        những lần bấm lại vô hại, và Hội đồng sẽ thu hồi một mã lành vì tưởng nó đã rò.
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterWithClanInviteRequest'
+      responses:
+        '200':
+          description: Đã lập tài khoản. Chưa gắn nhân khẩu nào. / Account created, not yet linked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanRegistration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/InvitationNotFound'
+        '409':
+          $ref: '#/components/responses/ClanInviteExhausted'
+        '410':
+          $ref: '#/components/responses/ClanInviteGone'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          description: |-
+            Chưa lập được tài khoản đăng nhập — `code: IDENTITY_PROVIDER_UNAVAILABLE`. Quan trọng:
+            khi mã này xuất hiện thì **chưa một lượt nào bị tiêu**, nên bấm lại là được.
+            / Identity provider unavailable; no use was consumed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # TỰ NHẬN MÌNH TRONG PHẢ / PERSON CLAIMS
+  # ---------------------------------------------------------------------------
+  /person-claims/existing:
+    post:
+      tags: [person-claims]
+      operationId: submitPersonClaim
+      summary: Gửi đơn nhận một nhân khẩu đã có / Claim an existing person
+      description: |-
+        Bước 4 của luồng vào hệ thống: người đã đăng ký (có tài khoản, `personId` rỗng) chọn đúng ô
+        của mình trên phả đồ, nhập số điện thoại và vài dòng tự giới thiệu.
+
+        `introduction` mới là thứ Trưởng chi thật sự dùng để đối chiếu — *con ông nào, bà nào, quê
+        quán*; số điện thoại chỉ giúp gọi kiểm chứng.
+
+        ### Ba ca bị chặn NGAY LÚC GỬI
+
+        | Tình huống | Phản hồi |
+        |---|---|
+        | Nhận nhầm người **đã khuất** | `422 VALIDATION_FAILED`, thông điệp **nói thẳng** |
+        | Nhân khẩu **đã có tài khoản** | `422 VALIDATION_FAILED`, thông điệp **chung chung** |
+        | Nhân khẩu đã xoá mềm | `422 VALIDATION_FAILED`, **cùng** thông điệp chung chung ấy |
+
+        Người đã khuất được nói thẳng vì hồ sơ người đã khuất vốn công khai — nói rõ ở bước này
+        không lộ thêm gì, còn một câu mơ hồ chỉ làm người dùng bấm lại đúng ô ấy.
+
+        **Hai ca sau dùng chung một thông điệp, và đó là chủ ý.** Nói thẳng "người này đã có tài
+        khoản" biến màn này thành **công cụ dò xem ai đã vào hệ thống**: gửi thử lần lượt từng ô
+        trên phả đồ rồi đọc thông điệp là ra danh sách những người *chưa* có tài khoản — tức danh
+        sách để mạo danh. Giao diện **không được** cố suy ra lý do thật từ thông điệp.
+
+        Ngoài ra: một tài khoản chỉ có **một** đơn đang chờ, và số lần **bị từ chối** có giới hạn
+        (`CLAIM_LIMIT_REACHED`).
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitPersonClaimRequest'
+      responses:
+        '201':
+          description: Đã gửi đơn. / Claim submitted.
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonClaim'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /person-claims/new-person:
+    post:
+      tags: [person-claims]
+      operationId: submitNewPersonClaim
+      summary: Gửi đơn xin được thêm vào phả / Ask to be added to the tree
+      description: |-
+        Nút **"Tôi chưa có trong phả"**, cho ba tình huống có thật: con dâu mới về · cháu mới sinh ·
+        người ở xa nhiều đời. Cả ba cầm mã mời hợp lệ, đăng ký thành công, mở phả đồ ra và **không
+        tìm thấy mình**. Không có lối này thì họ sẽ *chọn bừa một người gần đúng* — thường là người
+        cùng tên, hoặc bố mình — rồi Trưởng chi nhận một đơn vô nghĩa và không hiểu vì sao.
+
+        ### Đây là lối GHI VÀO PHẢ, không phải một biểu mẫu liên hệ
+
+        Nó cho một người **chưa được duyệt** khởi tạo việc thêm người vào gia phả. Năm ràng buộc đi
+        kèm, và ba trong số đó nhìn thấy được từ hợp đồng này:
+
+        1. **Đơn KHÔNG tạo nhân khẩu.** Nhân khẩu chỉ ra đời khi Trưởng chi duyệt — xem
+           `createdPersonId` trên `PersonClaim`, vốn rỗng ở mọi đơn chưa duyệt và mọi đơn bị từ
+           chối. Xoá mềm là luật tuyệt đối của dự án, nên tạo trước rồi xoá sau sẽ để lại một
+           **node ma** trong phả cho mỗi đơn bị từ chối.
+        2. **`relativePersonId` là bắt buộc.** Không có nó thì nhân khẩu mới thành node mồ côi:
+           không gắn vào cây, không tính được đời, không tra được danh xưng. Người thân ấy cũng là
+           thứ quyết định **ai duyệt**, vì người mới chưa thuộc chi nào.
+        3. **Đơn chạy qua bộ dò trùng ngay lúc gửi.** Phản hồi mang `duplicateSuspects`, và giao
+           diện nên hiện ngay cho người gửi: *"có phải bạn là người này không?"* ở bước gửi rẻ hơn
+           nhiều so với một bản trùng được tạo ra rồi phải gộp lại — gộp nhầm hai người trong gia
+           phả là loại lỗi rất khó gỡ, vì cả hai nhánh con cháu đều đã treo vào node sai.
+
+        Người thân được chỉ ra **được phép đã khuất** — *"bố tôi là cụ X, cụ mất năm 2019"* là ca
+        thường gặp nhất của cả lối này.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitNewPersonClaimRequest'
+      responses:
+        '201':
+          description: |-
+            Đã gửi đơn. **Chưa một nhân khẩu nào được tạo.** / Claim submitted; no person created.
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonClaim'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /person-claims/mine:
+    get:
+      tags: [person-claims]
+      operationId: listMyPersonClaims
+      summary: Đơn của chính tôi / My own claims
+      description: |-
+        Màn "đang chờ duyệt". Không có màn này thì người dùng gửi đơn xong rơi vào im lặng và sẽ
+        gửi lại lần hai, lần ba — rồi chạm giới hạn gửi lại và không hiểu vì sao.
+
+        ### Phản hồi BỌC danh sách: `{ claims, quota }`
+
+        `quota` là **hạn mức gửi lại**, và nó không thuộc về đơn nào. Ngưỡng nằm ở cấu hình máy chủ
+        (`giapha.membership.claim.max-rejected`) nên **client không được đoán**: gán cứng con số sẽ
+        đúng hôm nay và âm thầm sai ngày Hội đồng đổi cấu hình — lúc ấy người dùng thấy "còn 1 lần"
+        trong khi máy chủ đã chặn, hoặc ngược lại. Không có trường này thì màn hình im lặng cho tới
+        khi đâm vào `CLAIM_LIMIT_REACHED` ở lần gửi thứ tư.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyPersonClaims'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /person-claims/pending:
+    get:
+      tags: [person-claims]
+      operationId: listPendingPersonClaims
+      summary: Hàng chờ duyệt trong phạm vi của tôi / Review queue in my scope
+      description: |-
+        Trưởng chi Ất **không thấy** đơn trỏ vào người chi Bính; Hội đồng thấy cả họ. Phép lọc chạy
+        ngay trong SQL bằng `ltree`, nên đơn của chi khác không bao giờ đi vào bộ nhớ tiến trình —
+        và điều đó quan trọng hơn một chi tiết hiệu năng, vì đơn chở **số điện thoại** và vài dòng
+        tự giới thiệu của một người đang sống.
+
+        Sắp **cũ nhất trước**. Hai đơn cùng trỏ một nhân khẩu **đều xuất hiện**, cố ý không ưu tiên
+        đơn gửi trước: trùng tên trong dòng họ là chuyện thường, và người gửi trước chưa chắc là
+        người đúng — Trưởng chi thấy cả hai rồi chọn.
+
+        > **Lệch quy ước phân trang:** trả một **mảng phẳng**. / Returns a bare array.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonClaim'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /person-claims/pending/count:
+    get:
+      tags: [person-claims]
+      operationId: countPendingPersonClaims
+      summary: Đếm đơn chờ duyệt trong phạm vi / Count pending claims in scope
+      description: |-
+        Huy hiệu trên thanh điều hướng.
+
+        **Trả `0` cho người không có quyền duyệt, KHÔNG trả `403`.** Huy hiệu này nằm trên thanh đầu
+        trang của *mọi* màn hình: nếu nó `403` thì giao diện phải biết vai của người dùng **trước
+        khi** gọi, tức phải chép luật phân quyền sang client — và một huy hiệu bật lên dải đỏ là một
+        lỗi trông như sự cố hệ thống.
+
+        `0` không lộ gì: con số ấy vốn là *"có bao nhiêu đơn **bạn** duyệt được"*, nên với người
+        không duyệt được đơn nào thì `0` là câu trả lời **đúng**, không phải một lời từ chối bị giấu
+        đi. Phép lọc phạm vi vẫn nguyên — "không có phạm vi nào" cho ra `0`, tuyệt đối không hiểu
+        ngược thành "thấy tất".
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    type: integer
+                    format: int64
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /person-claims/{id}:
+    get:
+      tags: [person-claims]
+      operationId: getPersonClaim
+      summary: Chi tiết một đơn / Claim detail
+      description: |-
+        **Chỉ người gửi hoặc người duyệt đúng phạm vi chi.** Không có lối thứ ba: đơn chở số điện
+        thoại và vài dòng tự giới thiệu của một người đang sống, nên mở cho "mọi thành viên đã đăng
+        nhập" là biến hàng chờ duyệt thành một danh bạ.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonClaim'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /person-claims/{id}/review:
+    post:
+      tags: [person-claims]
+      operationId: reviewPersonClaim
+      summary: Duyệt hoặc từ chối một đơn / Approve or reject a claim
+      description: |-
+        **Quyền**: `BRANCH_HEAD` trong phạm vi chi mà đơn trỏ tới · `COUNCIL` · `ADMIN`. Phạm vi
+        đích là `targetBranchId`: chi của nhân khẩu được nhận (`EXISTING`), hoặc chi của **người
+        thân được chỉ ra** (`NEW_PERSON`), vì người mới chưa thuộc chi nào.
+        Đúng vai nhưng sai nhánh trả `403 BRANCH_SCOPE_VIOLATION`.
+
+        **Không ai được tự duyệt đơn của chính mình** (`403 SELF_REVIEW_FORBIDDEN`).
+
+        ### Duyệt là MỘT transaction, và nó làm bốn việc hoặc không làm gì cả
+
+        Với đơn `NEW_PERSON`: tạo nhân khẩu **cùng lúc** với cạnh quan hệ vào người thân · gắn tài
+        khoản vào nhân khẩu ấy · đóng đơn · ghi nhật ký. Hỏng ở bất kỳ bước nào thì cả bốn cùng
+        cuộn lại, và đặc biệt là **không có nhân khẩu nào ở lại trong phả** — điều mà một node đã
+        tạo thì xoá mềm không gỡ được.
+
+        Nhân khẩu mới là **người còn sống**, nên mọi nhóm trường riêng tư mặc định **kín**. Điều đó
+        rơi ra từ cách lưu dữ liệu, không phải một cờ mà luồng này đặt.
+
+        ### Duyệt xong, các đơn còn lại cùng trỏ một nhân khẩu bị đóng tường minh
+
+        Kèm lý do, và chúng chuyển sang `REJECTED`. Để chúng nằm lại `PENDING` là để lại một đơn
+        **vĩnh viễn không duyệt được** (nhân khẩu đã có tài khoản) làm nghẽn hàng chờ, còn người gửi
+        thì không bao giờ nhận được câu trả lời.
+
+        > **Khoản nợ đã biết:** `phone` hiện **chưa** chảy vào `person.contact` khi duyệt —
+        > `genealogy` chưa mở bề mặt ghi trường liên hệ. Số vẫn nằm trên đơn để Trưởng chi gọi kiểm
+        > chứng. Khi lối ghi ấy có, số sẽ vào nhóm `contact`, **mặc định kín**, chính chủ tự mở.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewPersonClaimRequest'
+      responses:
+        '200':
+          description: Đã xử. / Reviewed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonClaim'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/PersonClaimClosed'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /person-claims/{id}/cancel:
+    post:
+      tags: [person-claims]
+      operationId: cancelPersonClaim
+      summary: Rút lại đơn của chính mình / Withdraw my own claim
+      description: |-
+        Rút xong thì gửi được đơn khác ngay. **Không tính vào giới hạn gửi lại**: giới hạn ấy đếm
+        số lần *bị từ chối*, và người tự sửa sai của mình không phải là người đang dò.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Đã rút. / Withdrawn.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonClaim'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/PersonClaimClosed'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
+  # BÀI VIẾT & VINH DANH / POSTS & HONOURS
+  # ---------------------------------------------------------------------------
+  /posts:
+    get:
+      tags: [content]
+      operationId: listPosts
+      summary: Danh sách bài viết trong phạm vi được thấy / List posts visible to the caller
+      description: |-
+        **Luật "ai thấy gì" chạy trong SQL, không ở FE.** Bốn dòng, và dòng cuối là dòng hay bị
+        hiểu sai:
+
+        * `PUBLISHED` — mọi thành viên đã có tài khoản;
+        * bài của **chính mình** — luôn thấy, ở mọi trạng thái;
+        * `PENDING` / `WITHDRAWN` — người duyệt **trong phạm vi `ltree`** của chi bài viết;
+        * `DRAFT` **của người khác** — **không ai**, kể cả Hội đồng Tộc biểu. Một bản nháp chưa gửi
+          là thứ chưa ai được mở ra đọc.
+
+        Không truyền `status` thì trả **mọi trạng thái người gọi được thấy** — đó không đồng nghĩa
+        với "mọi trạng thái".
+
+        Bài không được phép thấy trả `404`, **không** `403`: trả 403 là tự xác nhận bài đó có thật,
+        và với một bản nháp thì "có thật" đã là thông tin.
+
+        **Khách vãng lai không dùng được endpoint này** (`401`): toàn bộ `/posts` đòi token.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: status
+          in: query
+          required: false
+          description: Lọc theo trạng thái. Vắng mặt = mọi trạng thái người gọi được thấy.
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - name: mine
+          in: query
+          required: false
+          description: |-
+            `true` = chỉ bài do **chính người đang đăng nhập** viết — nguồn của màn *"Bài của
+            tôi"*. Kết hợp được với `status` và với phân trang.
+
+            > **Vì sao tham số này tồn tại.** Không có nó, màn "Bài của tôi" phải bắn **bốn lượt
+            > gọi song song** (một cho mỗi trạng thái) rồi lọc tiếp ở client. Hậu quả không phải
+            > chậm mà là **sai im lặng**: phân trang của máy chủ đếm trên *toàn bộ* tập bài người
+            > đó được thấy, còn phép lọc của client chỉ nhìn thấy trang đầu — nên một người viết
+            > nhiều sẽ mất bài cũ **mà không có gì báo**. Phép lọc chạy trong SQL, trên index
+            > `ix_post_author`.
+
+            "Tôi" ở đây là **tài khoản** (`author_user_id`), không phải nhân khẩu: câu hỏi của màn
+            ấy là *"tôi đã viết gì"*, và người hỏi là người đang đăng nhập. Hai cột tách nhau có lý
+            do — khi một nhân khẩu đổi tài khoản, "bài này là tiếng nói của ai trong họ" không đổi.
+          schema:
+            type: boolean
+            default: false
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [content]
+      operationId: createPostDraft
+      summary: Tạo bản nháp bài viết / Create a post draft
+      description: |-
+        Tạo bài ở trạng thái `DRAFT`. Tác giả **luôn** là người đang đăng nhập — không có trường
+        tác giả trong thân yêu cầu, vì cho phép truyền nó là mở một đường đăng bài nhân danh người
+        khác và không màn hình nào cần đường ấy.
+
+        ### Người chưa được duyệt vào phả KHÔNG đăng bài được → `403 AUTHOR_NOT_IN_PHA`
+
+        Quyết định đã chốt của chủ dự án: **"viết bài là tiếng nói của người trong họ"**. Một tài
+        khoản vừa đăng ký bằng **mã mời dòng họ** đã xem được phả đồ nhưng `app_user.person_id` còn
+        rỗng — người ấy chưa được ai xác nhận là người trong họ.
+
+        Nhìn từ phía client đây chỉ là một mã lỗi, nên nói rõ để nó **không trông như lỗi hệ
+        thống**: đây là trạng thái bình thường của một người mới, và lối đi tiếp rất cụ thể —
+        mở màn *"tôi là ai trong phả"* (`POST /person-claims/existing`) rồi chờ Trưởng chi duyệt.
+        Phân biệt với `ACCOUNT_NOT_PROVISIONED` (chưa có `app_user` — "hãy đăng nhập lại") và
+        `FORBIDDEN` (sai vai — "bạn không có quyền này"): ba tình huống, ba lối đi khác hẳn nhau.
+
+        **Chi của bài được chụp lại tại đây** từ chi chính của tác giả, y như
+        `change_request.target_branch_id`. Nhờ vậy bài vẫn thuộc chi của tác giả *lúc viết*, kể cả
+        khi sau này họ chuyển chi. Tác giả chưa gắn chi nào ⇒ `branchId` rỗng ⇒ **chỉ vai toàn dòng
+        họ duyệt được** (chi rỗng không phải chi công cộng).
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '201':
+          description: Đã tạo bản nháp. / Draft created.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: '`/api/v1/posts/{id}`'
+            ETag:
+              schema:
+                type: string
+              description: '`version` của bài — gửi lại qua `If-Match` khi `PATCH`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/feed:
+    get:
+      tags: [content]
+      operationId: getPostFeed
+      summary: Bài đã đăng, mới nhất trước / Published posts, newest first
+      description: |-
+        Nguồn của **trang chủ**. Chỉ bài `PUBLISHED`, sắp theo `publishedAt` giảm dần.
+
+        Không có tham số phạm vi chi nào, và đó là chủ ý: **bài đã đăng là của cả dòng họ**, không
+        phải của riêng chi tác giả — đó chính là lý do nó phải qua tay người duyệt trước.
+
+        > **Lệch quy ước phân trang:** trả một **mảng phẳng**, không phải bọc `{ items, page }`.
+        > Trang chủ lấy một nhúm bài mới nhất chứ không duyệt trang, nên khối phân trang ở đây chỉ
+        > là tiếng ồn. / Returns a bare array, not the `{items, page}` envelope.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: limit
+          in: query
+          required: false
+          description: Số bài tối đa. / Max number of posts.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/pending/count:
+    get:
+      tags: [content]
+      operationId: countPendingPosts
+      summary: Đếm bài chờ duyệt trong phạm vi / Count posts pending review in scope
+      description: |-
+        Dữ liệu cho badge trên chuông thông báo.
+
+        **`0` nghĩa là "không có gì trong phạm vi của tôi", tuyệt đối không phải "không có phạm vi
+        nên thấy tất".** Trưởng chi chưa được giao chi nào luôn nhận `0`.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    type: integer
+                    format: int64
+                    minimum: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{id}:
+    get:
+      tags: [content]
+      operationId: getPost
+      summary: Một bài viết / Get one post
+      description: |-
+        Trả `404` khi người gọi không được phép thấy bài — xem luật ở `GET /posts`.
+
+        **`ETag` ở đây là khoá lạc quan, không phải khoá bộ nhớ đệm.** Giá trị là `version` của
+        bài, nên nó **giống nhau với mọi người gọi** — trong khi thân phản hồi thì *không*:
+        `authorDisplayName` đã đi qua bộ lọc riêng tư của người đọc và `canReview` phụ thuộc phạm
+        vi chi của họ. Vì vậy phản hồi luôn kèm `Cache-Control: no-store, private` và
+        `Vary: Authorization`; đừng bỏ qua chúng khi dựng lớp cache ở client.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: '`version` — gửi lại qua `If-Match` khi `PATCH`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [content]
+      operationId: updatePostDraft
+      summary: Sửa bản nháp / Edit a draft
+      description: |-
+        **Chỉ tác giả, và chỉ khi bài đang ở `DRAFT`.** Sửa bài ở trạng thái khác ⇒
+        `409 CONTENT_CLOSED`.
+
+        Bài **đã đăng thì không sửa**: "bài lên trang chủ là tiếng nói của cả dòng họ", và một bài
+        đã được Trưởng chi đọc rồi duyệt mà tác giả còn sửa được thì chữ ký duyệt ấy không nói lên
+        điều gì. Muốn sửa thì gỡ xuống rồi soạn bài mới, hoặc để người duyệt sửa nhẹ **trước** khi
+        bấm duyệt.
+
+        Trường vắng mặt = **giữ nguyên** (ngữ nghĩa PATCH của cả sản phẩm).
+
+        **`If-Match` là bắt buộc.** Thiếu ⇒ `412 PRECONDITION_REQUIRED`; lệch phiên bản ⇒
+        `409 OPTIMISTIC_LOCK_CONFLICT`. Không phải thủ tục: màn soạn bài có **lưu nháp tự động**,
+        nên hai tab cùng ghi là hành vi bình thường chứ không phải ca hiếm, và im lặng ghi đè ở đó
+        là mất dữ liệu mà không ai phát hiện ra.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IfMatch'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Đã sửa. / Updated.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ContentConflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{id}/submit:
+    post:
+      tags: [content]
+      operationId: submitPost
+      summary: Gửi bài đi duyệt / Submit a post for review
+      description: |-
+        `DRAFT → PENDING`. **Chỉ tác giả.** Bài ở trạng thái khác ⇒ `409 CONTENT_CLOSED`.
+
+        Lý do trả lại của lượt trước **bị xoá ở bước này**: nó nói về bản cũ, và để nguyên thì màn
+        duyệt sẽ hiện một lời phê không còn đúng với thứ người duyệt đang đọc.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Đã chuyển sang `PENDING`. / Now pending review.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ContentConflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{id}/review:
+    post:
+      tags: [content]
+      operationId: reviewPost
+      summary: Duyệt bài hoặc trả lại kèm lý do / Approve a post or send it back
+      description: |-
+        `approve: true` ⇒ `PENDING → PUBLISHED`. `approve: false` ⇒ `PENDING → DRAFT`, **`note` bắt
+        buộc**.
+
+        ### "Trả lại", không phải "từ chối"
+
+        Bài quay về `DRAFT` chứ không rơi vào một trạng thái `REJECTED` riêng: đích đến của người
+        viết sau khi bị trả lại là **sửa rồi gửi lại**, và trạng thái duy nhất cho phép sửa là
+        `DRAFT`. `rejectReason` **ở lại trên bản nháp** để người viết còn đọc được lý do trong lúc
+        sửa. Thiếu `note` ⇒ `422`: không có lý do thì người viết gửi lại y nguyên và cả hai bên
+        cùng mất thời gian lần thứ hai.
+
+        ### Quyền duyệt soi `ltree`, không chỉ soi vai
+
+        Trưởng chi Ất **không** duyệt được bài của người chi Bính — `403 BRANCH_SCOPE_VIOLATION`
+        (đúng vai, sai nhánh), phân biệt với `403 FORBIDDEN` (sai vai). Hội đồng Tộc biểu duyệt cả
+        họ. Bài của tác giả chưa gắn chi nào chỉ vai toàn dòng họ duyệt được.
+
+        ### Không ai tự duyệt bài của chính mình → `403 SELF_REVIEW_FORBIDDEN`
+
+        Nhìn từ phía client đây chỉ là một mã lỗi và **trông như lỗi hệ thống nếu không giải
+        thích**, nên nói thẳng: thứ mà cả bước duyệt này mua được chính là **một người thứ hai đã
+        đọc**. Cho tác giả tự bấm duyệt thì bước duyệt chỉ còn là một cú nhấp thêm, và `audit_log`
+        ghi lại một "cuộc phê duyệt" không có ai kiểm tra ai.
+
+        Giao diện nên **ẩn nút Duyệt** khi `canReview = false` thay vì để người dùng bấm rồi nhận
+        403 — trường ấy có sẵn trên `PostDto` chính là để FE không phải chép lại luật `ltree` bằng
+        JavaScript. `canReview` đã tính sẵn cả luật "không tự duyệt".
+
+        **Cái giá của luật này, để Hội đồng biết mà quyết:** một dòng họ mà Hội đồng chỉ có đúng
+        một người thì người ấy không đăng được bài của chính mình. Nới ra là quyết định **một
+        chiều** — một khi đã cho tự duyệt thì mọi dòng `APPROVE` trong nhật ký mất hết ý nghĩa, kể
+        cả những dòng đã ghi trước đó.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewContentRequest'
+      responses:
+        '200':
+          description: Đã duyệt (`PUBLISHED`) hoặc đã trả lại (`DRAFT`). / Approved or sent back.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ContentConflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{id}/withdraw:
+    post:
+      tags: [content]
+      operationId: withdrawPost
+      summary: Gỡ bài — xoá mềm / Withdraw a post (soft delete)
+      description: |-
+        Chuyển bài sang `WITHDRAWN`. **Hàng ở lại trong bảng.**
+
+        ### Vì sao không có `DELETE /posts/{id}`
+
+        Xoá mềm là tuyệt đối trong sản phẩm này. Một bài đã lên trang chủ rồi bị gỡ là **dữ kiện
+        phải tra lại được** — ai gỡ, lúc nào, vì sao. Endpoint này vì thế là `POST .../withdraw`
+        chứ không phải một động từ `DELETE` trông như xoá thật.
+
+        **Ai gỡ được:** tác giả (gỡ bài mình đã đăng, hoặc **bỏ một bản nháp** mình không muốn viết
+        nữa) và người duyệt **trong phạm vi**. Không có ai khác.
+
+        Cho phép gỡ từ `DRAFT` là chủ ý: hợp đồng không có lệnh xoá bài nào, nên nếu không có lối
+        này thì màn "Bài của tôi" của một người viết nhiều sẽ đầy rác vĩnh viễn và họ sẽ ngừng dùng
+        màn ấy.
+
+        `WITHDRAWN` là **trạng thái cuối** — gỡ lại lần nữa ⇒ `409 CONTENT_CLOSED`. Muốn đăng lại
+        thì soạn bài mới; cho phép hồi sinh một bài đã gỡ nghĩa là nội dung trên trang chủ đổi mà
+        nhật ký chỉ thấy một dòng `UPDATE`.
+
+        Thân yêu cầu **có thể rỗng**: tác giả bỏ bản nháp của chính mình thì không nợ ai một lời
+        giải thích. Nhưng khi **người duyệt** gỡ một bài đã đăng thì `reason` là thứ duy nhất tác
+        giả còn đọc được — giao diện nên hỏi ở đúng ca đó.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawPostRequest'
+      responses:
+        '200':
+          description: Đã gỡ. / Withdrawn.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ContentConflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /honours:
+    get:
+      tags: [content]
+      operationId: listHonours
+      summary: Tra cứu vinh danh / List honours
+      description: |-
+        Vinh danh **gắn với nhân khẩu**: đỗ đạt · chức tước · thành tích · khen thưởng. Vì gắn với
+        nhân khẩu nên nó **tra cứu và thống kê được** — "chi nào có bao nhiêu người đỗ đạt", "các
+        cụ đỗ tiến sĩ trong họ". Đó là khác biệt thật so với một bài viết tiêu đề *"Họ ta có ba
+        tiến sĩ"*.
+
+        ### `branchId` tính cả CÂY CON
+
+        Lọc theo chi dùng toán tử `ltree` "là hậu duệ hoặc chính nó", nên `branchId = Chi Giáp`
+        **gồm cả các ngành/cành bên dưới**. Hỏi "Chi Giáp có bao nhiêu người đỗ đạt" mà không đếm
+        cây con là trả lời sai một câu hỏi nghe có vẻ đã trả lời đúng, và người dùng không có cách
+        nào phát hiện.
+
+        Chi của một vinh danh là chi **hiện tại** của nhân khẩu, suy lúc đọc — **không** phải một
+        giá trị chụp lại lúc khai. Chụp lại thì sau một lần chuyển chi, con số thống kê **sai mà
+        không ai thấy**: bảng vẫn đủ hàng, tổng vẫn khớp, chỉ phân bổ theo chi là sai.
+
+        ### Hai tầng lọc, và tầng thứ hai là lý do `totalElements` không đếm được chính xác
+
+        1. **Trong SQL** — trạng thái × phạm vi `ltree` × chưa xoá mềm.
+        2. **Sau đó, trong tiến trình** — nhóm trường riêng tư `honour` (xem `PrivacySettings`),
+           hỏi cho **từng nhân khẩu một**. Không đẩy xuống SQL được: câu trả lời phụ thuộc cả vào
+           *người gọi* (chính chủ? Hội đồng? cùng chi?) lẫn *chủ thể* (còn sống? vị thành niên?).
+
+        > ⚠️ **`page.totalElements` đếm TRƯỚC tầng lọc thứ hai.** Một trang có thể trả về **ít phần
+        > tử hơn `size`** mà vẫn còn trang sau. **FE phải dùng `page.hasNext`**, không được suy ra
+        > số trang từ `totalElements`, và **không được vẽ "12 kết quả" rồi mở ra ba dòng**.
+        > Đây là đánh đổi có chủ ý: đếm sau khi lọc thì phải nạp toàn bộ bảng lên để đếm.
+        > / `totalElements` is counted **before** privacy filtering — rely on `hasNext`.
+
+        ### Bản ghi chờ duyệt vẫn vào hàng đợi dù nhóm trường đang kín
+
+        Nhóm `honour` **mặc định kín**, nên nếu áp bộ lọc riêng tư lên *mọi* lối đọc thì hàng đợi
+        duyệt của Trưởng chi sẽ **luôn rỗng** và bản ghi nằm đó vĩnh viễn. Vì vậy hai câu hỏi được
+        tách hẳn: bản ghi `PENDING`/`WITHDRAWN` là một **hồ sơ đang được xét** (hiện với người khai
+        và người duyệt trong phạm vi), còn `PUBLISHED` mới là **công bố dữ liệu** và bắt buộc đi
+        qua bộ lọc.
+
+        **Hệ quả cần biết khi dựng giao diện:** duyệt một vinh danh của người còn sống **chưa bật
+        công tắc** thì nó *vẫn không hiện ra với ai* ngoài chính chủ và Hội đồng. Đó không phải
+        lỗi — quyền công bố nằm ở chủ thể, còn quyền duyệt chỉ nói "bản ghi này có thật".
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: personId
+          in: query
+          required: false
+          description: Lọc theo nhân khẩu được vinh danh. / Filter by honoured person.
+          schema:
+            type: string
+            format: uuid
+        - name: kind
+          in: query
+          required: false
+          description: Lọc theo loại vinh danh. / Filter by honour kind.
+          schema:
+            $ref: '#/components/schemas/HonourKind'
+        - name: branchId
+          in: query
+          required: false
+          description: |-
+            Lọc theo chi — **tính cả cây con** (`ltree`). / Filter by branch, subtree included.
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          description: |-
+            Lọc theo trạng thái duyệt. Vắng mặt = mọi trạng thái người gọi được thấy.
+
+            **Chỉ có ba giá trị hợp lệ ở đây: `PENDING` · `PUBLISHED` · `WITHDRAWN`.** Xem
+            `ContentStatus` để biết vì sao **không có** `APPROVED`/`REJECTED`.
+          schema:
+            $ref: '#/components/schemas/ContentStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HonourPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [content]
+      operationId: createHonour
+      summary: Khai một vinh danh / Record an honour
+      description: |-
+        Bản ghi sinh ra ở **`PENDING`** — vinh danh **không có giai đoạn nháp**. Bốn ô điền xong
+        trong một phút; thêm một trạng thái nháp chỉ tạo ra một hàng đợi thứ hai mà không ai mở.
+
+        Người khai phải **đã được duyệt vào phả**, cùng luật và cùng lý do với bài viết ⇒
+        `403 AUTHOR_NOT_IN_PHA` nếu chưa.
+
+        **Không kiểm phạm vi chi ở bước này** — cố ý, giống `POST /change-requests`: một người con
+        gái lấy chồng xa vẫn phải khai được tấm bằng của cha mình, dù chi của cha không phải chi cô
+        ấy đang sinh hoạt. Cửa kiểm *phạm vi* ở bước duyệt, và ở đó nó chặt.
+
+        ### `personId` lấy ở đâu
+
+        Không có endpoint riêng cho việc này và **không cần**: dùng `GET /persons/search` hoặc
+        `GET /directory` — cả hai đã đi qua bộ lọc riêng tư và trả về `id`. Đừng bắt người dùng gõ
+        tay một UUID.
+
+        `personId` trỏ vào một nhân khẩu **không tồn tại hoặc người khai không được biết là tồn
+        tại** đều trả cùng một `422 VALIDATION_FAILED`. Hai ca dùng chung một câu trả lời là chủ ý:
+        phân biệt chúng sẽ biến màn khai vinh danh thành **máy dò sự tồn tại của một nhân khẩu**.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHonourRequest'
+      responses:
+        '201':
+          description: Đã khai, trạng thái `PENDING`. / Created, pending review.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: '`/api/v1/honours/{id}`'
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HonourDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /honours/pending/count:
+    get:
+      tags: [content]
+      operationId: countPendingHonours
+      summary: Đếm vinh danh chờ duyệt trong phạm vi / Count honours pending review in scope
+      description: |-
+        Dữ liệu cho badge. **`0` nghĩa là "không có gì trong phạm vi của tôi"**, không phải "thấy
+        tất".
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    type: integer
+                    format: int64
+                    minimum: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /honours/{id}:
+    get:
+      tags: [content]
+      operationId: getHonour
+      summary: Một bản ghi vinh danh / Get one honour
+      description: |-
+        Trả `404` khi người gọi không được phép xem — đã gỡ (xoá mềm), không được biết nhân khẩu
+        tồn tại, hoặc bản ghi `PUBLISHED` của một người còn sống chưa mở nhóm trường `honour`.
+
+        **Ba lý do dùng chung một mã trạng thái là chủ ý**: `404` ở đây nghĩa "với anh, bản ghi này
+        không tồn tại", và phân biệt "bị giấu" với "không có" chính là mẩu thông tin mà BA v2 §10
+        bảo vệ.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: '`version` — gửi lại qua `If-Match` khi `PATCH`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HonourDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags: [content]
+      operationId: updateHonour
+      summary: Sửa vinh danh / Edit an honour
+      description: |-
+        Người khai (khi bản ghi còn mở) hoặc người duyệt **trong phạm vi**. Trường vắng mặt = giữ
+        nguyên. `If-Match` bắt buộc.
+
+        ### Sửa một bản ghi ĐÃ DUYỆT đưa nó VỀ LẠI `PENDING`
+
+        Và xoá chữ ký duyệt cũ (`reviewedBy` / `reviewedAt` trở về rỗng). Đây là điểm **khác bài
+        viết**, vốn chặn hẳn việc sửa sau khi đăng, và khác vì một lý do cụ thể: một bài viết sửa
+        xong là một bài khác, còn một vinh danh thì thường chỉ được *bổ sung* (thêm năm, thêm nơi
+        cấp) — bắt người dùng xoá rồi tạo lại sẽ làm mất lịch sử của chính bản ghi ấy.
+
+        Nhưng nội dung đã đổi thì chữ ký duyệt cũ không còn nói về thứ đang hiển thị, nên nó **phải
+        mất theo**; nếu không, "sửa nhẹ sau khi được duyệt" thành lối đăng thẳng lên trang chủ mà
+        không ai đọc. **FE phải lường trước** rằng một lần `PATCH` có thể làm bản ghi biến mất khỏi
+        danh sách `PUBLISHED`.
+
+        **`personId` không sửa được** và không có mặt trong thân yêu cầu: đổi chủ thể của một vinh
+        danh đã duyệt là biến lời phê duyệt cho người này thành lời phê duyệt cho người khác. Cần
+        đổi thì gỡ rồi khai lại.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - $ref: '#/components/parameters/IfMatch'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHonourRequest'
+      responses:
+        '200':
+          description: Đã sửa. Bản ghi từng `PUBLISHED` nay quay về `PENDING`. / Updated.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HonourDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ContentConflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [content]
+      operationId: deleteHonour
+      summary: Gỡ vinh danh — XOÁ MỀM / Remove an honour (soft delete)
+      description: |-
+        > ⚠️ **Động từ là `DELETE` nhưng đây là XOÁ MỀM.** Hàng **ở lại** trong bảng với cờ
+        > `is_deleted`; không có lệnh xoá cứng nào trong context này. Động từ HTTP được chọn vì nó
+        > đúng nghĩa với client ("bỏ bản ghi này đi"), không phải vì hàng biến mất.
+        > / Soft delete despite the `DELETE` verb.
+
+        Cột `status` **giữ nguyên**: trộn "đã gỡ" vào `status` sẽ xoá mất thông tin bản ghi ấy từng
+        được duyệt hay chưa — và đó đúng là câu người ta hỏi khi tra lại một vinh danh bị gỡ.
+
+        Người khai (khi bản ghi còn mở) hoặc người duyệt trong phạm vi. Gỡ lần thứ hai ⇒
+        `409 CONTENT_CLOSED`.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Đã gỡ (xoá mềm). / Soft-deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ContentConflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /honours/{id}/review:
+    post:
+      tags: [content]
+      operationId: reviewHonour
+      summary: Duyệt hoặc từ chối vinh danh / Approve or reject an honour
+      description: |-
+        `approve: true` ⇒ `PENDING → PUBLISHED`. `approve: false` ⇒ `PENDING → WITHDRAWN`,
+        **`note` bắt buộc**.
+
+        ### Vì sao từ chối đi thẳng `WITHDRAWN`, khác bài viết
+
+        Bài viết bị trả lại về `DRAFT` để sửa rồi gửi lại. Một vinh danh bị từ chối thì thường bị
+        từ chối vì **không có thật** hoặc **không thuộc về người đó** — hai thứ mà sửa câu chữ
+        không cứu được. Cần khai lại thì tạo bản ghi mới, và khi ấy lần từ chối cũ vẫn còn đó để
+        người duyệt sau đọc được.
+
+        ### Vì sao vinh danh cũng phải duyệt
+
+        *"Một danh hiệu **tự khai** mà lên thẳng trang chủ là chuyện khác hẳn một bài viết."*
+
+        ### Phạm vi và luật không-tự-duyệt
+
+        Chi đích là chi **hiện tại** của **nhân khẩu được vinh danh**, không phải chi của người
+        khai. Trưởng chi Ất không duyệt được vinh danh của người chi Bính ⇒
+        `403 BRANCH_SCOPE_VIOLATION`.
+
+        Người **khai** không tự duyệt bản ghi của mình ⇒ `403 SELF_REVIEW_FORBIDDEN`. Phép so là
+        **người khai**, không phải người được vinh danh: ca cần chặn không chỉ là "tự khai cho
+        mình" mà cả "tự khai cho con mình rồi tự duyệt" — cả hai đều là một người vừa khai vừa xác
+        nhận.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewContentRequest'
+      responses:
+        '200':
+          description: Đã duyệt (`PUBLISHED`) hoặc đã từ chối (`WITHDRAWN`). / Approved or rejected.
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HonourDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ContentConflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ---------------------------------------------------------------------------
   # GRAPHQL
   # ---------------------------------------------------------------------------
   /graphql:
@@ -3549,6 +5369,568 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
+  # ===========================================================================
+  # MEDIA — kho đối tượng (ảnh & video)
+  #
+  # TỆP KHÔNG ĐI QUA BACKEND. Luồng ba bước: xin phiếu → PUT thẳng lên MinIO →
+  # xác nhận. Không có điểm cuối multipart nào, và đó là quyết định kiến trúc
+  # chính của đợt: một video 100 MiB đi xuyên Tomcat chiếm trọn một luồng xử lý
+  # suốt thời gian tải, và trần `spring.servlet.multipart` 10 MB của dự án cố ý
+  # khớp `ImportLimits.MAX_FILE_BYTES` nên không được nâng.
+  # ===========================================================================
+
+  /media/policy:
+    get:
+      tags: [media]
+      operationId: getMediaPolicy
+      summary: Chính sách tải tệp do máy chủ công bố / Upload policy published by the server
+      description: |-
+        **Đọc cái này trước khi dựng ô chọn tệp.** Trả về trần dung lượng theo từng loại, danh sách
+        kiểu tệp được nhận, số tệp tối đa một bài, và hạn của hai loại URL đã ký.
+
+        > **Vì sao endpoint này tồn tại — nó không phải tiện nghi.** Nếu mỗi bên tự đặt một bộ
+        > trần, cái giá rơi đúng vào chỗ đắt nhất: người dùng chọn một video, nhìn thanh tiến trình
+        > chạy hết, **rồi** mới bị từ chối. Trên mạng di động ở quê thì đó là mười phút chờ và một
+        > lượng dữ liệu có thật, cho một thao tác đã hỏng ngay từ giây đầu. Trần phải **đến từ máy
+        > chủ**, và giao diện không được chép lại con số nào.
+        >
+        > Tiền lệ cùng hình dạng trong chính dự án này: `GET /import/duplicate-policy`. Luật là dữ
+        > liệu máy chủ công bố, không phải hằng số chép tay ở hai nơi.
+
+        Điểm cuối này **và** trường `maxBytes`/`maxDurationSeconds` trong `UploadTicketDto` không
+        mâu thuẫn mà bổ sung: cái này để **dựng màn hình** (đặt `accept`, hiện dòng "tối đa …"),
+        cái kia để **kiểm một tệp cụ thể** ngay trước khi tải.
+
+        Đây là **dữ liệu công khai của hệ thống**, không phải dữ liệu cá nhân — nên nó là lối duy
+        nhất trong nhóm `media` được phép vào bộ nhớ đệm (`max-age=900, public`).
+      responses:
+        '200':
+          description: Chính sách đang áp dụng.
+          headers:
+            Cache-Control:
+              schema: { type: string }
+              description: '`max-age=900, public` — khác hẳn mọi lối khác của nhóm `media`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaPolicyDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /media/upload-tickets:
+    post:
+      tags: [media]
+      summary: Xin URL PUT đã ký / Request a signed upload URL
+      description: |-
+        Bước **1/3**. Trả về một URL `PUT` đã ký (hạn **15 phút**), khoá đối tượng, và **các trần
+        đang áp dụng**.
+
+        > **Trần được trả xuống để giao diện khỏi chép lại con số nào.** Một trần viết cứng trong
+        > JavaScript sẽ lệch khỏi backend đúng vào ngày ai đó chỉnh một bên, và triệu chứng là thứ
+        > tệ nhất: màn hình nhận tệp, người dùng chờ hết 100 MiB tải lên, rồi bước xác nhận mới từ
+        > chối.
+
+        `sizeBytes` là **bắt buộc**: nó cho phép từ chối một tệp quá khổ **trước khi** tốn băng
+        thông. Nó **không** phải phép kiểm — phép kiểm có thẩm quyền là `statObject` ở bước xác
+        nhận, và nó bắt người khai gian.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadTicketRequest'
+      responses:
+        '200':
+          description: Phiếu tải lên.
+          headers:
+            Cache-Control:
+              schema: { type: string }
+              description: Luôn `no-store, private` — thân phản hồi chở một URL đã ký.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadTicketDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          description: |-
+            `sizeBytes` đã vượt trần — từ chối **trước khi** tốn băng thông. `code =
+            MEDIA_TOO_LARGE`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /media/{mediaId}/confirm:
+    post:
+      tags: [media]
+      summary: Xác nhận đã tải xong / Confirm the upload
+      description: |-
+        Bước **3/3**, và là chỗ **bất biến lớn nhất của đường này** được giữ: một tệp chỉ được coi
+        là có thật sau khi **backend tự nhìn thấy nó trên kho**. Backend `statObject`, đọc chữ ký
+        byte của những byte đầu, và (với video) đọc thời lượng từ header container.
+
+        Gọi điểm cuối này mà chưa tải gì lên sẽ nhận `409 MEDIA_NOT_UPLOADED`, **không** phải một
+        cái gật đầu.
+
+        > **`alt` bắt buộc với ảnh** (WCAG 2.2 AA, tiêu chí 1.1.1). Người dùng chính của sản phẩm
+        > là các cụ cao niên, trong đó có người dùng trình đọc màn hình; một tấm ảnh không có chữ
+        > thay thế với họ là một khoảng trống câm. Thiếu `alt` thì tệp **không bị xoá** — người
+        > dùng chỉ cần gõ thêm một câu rồi gọi lại, không phải tải lại 8 MiB.
+
+        **Tệp bị từ chối sẽ bị xoá khỏi kho ngay**, trước khi lỗi được trả về.
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmUploadRequest'
+      responses:
+        '200':
+          description: Tệp đã được xác nhận và sẵn sàng gắn vào một bản ghi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAssetDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Phiếu này không phải của bạn. `code = MEDIA_NOT_OWNED`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: |-
+            `MEDIA_NOT_UPLOADED` — trên kho không có đối tượng nào ứng với phiếu này;
+            `MEDIA_TICKET_CLOSED` — phiếu đã quá hạn hoặc đã xử lý rồi.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '413':
+          description: Kích thước **thật** trên kho vượt trần. `code = MEDIA_TOO_LARGE`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |-
+            `MEDIA_BAD_SIGNATURE` — những byte đầu không khớp định dạng nào được nhận (hoặc khớp
+            một định dạng bị loại: HEIC của iPhone, GIF, MOV, MKV), hoặc loại tệp khác với loại đã
+            xin phiếu;
+            `MEDIA_TOO_LONG` — video dài quá trần;
+            `MEDIA_DURATION_UNKNOWN` — không đọc được thời lượng từ header container, nên trần
+            thời lượng không kiểm được;
+            `VALIDATION_FAILED` — **thiếu `alt` cho một tấm ảnh**. Bốn mã dẫn tới bốn việc khác
+            nhau: chọn lại tệp / cắt ngắn / xuất lại bằng công cụ khác / gõ thêm một câu mô tả.
+
+            > Ở ba mã đầu, tệp **bị xoá khỏi kho ngay**. Ở `VALIDATION_FAILED` thì **không** —
+            > tệp hoàn toàn hợp lệ, người dùng chỉ cần gõ `alt` rồi gọi lại điểm cuối này. Xoá ở
+            > đó sẽ bắt họ tải lại 8 MiB vì một ô nhập bỏ trống.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: |-
+            Kho tệp không phản hồi. `code = MEDIA_STORAGE_UNAVAILABLE`. **503 chứ không 500**: kho
+            tệp là phụ thuộc *ngoài*, và phần còn lại của hệ thống gia phả vẫn chạy khi nó hỏng.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /media/view-urls:
+    post:
+      tags: [media]
+      summary: Đổi khoá thành URL đọc đã ký / Sign read URLs in bulk
+      description: |-
+        Dùng cho `PersonDto.avatarKey` — khoá ấy đã đi qua bộ lọc nhóm trường `birthDetailAndPhoto`
+        trước khi rời máy chủ, nhưng nó **không phải giấy thông hành**: mỗi lần ký là một lần bộ
+        lọc chạy lại với người gọi *hiện tại* và cấu hình riêng tư *hiện tại*. Ai đặt lại nhóm
+        trường về `PRIVATE` hôm nay thì từ hôm nay không ai ký được URL cho ảnh của họ nữa.
+
+        Nhận một **danh sách** (tối đa 200) chứ không một khoá: phả đồ vẽ hàng trăm node và hàng
+        trăm vòng HTTP trên mạng di động sẽ làm hỏng NFR-1.
+
+        > Khoá **vắng mặt** khỏi kết quả khi nó không tồn tại, tệp đã bị gỡ, **hoặc** người gọi
+        > không được xem. Ba tình huống cố ý không phân biệt được từ ngoài — trả ba câu trả lời
+        > khác nhau là biến điểm cuối này thành công cụ dò.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ViewUrlRequest'
+      responses:
+        '200':
+          description: Bản đồ khoá → URL đã ký (hạn 10 phút).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ViewUrlDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /media/{mediaId}/reports:
+    post:
+      tags: [media]
+      summary: Báo một tệp đính kèm vi phạm / Report an attachment
+      description: |-
+        **Đây là nửa còn lại của quyết định "ảnh đi theo quyền của bài".** Bài đã đăng thì ảnh hiện
+        với mọi thành viên, không đi qua bộ lọc nhóm trường của từng người có mặt trong ảnh — một
+        lựa chọn hợp lý cho trang của một dòng họ, nhưng nó chỉ **an toàn** nếu có lối đóng. Lối
+        đóng là điểm cuối này.
+
+        Chỉ báo được tệp mình **nhìn thấy được**: thiếu phép kiểm ấy thì điểm cuối này thành công
+        cụ dò xem một `mediaId` có thật hay không.
+
+        Một người báo một tệp **một lần** khi đơn còn mở (`409 REPORT_DUPLICATE`) — không thì một
+        người bực mình bấm mười lần sẽ dìm hàng đợi của Trưởng chi.
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportMediaRequest'
+      responses:
+        '201':
+          description: Đơn đã được mở.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaReportDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`REPORT_DUPLICATE` — bạn đã có một đơn đang mở cho tệp này.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /media/reports:
+    get:
+      tags: [media]
+      summary: Hàng đợi đơn báo gỡ trong phạm vi chi / Open reports in scope
+      description: |-
+        Chỉ đơn **đang mở**, và chỉ những đơn mà người gọi có thẩm quyền xử lý — phạm vi suy từ
+        **chi của bản ghi mang tấm ảnh** (bài viết: chi đã chụp lúc tạo nháp; ảnh chân dung: chi
+        hiện tại của nhân khẩu). Tệp đã mất chủ thì chỉ vai toàn dòng họ thấy, đúng luật *"chi rỗng
+        không phải chi công cộng"*.
+
+        Mỗi đơn kèm `mediaUrl` đã ký để người duyệt **nhìn thấy thứ mình đang quyết** — không có nó
+        thì màn duyệt chỉ hiện một UUID.
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 200 }
+      responses:
+        '200':
+          description: Danh sách đơn đang mở trong phạm vi.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MediaReportDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /media/reports/{reportId}/takedown:
+    post:
+      tags: [media]
+      summary: Gỡ tệp theo đơn báo / Take the attachment down
+      description: |-
+        **Gỡ thật, và gỡ ngay.** Liên kết bị cắt và byte bị xoá khỏi kho **trong cùng giao dịch** —
+        không có ân hạn. Ân hạn 24 giờ của đường dọn áp cho tệp mất chủ vì bài bị gỡ, *không* áp
+        cho tệp bị gỡ vì vi phạm: một tấm ảnh đang làm lộ dữ liệu cá nhân phải ngừng được phục vụ
+        ngay, không phải sau một đêm.
+
+        Hàng `media_asset` **ở lại** với trạng thái `PURGED` làm sổ: ai gỡ, lúc nào, theo đơn nào.
+
+        Nếu tệp là **ảnh chân dung**, con trỏ `person.avatarKey` cũng được xoá trong cùng giao dịch
+        — thiếu bước ấy thì hồ sơ đó mãi mãi hiện một ô ảnh vỡ trông y hệt một sự cố hạ tầng.
+
+        Người **báo** không tự duyệt đơn của mình (`403 SELF_REVIEW_FORBIDDEN`).
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewReportRequest'
+      responses:
+        '200':
+          description: Đã gỡ.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaReportDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: '`BRANCH_SCOPE_VIOLATION` hoặc `SELF_REVIEW_FORBIDDEN`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`REPORT_CLOSED` — đơn đã được xử lý rồi.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /media/reports/{reportId}/dismiss:
+    post:
+      tags: [media]
+      summary: Xem xét rồi giữ nguyên tệp / Dismiss the report
+      description: |-
+        Người duyệt vẫn phải **ký tên**: người báo có quyền biết ai đã quyết và vì sao.
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewReportRequest'
+      responses:
+        '200':
+          description: Đã giữ nguyên.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaReportDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`REPORT_CLOSED`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /admin/media/gc:
+    post:
+      tags: [media]
+      summary: Dọn tệp mồ côi ngay / Sweep orphaned objects now
+      description: |-
+        **Chỉ Quản trị hệ thống.** Việc này chạm vào tệp của *mọi* chi cùng lúc nên không giới hạn
+        được theo một `ltree` nào.
+
+        Công việc đêm chạy **03:15 GMT+7** làm đúng việc này. Nút chạy tay tồn tại vì cùng lý do mà
+        `POST /api/v1/admin/reminders/dispatch` tồn tại: **một đường ống chỉ chạy được lúc 3 giờ
+        sáng là một đường ống không ai kiểm được.**
+
+        Ba nguồn rác, cả ba đều là hành vi bình thường: (1) xin URL rồi bỏ ngang; (2) bài bị gỡ;
+        (3) đổi ảnh chân dung.
+
+        > Xoá byte thất bại thì hàng **giữ nguyên trạng thái cũ** và lượt sau thử lại. Đánh dấu đã
+        > dọn trong khi byte vẫn nằm trên kho là cách tạo ra một tệp **không ai còn biết mình đang
+        > giữ** — thứ tệ nhất có thể có dưới Nghị định 13/2023.
+      responses:
+        '200':
+          description: Số lượng đã dọn.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GcResultDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /posts/{postId}/media:
+    put:
+      tags: [content]
+      summary: Đặt danh sách tệp đính kèm của bài / Replace a post's attachments
+      description: |-
+        **Đặt cả danh sách**, đúng thứ tự — `PUT`, không `PATCH`, và không có lệnh "thêm một tệp".
+        Thứ tự là một phần của dữ liệu ("ảnh toàn cảnh trước, ảnh dâng hương sau"), nên một API
+        thêm/bớt từng tệp sẽ cần thêm một lệnh sắp xếp lại, tức hai lệnh cho một thao tác mà người
+        dùng nghĩ là một.
+
+        Danh sách **rỗng** là hợp lệ: gỡ hết ảnh khỏi bài.
+
+        Điểm cuối này chỉ nhận **khoá** của những tệp đã xác nhận qua `/api/v1/media` — không có
+        `multipart` ở đây.
+
+        **Chỉ tác giả, chỉ khi bài đang ở `DRAFT`.** Bài đã đăng mà còn đổi được ảnh là một lối
+        vòng qua luật *"bài đã đăng thì không sửa"*, vốn tồn tại để chữ ký duyệt của Trưởng chi có
+        nghĩa. Đây cũng là chỗ chặn ca **người ngoài phạm vi gắn tệp vào bài của chi khác**.
+
+        **Không đòi `If-Match`:** gắn tệp không đụng tới `post.version`.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachMediaRequest'
+      responses:
+        '200':
+          description: Bài viết sau khi đặt tệp.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: |-
+            Không phải tác giả, hoặc bài không còn ở `DRAFT`, hoặc `MEDIA_NOT_OWNED` (tệp không do
+            bạn tải lên).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`MEDIA_NOT_UPLOADED` — một tệp trong danh sách chưa được xác nhận hoặc đã bị gỡ.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`MEDIA_TOO_MANY` — quá 12 tệp.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /persons/{personId}/avatar:
+    put:
+      tags: [persons]
+      summary: Đặt ảnh chân dung / Set a person's portrait
+      description: |-
+        Nhận một **`mediaId`**, không phải một chuỗi khoá. Cột `avatarKey` tồn tại từ V2 nhưng
+        **chưa bao giờ có lối tải lên** cho tới đợt này, nên mọi hợp đồng trước đó chỉ cho phép
+        client tự điền một chuỗi — tức một trường trỏ vào hư không.
+
+        **Riêng tư: không có luật mới.** Ảnh chân dung đi qua nhóm trường `birthDetailAndPhoto` đã
+        có (V8/V17). Đường đọc vốn đã đúng — `avatarKey` chỉ xuất hiện khi nhóm ấy mở, ở cả hồ sơ
+        đầy đủ lẫn node phả đồ lẫn danh bạ. Đợt này **chỉ thêm đường ghi**.
+
+        Quyền: chính chủ, Trưởng chi trong phạm vi `ltree`, hoặc vai toàn dòng họ — đúng phép kiểm
+        đã dùng cho mọi lối sửa hồ sơ khác. **Chỉ nhận ảnh**, không nhận video.
+
+        Luồng đầy đủ: `POST /api/v1/media/upload-tickets` → `PUT` thẳng lên `uploadUrl` →
+        `POST /api/v1/media/{id}/confirm` (kèm `alt`) → `PUT` điểm cuối này.
+      parameters:
+        - name: personId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAvatarRequest'
+      responses:
+        '200':
+          description: Hồ sơ sau khi đặt ảnh, **đã qua bộ lọc riêng tư của người gọi**.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`MEDIA_NOT_UPLOADED` — tệp chưa được xác nhận hoặc đã bị gỡ.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`VALIDATION_FAILED` — tệp là video, không phải ảnh.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    delete:
+      tags: [persons]
+      summary: Gỡ ảnh chân dung / Clear a person's portrait
+      description: |-
+        Tệp **không bị xoá ngay**: liên kết bị cắt, nó thành mồ côi, và đường dọn mang đi sau 24
+        giờ. Một lần bấm nhầm không được phép làm mất vĩnh viễn một tấm ảnh chân dung cũ đã scan từ
+        ảnh giấy.
+
+        *Ngoại lệ:* gỡ theo một đơn báo vi phạm thì **không** có ân hạn.
+      parameters:
+        - name: personId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Hồ sơ sau khi gỡ ảnh.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
 # =============================================================================
 # COMPONENTS
@@ -3722,6 +6104,56 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    ClanInviteGone:
+      description: |-
+        Mã mời dòng họ hết hạn (`INVITATION_EXPIRED`) hoặc đã bị thu hồi (`INVITATION_REVOKED`).
+        `410 Gone` vì thử lại không bao giờ đổi kết quả. **Thu hồi không đụng tới người đã vào** —
+        tài khoản của họ không treo vào mã. / Clan invite expired or revoked.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ClanInviteExhausted:
+      description: |-
+        Mã đã dùng hết trần lượt — `code: CLAN_INVITE_EXHAUSTED`. `409 Conflict` chứ không `410`:
+        trạng thái này **đổi được** (Hội đồng nâng trần là mã dùng lại được), nên lời khuyên cho
+        người dùng khác hẳn một mã quá hạn. / Clan invite hit its use cap.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PersonClaimClosed:
+      description: |-
+        Đơn đã ở trạng thái cuối — `code: CLAIM_CLOSED`. / Claim already closed.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ContentConflict:
+      description: |-
+        Xung đột trạng thái hoặc phiên bản trên bài viết / vinh danh —
+        `code: CONTENT_CLOSED` hoặc `code: OPTIMISTIC_LOCK_CONFLICT`.
+
+        **409 chứ không 422**, và khác biệt ấy dẫn tới hai màn hình khác nhau: 422 nói *"bạn gửi
+        sai, hãy sửa body"*, còn ở đây thân yêu cầu hoàn toàn hợp lệ — thứ đã đổi là **trạng thái
+        phía máy chủ**, gần như luôn vì hai người mở cùng một bài và người kia bấm trước.
+        Hành động đúng của client là **tải lại rồi xem**, không phải bấm lại.
+        / State or version conflict; reload and look, don't retry.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    PreconditionFailed:
+      description: |-
+        Thiếu hoặc sai `If-Match` — `code: PRECONDITION_REQUIRED`.
+
+        Không gộp vào `400`: yêu cầu đúng cú pháp, chỉ thiếu **điều kiện tiên quyết** của giao
+        thức. Client sửa bằng cách đọc lại tài nguyên để lấy `ETag`, không phải bằng cách sửa thân
+        yêu cầu. / Missing/invalid `If-Match`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     TooManyRequests:
       description: Vượt hạn mức gọi. / Rate limit exceeded.
       headers:
@@ -3816,6 +6248,8 @@ components:
         - PERSON_ALREADY_DELETED
         - CHANGE_REQUEST_CLOSED
         - SELF_REVIEW_FORBIDDEN
+        - AUTHOR_NOT_IN_PHA
+        - CONTENT_CLOSED
         - ACCOUNT_NOT_PROVISIONED
         - ACCOUNT_NOT_ACTIVE
         - INVALID_ROLE_ASSIGNMENT
@@ -3827,8 +6261,11 @@ components:
         - ACCOUNT_NOT_LINKED
         - SET_PASSWORD_LINK_INVALID
         - IDENTITY_PROVIDER_UNAVAILABLE
+        - IDENTITY_ALREADY_REGISTERED
         - REMINDER_GENERATION_IN_PROGRESS
         - WEBPUSH_NOT_CONFIGURED
+        - GIO_DATE_FROM_PERSON
+        - EVENT_DELETED
         - OPTIMISTIC_LOCK_CONFLICT
         - PRECONDITION_REQUIRED
         - SYSTEM_RULE_SET_IMMUTABLE
@@ -3837,8 +6274,26 @@ components:
         - LUNAR_CONVERSION_FAILED
         - DEPTH_LIMIT_EXCEEDED
         - QUERY_TOO_COMPLEX
+        - CLAN_INVITE_EXHAUSTED
+        - CLAIM_CLOSED
+        - CLAIM_LIMIT_REACHED
+        - CLAIM_TARGET_UNAVAILABLE
+        - CLAIM_RELATIVE_UNUSABLE
+        - CLAIM_ALREADY_OPEN
         - RATE_LIMITED
         - INTERNAL_ERROR
+        # --- media: kho doi tuong (V19) ---
+        - MEDIA_BAD_SIGNATURE
+        - MEDIA_TOO_LARGE
+        - MEDIA_TOO_LONG
+        - MEDIA_DURATION_UNKNOWN
+        - MEDIA_NOT_UPLOADED
+        - MEDIA_TICKET_CLOSED
+        - MEDIA_TOO_MANY
+        - MEDIA_NOT_OWNED
+        - MEDIA_STORAGE_UNAVAILABLE
+        - REPORT_CLOSED
+        - REPORT_DUPLICATE
         - IMP_BAD_FORMAT
         - IMP_CORRUPT_FILE
         - IMP_UNSAFE_FILE
@@ -3863,11 +6318,107 @@ components:
         REMINDER_GENERATION_IN_PROGRESS: Một lượt sinh lịch nhắc giỗ đang chạy — thử lại sau.
         WEBPUSH_NOT_CONFIGURED: Máy chủ thiếu khoá VAPID nên Web Push tắt; giao diện nên ẩn công tắc.
         CHANGE_REQUEST_CLOSED: Yêu cầu đính chính đã duyệt/từ chối/huỷ — không thao tác thêm được.
-        SELF_REVIEW_FORBIDDEN: Người gửi không được tự duyệt yêu cầu đính chính của chính mình.
+        SELF_REVIEW_FORBIDDEN: |-
+          Người gửi không được tự duyệt nội dung của chính mình — yêu cầu đính chính, **bài viết**,
+          và **vinh danh** dùng chung một mã vì cùng một luật.
+          Thứ mà cả bước duyệt mua được chính là **một người thứ hai đã đọc**; cho tác giả tự bấm
+          duyệt thì bước duyệt chỉ còn là một cú nhấp thêm, và nhật ký ghi lại một "cuộc phê duyệt"
+          không có ai kiểm tra ai. Với vinh danh, phép so là **người khai**, không phải người được
+          vinh danh — ca cần chặn không chỉ là "tự khai cho mình" mà cả "tự khai cho con mình rồi tự
+          duyệt".
+          FE nên **ẩn nút Duyệt** theo `canReview` thay vì để người dùng bấm rồi nhận 403.
+        AUTHOR_NOT_IN_PHA: |-
+          Tài khoản **chưa được duyệt vào phả** (`app_user.person_id` rỗng) nên chưa đăng bài /
+          khai vinh danh được. Quyết định đã chốt của chủ dự án: *"viết bài là tiếng nói của người
+          trong họ"*. Một người vừa đăng ký bằng mã mời dòng họ đã xem được phả đồ nhưng chưa được
+          ai xác nhận là người trong họ.
+          **Đây là trạng thái bình thường của một người mới, không phải lỗi hệ thống** — giao diện
+          phải nói ra lối đi tiếp: mở màn *"tôi là ai trong phả"* rồi chờ Trưởng chi duyệt.
+          Phân biệt với `ACCOUNT_NOT_PROVISIONED` (chưa có `app_user` — "hãy đăng nhập lại") và
+          `FORBIDDEN` (sai vai — "bạn không có quyền này"): ba tình huống, ba lối đi khác hẳn nhau.
+        CONTENT_CLOSED: |-
+          Bài viết / vinh danh đã ở trạng thái cuối, hoặc mũi tên chuyển trạng thái không tồn tại
+          (ví dụ duyệt một bài đang `DRAFT`, sửa một bài đã đăng, gỡ một bản ghi đã gỡ).
+          **Một mã cho cả hai** vì cả hai dẫn tới cùng một lối đi: **tải lại rồi xem trạng thái hiện
+          tại**. Gần như mọi lần gặp mã này là do hai người mở cùng một bài và người kia bấm trước —
+          bấm lại không giúp gì, nhìn lại thì có.
+          Cố ý **không** dùng lại `CHANGE_REQUEST_CLOSED`: khác thực thể, khác màn hình.
+        IDENTITY_ALREADY_REGISTERED: |-
+          Email / số điện thoại tự khai đã có tài khoản trong realm. Trả về ở **cả hai lối vào
+          không cần đăng nhập**: `POST /api/v1/clan-invites/register` và
+          `POST /api/v1/invitations/accept`.
+          Hai lối ấy không đòi token, nên chuỗi người dùng tự gõ **không chứng minh** họ sở hữu định
+          danh đó — mọi thao tác tiếp theo trên một tài khoản đã có chủ (phát liên kết đặt mật khẩu,
+          làm tươi hồ sơ, ghép vào nhân khẩu) là thao tác trên tài sản của người khác. Lưu ý một tài
+          khoản dựng qua **đăng nhập Google/Zalo không có mật khẩu**, nên "chưa có mật khẩu" không
+          hề có nghĩa là "chưa có chủ".
+          Lối đi tiếp cho FE: đưa người dùng sang màn **đăng nhập**, rồi gọi lại đúng endpoint ấy
+          **kèm token** — nhánh có token lấy danh tính từ Keycloak và đi trọn vẹn.
+          Câu cho người dùng phải do **FE dựng theo `code`**, từ bộ dịch của chính nó — **đừng in
+          `detail` ra màn hình**. Sản phẩm song ngữ VI–EN, còn `detail` chỉ có tiếng Việt: in nó
+          ra là dán một đoạn tiếng Việt xuống dưới một đoạn tiếng Anh hoàn chỉnh cho bà con ở nước
+          ngoài. Một `ProblemCode` **đóng** cộng bộ dịch phía client tồn tại *chính là* để tránh
+          chuyện đó; `detail` dành cho **nhật ký và người hỗ trợ đang đọc log**.
+          Nhưng câu FE dựng phải mang đủ hai tình tiết mà `detail` nói ra, vì người bị chặn thường
+          không nhớ mình đã có tài khoản: (1) địa chỉ ấy có thể đã từng dùng để đăng nhập **bằng
+          Google/Zalo** — những lối không đặt mật khẩu nào cả; (2) lối đi thứ hai cho người
+          **không đăng nhập được**: đưa mã mời cho Trưởng chi.
+          Mỗi lần gặp mã này được tính vào giới hạn tần suất như một lần thất bại, nên FE
+          **không** được tự thử lại vòng lặp.
         ACCOUNT_NOT_PROVISIONED: Đăng nhập Keycloak hợp lệ nhưng chưa có `app_user` tương ứng.
         ACCOUNT_NOT_ACTIVE: Tài khoản tồn tại nhưng đang bị khoá hoặc chờ duyệt.
         INVALID_ROLE_ASSIGNMENT: Ví dụ gán Trưởng Chi mà không kèm chi, hoặc tự nâng vai của mình.
+        CLAN_INVITE_EXHAUSTED: |-
+          Mã mời dòng họ đã dùng hết trần lượt mà Hội đồng đặt. **Khác `INVITATION_ALREADY_USED`**:
+          mã dòng họ vốn dùng nhiều lần, vẫn còn hạn và vẫn chưa bị thu hồi — chỉ là trần đầy. Lối
+          đi tiếp là xin Hội đồng nâng trần hoặc phát mã mới.
+          Hai ca còn lại của mã dòng họ (hết hạn · đã thu hồi) **cố ý dùng lại**
+          `INVITATION_EXPIRED` / `INVITATION_REVOKED`: người dùng chỉ cầm một dãy mười ký tự và
+          không phân biệt được hai loại mã, nên hai tập mã lỗi song song chỉ bắt FE viết hai nhánh
+          giống hệt nhau.
+        CLAIM_CLOSED: |-
+          Đơn tự nhận đã được duyệt/từ chối/rút — không xử lại được. Cố ý **không** dùng lại
+          `CHANGE_REQUEST_CLOSED`: hai thực thể khác nhau, hai màn hình khác nhau.
+        CLAIM_TARGET_UNAVAILABLE: |-
+          Nhân khẩu được nhận không nhận đơn được. **MỘT mã cho BA lý do** — đã khuất · đã có tài
+          khoản · đã xoá mềm — và đó là *điểm* của nó: gộp lại là thứ giữ cho màn tự nhận không
+          thành **công cụ liệt kê ai đã có tài khoản**. Gửi thử lần lượt từng ô trên phả đồ rồi đọc
+          mã lỗi sẽ ra danh sách những người *chưa* đăng ký, tức danh sách để mạo danh.
+          FE **không được** cố suy ra lý do thật từ thông điệp, và **không có** endpoint kiểm trước:
+          bất cứ thứ gì trả lời "node này có nhận đơn không" *chính là* công cụ liệt kê ấy, chỉ rẻ
+          hơn.
+        CLAIM_RELATIVE_UNUSABLE: |-
+          Người thân được chỉ ra trong đơn `NEW_PERSON` không dùng để nối được: thiếu, đã xoá mềm,
+          hoặc chưa được gắn vào chi nào. Tách khỏi `CLAIM_TARGET_UNAVAILABLE` vì hai luồng dẫn tới
+          hai màn hình khác nhau — một bên là "chọn ô khác trên phả đồ", bên kia là "chọn người thân
+          khác".
+        CLAIM_ALREADY_OPEN: |-
+          Người gửi đang có một đơn chờ duyệt (`ux_person_claim_open_requester`). Hành động tiếp
+          theo rất cụ thể và **giao diện làm hộ được**: rút đơn cũ qua
+          `POST /person-claims/{id}/cancel` rồi gửi lại. Rút **không** tính vào giới hạn gửi lại.
+        CLAIM_LIMIT_REACHED: |-
+          Người gửi đã bị từ chối quá số lần cho phép. Giới hạn tồn tại vì không có nó thì màn tự
+          nhận thành cách **dò đúng người bằng cách thử lần lượt**. Lối đi tiếp của người dùng thật
+          là gọi Trưởng chi, nên giao diện phải nói ra điều đó chứ đừng chỉ nói "không được".
         DEPTH_LIMIT_EXCEEDED: '`depth` vượt trần cho phép.'
+        GIO_DATE_FROM_PERSON: |-
+          Ngày giỗ ghi trong bản ghi sự kiện khác `person.death_lunar`, hoặc một cái giỗ được gửi
+          lên **theo dương lịch**. `409`.
+          **Vì sao máy chủ từ chối thay vì lặng lẽ nhận.** `person.death_lunar` là nguồn chân lý
+          của ngày giỗ (BA v2), và bộ sinh lịch nhắc đọc thẳng từ hồ sơ nhân khẩu. Nhận một ngày
+          khác vào bản ghi sự kiện là nhận một thay đổi **không có tác dụng nào**: người sửa tin
+          rằng mình vừa đổi ngày giỗ, trong khi cả họ vẫn được nhắc theo ngày cũ — và không ai biết
+          cho tới khi cái giỗ đã qua. Ca dương lịch còn tệ hơn: một ngày dương cố định **trôi khoảng
+          11 ngày mỗi năm** khỏi ngày giỗ thật.
+          Cũng **không** tự ghi đè theo hồ sơ: sửa ngầm dữ liệu trong một lượt ghi mà người dùng
+          tưởng là chuyện khác là hành vi không được phép của một hệ có kiểm toán.
+          Lối đi tiếp cho FE: nói rằng ngày giỗ lấy từ **hồ sơ nhân khẩu** và chỉ sang hồ sơ người
+          ấy — đừng hiện một câu lỗi chung, vì người dùng sẽ gõ lại đúng cái ngày vừa bị từ chối.
+        EVENT_DELETED: |-
+          Sự kiện đã bị **xoá mềm** thì không sửa tiếp được. `409`, cố ý **không** `404`: người gọi
+          đã biết id này có thật (họ vừa đọc nó trước khi bấm sửa), và "đã bị xoá" chính là thông
+          tin họ cần để hiểu vì sao thao tác không đi qua. Phân biệt với `OPTIMISTIC_LOCK_CONFLICT`
+          (bản ghi còn sống, chỉ là có người sửa trước — tải lại rồi sửa lại thì được).
         LUNAR_CONVERSION_FAILED: Ngày âm không tồn tại trong năm quy đổi (thường do tháng nhuận).
         IMP_BAD_FORMAT: Không phải `.xlsx` thật — nhận diện bằng chữ ký tệp, không bằng đuôi.
         IMP_CORRUPT_FILE: Tệp hỏng, thư viện đọc bảng tính không mở nổi.
@@ -4150,7 +6701,7 @@ components:
       type: object
       title: Bản đồng thuận riêng tư / Privacy consent, per field group
       description: |-
-        Năm nhóm trường, **mỗi nhóm một mức độc lập** (Nghị định 13/2023, BA v2 §10).
+        **Sáu** nhóm trường, **mỗi nhóm một mức độc lập** (Nghị định 13/2023, BA v2 §10).
         Thay cho `privacyLevel` cũ — vốn là **một** mức áp cho cả con người và chỉ nới/siết được
         toàn bộ Tầng 3 một lượt.
 
@@ -4193,6 +6744,32 @@ components:
             cho nhóm ấy là kín nhất có thể: người đã khuất · chính chủ · Hội đồng Tộc biểu/Admin.
             Mở nhóm này thì `birth` hiện ra ở dạng **ngày đầy đủ**, không phải riêng năm.
             / Full date of birth and portrait.
+        honour:
+          allOf:
+            - $ref: '#/components/schemas/ShareScope'
+          description: |-
+            **Vinh danh** — các bản ghi `HonourDto` của chính chủ (đỗ đạt · chức tước · thành tích ·
+            khen thưởng). **Nhóm thứ sáu, thêm ở V17.**
+
+            Vinh danh của người **đã khuất** là dữ liệu công khai như mọi dữ liệu người đã khuất —
+            nhóm này không đụng tới họ. Vinh danh của người **còn sống** thì khác hẳn: *"Thạc sĩ, Đại
+            học Y Hà Nội, 2019"* dựng được gần trọn một hồ sơ định danh, và Nghị định 13/2023 xếp nó
+            vào dữ liệu cá nhân — nên chính chủ tự quyết.
+
+            **Mặc định `PRIVATE` cho toàn bộ dữ liệu đang có**, kể cả những hồ sơ trước đây đã chọn
+            "cả họ xem" cho năm nhóm kia: mức cũ chưa bao giờ nói gì về vinh danh, nên suy ra một sự
+            đồng ý chưa từng được đưa ra là không được phép. Không có cửa sổ lộ nào.
+
+            > **Hệ quả vận hành, nói thẳng:** duyệt một vinh danh của người còn sống chưa bật công
+            > tắc này thì nó **vẫn không hiện ra với ai** ngoài chính chủ và Hội đồng. Đó không phải
+            > lỗi: quyền công bố nằm ở chủ thể, còn quyền duyệt chỉ nói "bản ghi này có thật".
+
+            **Nhóm này KHÔNG đưa ai vào danh bạ.** Một người chỉ mở riêng `honour` vẫn **không**
+            xuất hiện trong `GET /directory`: danh bạ là chỗ tra *người liên hệ được* (nghề nghiệp,
+            tỉnh, ảnh), và họ sẽ hiện ra ở đó như một **dòng trống** — vừa lộ vừa vô dụng.
+
+            **Client cũ không gửi khoá này vẫn hoạt động bình thường**: vắng mặt ở `POST` ⇒ `PRIVATE`,
+            vắng mặt ở `PATCH` ⇒ giữ nguyên. / Honours; sixth field group, added in V17.
 
     VisibleTier:
       type: string
@@ -5797,6 +8374,155 @@ components:
             Mộ phần liên quan (Giai đoạn 3) — dùng cho nhắc chạp mả kèm bản đồ.
         note:
           type: [string, 'null']
+        location:
+          type: [string, 'null']
+          description: Địa điểm (từ đường, nghĩa trang…). / Venue.
+        adjustmentNote:
+          type: [string, 'null']
+          description: |-
+            Vì sao ngày dương lệch khỏi ngày âm chép trong sổ (tháng thiếu, năm nay không nhuận
+            tháng ấy). `null` khi không lệch. Đưa ra một ngày khác với sổ mà không giải thích là
+            cách nhanh nhất để cả họ mất tin vào hệ thống.
+        solarDate:
+          type: [string, 'null']
+          format: date
+          description: |-
+            Ngày dương **gốc** của sự kiện tính theo dương lịch; `null` với sự kiện theo âm lịch
+            (tức gần như mọi việc họ). **Đừng nhầm với `nextOccurrenceSolar`** — cái sau là kết quả
+            quy đổi cho một năm cụ thể và đổi theo từng năm.
+        lunarBased:
+          type: boolean
+          description: '`true` = ngày âm là dữ liệu gốc (mặc định cho việc họ).'
+        recurringAnnually:
+          type: boolean
+          description: |-
+            `true` = lặp lại hằng năm theo ngày âm (giỗ, chạp mả, lễ Tết).
+            `false` = xảy ra đúng một lần (khánh thành từ đường) — khi đó `lunarDate.year` bắt buộc.
+        version:
+          type: integer
+          format: int64
+          description: |-
+            Phiên bản optimistic locking; cũng là giá trị trong `ETag`. Gửi lại qua `If-Match`
+            khi `PATCH`. / Optimistic-lock version, mirrored in the ETag.
+
+    CreateEventRequest:
+      type: object
+      title: Tạo sự kiện dòng họ / Create clan event
+      description: |-
+        Trưởng cành/chi/họ cấu hình một việc họ: lễ Tết, chạp mả, họp họ, khánh thành.
+
+        **Ngày âm là mặc định.** Gửi `lunarDate` cho gần như mọi trường hợp; `solarDate` dành cho
+        số ít việc vốn ấn định theo dương lịch. Chỉ gửi **một trong hai** — lưu cả hai là tạo ra
+        hai ngày không bao giờ đồng bộ lại được.
+
+        **Phạm vi phải chọn, không được bỏ trống:** `clanWide: true` hoặc `scopeBranchId`. Trường
+        này quyết định **ai được nhắc**, không phải một nhãn hiển thị.
+      required: [eventType, title]
+      properties:
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: [string, 'null']
+          maxLength: 4000
+        lunarDate:
+          oneOf:
+            - $ref: '#/components/schemas/LunarDateInput'
+            - type: 'null'
+        solarDate:
+          type: [string, 'null']
+          format: date
+        recurringAnnually:
+          type: boolean
+          default: true
+          description: Mặc định `true` — đại đa số việc họ lặp theo năm âm.
+        scopeBranchId:
+          type: [string, 'null']
+          format: uuid
+          description: Chi/ngành nhận nhắc, **bao gồm mọi nhánh con** (`ltree`).
+        clanWide:
+          type: boolean
+          default: false
+          description: |-
+            Việc của cả dòng họ. Chỉ **Hội đồng Tộc biểu** và **Quản trị hệ thống** đặt được;
+            Trưởng chi nhận `403 FORBIDDEN`.
+        personId:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            Nhân khẩu chủ thể. **Bắt buộc** với `GIO_THUONG`, và khi đó `lunarDate` phải trùng
+            `person.death_lunar` — ngược lại nhận `409 GIO_DATE_FROM_PERSON`, vì hồ sơ nhân khẩu
+            mới là nguồn chân lý của ngày giỗ.
+        location:
+          type: [string, 'null']
+          maxLength: 255
+
+    UpdateEventRequest:
+      type: object
+      title: Sửa sự kiện dòng họ / Update clan event
+      description: |-
+        Mọi trường tuỳ chọn. Trường **vắng mặt** giữ nguyên giá trị cũ; trường có mặt và `null` thì
+        xoá giá trị. Bắt buộc `If-Match` với `ETag` lấy từ `GET`.
+      properties:
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        title:
+          type: [string, 'null']
+          maxLength: 200
+        description:
+          type: [string, 'null']
+          maxLength: 4000
+        lunarDate:
+          oneOf:
+            - $ref: '#/components/schemas/LunarDateInput'
+            - type: 'null'
+        solarDate:
+          type: [string, 'null']
+          format: date
+        recurringAnnually:
+          type: [boolean, 'null']
+        scopeBranchId:
+          type: [string, 'null']
+          format: uuid
+        clanWide:
+          type: [boolean, 'null']
+        personId:
+          type: [string, 'null']
+          format: uuid
+        location:
+          type: [string, 'null']
+          maxLength: 255
+
+    LunarDateInput:
+      type: object
+      title: Ngày âm gửi lên / Lunar date input
+      description: |-
+        **`leap` là trường nguy hiểm nhất của cả thân yêu cầu.** Bỏ quên nó không sinh ra lỗi nào:
+        ngày vẫn hợp lệ, hệ thống vẫn quy đổi được, và lời nhắc lệch **nguyên một tháng**.
+      required: [month, day]
+      properties:
+        year:
+          type: [integer, 'null']
+          minimum: 1
+          description: |-
+            Vắng = lặp lại hằng năm, không gắn năm nào. **Bắt buộc khi `recurringAnnually: false`**:
+            "ngày 12 tháng 2 âm" không có năm thì không quy đổi được sang ngày dương nào.
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        day:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: |-
+            Ngày 30 ở một tháng thiếu được **lùi về 29** lúc quy đổi, không bị từ chối lúc ghi —
+            đúng tập quán.
+        leap:
+          type: boolean
+          default: false
 
     EventPage:
       type: object
@@ -5973,6 +8699,42 @@ components:
         dispatchedAt:
           type: string
           format: date-time
+
+    EventScopeBackfillResult:
+      type: object
+      title: Kết quả dọn phạm vi sự kiện cũ / Event scope backfill result
+      description: |-
+        `changed` tách khỏi `scanned` vì một lượt `dryRun` **quét thì có mà sửa thì không** — gộp
+        làm một sẽ khiến người vận hành tin rằng mình đã sửa xong.
+        Trên một hệ đã dọn, lượt chạy thứ hai trả `scanned = 0` và `changed = 0`.
+      required: [scanned, assignedBranch, markedClanWide, changed, dryRun]
+      properties:
+        scanned:
+          type: integer
+          description: |-
+            Số sự kiện **còn hiệu lực** (chưa xoá mềm) không có chi lẫn cấp dòng họ.
+          example: 12
+        assignedBranch:
+          type: integer
+          description: |-
+            Số dòng được gán chi/ngành **lấy từ hồ sơ nhân khẩu** của sự kiện (luật 1). Khi
+            `dryRun = true` đây là số dòng *sẽ* được gán.
+          example: 11
+        markedClanWide:
+          type: integer
+          description: |-
+            Số dòng được đánh dấu **tường minh** là cấp dòng họ (luật 2) — không suy ra được chi nào
+            vì sự kiện không gắn nhân khẩu, hoặc nhân khẩu chưa thuộc chi nào.
+          example: 1
+        changed:
+          type: integer
+          description: |-
+            Số dòng **thật sự** bị sửa. **Luôn `0` khi `dryRun = true`**, và `0` ở lượt chạy thứ hai.
+          example: 12
+        dryRun:
+          type: boolean
+          description: Lượt chạy này chỉ đếm, không ghi.
+          example: false
 
     # -------------------------------------------------------------------------
     # WEB PUSH
@@ -7619,8 +10381,12 @@ components:
         Thân yêu cầu của `POST /invitations/accept`. Mở rộng `RedeemInvitationRequest` bằng hai
         trường chỉ cần khi backend phải **tạo tài khoản Keycloak** cho người được mời.
 
-        `email` bắt buộc khi người gọi **chưa có** tài khoản — Keycloak cần một định danh. Khi lời
-        gọi mang token của một tài khoản đã có, hai trường này bị bỏ qua.
+        `loginId` bắt buộc khi người gọi **chưa có** tài khoản — Keycloak cần một định danh. Khi
+        lời gọi mang token của một tài khoản đã có, các trường này bị bỏ qua.
+
+        Luồng này dành cho **các cụ lớn tuổi** (Trưởng chi chọn người trong phả, in phiếu, đưa tận
+        tay), tức đúng nhóm thường *không có* email — nên đây là lối cần nhận số điện thoại **nhất**,
+        không phải ít nhất.
       required: [code]
       properties:
         code:
@@ -7628,11 +10394,34 @@ components:
           maxLength: 32
           examples: ['K7M2Q-D9HFX']
           description: Mã mời. Chuẩn hoá như `RedeemInvitationRequest`. / Invitation code.
+        loginId:
+          type: string
+          maxLength: 254
+          examples: ['ba.lan@example.com', '0912345678']
+          description: |-
+            **Địa chỉ thư điện tử HOẶC số điện thoại.** Ô đăng nhập của realm nhận cả hai — quyết
+            định ấy có để phục vụ các cụ không có email — nên ô lập tài khoản cũng nhận cả hai. Chỉ
+            nhận email ở đây là một **mâu thuẫn trong chính sản phẩm**, và nó rơi đúng vào nhóm
+            người mà luồng mời sinh ra để phục vụ.
+
+            Số điện thoại Việt Nam được **chuẩn hoá** về dạng `0…`: `+84912345678`, `84912345678`,
+            `0912 345 678`, `0912.345.678` đều là **một** số. Không chuẩn hoá thì cùng một người
+            đăng ký hai lần sẽ ra hai tài khoản, rồi một trong hai được ghép vào phả còn cái kia
+            thì không.
+
+            **Giới hạn có thật, giao diện nên nói ra:** tài khoản lập bằng số điện thoại sẽ *không*
+            nhận được thư đặt lại mật khẩu khi hệ thống có SMTP. Đó là giới hạn của việc **khôi
+            phục**, không phải của việc đăng ký — và hôm nay chưa khác gì, vì chưa có SMTP và liên
+            kết đặt mật khẩu được trả thẳng trong phản hồi HTTP.
+
+            Đọc không ra thành email lẫn số máy → `422 VALIDATION_FAILED`.
         email:
           type: string
-          format: email
+          maxLength: 254
+          deprecated: true
           description: |-
-            Định danh của tài khoản sắp tạo. **Bắt buộc khi chưa có tài khoản.**
+            **Tên cũ của `loginId`.** Giữ lại để bản giao diện đang chạy không gãy; sẽ bỏ. Dùng
+            `loginId` — tên ấy không nói dối khi giá trị là một số điện thoại.
         displayName:
           type: string
           maxLength: 200
@@ -7694,6 +10483,8 @@ components:
         personId:
           type: string
           format: uuid
+        invitee:
+          $ref: '#/components/schemas/InviteeSummary'
         branchId:
           type: string
           format: uuid
@@ -7889,3 +10680,1462 @@ components:
             **bình thường** — một cụ có thể để tin nhắn tới hôm sau mới mở — nên giao diện phải cho
             một đường xin lại, không phải một dải đỏ.
 
+    # -------------------------------------------------------------------------
+    # MÃ MỜI DÒNG HỌ / CLAN INVITE CODES
+    # -------------------------------------------------------------------------
+    IssueClanInviteRequest:
+      type: object
+      title: Phát mã mời dòng họ
+      description: |-
+        Mọi trường đều tuỳ chọn — một mã không nhãn, hạn mặc định, không trần vẫn là một mã hợp lệ.
+        Nhưng `label` nên có: nó là thứ **biến bộ đếm thành thông tin dùng được**.
+      properties:
+        label:
+          type: string
+          maxLength: 160
+          examples: ['Nhóm Zalo họ Nguyễn 2026']
+          description: |-
+            Nhãn để Hội đồng nhận ra mã này phát cho kênh nào. *"Mã dán nhóm Zalo đã dùng 400 lần"*
+            nói được điều gì đó; *"mã thứ ba đã dùng 400 lần"* thì không.
+            **Không phải bí mật, nhưng cũng không đi ra tới người cầm mã.**
+        ttlDays:
+          type: integer
+          minimum: 1
+          maximum: 90
+          default: 30
+          description: |-
+            Số ngày hiệu lực. **Không có giá trị nào nghĩa là vô hạn** — một mã không hạn là một mã
+            vĩnh viễn, và một tờ giấy bỏ quên năm 2026 vẫn mở được phả năm 2030.
+            Trần 90 ngày dài hơn mã cá nhân (30) vì mã dòng họ phát ra ở một dịp có thật (lễ giỗ tổ,
+            họp họ) và người ở xa cần vài tuần mới ngồi xuống đăng ký.
+        maxUses:
+          type: integer
+          minimum: 1
+          examples: [600]
+          description: |-
+            Trần lượt dùng. Bỏ trống = không giới hạn *số lượt* (vẫn có hạn thời gian, vẫn thu hồi
+            được, vẫn có bộ đếm). Hội đồng biết dòng họ có bao nhiêu người thì nên đặt theo con số ấy.
+        note:
+          type: string
+          maxLength: 500
+
+    ClanInvite:
+      type: object
+      title: Mã mời dòng họ (nhìn từ màn quản trị)
+      description: |-
+        **Không có mã, và cũng không có băm của mã.** Băm không mở được cửa nào, nhưng một trường
+        không màn hình nào dùng thì không có lý do để đi qua dây.
+      required: [id, issuedBy, status, usability, expiresAt, useCount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        issuedBy:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [ACTIVE, REVOKED]
+          description: |-
+            Trạng thái **lưu trữ**. Cố ý chỉ có hai giá trị: "hết hạn" và "hết lượt" là phép so
+            sánh (với đồng hồ, với bộ đếm), không phải dòng dữ liệu cần một job đi lật cờ.
+        usability:
+          type: string
+          enum: [USABLE, EXPIRED, REVOKED, EXHAUSTED]
+          description: |-
+            Trạng thái **đã xét đồng hồ và bộ đếm**. FE hiển thị trường này, **không** phải
+            `status`: `ACTIVE` của một mã đã quá hạn không nói lên điều gì.
+        expiresAt:
+          type: string
+          format: date-time
+        useCount:
+          type: integer
+          examples: [37]
+          description: |-
+            **Số lượt đã dùng — con số làm cả màn hình này có ích.** Thấy 400 lượt trên một dòng họ
+            600 người thì *biết* mà thu hồi; không có bộ đếm thì mã rò ra và mọi thứ trông vẫn bình
+            thường. Bấm hai lần bởi cùng một tài khoản **không** đếm thành hai.
+        maxUses:
+          type: integer
+          description: Trần lượt dùng; vắng nghĩa là không đặt trần. / Use cap, optional.
+        remainingUses:
+          type: integer
+          description: Số lượt còn lại; vắng cùng lúc với `maxUses`. / Remaining uses.
+        revokedAt:
+          type: string
+          format: date-time
+        revokedReason:
+          type: string
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    IssuedClanInvite:
+      type: object
+      title: Mã dòng họ vừa phát
+      description: |-
+        **Lần duy nhất mã thô rời máy chủ.** `code` không đọc lại được ở bất kỳ endpoint nào — CSDL
+        chỉ lưu băm SHA-256. Mất mã thì phát mã mới, và mã cũ ở lại với bộ đếm của nó.
+      required: [code, invite]
+      properties:
+        code:
+          type: string
+          examples: ['K7M2Q-D9HFX']
+          description: |-
+            Mã thô, đã chia nhóm cho dễ đọc qua điện thoại. Bảng chữ Crockford Base32 (bỏ hẳn
+            `I`, `L`, `O`, `U`); khi nhập lại thì dấu gạch, khoảng trắng và chữ thường đều được
+            chấp nhận.
+        invite:
+          $ref: '#/components/schemas/ClanInvite'
+
+    ClanInvitePreview:
+      type: object
+      title: Mã này của dòng họ nào
+      description: |-
+        **Hai trường, và đó là toàn bộ.** Khác hẳn `InvitationPreview`, vốn trả về tên một người
+        đang sống: mã dòng họ không trỏ vào ai nên không có gì để trả.
+        Bộ đếm, số lượt còn lại và nhãn mã **cố ý vắng mặt** — chúng là công cụ giám sát của Hội
+        đồng, không phải thông tin cho người cầm mã.
+      properties:
+        clanName:
+          type: string
+          examples: ['Dòng họ Nguyễn — Đại Lan']
+          description: |-
+            Tên gốc của dòng họ, để người nhận mã qua một tin nhắn chuyển tiếp biết mã này của họ
+            nào. Dữ liệu công khai — nó đã nằm trong `BranchRef` mà Khách vẫn đọc được.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Người ta cần biết còn kịp đăng ký không. / Deadline for the reader.
+
+    RedeemClanInviteRequest:
+      type: object
+      title: Mã mời dòng họ
+      required: [code]
+      properties:
+        code:
+          type: string
+          maxLength: 32
+          examples: ['K7M2Q-D9HFX']
+          description: Dấu gạch, khoảng trắng và chữ thường đều chấp nhận được. / Normalised server-side.
+
+    RegisterWithClanInviteRequest:
+      type: object
+      title: Đăng ký bằng mã mời dòng họ
+      required: [code]
+      properties:
+        code:
+          type: string
+          maxLength: 32
+          examples: ['K7M2Q-D9HFX']
+        loginId:
+          type: string
+          maxLength: 254
+          examples: ['ba.lan@example.com', '0912345678']
+          description: |-
+            **Địa chỉ thư điện tử HOẶC số điện thoại.** Ô đăng nhập của realm nhận cả hai — quyết
+            định ấy có để phục vụ các cụ không có email — nên ô lập tài khoản cũng nhận cả hai. Chỉ
+            nhận email ở đây là một **mâu thuẫn trong chính sản phẩm**, và nó rơi đúng vào nhóm
+            người mà luồng mời sinh ra để phục vụ.
+
+            Số điện thoại Việt Nam được **chuẩn hoá** về dạng `0…`: `+84912345678`, `84912345678`,
+            `0912 345 678`, `0912.345.678` đều là **một** số. Không chuẩn hoá thì cùng một người
+            đăng ký hai lần sẽ ra hai tài khoản, rồi một trong hai được ghép vào phả còn cái kia
+            thì không.
+
+            **Giới hạn có thật, giao diện nên nói ra:** tài khoản lập bằng số điện thoại sẽ *không*
+            nhận được thư đặt lại mật khẩu khi hệ thống có SMTP. Đó là giới hạn của việc **khôi
+            phục**, không phải của việc đăng ký — và hôm nay chưa khác gì, vì chưa có SMTP và liên
+            kết đặt mật khẩu được trả thẳng trong phản hồi HTTP.
+
+            Đọc không ra thành email lẫn số máy → `422 VALIDATION_FAILED`.
+        email:
+          type: string
+          maxLength: 254
+          deprecated: true
+          description: |-
+            **Tên cũ của `loginId`.** Giữ lại để bản giao diện đang chạy không gãy; sẽ bỏ. Dùng
+            `loginId` — tên ấy không nói dối khi giá trị là một số điện thoại.
+
+            **Bắt buộc khi gọi không kèm token.** Nếu người gọi đã đăng nhập (ví dụ vừa vào bằng
+            Google/Zalo nhưng chưa được ghép vào phả) thì danh tính lấy từ token và cả hai trường
+            này bị bỏ qua.
+        displayName:
+          type: string
+          maxLength: 160
+          examples: ['Nguyễn Thị Lan']
+          description: |-
+            Tên hiển thị tự khai. **Không** phải tên trong phả, và **không** được dùng để tự động
+            suy ra nhân khẩu nào — việc ghép là của đơn tự nhận và của Trưởng chi.
+
+    ClanRegistration:
+      type: object
+      title: Tài khoản sau khi đăng ký bằng mã dòng họ
+      description: |-
+        **Không có `personId`, và `status` là `PENDING`** — đó là điểm phân biệt căn bản với
+        `AcceptedInvitation`. Trạng thái này là đúng, không phải bước dang dở: người dùng xem được
+        phả đồ ngay, rồi tự nhận mình qua `/person-claims/...`.
+      required: [appUserId, status, clanInviteId]
+      properties:
+        appUserId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING]
+          description: 'Luôn là `PENDING` — chưa gắn nhân khẩu nào. / Always PENDING.'
+        clanInviteId:
+          type: string
+          format: uuid
+          description: Mã đã dùng — để màn hình nói được "bạn vào bằng mã nào". / Redeemed code.
+        setPasswordUrl:
+          type: string
+          format: uri
+          description: |-
+            Liên kết một lần dẫn tới `POST /invitations/set-password`. **Tuỳ chọn** — vắng mặt
+            nghĩa là tài khoản đã có mật khẩu (hoặc người gọi đã mang token), và client phải đưa họ
+            tới màn đăng nhập chứ **không** hiện lỗi.
+        setPasswordExpiresAt:
+          type: string
+          format: date-time
+
+    ClanInviteRedemption:
+      type: object
+      title: Một lượt dùng mã
+      description: |-
+        Cố ý **không** mang email hay tên: `appUserId` trỏ tới đủ mọi thứ ấy và bản thân nó đi qua
+        bộ lọc riêng tư khi hiển thị. Chép lại ở đây là tạo một bản sao dữ liệu cá nhân nằm ngoài
+        mọi bộ lọc — và một bản sao thì không ai nhớ mà xoá khi có yêu cầu xoá dữ liệu.
+      required: [appUserId, at]
+      properties:
+        appUserId:
+          type: string
+          format: uuid
+        at:
+          type: string
+          format: date-time
+
+    # -------------------------------------------------------------------------
+    # TỰ NHẬN MÌNH TRONG PHẢ / PERSON CLAIMS
+    # -------------------------------------------------------------------------
+    RelativeKind:
+      type: string
+      title: Quan hệ với người thân đã có trong phả
+      enum: [FATHER, MOTHER, SPOUSE]
+      description: |-
+        Ba quan hệ **duy nhất** mà hệ thống suy ra được đời thứ từ đó: cha, mẹ (đời = đời cha/mẹ +
+        1) và vợ/chồng (đời = đời người phối ngẫu — đúng cách dâu/rể vào phả).
+
+        **Con cái cố ý không có mặt.** *"Tôi là con của người này"* thì người thân là cha/mẹ; còn
+        *"tôi là cha của người đã có trong phả"* là một nghiệp vụ khác hẳn — nó chèn một đời *lên
+        trên* và đánh số lại cả một nhánh, việc mà Trưởng chi phải làm bằng tay chứ không phải hệ
+        quả phụ của một đơn tự nhận.
+
+    SubmitPersonClaimRequest:
+      type: object
+      title: Đơn nhận một nhân khẩu đã có
+      required: [personId, phone]
+      properties:
+        personId:
+          type: string
+          format: uuid
+          description: Ô mình vừa chọn trên phả đồ. / The node the user picked.
+        phone:
+          type: string
+          maxLength: 32
+          examples: ['0912345678']
+          description: |-
+            **Bắt buộc** — đây là thứ Trưởng chi dùng để gọi kiểm chứng, và một đơn không gọi kiểm
+            chứng được thì Trưởng chi không có gì để đối chiếu ngoài niềm tin.
+            Khi đơn được duyệt, số này thuộc nhóm `contact` của mô hình riêng tư: **mặc định kín**,
+            chính chủ tự mở nếu muốn.
+        introduction:
+          type: string
+          maxLength: 2000
+          examples: ['Cháu là con thứ hai của ông Nguyễn Văn Bốn, quê Đại Lan.']
+          description: |-
+            *Con ông nào, bà nào, quê quán.* **Đây mới là thứ Trưởng chi thật sự dùng để đối
+            chiếu**; số điện thoại chỉ giúp gọi kiểm chứng.
+
+    SubmitNewPersonClaimRequest:
+      type: object
+      title: Đơn xin được thêm vào phả
+      required: [fullName, relativePersonId, relativeKind, phone]
+      properties:
+        fullName:
+          type: string
+          maxLength: 160
+          examples: ['Trần Thị Mai']
+        birthYear:
+          type: integer
+          minimum: 1800
+          maximum: 2200
+          examples: [1998]
+          description: |-
+            Không bắt buộc, nhưng nó là tín hiệu tốt của bộ dò trùng — và bộ dò là thứ giữ cho phả
+            không sinh ra hai bản ghi của cùng một người.
+        gender:
+          $ref: '#/components/schemas/Gender'
+        relativePersonId:
+          type: string
+          format: uuid
+          description: |-
+            **Người thân đã có trong phả.** Bắt buộc: không có nó thì nhân khẩu mới thành node mồ
+            côi — không gắn vào cây, không tính được đời, không tra được danh xưng. Người thân ấy
+            cũng là thứ quyết định **ai duyệt**, vì người mới chưa thuộc chi nào.
+            Được phép **đã khuất**; chỉ nhân khẩu đã xoá mềm mới bị từ chối.
+        relativeKind:
+          $ref: '#/components/schemas/RelativeKind'
+        phone:
+          type: string
+          maxLength: 32
+          examples: ['0912345678']
+        introduction:
+          type: string
+          maxLength: 2000
+          examples: ['Cháu là con dâu mới của ông Nguyễn Văn Bốn, cưới tháng 3 năm nay.']
+
+    ReviewPersonClaimRequest:
+      type: object
+      title: Duyệt hoặc từ chối một đơn
+      required: [approve]
+      properties:
+        approve:
+          type: boolean
+          description: |-
+            `true` = duyệt. Với đơn `NEW_PERSON` thì duyệt **tạo nhân khẩu mới**, nối vào người
+            thân được chỉ ra, rồi gắn tài khoản — tất cả trong một transaction.
+        note:
+          type: string
+          maxLength: 1000
+          description: |-
+            **Bắt buộc khi từ chối** — người gửi có quyền biết vì sao để khai lại cho đúng, và
+            không nói lý do là cách chắc chắn nhất để họ gửi lại đúng cái đơn ấy. Lưu ý số lần bị
+            từ chối **có giới hạn**.
+
+    ClaimDuplicateSuspect:
+      type: object
+      title: Một nhân khẩu bị nghi là chính người đang khai
+      description: |-
+        **Chỉ khoá, điểm và tín hiệu — không tên, không năm sinh, không chi.** Bên bị nghi hoàn
+        toàn có thể là một người **còn sống ở một chi khác** mà người đọc đơn không được xem tên
+        huý hay năm sinh. Giao diện cầm `personId` rồi gọi `GET /persons/{personId}`, nơi bộ lọc
+        phân tầng riêng tư thật sự chạy.
+
+        Điều đó đặc biệt quan trọng vì ảnh chụp này được **lưu vào đơn**: một giá trị đọc từ phả
+        lọt vào đó là lọt vĩnh viễn, và nó sẽ đi qua mọi lần đọc đơn về sau mà không còn bộ lọc nào
+        chạy trên nó.
+      required: [personId, score]
+      properties:
+        personId:
+          type: string
+          format: uuid
+        score:
+          type: integer
+          description: Điểm nghi ngờ, đã cộng trừ mọi tín hiệu. Cao hơn = đáng xem hơn. / Match score.
+        signals:
+          type: array
+          items:
+            type: string
+          description: Tên các tín hiệu đã đóng góp — **chỉ để hiển thị**. / Display only.
+        hint:
+          type: string
+          description: |-
+            Câu giải thích ngắn cho người đọc — **chỉ để hiển thị, đừng phân tích chuỗi này**.
+            / Human-readable hint; do not parse.
+
+    PersonClaim:
+      type: object
+      title: Đơn tự nhận mình trong phả
+      description: |-
+        `phone` và `introduction` chỉ đi tới **hai** loại người: người gửi (xem đơn của chính mình)
+        và người duyệt **đúng phạm vi chi**. Không có lối thứ ba.
+
+        **Không mang tên hay năm sinh của nhân khẩu được nhận** — chỉ `personId`. Nhân khẩu ấy có
+        thể là một người còn sống, và ai được xem gì về họ là câu hỏi của bộ lọc phân tầng riêng
+        tư, thứ chạy ở `GET /persons/{id}` chứ không phải ở đây.
+      required: [id, kind, status, requestedBy, phone, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [EXISTING, NEW_PERSON]
+          description: |-
+            `EXISTING` = nhận một nhân khẩu đã có; duyệt thì chỉ *gắn* tài khoản.
+            `NEW_PERSON` = xin được thêm vào phả; duyệt thì **tạo** nhân khẩu rồi mới gắn.
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+        requestedBy:
+          type: string
+          format: uuid
+        requesterDisplayName:
+          type: string
+          description: |-
+            Tên hiển thị của **tài khoản** gửi đơn (tự khai lúc đăng ký), để Trưởng chi đối chiếu
+            với phần tự giới thiệu. Không phải tên trong phả.
+        attemptNo:
+          type: integer
+          examples: [1]
+          description: |-
+            Đơn thứ mấy của người này. Lần thứ nhất là chuyện thường; lần thứ tư trên bốn nhân khẩu
+            khác nhau là một tín hiệu hoàn toàn khác, và Trưởng chi cần thấy con số ấy.
+        personId:
+          type: string
+          format: uuid
+          description: Nhân khẩu được nhận. **Chỉ đơn `EXISTING`.** / Claimed person, EXISTING only.
+        relativePersonId:
+          type: string
+          format: uuid
+          description: Người thân đã có trong phả. **Chỉ đơn `NEW_PERSON`.** / Relative, NEW_PERSON only.
+        relativeKind:
+          $ref: '#/components/schemas/RelativeKind'
+        declaredName:
+          type: string
+          description: Họ tên tự khai. Chỉ đơn `NEW_PERSON`. / Self-declared name.
+        declaredBirthYear:
+          type: integer
+        declaredGender:
+          $ref: '#/components/schemas/Gender'
+        targetBranchId:
+          type: string
+          format: uuid
+          description: |-
+            Chi đích — **căn cứ để so phạm vi `ltree` khi duyệt**. Với `EXISTING` là chi của nhân
+            khẩu được nhận; với `NEW_PERSON` là chi của người thân được chỉ ra.
+        targetBranch:
+          $ref: '#/components/schemas/ClaimBranch'
+        phone:
+          type: string
+          examples: ['0912345678']
+        introduction:
+          type: string
+        duplicateSuspects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimDuplicateSuspect'
+          description: |-
+            Ảnh chụp kết quả dò trùng, chụp **lúc gửi** — không dò lại lúc duyệt, vì Trưởng chi phải
+            thấy đúng thứ hệ thống đã thấy khi nhận đơn chứ không phải một kết quả khác vì phả đã
+            đổi trong lúc chờ.
+
+            **Ba trạng thái, ba câu khác nhau trên màn hình:**
+
+            | Giá trị | Nghĩa |
+            |---|---|
+            | **vắng mặt** | chưa quét bao giờ — đơn `EXISTING` không cần quét |
+            | `[]` | đã quét, **không nghi ai** — kết quả mong đợi của tuyệt đại đa số đơn |
+            | có phần tử | đã quét, và đây |
+
+            Gộp hai trạng thái đầu sẽ nói với Trưởng chi rằng hệ thống đã kiểm trong khi nó chưa
+            kiểm.
+        competingClaimIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: |-
+            Các đơn **khác đang chờ** cùng trỏ vào nhân khẩu này. Rỗng là thường.
+
+            **Khác rỗng thì màn duyệt phải nói ra.** Quyết định đã chốt là Trưởng chi thấy *cả hai*
+            rồi chọn, và lược đồ CSDL đã làm đúng phần của nó khi từ chối một chỉ mục duy nhất trên
+            nhân khẩu đang có đơn chờ — nhờ thế "ai gửi trước thắng" không thành luật. Nhưng một đơn
+            đối thủ nằm ở trang 2 của hàng chờ mà không được đánh dấu là **vô hình**, và Trưởng chi
+            sẽ duyệt đơn duy nhất mình nhìn thấy: "ai gửi trước thắng", chỉ qua một đường vòng.
+
+            Chỉ trả **khoá** — đơn kia chở số điện thoại của một người thứ ba, và người đọc có thể
+            là người gửi đơn này chứ không phải Trưởng chi. Giao diện cầm khoá rồi gọi
+            `GET /person-claims/{id}`, nơi phép kiểm quyền thật sự chạy.
+        reviewerId:
+          type: string
+          format: uuid
+        reviewNote:
+          type: string
+        reviewedAt:
+          type: string
+          format: date-time
+        createdPersonId:
+          type: string
+          format: uuid
+          description: |-
+            Nhân khẩu được tạo **lúc duyệt** một đơn `NEW_PERSON`. **Rỗng ở mọi đơn chưa duyệt và
+            mọi đơn bị từ chối** — đó là bằng chứng kiểm được rằng không có node ma nào trong phả.
+        createdAt:
+          type: string
+          format: date-time
+
+    ClaimBranch:
+      type: object
+      title: Chi đích của một đơn
+      description: |-
+        Câu trả lời cho **"đang chờ ai"**. `clanTitle` là một **vai** ("Trưởng Chi Giáp", "Tộc
+        trưởng"), **không phải một con người**: tên và số điện thoại của Trưởng chi không đi ra màn
+        này. Người đọc là một tài khoản vừa đăng ký, chưa được duyệt, chưa ở trong phả — cho họ đọc
+        danh bạ ban quản trị là một bề mặt không ai xin. Tên chi thì công khai; nó đã nằm trong
+        `BranchRef` mà cổng công khai trả cho Khách.
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          examples: ['Chi Giáp']
+        kind:
+          type: string
+          examples: ['CHI']
+        clanTitle:
+          type: string
+          examples: ['Trưởng Chi Giáp']
+          description: |-
+            Chức danh dòng tộc của người đứng đầu chi. Vắng mặt là câu trả lời đúng khi không dựng
+            được; giao diện để trống dòng ấy chứ đừng bịa.
+
+    MyPersonClaims:
+      type: object
+      title: Đơn của tôi, kèm hạn mức gửi lại
+      required: [claims, quota]
+      properties:
+        claims:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonClaim'
+        quota:
+          $ref: '#/components/schemas/ClaimQuota'
+
+    ClaimQuota:
+      type: object
+      title: Hạn mức gửi lại
+      description: |-
+        Ngưỡng là một giá trị **cấu hình của máy chủ** (`giapha.membership.claim.max-rejected`) và
+        một dòng họ hoàn toàn có thể đặt khác, nên **client không được đoán**.
+      required: [rejected, max, remaining]
+      properties:
+        rejected:
+          type: integer
+          examples: [1]
+          description: |-
+            Số đơn đã bị **từ chối**. Đơn tự rút **không** tính: người tự sửa sai của mình không
+            phải là người đang dò.
+        max:
+          type: integer
+          examples: [3]
+        remaining:
+          type: integer
+          examples: [2]
+          description: '`max - rejected`, không bao giờ âm.'
+
+    ClanInviteList:
+      type: object
+      title: Danh sách mã dòng họ, kèm mẫu số của bộ đếm
+      required: [invites, clanLivingPersonCount]
+      properties:
+        invites:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClanInvite'
+        clanLivingPersonCount:
+          type: integer
+          examples: [612]
+          description: |-
+            Số người **đang sống** trong cả dòng họ — **mẫu số** để đọc `useCount`. Lập luận của
+            quyết định "cấp mã cho cả họ" là *"mã đã dùng 400 lần trong khi dòng họ có 600 người"*,
+            và vế thứ hai mới làm vế thứ nhất có nghĩa: một bộ đếm không có mẫu số thì không ai
+            phán xét được. Đây là một phép đếm, không phải một báo cáo dân số — không phân theo chi,
+            không phân theo đời, không tiết lộ ai cả.
+
+    InviteeSummary:
+      type: object
+      title: Nhân khẩu được mời (tóm tắt)
+      description: |-
+        Đúng đủ để **nhận ra ai** trong một danh sách. Không năm sinh, không nghề nghiệp, không nơi
+        ở, không điện thoại, không ảnh — cùng ranh giới mà màn nhận lời mời đã đặt, vì đây là cùng
+        một dữ liệu đi ra ngoài.
+
+        **Vì sao đưa ra ở đây là an toàn:** `POST /invitations/lookup` vốn đã hiện đúng cái tên ấy
+        cho *bất kỳ ai cầm mã*, kể cả người chưa đăng nhập. Người đọc danh sách này thì chặt hơn
+        nhiều: đã đăng nhập, đã qua kiểm phạm vi chi, và thường chính là người vừa phát lời mời.
+
+        Không có khối này thì màn "lời mời đã phát" là một cột UUID, và giao diện buộc phải gọi
+        `GET /persons/{id}` một lượt cho mỗi dòng — một bài toán N+1 sinh ra chỉ vì thiếu ba trường.
+      properties:
+        displayName:
+          type: string
+          examples: ['Nguyễn Thị Lan']
+        generation:
+          type: integer
+          examples: [7]
+        branchName:
+          type: string
+          examples: ['Chi Giáp']
+
+    # -------------------------------------------------------------------------
+    # BÀI VIẾT & VINH DANH / POSTS & HONOURS
+    # -------------------------------------------------------------------------
+    ContentStatus:
+      type: string
+      title: Trạng thái duyệt nội dung / Content review status
+      description: |-
+        **Một máy trạng thái duy nhất, dùng chung cho bài viết và vinh danh.**
+
+        ```
+        Bài viết :  DRAFT ──submit──▶ PENDING ──approve──▶ PUBLISHED ──withdraw──▶ WITHDRAWN
+                      ▲                 │                      │
+                      └──── review ─────┘                      │
+                           (approve:false)                     │
+                      └───────────── withdraw ─────────────────┘   (bỏ bản nháp)
+
+        Vinh danh:                   PENDING ──approve──▶ PUBLISHED
+                                        │                     │
+                                        └── review ────▶ WITHDRAWN ◀── DELETE? KHÔNG
+                                           (approve:false)
+        ```
+
+        > ⚠️ **KHÔNG có `APPROVED` và KHÔNG có `REJECTED`.** Nếu bạn đang tìm hai giá trị ấy cho
+        > hàng đợi duyệt vinh danh thì bạn đang đọc một bản mô tả cũ: duyệt ⇒ **`PUBLISHED`**,
+        > từ chối ⇒ **`WITHDRAWN`**. Đây chính là chỗ đã được đưa sai một lần và frontend đã xây
+        > nhầm một vòng, nên nó được viết ra ở đây thay vì để suy đoán.
+        > / There is no `APPROVED`/`REJECTED`: approve ⇒ `PUBLISHED`, reject ⇒ `WITHDRAWN`.
+
+        * `DRAFT` — bản nháp. **Chỉ tồn tại với bài viết**; vinh danh không có giai đoạn nháp.
+          Chỉ chính tác giả nhìn thấy, kể cả Hội đồng cũng không.
+        * `PENDING` — chờ Trưởng cành/chi/họ duyệt.
+        * `PUBLISHED` — đã đăng. Với vinh danh, "đã duyệt" **chưa** đồng nghĩa "ai cũng thấy":
+          nhóm trường riêng tư `honour` vẫn quyết định việc hiển thị.
+        * `WITHDRAWN` — đã gỡ (bài viết) hoặc bị từ chối hẳn (vinh danh). **Trạng thái cuối, không
+          có lối ra.** Đây **không phải** "đã xoá": hàng ở lại để tra được ai gỡ, lúc nào, vì sao.
+          Muốn đăng lại thì soạn bài mới — cho phép hồi sinh nghĩa là nội dung trang chủ đổi mà
+          nhật ký chỉ thấy một dòng `UPDATE`.
+      enum: [DRAFT, PENDING, PUBLISHED, WITHDRAWN]
+
+    HonourKind:
+      type: string
+      title: Loại vinh danh / Honour kind
+      description: |-
+        Bốn loại, giữ nguyên **tiếng Việt không dấu** trong giá trị enum. Đây là phân loại của
+        *dòng họ* chứ không phải của phần mềm, và "đỗ đạt" không có từ tiếng Anh nào dịch đúng:
+        `DEGREE` mất phần khoa bảng, `ACHIEVEMENT` lại trùng với `THANH_TICH`. Giữ tiếng Việt là
+        cách duy nhất để bốn giá trị này còn phân biệt được với nhau.
+
+        * `DO_DAT` — **Đỗ đạt**: khoa bảng — tiến sĩ, cử nhân, thủ khoa; cả khoa cử xưa lẫn bằng
+          cấp nay.
+        * `CHUC_TUOC` — **Chức tước**: phẩm hàm, chức vụ được bổ nhiệm.
+        * `THANH_TICH` — **Thành tích**: giải thưởng, kỷ lục, công trình.
+        * `KHEN_THUONG` — **Khen thưởng**: huân/huy chương, bằng khen, danh hiệu do một cơ quan trao.
+      enum: [DO_DAT, CHUC_TUOC, THANH_TICH, KHEN_THUONG]
+
+    PostDto:
+      type: object
+      title: Bài viết / Post
+      description: |-
+        Một bài viết của dòng họ.
+
+        > **`media` là một DANH SÁCH, không phải một `coverImageKey`.**
+        > Bản nháp đầu của hợp đồng có một trường `coverImageKey` và nó đã bị gỡ với một lý do đo
+        > được: backend khi ấy **không có SDK S3/MinIO nào** (tìm `MinioClient` / `S3Client` /
+        > `software.amazon` trên cả cây nguồn trả **0 kết quả**), nên trường ấy chỉ nhận được giá
+        > trị do client tự bịa.
+        >
+        > Ba điều kiện tiên quyết mà ghi chú cũ nêu đích danh — **SDK MinIO**, một **bucket**
+        > riêng, và một **chính sách URL đã ký** (thời hạn, ai ký, ai dọn đối tượng mồ côi) — nay
+        > **đã đủ cả ba**: `io.minio:minio` 8.5.17, bucket `giapha-media`, `V19` +
+        > `vn.giapha.media`. Nên trường ảnh quay lại.
+        >
+        > Nhưng nó quay lại ở **đúng hình dạng của nghiệp vụ**: một bài kể chuyện lễ giỗ có
+        > *nhiều* tấm ảnh, và **thứ tự** của chúng là một phần của câu chuyện. Một trường "ảnh bìa"
+        > sẽ buộc giao diện bịa ra một quy ước ("tấm đầu tiên là bìa") ngay trong tuần đầu.
+        >
+        > **Hệ quả về bộ nhớ đệm:** `media[].url` là URL **đã ký, hạn 10 phút**. Mọi phản hồi chở
+        > `PostDto` đều mang `Cache-Control: no-store` + `Vary: Authorization`; thiếu chúng là một
+        > tệp riêng tư được phục vụ lại cho người dùng sau trên máy tính chung ở nhà thờ họ.
+        > / `media` is an ordered list, not a single cover image.
+      required: [id, title, body, status, authorPersonId, createdAt, version, canReview, canEdit, media]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 250
+        body:
+          type: string
+          description: Văn bản thuần / markdown. / Plain text or markdown.
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        authorPersonId:
+          type: string
+          format: uuid
+          description: |-
+            **Nhân khẩu** của người viết, không phải tài khoản. Luôn có mặt: một tài khoản chưa gắn
+            nhân khẩu không dựng nổi một bài viết (xem `AUTHOR_NOT_IN_PHA`).
+        authorDisplayName:
+          type: [string, 'null']
+          description: |-
+            Tên tác giả, **đã qua bộ lọc riêng tư của người đọc** — không đọc thẳng bảng nhân khẩu.
+
+            `null` là **một câu trả lời hợp lệ**, không phải dữ liệu thiếu: xảy ra khi người đọc
+            không được biết tác giả tồn tại (hồ sơ đã xoá mềm). Bài viết **vẫn ở lại** — nó là
+            tiếng nói của dòng họ, không phải tài sản riêng của một hồ sơ — nhưng chỗ ghi tên thì
+            trống. **Giao diện phải chịu được điều đó**, và không được bịa một chuỗi thay thế.
+          examples: ['Nguyễn Thị Mai']
+        branchId:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            Chi của tác giả, **chụp lại lúc tạo nháp** (không đổi khi tác giả chuyển chi sau này).
+            Đây là căn cứ so phạm vi khi duyệt. `null` = tác giả chưa gắn chi nào ⇒ **chỉ vai toàn
+            dòng họ duyệt được**.
+        branchName:
+          type: [string, 'null']
+          examples: ['Chi Bính']
+        publishedAt:
+          type: [string, 'null']
+          format: date-time
+          description: Có mặt khi và chỉ khi `status = PUBLISHED`. / Set iff published.
+        reviewedBy:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            **Khoá tài khoản** (`app_user.id`) của người duyệt — **không phải** khoá nhân khẩu.
+            Cùng quy ước với `change-requests`. Dùng để đối chiếu nhật ký, **không dùng để hiển
+            thị**: một UUID không nói được với ai điều gì.
+        reviewedByDisplayName:
+          type: [string, 'null']
+          description: |-
+            Tên người duyệt, **đã qua đúng bộ lọc riêng tư của người đọc** (cùng đường với
+            `authorDisplayName`: `app_user → person → bộ lọc`).
+
+            Trường này tồn tại vì checklist §2 đòi ghi rõ **"ai duyệt và lúc nào"** — *"bài lên
+            trang chủ là tiếng nói của cả dòng họ"* — mà `reviewedBy` một mình chỉ là một khoá tài
+            khoản, nên màn hình sẽ mãi chỉ hiện được "lúc {ngày}" và **không bao giờ hiện được
+            ai**.
+
+            > `null` ở đây là **một câu trả lời, không phải dữ liệu thiếu**: người đọc không được
+            > thấy tên người duyệt, hoặc tài khoản duyệt chưa gắn nhân khẩu nào. Giao diện hiện
+            > **"đã duyệt"** trơn ở ca đó và **tuyệt đối không bịa một chuỗi thay thế** — "một ai
+            > đó" và "bác Ba" là hai thông điệp khác nhau về trách nhiệm.
+            > / A legitimate `null`, not missing data.
+          examples: ['Nguyễn Văn Bính']
+        reviewedAt:
+          type: [string, 'null']
+          format: date-time
+        rejectReason:
+          type: [string, 'null']
+          description: |-
+            Lý do trả lại (hoặc lý do gỡ). **Ở lại trên bản nháp** sau khi bài bị trả về `DRAFT`,
+            để người viết còn đọc được trong lúc sửa. Bị xoá khi bài được gửi duyệt lại.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: [string, 'null']
+          format: date-time
+        version:
+          type: integer
+          format: int64
+          description: Dùng cho `If-Match`. Cũng là giá trị của `ETag`. / Optimistic-lock version.
+        canReview:
+          type: boolean
+          description: |-
+            **Nói về người đọc, không nói về bài.** `true` khi người đọc duyệt được bài này *ngay
+            bây giờ* — tức bài đang `PENDING`, người đọc **không phải tác giả**, và phạm vi `ltree`
+            của họ phủ chi của bài.
+
+            Có nó thì giao diện không phải chép lại luật phạm vi bằng JavaScript để quyết định vẽ
+            nút "Duyệt", và **luật không-tự-duyệt đã được tính sẵn** — dùng nó để ẩn nút thay vì
+            để người dùng bấm rồi nhận `403`.
+        canEdit:
+          type: boolean
+          description: |-
+            `true` khi người đọc là tác giả **và** bài đang ở `DRAFT`. Bài đã đăng thì không sửa
+            được, kể cả bởi tác giả.
+        media:
+          type: array
+          maxItems: 12
+          description: |-
+            Tệp đính kèm, **đúng thứ tự hiển thị**. Mảng rỗng khi bài không có tệp nào — trường này
+            **không bao giờ vắng mặt**, để giao diện khỏi viết nhánh dự phòng.
+
+            Quyền xem đi theo **quyền của BÀI**, không theo bộ lọc nhóm trường của từng người có
+            mặt trong ảnh (quyết định đã chốt của chủ dự án). Bài đã đăng ⇒ ảnh hiện với mọi thành
+            viên. Đổi lại có **đường báo gỡ**: `POST /api/v1/media/{mediaId}/reports`.
+          items:
+            $ref: '#/components/schemas/PostMediaDto'
+
+    PostPage:
+      type: object
+      title: Trang bài viết / Page of posts
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostDto'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    CreatePostRequest:
+      type: object
+      title: Tạo bản nháp bài viết / Create a post draft
+      description: |-
+        **Không có trường tác giả:** tác giả luôn là người đang đăng nhập.
+        **Không có trường ảnh ở đây:** tệp được gắn bằng một lệnh riêng
+        (`PUT /api/v1/posts/{id}/media`) sau khi đã tải lên qua `/api/v1/media`. Nhồi khoá tệp vào
+        lệnh tạo nháp nghĩa là bắt người viết chọn xong ảnh trước khi gõ được chữ đầu tiên.
+      required: [title, body]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 250
+          examples: ['Họp mặt dòng họ đầu xuân Bính Ngọ']
+        body:
+          type: string
+          minLength: 1
+          maxLength: 200000
+          description: |-
+            Trần 200.000 ký tự. Rộng có chủ ý — một cụ chép lại cả một đoạn gia phả giấy có thể gõ
+            rất dài, và cắt ngắn bằng một ràng buộc ở tầng CSDL nghĩa là bài bị từ chối **sau khi**
+            người ta đã gõ xong.
+
+    UpdatePostRequest:
+      type: object
+      title: Sửa bản nháp / Edit a post draft
+      description: |-
+        Trường **vắng mặt = giữ nguyên** (ngữ nghĩa PATCH của cả sản phẩm). Không có trường nào bắt
+        buộc, nhưng gửi một object rỗng thì không đổi gì cả.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 250
+        body:
+          type: string
+          minLength: 1
+          maxLength: 200000
+
+    ReviewContentRequest:
+      type: object
+      title: Duyệt / trả lại nội dung — dùng chung / Review a post or an honour
+      description: |-
+        **Một schema cho cả hai endpoint duyệt** (`/posts/{id}/review` và `/honours/{id}/review`)
+        vì hai lệnh có **đúng** cùng hình dạng, và hai schema giống hệt nhau chỉ là hai chỗ để lệch
+        nhau.
+
+        Ý nghĩa của `approve: false` thì **khác nhau** và FE phải biết:
+
+        * **bài viết** — *trả lại* về `DRAFT` để sửa rồi gửi lại;
+        * **vinh danh** — *từ chối hẳn*, chuyển sang `WITHDRAWN`.
+
+        Khác biệt ấy nằm ở luật nghiệp vụ, không nằm ở hình dạng thân yêu cầu.
+      required: [approve]
+      properties:
+        approve:
+          type: boolean
+          description: '`true` = duyệt; `false` = trả lại (bài) / từ chối (vinh danh).'
+        note:
+          type: string
+          maxLength: 2000
+          description: |-
+            **Bắt buộc khi `approve = false`** ⇒ thiếu thì `422`. Không có lý do thì người viết gửi
+            lại y nguyên và cả hai bên cùng mất thời gian lần thứ hai.
+
+            Ràng buộc "bắt buộc khi trường kia bằng `false`" cố ý **không** biểu diễn bằng
+            `oneOf`/`if-then` trong schema: nó được ép ở tầng domain để đúng cho cả những lối vào
+            không đi qua HTTP.
+
+    WithdrawPostRequest:
+      type: object
+      title: Gỡ bài / Withdraw a post
+      description: Thân yêu cầu **có thể rỗng hoặc vắng mặt hoàn toàn**. / The body is optional.
+      properties:
+        reason:
+          type: string
+          maxLength: 2000
+          description: |-
+            Không bắt buộc: tác giả bỏ bản nháp của chính mình thì không nợ ai một lời giải thích.
+            Nhưng khi **người duyệt** gỡ một bài đã đăng thì đây là thứ duy nhất tác giả còn đọc
+            được — giao diện nên hỏi ở đúng ca đó.
+
+    HonourDto:
+      type: object
+      title: Vinh danh / Honour
+      description: |-
+        Bản ghi vinh danh **gắn với nhân khẩu** — không phải một loại bài viết (quyết định đã chốt,
+        design/07-checklist §2). Vì gắn với nhân khẩu nên nó tra cứu và thống kê được theo chi.
+
+        **Bản ghi nào ra tới client thì người đọc đã được phép xem**: bộ lọc nhóm trường riêng tư
+        `honour` chạy ở backend *trước* khi DTO được dựng. Không có cờ nào cho phép phân biệt "bị
+        giấu" với "không có" — đó là nguyên tắc của BA v2 §10 và nó áp cho cả context này.
+      required: [id, personId, kind, title, status, createdAt, version, canReview]
+      properties:
+        id:
+          type: string
+          format: uuid
+        personId:
+          type: string
+          format: uuid
+          description: Nhân khẩu được vinh danh. / The honoured person.
+        personDisplayName:
+          type: [string, 'null']
+          description: |-
+            Tên chủ thể, **đã lọc theo người đọc**. `null` khi người đọc không được biết nhân khẩu
+            ấy tồn tại — một câu trả lời hợp lệ, không phải dữ liệu thiếu.
+        kind:
+          $ref: '#/components/schemas/HonourKind'
+        title:
+          type: string
+          maxLength: 250
+          examples: ['Tiến sĩ Luật']
+        year:
+          type: [integer, 'null']
+          minimum: 1000
+          maximum: 2200
+          description: |-
+            Năm được vinh danh. Không bắt buộc — gia phả giấy thường chép "đỗ khoa Nhâm Tuất" mà
+            không ghi năm dương.
+          examples: [2019]
+        issuer:
+          type: [string, 'null']
+          maxLength: 250
+          description: Nơi cấp / nơi trao. / Issuing body.
+          examples: ['Đại học Luật Hà Nội']
+        description:
+          type: [string, 'null']
+          maxLength: 4000
+        status:
+          $ref: '#/components/schemas/ContentStatus'
+        branchId:
+          type: [string, 'null']
+          format: uuid
+          description: |-
+            Chi **hiện tại** của chủ thể, **suy lúc đọc** — không phải một giá trị chụp lại lúc
+            khai. Chụp lại thì sau một lần chuyển chi, thống kê "chi nào có bao nhiêu người đỗ đạt"
+            **sai mà không ai thấy**.
+        branchName:
+          type: [string, 'null']
+        reviewedBy:
+          type: [string, 'null']
+          format: uuid
+          description: '**Khoá tài khoản** (`app_user.id`), không phải khoá nhân khẩu. Không dùng để hiển thị.'
+        reviewedByDisplayName:
+          type: [string, 'null']
+          description: |-
+            Tên người duyệt, **đã qua đúng bộ lọc riêng tư của người đọc**.
+
+            > `null` là **một câu trả lời hợp lệ**, không phải dữ liệu thiếu: người đọc không được
+            > thấy tên người duyệt, hoặc tài khoản duyệt chưa gắn nhân khẩu. Giao diện hiện
+            > **"đã duyệt"** trơn và **không bịa một chuỗi thay thế**.
+        reviewedAt:
+          type: [string, 'null']
+          format: date-time
+        rejectReason:
+          type: [string, 'null']
+          description: Lý do từ chối. Ở lại vĩnh viễn để người duyệt sau đọc được.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: [string, 'null']
+          format: date-time
+        version:
+          type: integer
+          format: int64
+          description: Dùng cho `If-Match`. Cũng là giá trị của `ETag`.
+        canReview:
+          type: boolean
+          description: |-
+            **Nói về người đọc.** `true` khi bản ghi đang `PENDING`, người đọc **không phải người
+            khai**, và phạm vi `ltree` của họ phủ chi hiện tại của nhân khẩu được vinh danh.
+
+    HonourPage:
+      type: object
+      title: Trang vinh danh / Page of honours
+      description: |-
+        > ⚠️ **`page.totalElements` đếm TRƯỚC bộ lọc nhóm trường riêng tư `honour`** — xem
+        > `GET /honours`. `items` có thể **ít hơn `size`** mà vẫn còn trang sau.
+        > **Dùng `page.hasNext`**; đừng vẽ một con số tổng rồi mở ra ít dòng hơn hẳn.
+        > / `totalElements` is pre-privacy-filter; rely on `hasNext`.
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/HonourDto'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    CreateHonourRequest:
+      type: object
+      title: Khai một vinh danh / Record an honour
+      description: |-
+        Bản ghi sinh ra ở `PENDING`. Khác `CreatePostRequest`, ở đây **có** `personId`: vinh danh
+        là dữ liệu *về* một người, và con cháu ghi công cho các cụ đã khuất chính là ca thường gặp
+        nhất — đúng vì thế mà bước duyệt tồn tại.
+      required: [personId, kind, title]
+      properties:
+        personId:
+          type: string
+          format: uuid
+          description: |-
+            Lấy từ `GET /persons/search` hoặc `GET /directory` — **đừng bắt người dùng gõ tay một
+            UUID**. Nhân khẩu không tồn tại và nhân khẩu người khai không được biết là tồn tại đều
+            trả cùng một `422`, để màn này không thành máy dò.
+        kind:
+          $ref: '#/components/schemas/HonourKind'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 250
+        year:
+          type: integer
+          minimum: 1000
+          maximum: 2200
+          description: |-
+            Ngoài khoảng ⇒ `422`. Năm **xa hơn năm sau** cũng bị từ chối; năm sau thì được — một
+            quyết định khen thưởng ký cuối năm nay cho năm sau là chuyện có thật.
+        issuer:
+          type: string
+          maxLength: 250
+        description:
+          type: string
+          maxLength: 4000
+
+    UpdateHonourRequest:
+      type: object
+      title: Sửa vinh danh / Edit an honour
+      description: |-
+        Trường vắng mặt = giữ nguyên.
+
+        **`personId` không có mặt ở đây và không sửa được**: đổi chủ thể của một vinh danh đã duyệt
+        là biến lời phê duyệt cho người này thành lời phê duyệt cho người khác. Cần đổi thì gỡ
+        (`DELETE`) rồi khai lại.
+
+        > Sửa một bản ghi **đã duyệt** đưa nó **về lại `PENDING`** và xoá chữ ký duyệt cũ — xem mô
+        > tả của `PATCH /honours/{id}`. FE phải lường trước rằng một lần `PATCH` có thể làm bản ghi
+        > biến mất khỏi danh sách `PUBLISHED`.
+      properties:
+        kind:
+          $ref: '#/components/schemas/HonourKind'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 250
+        year:
+          type: integer
+          minimum: 1000
+          maximum: 2200
+        issuer:
+          type: string
+          maxLength: 250
+        description:
+          type: string
+          maxLength: 4000
+
+    # =========================================================================
+    # MEDIA
+    # =========================================================================
+
+    MediaKind:
+      type: string
+      enum: [IMAGE, VIDEO]
+      description: |-
+        Hai loại tệp được nhận ở đợt này.
+
+        Định dạng cụ thể: **JPEG · PNG · WebP** cho ảnh, **MP4 (H.264) · WebM** cho video. Ba thứ
+        bị loại có tên và có lý do:
+        * **HEIC/HEIF** (ảnh mặc định của iPhone) — chỉ Safari hiển thị được; nhận nó nghĩa là ảnh
+          của bác dùng iPhone hiện ra ô vỡ trên máy của mọi người còn lại, **không kèm thông báo
+          lỗi nào**. Bị từ chối kèm đúng câu hướng dẫn đổi cài đặt máy ảnh.
+        * **GIF** — ảnh động là một thể loại nội dung khác.
+        * **MOV/MKV** — vỏ chứa có thể ôm codec mà trình duyệt không phát được, và **không có bước
+          chuyển mã nào** ở đợt này nên nhận vào là hứa một thứ không giữ được.
+
+    MediaPolicyDto:
+      type: object
+      title: Chính sách tải tệp / Upload policy
+      description: |-
+        Bộ trần **do máy chủ công bố**. Giao diện đọc nó thay vì giữ hằng số riêng — xem
+        `GET /media/policy` cho lý do đầy đủ.
+      required:
+        - maxImageBytes
+        - maxVideoBytes
+        - maxVideoDurationSeconds
+        - maxMediaPerPost
+        - maxAltLength
+        - imageContentTypes
+        - videoContentTypes
+        - uploadUrlTtlSeconds
+        - viewUrlTtlSeconds
+      properties:
+        maxImageBytes:
+          type: integer
+          format: int64
+          description: |-
+            **8 MiB** (8388608). Một ảnh JPEG 12 MP chụp bằng điện thoại phổ thông rơi vào 3–5 MB,
+            nên đây đã là dư cho mọi ảnh chụp thật. Không nới lên 20 MB vì thứ lọt qua ở khoảng ấy
+            không phải ảnh chụp mà là ảnh 48 MP chưa nén hoặc ảnh scan 600 dpi — và **không có bước
+            chuyển mã nào**, nên đúng số byte ấy sẽ đi ngược xuống máy của một người trong họ đang
+            dùng 3G.
+          examples: [8388608]
+        maxVideoBytes:
+          type: integer
+          format: int64
+          description: |-
+            **100 MiB** (104857600).
+
+            > Đây là một **ngân sách tải xuống**, không phải ngân sách tải lên. Quyết định đã chốt
+            > của chủ dự án là *nhận tệp gốc, không chuyển mã*; hệ quả trực tiếp là mỗi byte tải
+            > lên sẽ được tải xuống nguyên vẹn bởi **mọi** người đọc bài, trong đó có con cháu ở
+            > nước ngoài mở bằng dữ liệu di động. 100 MiB ở 6 Mbps là khoảng hai phút chờ; 200 MiB
+            > là bốn phút, và ở mốc ấy người ta đóng trang.
+
+            Con số này ăn khớp với trần thời lượng: 100 MiB / 120 s ≈ 7 Mbps, thừa cho 1080p quay
+            bằng điện thoại. Một clip 4K 2 phút sẽ vượt trần dung lượng và bị từ chối — **đúng ý
+            đồ**, và thông báo nói thẳng cách chữa.
+          examples: [104857600]
+        maxVideoDurationSeconds:
+          type: integer
+          description: |-
+            **120 giây.**
+
+            Vì sao cần nó khi đã có trần dung lượng: hai trần bắt hai thứ khác nhau. Dung lượng bắt
+            *băng thông*; thời lượng bắt *thể loại*. Không có trần thời lượng thì một bản ghi hình
+            40 phút lễ giỗ nén rất mạnh vẫn lọt qua 100 MiB, và trang chủ của dòng họ biến thành
+            một kho video — thứ mà đợt này cố ý **không** xây (không chuyển mã, không ảnh bìa,
+            không phát theo đoạn).
+
+            Trần này **đo được**: máy chủ đọc thời lượng từ header container (`mvhd` của MP4 /
+            `Info-Duration` của WebM), không tin con số client khai và không gọi ffmpeg. Đọc không
+            ra thì **từ chối** (`MEDIA_DURATION_UNKNOWN`) — một trần im lặng bỏ qua tệp nó không
+            hiểu là một trần chỉ chặn được người trung thực.
+          examples: [120]
+        maxMediaPerPost:
+          type: integer
+          description: |-
+            **12.** Bài viết là một bài viết, không phải một an-bum. 12 đủ cho bộ ảnh một lễ giỗ mà
+            vẫn giữ `PostDto` ở kích thước hợp lý — mỗi phần tử chở theo một URL đã ký dài vài trăm
+            byte, nên một trang chủ 10 bài × 12 tệp đã là 120 URL trong một phản hồi.
+          examples: [12]
+        maxAltLength:
+          type: integer
+          description: |-
+            **300 ký tự.** Chữ thay ảnh nên ngắn gọn; mô tả dài thuộc về thân bài. 300 là chỗ cho
+            một câu tiếng Việt đầy đủ dấu mà vẫn ngắn hơn ngưỡng làm người nghe trình đọc màn hình
+            mệt.
+          examples: [300]
+        imageContentTypes:
+          type: array
+          items: { type: string }
+          description: |-
+            **JPEG · PNG · WebP.** Đây là **gợi ý cho ô chọn tệp** (`accept`), không phải phép
+            kiểm: phép kiểm thật là chữ ký byte máy chủ đọc ngược về từ kho.
+
+            HEIC (ảnh mặc định của iPhone), GIF và MOV/MKV **không** có ở đây, và mỗi cái có một
+            lý do riêng — xem `MediaKind`.
+          examples: [['image/jpeg', 'image/png', 'image/webp']]
+        videoContentTypes:
+          type: array
+          items: { type: string }
+          examples: [['video/mp4', 'video/webm']]
+        uploadUrlTtlSeconds:
+          type: integer
+          description: |-
+            **900** (15 phút). Một video 100 MiB trên đường lên 2 Mbps mất khoảng 7 phút; 15 phút
+            cho gấp đôi biên. Ngắn hơn thì một lần tải hợp lệ hỏng ở 80% và người dùng không hiểu
+            vì sao.
+          examples: [900]
+        viewUrlTtlSeconds:
+          type: integer
+          description: |-
+            **600** (10 phút). Đủ để một trang tải xong và một video bắt đầu phát; ngắn đủ để một
+            URL bị dán vào nhóm chat ngừng hoạt động trước khi nó đi xa.
+          examples: [600]
+
+    UploadTicketRequest:
+      type: object
+      title: Xin phiếu tải lên / Request an upload ticket
+      required: [kind, sizeBytes]
+      properties:
+        kind:
+          $ref: '#/components/schemas/MediaKind'
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          description: |-
+            Số byte của tệp. **Bắt buộc**, và nó chỉ dùng để từ chối sớm — loại và kích thước
+            *thật* được backend tự xác định ở bước xác nhận bằng `statObject` + chữ ký byte. Khai
+            gian không lọt được; khai đúng thì tiết kiệm được một lần tải hỏng.
+
+    UploadTicketDto:
+      type: object
+      title: Phiếu tải lên / Upload ticket
+      required: [uploadUrl, mediaId, mediaKey, expiresAt, maxBytes, acceptedContentTypes]
+      properties:
+        uploadUrl:
+          type: string
+          format: uri
+          description: |-
+            URL `PUT` **đã ký**. Client tải tệp **thẳng lên kho**, không qua backend.
+            Gửi đúng một yêu cầu `PUT` với thân là nội dung tệp.
+        mediaId:
+          type: string
+          format: uuid
+          description: Khoá của phiếu. Dùng cho bước xác nhận và để gắn tệp vào bài/hồ sơ.
+        mediaKey:
+          type: string
+          description: |-
+            Khoá đối tượng trên kho. Trả xuống để đối chiếu khi đi truy sự cố; luồng thường **không
+            cần** nó, và cầm nó cũng không đọc được gì — bucket để riêng tư, lối đọc duy nhất là
+            một URL được ký lại **sau khi kiểm quyền**.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Hạn của `uploadUrl` — **15 phút**. Quá hạn thì xin phiếu mới.
+        maxBytes:
+          type: integer
+          format: int64
+          description: |-
+            Trần dung lượng áp cho loại tệp này: **8 MiB** với ảnh, **100 MiB** với video.
+
+            Với video, đây là một **ngân sách tải xuống**, không phải ngân sách tải lên: hệ thống
+            *không chuyển mã*, nên mỗi byte tải lên sẽ được tải xuống nguyên vẹn bởi mọi người đọc
+            bài, trong đó có con cháu ở nước ngoài mở bằng dữ liệu di động.
+        maxDurationSeconds:
+          type: [integer, 'null']
+          description: |-
+            Trần thời lượng — **120 giây** với video, `null` với ảnh.
+
+            Vì sao cần nó khi đã có trần dung lượng: hai trần bắt hai thứ khác nhau. Dung lượng bắt
+            *băng thông*; thời lượng bắt *thể loại*. Không có trần thời lượng thì một bản ghi hình
+            40 phút lễ giỗ nén rất mạnh vẫn lọt qua 100 MiB, và trang chủ của dòng họ biến thành
+            một kho video — thứ mà đợt này cố ý không xây.
+        acceptedContentTypes:
+          type: array
+          items: { type: string }
+          description: |-
+            Để giao diện đặt thuộc tính `accept` của ô chọn tệp. Đây là **gợi ý cho người dùng**,
+            không phải phép kiểm: phép kiểm thật là chữ ký byte đọc ngược về từ kho.
+          examples: [['image/jpeg', 'image/png', 'image/webp']]
+
+    ConfirmUploadRequest:
+      type: object
+      title: Xác nhận tải lên / Confirm upload
+      properties:
+        alt:
+          type: string
+          maxLength: 300
+          description: |-
+            Chữ thay ảnh. **Bắt buộc với ảnh** (WCAG 2.2 AA, tiêu chí 1.1.1), tuỳ chọn với video.
+
+            Không có nó thì với một người dùng trình đọc màn hình, tấm ảnh là một khoảng trống câm.
+            Ràng buộc được ép tới tận `ck_media_alt_required` ở tầng CSDL, nên `MediaAssetDto.alt`
+            **không bao giờ rỗng với ảnh** và giao diện khỏi viết nhánh dự phòng.
+          examples: ['Con cháu chi Giáp dâng hương tại từ đường ngày giỗ Tổ']
+
+    MediaAssetDto:
+      type: object
+      title: Tệp đính kèm / Media asset
+      required: [id, kind, contentType, sizeBytes, position]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/MediaKind'
+        contentType:
+          type: string
+          description: |-
+            Kiểu MIME **do backend dò bằng chữ ký byte**, không phải `Content-Type` client gửi và
+            không phải đuôi tệp.
+          examples: ['image/jpeg']
+        sizeBytes:
+          type: integer
+          format: int64
+        durationMs:
+          type: [integer, 'null']
+          description: |-
+            Thời lượng video theo mili-giây, **đọc từ header container** (`mvhd` của MP4 /
+            `Info-Duration` của WebM). Không ffmpeg. `null` với ảnh.
+        alt:
+          type: [string, 'null']
+          description: Chữ thay ảnh. **Không bao giờ rỗng với ảnh.**
+        position:
+          type: integer
+          description: Thứ tự hiển thị trong bài, bắt đầu từ 0.
+        url:
+          type: [string, 'null']
+          format: uri
+          description: |-
+            URL `GET` **đã ký, hạn 10 phút**. Vắng mặt trong phản hồi của bước xác nhận (lúc đó tệp
+            chưa gắn vào bản ghi nào).
+
+    PostMediaDto:
+      allOf:
+        - $ref: '#/components/schemas/MediaAssetDto'
+      title: Tệp đính kèm của bài / A post's attachment
+      description: |-
+        Cùng hình dạng với `MediaAssetDto`, nhưng `url` **luôn có mặt** — mỗi lần đọc bài là một
+        lần ký lại.
+
+    ViewUrlRequest:
+      type: object
+      title: Xin URL đọc / Request read URLs
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { type: string }
+          description: Khoá đối tượng, ví dụ giá trị của `PersonDto.avatarKey`.
+
+    ViewUrlDto:
+      type: object
+      title: URL đọc đã ký / Signed read URLs
+      required: [urls]
+      properties:
+        urls:
+          type: object
+          additionalProperties: { type: string, format: uri }
+          description: |-
+            Bản đồ khoá → URL đã ký. Khoá **vắng mặt** khi không tồn tại, đã bị gỡ, hoặc người gọi
+            không được xem — ba tình huống cố ý không phân biệt được từ ngoài.
+
+    MediaReportReason:
+      type: string
+      enum: [RIENG_TU, SAI_NGUOI, KHONG_PHU_HOP, BAN_QUYEN, KHAC]
+      description: |-
+        Năm câu mà người trong họ thật sự nói. Danh sách đóng chứ không phải ô chữ tự do, vì người
+        duyệt cần **sắp xếp được hàng đợi**: một đơn `RIENG_TU` phải được xử trước một đơn
+        `BAN_QUYEN`.
+
+        * `RIENG_TU` — ảnh lộ thông tin riêng tư (mặt trẻ nhỏ, số điện thoại trên giấy tờ…)
+        * `SAI_NGUOI` — gán tấm ảnh cho nhầm người trong họ
+        * `KHONG_PHU_HOP` — không phù hợp với trang của dòng họ
+        * `BAN_QUYEN` — ảnh/video của người khác, đăng lại không xin phép
+        * `KHAC` — van xả, và đúng vì thế nó **bắt buộc** kèm `note`
+
+    MediaReportStatus:
+      type: string
+      enum: [OPEN, ACTIONED, DISMISSED]
+
+    ReportMediaRequest:
+      type: object
+      title: Báo gỡ tệp / Report an attachment
+      required: [reason]
+      properties:
+        reason:
+          $ref: '#/components/schemas/MediaReportReason'
+        note:
+          type: string
+          maxLength: 2000
+          description: |-
+            Lời mô tả. **Bắt buộc khi `reason = KHAC`** — một đơn "Khác" không nói gì thêm là một
+            đơn người duyệt không xử được, và một hàng đợi đầy đơn không xử được là một hàng đợi
+            không ai mở.
+
+            > Trường này **không bao giờ đi vào `audit_log`**: nó là văn bản tự do và người ta sẽ
+            > viết đúng thứ họ đang muốn giấu ("ảnh này có số điện thoại của mẹ tôi"). Nhật ký ghi
+            > *mã lý do* và *khoá đơn*, không ghi lời.
+
+    ReviewReportRequest:
+      type: object
+      title: Quyết định trên đơn báo gỡ / Reviewer's decision
+      properties:
+        note:
+          type: string
+          maxLength: 2000
+          description: Lý do của người duyệt. Người báo có quyền đọc được nó.
+
+    MediaReportDto:
+      type: object
+      title: Đơn báo gỡ / Takedown report
+      required: [id, mediaId, mediaKind, reason, reportedBy, status, createdAt, version]
+      properties:
+        id: { type: string, format: uuid }
+        mediaId: { type: string, format: uuid }
+        mediaKind:
+          $ref: '#/components/schemas/MediaKind'
+        mediaUrl:
+          type: [string, 'null']
+          format: uri
+          description: |-
+            URL đã ký để người duyệt **nhìn thấy thứ mình đang quyết**. `null` sau khi tệp đã bị gỡ
+            — không còn byte nào để ký.
+        reason:
+          $ref: '#/components/schemas/MediaReportReason'
+        note:
+          type: [string, 'null']
+        reportedBy:
+          type: string
+          format: uuid
+          description: '**Khoá tài khoản** (`app_user.id`) của người báo.'
+        status:
+          $ref: '#/components/schemas/MediaReportStatus'
+        reviewedBy:
+          type: [string, 'null']
+          format: uuid
+        reviewedAt:
+          type: [string, 'null']
+          format: date-time
+        resolutionNote:
+          type: [string, 'null']
+        createdAt: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    GcResultDto:
+      type: object
+      title: Kết quả dọn tệp mồ côi / Sweep result
+      required: [expiredTickets, orphanAssets, storageFailures]
+      properties:
+        expiredTickets:
+          type: integer
+          description: Phiếu `PENDING` quá hạn đã dọn — "xin URL rồi bỏ ngang".
+        orphanAssets:
+          type: integer
+          description: Tệp đã xác nhận nhưng **mất chủ** — bài bị gỡ, ảnh chân dung bị thay.
+        storageFailures:
+          type: integer
+          description: |-
+            Số đối tượng **xoá khỏi kho không thành công**. Không phải lỗi chặn: hàng giữ nguyên
+            trạng thái cũ và lượt sau thử lại. Khác 0 nhiều lần liên tiếp nghĩa là kho có vấn đề —
+            đó là thứ đáng cảnh báo.
+
+    AttachMediaRequest:
+      type: object
+      title: Đặt danh sách tệp của bài / Replace a post's attachments
+      required: [mediaIds]
+      properties:
+        mediaIds:
+          type: array
+          maxItems: 12
+          items: { type: string, format: uuid }
+          description: |-
+            Khoá của các tệp **đã xác nhận**, đúng thứ tự muốn hiển thị. Danh sách **rỗng** là hợp
+            lệ và có nghĩa rõ ràng: gỡ hết ảnh khỏi bài. `null` thì không — đoán ý ở đó sẽ biến một
+            lỗi client thành một lần mất ảnh im lặng.
+
+            Trần **12** tệp: bài viết là một bài viết, không phải một an-bum. Tệp bị bỏ ra khỏi
+            danh sách **không bị xoá ngay** — nó thành mồ côi và đường dọn mang đi sau 24 giờ, nên
+            một lần kéo nhầm thứ tự không làm mất ảnh vĩnh viễn.
+
+    SetAvatarRequest:
+      type: object
+      title: Đặt ảnh chân dung / Set portrait
+      required: [mediaId]
+      properties:
+        mediaId:
+          type: string
+          format: uuid
+          description: |-
+            Tệp **đã xác nhận**, do chính người gọi tải lên, và phải là **ảnh**. Nhận `mediaId` thay
+            vì một chuỗi khoá làm ràng buộc "tệp phải đã tồn tại thật trên kho và đã được backend
+            nhìn thấy" trở thành một sự thật của kiểu, không phải một dòng ghi chú.
