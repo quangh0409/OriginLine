@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kịch bản nghiệm thu — Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ</title>
+<style>
+  :root {
+    --nen: #fbf7ee;
+    --nen-the: #ffffff;
+    --vien: #ddd0b8;
+    --vien-dam: #b99a63;
+    --chu: #2c2418;
+    --chu-nhat: #6b6152;
+    --do: #7a2e2e;
+    --do-nen: #f6e6e0;
+    --xanh: #2f5d43;
+    --xanh-nen: #e3f0e6;
+    --vang: #8a6d16;
+    --vang-nen: #fbf0d0;
+    --xam-nen: #f0ece0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--nen);
+    color: var(--chu);
+    font-family: "Segoe UI", "Be Vietnam Pro", Arial, sans-serif;
+    line-height: 1.55;
+    font-size: 15.5px;
+  }
+  .trang { max-width: 980px; margin: 0 auto; padding: 28px 22px 80px; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  h2 { font-size: 21px; margin: 40px 0 4px; padding-top: 10px; border-top: 3px solid var(--vien-dam); }
+  h3 { font-size: 17px; margin: 26px 0 6px; }
+  .phu-de { color: var(--chu-nhat); margin: 0 0 18px; }
+  a { color: var(--do); }
+  code { background: var(--xam-nen); border-radius: 3px; padding: 1px 5px; font-size: 0.92em; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 18px; background: var(--nen-the); }
+  th, td { border: 1px solid var(--vien); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--xam-nen); }
+  .khung {
+    background: var(--nen-the); border: 1px solid var(--vien); border-radius: 8px;
+    padding: 14px 18px; margin: 12px 0;
+  }
+  .khung-canhbao { border-color: var(--vien-dam); background: var(--vang-nen); }
+  .toc { columns: 2; column-gap: 30px; }
+  .toc-role { break-inside: avoid; margin-bottom: 14px; }
+  .toc-role h4 { margin: 0 0 4px; font-size: 15px; }
+  .toc-role ul { margin: 0; padding-left: 18px; font-size: 13.5px; }
+  .toc-role li { margin: 1px 0; }
+  .chip {
+    display: inline-block; font-size: 11.5px; font-weight: 700; border-radius: 4px;
+    padding: 2px 7px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.02em;
+  }
+  .chip-vai { background: #e4d9c2; color: #5c4419; }
+  .chip-cabien { background: var(--do-nen); color: var(--do); }
+  .chip-uutien { background: var(--xanh-nen); color: var(--xanh); }
+  .kich-ban {
+    background: var(--nen-the); border: 1px solid var(--vien); border-radius: 10px;
+    padding: 16px 20px 18px; margin: 16px 0 30px; break-inside: avoid; page-break-inside: avoid;
+  }
+  .kich-ban h3 { margin: 0 0 10px; font-size: 17px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .ma-so { font-family: "Consolas", monospace; color: var(--do); font-weight: 700; }
+  .kich-ban .nhan {
+    display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--chu-nhat); margin: 12px 0 3px; font-weight: 700;
+  }
+  .kich-ban .nhan:first-of-type { margin-top: 0; }
+  .kich-ban ol.buoc { margin: 4px 0 0; padding-left: 22px; }
+  .kich-ban ol.buoc li { margin: 3px 0; }
+  .kich-ban ul.ket-qua { margin: 4px 0 0; padding-left: 20px; }
+  .kich-ban ul.ket-qua li { margin: 4px 0; }
+  .kich-ban p.mo-ta { margin: 2px 0 0; }
+  .ket-qua-nhan { font-weight: 600; }
+  .bang-cham {
+    margin-top: 14px; border: 1px dashed var(--vien-dam); border-radius: 8px;
+    padding: 10px 14px; display: flex; gap: 26px; align-items: center; flex-wrap: wrap;
+    background: var(--xam-nen);
+  }
+  .o-vuong { display: inline-block; width: 15px; height: 15px; border: 2px solid var(--chu); margin-right: 6px; vertical-align: -2px; }
+  .dat .o-vuong { border-color: var(--xanh); }
+  .khongdat .o-vuong { border-color: var(--do); }
+  .ghichu-dong { flex: 1 1 220px; display: flex; align-items: center; gap: 6px; }
+  .ghichu-dong .duong { flex: 1; border-bottom: 1px solid var(--chu-nhat); height: 18px; }
+  .top-link { font-size: 12.5px; }
+  .bang-tongket td, .bang-tongket th { text-align: center; }
+  .bang-tongket td:first-child, .bang-tongket th:first-child { text-align: left; }
+  .lien-quan { font-size: 13px; color: var(--chu-nhat); margin-top: 8px; }
+  @media print {
+    body { background: #fff; font-size: 12.5px; }
+    .trang { max-width: none; padding: 0 14px; }
+    a[href^="#"]::after { content: ""; }
+    .kich-ban { break-inside: avoid; page-break-inside: avoid; border-color: #999; }
+    h2 { break-before: page; }
+    h2:first-of-type { break-before: auto; }
+    .top-link { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="trang">
+
+<h1>Kịch bản nghiệm thu — Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ</h1>
+<p class="phu-de">
+  Tài liệu <strong>09</strong>. Đây là kịch bản để <strong>chủ dự án tự bấm và tự chấm</strong> —
+  không phải danh sách ca kiểm tự động (bộ kiểm tự động đã xanh: backend, frontend, Playwright —
+  xem <code>CLAUDE.md</code>). Mọi đường dẫn, câu chữ và số đo dưới đây lấy trực tiếp từ mã đang
+  chạy (<code>frontend/src/app</code>, <code>frontend/messages/vi.json</code>,
+  <code>backend/src/main/java</code>) tại thời điểm viết — không chép từ tài liệu thiết kế.
+</p>
+
+<div class="khung">
+  <p class="nhan">Dựng môi trường trước khi bấm</p>
+  <table>
+    <tr><th>Việc</th><th>Chi tiết</th></tr>
+    <tr><td>Hạ tầng</td><td><code>cd infra &amp;&amp; docker compose up -d --wait postgres rabbitmq redis minio keycloak</code></td></tr>
+    <tr><td>Backend</td><td><code>./mvnw spring-boot:run</code> tại <code>backend/</code> — cổng <strong>8088</strong>
+      (8080 bị Apache httpd của máy chiếm). Cần <code>-Duser.timezone=Asia/Ho_Chi_Minh -Dfile.encoding=UTF-8 -Dserver.port=8088</code>
+      và <code>DB_URL=jdbc:postgresql://localhost:55432/giapha</code>.</td></tr>
+    <tr><td>Frontend</td><td><code>npm run dev</code> tại <code>frontend/</code> — mở <a href="http://localhost:3000">http://localhost:3000</a>.
+      Không chạy <code>npm run dev:mock</code> cho bộ này: kịch bản dưới đây cần backend thật, không phải MSW.</td></tr>
+    <tr><td><strong>PostgreSQL — cổng 55432, không phải 5432</strong></td>
+      <td>Máy có sẵn một PostgreSQL cài ở 5432; nếu ứng dụng vô tình nối vào đó, nó sẽ báo
+        <em>sai mật khẩu</em> hoặc chạy trên một cơ sở dữ liệu rỗng chứ không kêu ca gì đúng chỗ.
+        Kiểm bằng <code>docker compose ps</code> thấy cổng ánh xạ <code>55432→5432</code>.</td></tr>
+    <tr><td>Keycloak</td><td>Cổng 8081, admin console <code>admin</code>/<code>admin</code>, realm <code>giapha</code>.</td></tr>
+    <tr><td>Tài khoản thử nghiệm</td><td>Sáu tài khoản trong <code>TAI-KHOAN-THU-NGHIEM.md</code>, <strong>mật khẩu chung <code>giapha123</code></strong>:
+      <code>thanhvien</code> (MEMBER, Chi Bính) · <code>truongchi</code> (BRANCH_HEAD, Chi Bính) ·
+      <code>truongchi.at</code> (BRANCH_HEAD, Chi Ất) · <code>hoidong</code> (COUNCIL, cả họ) ·
+      <code>admin.giapha</code> (ADMIN+COUNCIL, cả họ) · <code>chuaduyet</code> (MEMBER, <strong>chưa gắn nhân khẩu</strong>).</td></tr>
+    <tr><td>Dữ liệu mẫu</td><td>1.506 nhân khẩu (627 còn sống), 4 chi × 3 ngành. Gốc đời 1 hợp lệ:
+      <code>3b54e802-a966-5570-b69b-3d01b808b0e3</code>.</td></tr>
+    <tr><td>Trình duyệt</td><td>Nên dùng <strong>hai trình duyệt khác nhau</strong> (hoặc một trình duyệt thường + một cửa sổ ẩn danh)
+      cho các kịch bản cần hai vai cùng lúc (ví dụ Trưởng chi duyệt trong khi Thành viên đang xem trạng thái đơn).</td></tr>
+  </table>
+</div>
+
+<div class="khung khung-canhbao">
+  <p class="nhan">Cách chấm</p>
+  <p style="margin:0">
+    Mỗi kịch bản có ô <strong>ĐẠT</strong> / <strong>KHÔNG ĐẠT</strong> để tick tay, và một dòng
+    <strong>ghi chú</strong>. "Kết quả mong đợi" viết cụ thể tới mức chấm được — nếu màn hình thực tế
+    nói khác một chữ so với câu trích dẫn, đó vẫn có thể là ĐẠT nếu ý nghĩa giữ nguyên; ghi vào ô ghi
+    chú câu thật đã thấy để báo lại cho đúng. Kịch bản đánh dấu <span class="chip chip-cabien">CA BIÊN</span>
+    là chỗ một bộ kiểm tầm thường bỏ sót — ưu tiên bấm hết nhóm này trước.
+  </p>
+</div>
+
+<h2 id="muc-luc" style="border-top:none">Mục lục</h2>
+<div class="toc">
+  <div class="toc-role">
+    <h4>A · Khách chưa đăng nhập (NT-KHACH)</h4>
+    <ul>
+      <li><a href="#NT-KHACH-01">01 · Trang chủ công khai</a></li>
+      <li><a href="#NT-KHACH-02">02 · Phả đồ công khai, chỉ người đã khuất</a></li>
+      <li><a href="#NT-KHACH-03">03 · Tìm kiếm công khai không cần đăng nhập</a></li>
+      <li><a href="#NT-KHACH-04">04 · Danh bạ bị khoá với khách</a></li>
+      <li><a href="#NT-KHACH-05">05 · Tra danh xưng khi chưa đăng nhập <span class="chip chip-cabien">CA BIÊN</span></a></li>
+      <li><a href="#NT-KHACH-06">06 · Người còn sống không lọt vào kết quả tìm kiếm công khai</a></li>
+      <li><a href="#NT-KHACH-07">07 · Mở liên kết mời cá nhân đã hỏng</a></li>
+      <li><a href="#NT-KHACH-08">08 · Gõ mã mời dòng họ sai ở màn đăng ký</a></li>
+    </ul>
+  </div>
+  <div class="toc-role">
+    <h4>B · Người mới đăng ký (NT-MOI)</h4>
+    <ul>
+      <li><a href="#NT-MOI-01">01 · Đăng ký bằng mã mời dòng họ hợp lệ</a></li>
+      <li><a href="#NT-MOI-02">02 · Đăng ký bằng định danh đã có tài khoản <span class="chip chip-cabien">CA BIÊN</span></a></li>
+      <li><a href="#NT-MOI-03">03 · Đặt mật khẩu lần đầu</a></li>
+      <li><a href="#NT-MOI-04">04 · Trang chủ báo "đang chờ duyệt"</a></li>
+      <li><a href="#NT-MOI-05">05 · Phả đồ hiện hai nút nhận diện cho tài khoản chưa gắn</a></li>
+      <li><a href="#NT-MOI-06">06 · Chọn nhầm người đã khuất bị chặn ngay <span class="chip chip-cabien">CA BIÊN</span></a></li>
+      <li><a href="#NT-MOI-07">07 · Gửi đơn nhận mình hợp lệ</a></li>
+      <li><a href="#NT-MOI-08">08 · Nhận nhầm người đã có tài khoản <span class="chip chip-cabien">CA BIÊN</span></a></li>
+      <li><a href="#NT-MOI-09">09 · "Tôi chưa có trong phả" thiếu người thân bị chặn</a></li>
+      <li><a href="#NT-MOI-10">10 · Gửi đơn "Tôi chưa có trong phả" hợp lệ</a></li>
+      <li><a href="#NT-MOI-11">11 · Chưa duyệt thì chưa viết bài được</a></li>
+      <li><a href="#NT-MOI-12">12 · Chưa duyệt thì chưa gửi đính chính được</a></li>
+      <li><a href="#NT-MOI-13">13 · Gửi đơn lại sau khi bị từ chối — có giới hạn số lần <span class="chip chip-cabien">CA BIÊN</span></a></li>
+      <li><a href="#NT-MOI-14">14 · Dựng ca hai người cùng nhận một nhân khẩu <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    </ul>
+  </div>
+</div>
+<p class="lien-quan">Mục lục các vai Thành viên / Trưởng chi / Hội đồng / Tài khoản chưa gắn phả /
+Admin kỹ thuật nằm ở đầu mỗi phần tương ứng bên dưới (tài liệu dài, tách mục lục theo phần cho
+dễ theo trong lúc bấm).</p>
+
+<h2 id="bang-tong-ket">Bảng tổng kết theo vai</h2>
+<table class="bang-tongket">
+  <tr><th>Vai</th><th>Số kịch bản</th><th>Trong đó là ca biên</th></tr>
+  <tr><td>A. Khách chưa đăng nhập</td><td>8</td><td>1</td></tr>
+  <tr><td>B. Người mới đăng ký / tự nhận mình</td><td>14</td><td>5</td></tr>
+  <tr><td>C. Thành viên</td><td>17</td><td>4</td></tr>
+  <tr><td>D. Trưởng chi</td><td>15</td><td>4</td></tr>
+  <tr><td>E. Hội đồng Tộc biểu</td><td>7</td><td>0</td></tr>
+  <tr><td>F. Tài khoản chưa gắn phả (<code>chuaduyet</code>)</td><td>3</td><td>1</td></tr>
+  <tr><td>G. Admin kỹ thuật</td><td>3</td><td>0</td></tr>
+  <tr><th>Tổng</th><th>67</th><th>15</th></tr>
+</table>
+
+<h2 id="ca-bien-chinh">Chỉ mục nhanh — các ca biên bắt buộc</h2>
+<table>
+  <tr><th>Ca biên yêu cầu</th><th>Kịch bản</th></tr>
+  <tr><td>Ranh giới phạm vi chi (hai Trưởng chi khác chi)</td><td><a href="#NT-TC-05">NT-TC-05</a></td></tr>
+  <tr><td><code>chuaduyet</code> — có tài khoản, chưa gắn phả, từ chối tử tế</td><td><a href="#NT-CHUA-01">NT-CHUA-01</a> … <a href="#NT-CHUA-03">NT-CHUA-03</a></td></tr>
+  <tr><td>Hai người cùng nhận một nhân khẩu</td><td><a href="#NT-MOI-14">NT-MOI-14</a> (dựng ca) → <a href="#NT-TC-06">NT-TC-06</a> (Trưởng chi thấy cả hai)</td></tr>
+  <tr><td>Nhận một người đã khuất — chặn lúc chọn</td><td><a href="#NT-MOI-06">NT-MOI-06</a></td></tr>
+  <tr><td>Nhận một người đã có tài khoản — báo chung chung</td><td><a href="#NT-MOI-08">NT-MOI-08</a></td></tr>
+  <tr><td>Tệp ảnh HEIC / quá khổ — báo rõ cách sửa</td><td><a href="#NT-TV-11">NT-TV-11</a>, <a href="#NT-TV-12">NT-TV-12</a></td></tr>
+  <tr><td>Vinh danh người còn sống — duyệt xong vẫn chỉ chính chủ thấy</td><td><a href="#NT-TV-15">NT-TV-15</a> + <a href="#NT-TC-10">NT-TC-10</a></td></tr>
+  <tr><td>Ngày giỗ không đổi được trên sự kiện</td><td><a href="#NT-TV-16">NT-TV-16</a></td></tr>
+  <tr><td>Đăng ký bằng địa chỉ đã có tài khoản</td><td><a href="#NT-MOI-02">NT-MOI-02</a></td></tr>
+  <tr><td>Sự kiện phạm vi một chi không lộ sang chi khác</td><td><a href="#NT-TC-13">NT-TC-13</a></td></tr>
+</table>
+
+<h2 id="a-khach">A. Khách chưa đăng nhập</h2>
+<p>
+  Không đăng nhập ở bước "Chuẩn bị" nào trong phần này — nếu trình duyệt còn phiên cũ, bấm
+  <strong>Đăng xuất</strong> trước, hoặc dùng một cửa sổ ẩn danh.
+</p>
+
+<div class="kich-ban" id="NT-KHACH-01">
+<h3><span class="ma-so">NT-KHACH-01</span> — Trang chủ công khai đã có nội dung thật</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kiểm rằng trang chủ không còn là khung rỗng của sprint đầu — khách phải thấy bài
+viết, vinh danh và việc họ sắp tới ngay cả khi chưa đăng nhập, vì đây cũng là màn người mới đăng ký
+nhìn thấy trong lúc chờ duyệt.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Mở <code>http://localhost:3000</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát khối đầu trang: tiêu đề "Gia Phả Dòng Họ" và câu phụ đề.</li>
+  <li>Cuộn xuống khối "Bài mới" ở nửa trái.</li>
+  <li>Cuộn xuống khối "Vinh danh" ở nửa phải.</li>
+  <li>Cuộn xuống khối "Việc họ sắp tới" ở dưới cùng.</li>
+  <li>Bấm "Xem tất cả" ở khối Bài mới.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Không thấy banner "đang chờ duyệt" nào (banner ấy chỉ dành cho người đã có tài khoản).</li>
+  <li>Khối "Bài mới" hiện tối đa 4 bài đã đăng, hoặc câu "Chưa có bài viết nào được đăng." nếu
+    dữ liệu mẫu chưa có bài — <strong>không phải</strong> lỗi 401/403.</li>
+  <li>Khối "Vinh danh" hiện các mục đã duyệt (<code>PUBLISHED</code>) hoặc câu "Chưa có vinh danh
+    nào được ghi nhận." — không hiện mục nào đang chờ duyệt.</li>
+  <li>Khối "Việc họ sắp tới" hiện sự kiện trong 60 ngày tới hoặc câu rỗng tương ứng.</li>
+  <li>Bấm "Xem tất cả" mở đúng <code>/bai-viet</code>, không bị chuyển hướng về trang đăng nhập.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-KHACH-02">
+<h3><span class="ma-so">NT-KHACH-02</span> — Phả đồ công khai chỉ hiện người đã khuất</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Xác nhận luật riêng tư nền tảng: khách chưa đăng nhập không bao giờ thấy một người
+còn sống, kể cả tên — và phải được nói rõ đây là bản công khai, không phải lỗi tải thiếu.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Từ trang chủ bấm ô "Cây phả đồ", hoặc mở thẳng <code>/tree</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Chờ phả đồ dựng xong.</li>
+  <li>Đọc dòng ghi chú phía trên canvas.</li>
+  <li>Bấm vào một vài node ở đời sâu (đời 4-5) — tìm một node ghi "Còn sống" và một node ghi "Đã khuất".</li>
+  <li>Thử tìm tên một người còn sống mà bạn biết chắc có trong dữ liệu mẫu (ví dụ một người thuộc Chi Bính) bằng ô tìm trên canvas.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đúng câu: "Đây là bản phả đồ công khai: gia phả công bố các cụ đã khuất cho mọi người
+    xem. Đăng nhập bằng tài khoản dòng họ để xem phả đồ đầy đủ."</li>
+  <li>Mọi node hiển thị đều ghi trạng thái "Đã khuất" — không có node nào ghi "Còn sống" xuất hiện
+    trên bản khách xem.</li>
+  <li>Không có nút "Đây là tôi" / "Tôi chưa có trong phả" cạnh ô tìm (hai nút này chỉ dành cho tài
+    khoản đã đăng nhập nhưng chưa gắn phả).</li>
+  <li>Gõ tên người còn sống vào ô tìm: không ra kết quả nào khớp (người ấy không tồn tại theo góc
+    nhìn của khách).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-KHACH-03">
+<h3><span class="ma-so">NT-KHACH-03</span> — Tìm kiếm công khai hoạt động không cần đăng nhập</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Trước đây màn tìm kiếm gọi nhầm lối cần đăng nhập nên khách bấm Tìm kiếm nhận lỗi
+401 ngay khi trang đăng nhập đang hứa điều ngược lại. Xác nhận lỗi này đã được nối đúng lối công
+khai.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Mở <code>/search</code> (hoặc bấm "Tìm kiếm" trên thanh đầu trang).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gõ vào ô tìm một họ phổ biến trong dữ liệu mẫu, không dấu (ví dụ <code>nguyen</code>).</li>
+  <li>Đợi kết quả hiện ra.</li>
+  <li>Thử gõ lại có dấu đầy đủ cho cùng tên.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Không có lỗi đỏ "Không tìm được". Kết quả hiện ra như một danh sách người đã khuất.</li>
+  <li>Thấy đúng câu ghi chú: "Tra cứu công khai: chỉ hiện những vị đã khuất trong dòng họ; con
+    cháu còn tại thế không có trong danh sách này."</li>
+  <li>Gõ có dấu và không dấu cho cùng một tên trả về cùng một bộ kết quả.</li>
+  <li>Không thấy ô lọc theo Chi/Ngành, Quê quán (những ô này chỉ có ở bản dành cho thành viên).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-KHACH-04">
+<h3><span class="ma-so">NT-KHACH-04</span> — Danh bạ dòng họ khoá với khách</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Danh bạ chở nghề nghiệp và nơi ở của người còn sống — một tầng dữ liệu cá nhân —
+nên phải đóng hẳn với khách, có lời giải thích chứ không phải màn trắng hay lỗi.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Mở <code>/danh-ba</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát nội dung màn hình.</li>
+  <li>Bấm nút "Xem phả đồ công khai" nếu có.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy tiêu đề "Danh bạ dành cho thành viên đã đăng nhập" và đoạn giải thích nhắc tới Nghị định
+    13/2023 — không phải một bảng trống hay một trang lỗi.</li>
+  <li>Thấy dòng "Phần các cụ đã khuất thì mở cho tất cả mọi người — bạn xem phả đồ được ngay bây giờ."</li>
+  <li>Bấm nút thì mở đúng <code>/tree</code> (bản công khai).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-KHACH-05">
+<h3><span class="ma-so">NT-KHACH-05</span> — Tra danh xưng khi chưa đăng nhập <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đây là chỗ nghi có lỗ hổng thật: ô chọn người trên màn "Tra danh xưng" hiện gọi cố
+định lối tìm dành cho thành viên (cần đăng nhập), trong khi menu vẫn cho khách bấm vào màn này.
+Kịch bản này kiểm xem khách nhận được lời từ chối tử tế, hay một ô tìm câm lặng không ra kết quả và
+không giải thích gì.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Bấm "Tra danh xưng" trên thanh điều hướng (hoặc mở thẳng <code>/kinship</code>).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát màn hình vừa mở — có lời giải thích nào về việc khách bị giới hạn không?</li>
+  <li>Bấm vào ô "Người xưng hô (tôi là…)".</li>
+  <li>Gõ một vài chữ cái, ví dụ <code>an</code>.</li>
+  <li>Đợi vài giây, quan sát danh sách gợi ý.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi (điều NÊN thấy)</span>
+<ul class="ket-qua">
+  <li>Hoặc màn hình chặn từ đầu với một lời giải thích rõ ràng kiểu "Tra danh xưng cho người đang
+    sống cần đăng nhập" kèm nút đăng nhập —</li>
+  <li>hoặc ô tìm hoạt động nhưng báo rõ bằng chữ rằng đây là tìm kiếm hạn chế/cần đăng nhập.</li>
+</ul>
+<span class="nhan">Điều CÓ THỂ thấy — đánh dấu KHÔNG ĐẠT nếu đúng vậy</span>
+<ul class="ket-qua">
+  <li>Ô gợi ý không hiện gì cả, không có thông báo lỗi, không có gợi ý đăng nhập — khách gõ xong
+    tưởng hệ thống không có ai tên "an" trong họ, trong khi thật ra ô tìm đã bị máy chủ từ chối âm
+    thầm (401) mà giao diện không lộ ra.</li>
+</ul>
+<p class="mo-ta"><em>Ghi chú cho người chấm: đây là ca dò tìm chủ động, viết ra để bắt đúng loại lỗi
+mà bộ kiểm tự động bỏ sót — không có gì sai nếu kết quả là "cần sửa", xin ghi rõ đã thấy gì.</em></p>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-KHACH-06">
+<h3><span class="ma-so">NT-KHACH-06</span> — Người còn sống không lọt vào kết quả tìm kiếm công khai</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kiểm chặt hơn NT-KHACH-03: gõ đích danh tên một người còn sống (biết trước từ vai
+Thành viên) để chắc chắn họ không rò ra qua khe tìm kiếm công khai.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Trước tiên đăng nhập bằng <code>thanhvien</code>/<code>giapha123</code>, mở <code>/tree</code>,
+  ghi lại họ tên đầy đủ của một người <strong>còn sống</strong> bất kỳ trong Chi Bính (ví dụ chính
+  hồ sơ của <code>thanhvien</code>). Đăng xuất.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/search</code> khi chưa đăng nhập.</li>
+  <li>Gõ đúng họ tên vừa ghi lại.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy "Không tìm thấy ai phù hợp." — không có tên người còn sống ấy trong danh sách kết quả,
+    dù tên gõ đúng tuyệt đối.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-KHACH-07">
+<h3><span class="ma-so">NT-KHACH-07</span> — Mở liên kết mời cá nhân đã hỏng</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Một liên kết mời cá nhân (<code>/moi/&lt;mã&gt;</code>) chuyển tiếp lòng vòng qua
+Zalo rồi mới được bấm nhiều ngày sau là chuyện thật. Kiểm rằng mã sai/hết hạn báo lỗi tử tế và
+không lộ tên người được mời.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/moi/MAKHONGTONTAI123</code> (một chuỗi bịa, chắc chắn không khớp mã nào đã phát).</li>
+  <li>Đọc tiêu đề tab trình duyệt.</li>
+  <li>Đọc nội dung màn hình.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Tiêu đề tab chỉ ghi "Lời mời vào phả" — <strong>không</strong> chứa chuỗi mã vừa gõ.</li>
+  <li>Thấy đúng câu: "Không mở được lời mời nào với mã này" kèm gợi ý về path bị cắt ngắn / gõ thiếu
+    ký tự, và lời khuyên gọi cho người đã mời — không có tên ai xuất hiện trên màn hình.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-KHACH-08">
+<h3><span class="ma-so">NT-KHACH-08</span> — Gõ mã mời dòng họ sai ở màn đăng ký</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Xác nhận mã được kiểm <em>trước</em> khi tài khoản được tạo — gõ sai không được
+phép tạo ra bất cứ thứ gì, để người dùng có thể thử lại thoải mái.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Mở <code>/dang-ky</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gõ vào ô "Mã mời dòng họ" một chuỗi bịa, ví dụ <code>ZZZZZ-00000</code>.</li>
+  <li>Bấm "Kiểm mã".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đúng câu: "Không mở được mã mời nào với mã này", cùng gợi ý về chữ O/số 0, chữ I/số 1
+    dễ nhầm.</li>
+  <li>Màn hình vẫn ở bước gõ mã (chưa chuyển sang bước lập tài khoản) — không có ô "Thư điện tử
+    hoặc số điện thoại" nào xuất hiện.</li>
+  <li>Gõ lại một mã khác (vẫn sai) ngay lập tức, không bị chặn — đúng như lời hứa "gõ sai mã thì
+    không có gì được tạo ra, nên ông/bà cứ thử lại thoải mái".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<h2 id="b-moi">B. Người mới đăng ký / tự nhận mình trong phả</h2>
+<div class="khung">
+  <p class="nhan">Chuẩn bị chung cho cả phần B</p>
+  <p style="margin:0">
+    Cần một <strong>mã mời dòng họ</strong> còn dùng được. Nếu chưa có, làm <a href="#NT-HD-01">NT-HD-01</a>
+    trước (đăng nhập <code>hoidong</code>, phát một mã, chép lại). Toàn bộ phần B dùng một
+    <strong>định danh mới</strong> chưa từng đăng ký — ví dụ một địa chỉ thư điện tử bịa dạng
+    <code>nghiem-thu-01@vidu.local</code> — để không đụng vào sáu tài khoản có sẵn. Đặt tên định
+    danh có đánh số (<code>nghiem-thu-01</code>, <code>nghiem-thu-02</code>, …) cho từng lượt đăng
+    ký khác nhau trong phần này.
+  </p>
+</div>
+
+<div class="kich-ban" id="NT-MOI-01">
+<h3><span class="ma-so">NT-MOI-01</span> — Đăng ký tài khoản mới bằng mã mời dòng họ hợp lệ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kiểm luồng đăng ký đã chốt: mã kiểm trước, tài khoản lập sau, và tài khoản mới
+<strong>chưa gắn với ai trong phả</strong> ngay sau khi lập xong.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Có sẵn một mã mời dòng họ còn dùng được. Mở <code>/dang-ky</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gõ đúng mã mời vào ô, bấm "Kiểm mã".</li>
+  <li>Đọc màn hình vừa mở sau khi mã được chấp nhận.</li>
+  <li>Gõ <code>nghiem-thu-01@vidu.local</code> vào ô "Thư điện tử hoặc số điện thoại".</li>
+  <li>Gõ một tên bất kỳ vào ô "Tên ông/bà tự xưng" (không bắt buộc).</li>
+  <li>Bấm "Lập tài khoản".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Sau khi kiểm mã, thấy tiêu đề "Mã dùng được — mời ông/bà lập tài khoản" và tên dòng họ hoặc
+    câu "Mã này mở cổng của dòng họ."</li>
+  <li>Sau khi lập tài khoản, thấy tiêu đề "Tài khoản đã lập xong" và đúng câu giải thích: tài khoản
+    <strong>chưa gắn với ai trong phả</strong>, "đoán bừa theo trùng tên là cách nhanh nhất để mở hồ
+    sơ của người này cho người khác".</li>
+  <li>Thấy khối "Còn một việc: đặt mật khẩu" với nút "Đặt mật khẩu".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-02">
+<h3><span class="ma-so">NT-MOI-02</span> — Đăng ký bằng định danh đã có tài khoản <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Một định danh (thư điện tử/số điện thoại) đã từng dùng để đăng nhập — kể cả qua
+Google/Zalo mà người dùng đã quên — không được phép bị chiếm lại qua lối mã mời không hỏi mật khẩu.
+Câu từ chối phải chỉ đúng lối đi tiếp, không phải một ngõ cụt.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập. Biết trước một định danh đã có tài khoản — dùng chính thư điện tử/số
+điện thoại của tài khoản <code>thanhvien</code> (tra trong Keycloak Admin Console nếu chưa biết:
+Users → thanhvien → Details). Có sẵn một mã mời dòng họ còn dùng được.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/dang-ky</code>, gõ mã mời hợp lệ, bấm "Kiểm mã".</li>
+  <li>Ở bước lập tài khoản, gõ đúng định danh của <code>thanhvien</code>.</li>
+  <li>Bấm "Lập tài khoản".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy tiêu đề "Xin đăng nhập rồi nhập lại mã" — <strong>không</strong> có câu nào nói thẳng
+    "định danh này đã có tài khoản" (nói thẳng thì màn này thành công cụ dò xem ai đã vào hệ
+    thống).</li>
+  <li>Thấy nút "Đăng nhập rồi nhập lại mã" — chỉ đúng lối đi tiếp: đăng nhập bằng định danh ấy rồi
+    quay lại gõ mã mời lần nữa.</li>
+  <li>Mã mời chưa bị tiêu tốn lượt dùng nào cho lần thử này (kiểm thêm ở <a href="#NT-HD-02">NT-HD-02</a>
+    nếu muốn chắc chắn: bộ đếm không tăng sau bước này).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-03">
+<h3><span class="ma-so">NT-MOI-03</span> — Đặt mật khẩu lần đầu</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Liên kết đặt mật khẩu dùng một lần phải hoạt động và cho phép đăng nhập ngay sau đó.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Vừa hoàn tất NT-MOI-01, đang ở màn "Còn một việc: đặt mật khẩu".</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Đặt mật khẩu".</li>
+  <li>Gõ một mật khẩu ít nhất 8 ký tự vào cả hai ô, ví dụ <code>NghiemThu2026!</code>.</li>
+  <li>Bấm "Đặt mật khẩu".</li>
+  <li>Bấm "Đăng nhập, xem phả đồ".</li>
+  <li>Đăng nhập bằng đúng định danh và mật khẩu vừa đặt.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy "Xong rồi — mật khẩu đã đặt" cùng ba gạch đầu dòng nói về những gì xem được sau khi đăng nhập.</li>
+  <li>Đăng nhập thành công, quay lại được ứng dụng ở trạng thái đã đăng nhập.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-04">
+<h3><span class="ma-so">NT-MOI-04</span> — Trang chủ báo "đang chờ duyệt" cho tài khoản chưa gắn phả</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người vừa đăng ký xong, đã có tài khoản nhưng chưa tự nhận mình, phải thấy ngay
+trạng thái của mình trên trang chủ — không phải đoán hay đi tìm.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đã đăng nhập bằng tài khoản vừa tạo ở NT-MOI-03 (chưa làm bước tự nhận mình).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở trang chủ (<code>/</code>).</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy banner màu hổ phách: "Hồ sơ của ông/bà đang chờ duyệt" cùng đoạn giải thích đã xem được
+    cây phả đồ mức tên/đời và hồ sơ các cụ đã khuất.</li>
+  <li>Có liên kết "Xem trạng thái đơn của tôi" dẫn tới <code>/nhan-dien/cho-duyet</code>.</li>
+  <li>Khối Bài mới / Vinh danh / Việc họ sắp tới vẫn hiển thị bình thường bên dưới banner.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-05">
+<h3><span class="ma-so">NT-MOI-05</span> — Phả đồ hiện hai nút nhận diện cho tài khoản chưa gắn</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Bước "tự nhận mình" chạy trên chính màn phả đồ — hai nút phải nằm đúng cạnh ô tìm,
+và chỉ hiện cho người chưa gắn phả.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đã đăng nhập bằng tài khoản chưa gắn phả (từ NT-MOI-03). Mở <code>/tree</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát dải ngay dưới ô tìm trên canvas.</li>
+  <li>Gõ tên một người bất kỳ vào ô tìm rồi bấm chọn kết quả, để chọn một node.</li>
+  <li>Quan sát lại dải nút.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Trước khi chọn node: thấy nút "Tôi chưa có trong phả" luôn hiện sẵn (không chờ chọn ai).</li>
+  <li>Sau khi chọn một node còn sống: thấy thêm nút "Đây là tôi — {tên người vừa chọn}".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-06">
+<h3><span class="ma-so">NT-MOI-06</span> — Chọn nhầm người đã khuất bị chặn ngay lúc chọn <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người đã khuất không thể là "tôi". Chặn phải xảy ra <strong>ngay lúc chọn</strong>,
+không phải sau khi đã gửi đơn — vì trạng thái đã khuất là dữ liệu công khai nên chặn sớm không lộ
+thêm gì.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đã đăng nhập bằng tài khoản chưa gắn phả. Mở <code>/tree</code>, tìm trước một
+người ghi "Đã khuất" (ví dụ Thuỷ tổ đời 1).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm chọn node của người đã khuất đó.</li>
+  <li>Quan sát dải nút cạnh ô tìm.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Không có</strong> nút "Đây là tôi" nào cho node này.</li>
+  <li>Thay vào đó thấy đúng câu: "Ô này là của một cụ đã khuất, nên không nhận được." (hoặc tương
+    đương) — không phải một nút bấm được rồi mới báo lỗi.</li>
+  <li>Nút "Tôi chưa có trong phả" vẫn còn đó, không bị ảnh hưởng.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-07">
+<h3><span class="ma-so">NT-MOI-07</span> — Gửi đơn nhận mình hợp lệ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Luồng chính: chọn đúng ô của mình, khai số điện thoại và tự giới thiệu, gửi cho
+Trưởng chi.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đã đăng nhập bằng tài khoản chưa gắn phả. Trên <code>/tree</code>, chọn một người
+<strong>còn sống</strong> thuộc Chi Bính mà chưa có tài khoản nào gắn vào (tránh sáu tài khoản có
+sẵn — chọn một nhân khẩu khác trong dữ liệu mẫu).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Đây là tôi — {tên}".</li>
+  <li>Trên màn "Ô ông/bà vừa chọn", xác nhận đúng người, bấm tiếp (nếu có bước xác nhận).</li>
+  <li>Gõ số điện thoại, ví dụ <code>0912345678</code>.</li>
+  <li>Gõ vài dòng tự giới thiệu (ít nhất một câu có ý nghĩa, ví dụ tên bố/mẹ và quê quán).</li>
+  <li>Bấm "Gửi đơn cho Trưởng chi".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Chuyển tới <code>/nhan-dien/cho-duyet</code> và thấy trạng thái "Đang chờ duyệt".</li>
+  <li>Thấy dòng "Đơn đang nằm ở {Chi Bính}, chờ … xem và đối chiếu."</li>
+  <li>Thấy danh sách "Trong lúc chờ, ông/bà xem được gì" liệt kê: xem phả đồ, xem hồ sơ các cụ đã
+    khuất; và danh sách "chưa" gồm: chưa viết bài, chưa xem số điện thoại/địa chỉ/ngày sinh đầy đủ
+    của người đang sống.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-08">
+<h3><span class="ma-so">NT-MOI-08</span> — Nhận nhầm người đã có tài khoản <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Ràng buộc "một nhân khẩu một tài khoản" phải chặn ở bước <strong>gửi</strong>, và
+câu từ chối phải <strong>mơ hồ có chủ ý</strong> — không được nói thẳng "người này đã có tài khoản",
+để màn này không trở thành công cụ dò xem ai trong họ đã vào hệ thống.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Cần một tài khoản chưa gắn phả <strong>khác</strong> với NT-MOI-07 (đăng ký thêm
+một định danh mới, ví dụ <code>nghiem-thu-02@vidu.local</code>, lặp lại NT-MOI-01 và NT-MOI-03).
+Đăng nhập bằng tài khoản này, mở <code>/tree</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Tìm và chọn đúng người mà tài khoản <code>thanhvien</code> đã gắn vào (hồ sơ của chính
+    <code>thanhvien</code> trên phả đồ).</li>
+  <li>Bấm "Đây là tôi — {tên}".</li>
+  <li>Điền số điện thoại và tự giới thiệu, bấm "Gửi đơn cho Trưởng chi".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Đơn <strong>bị chặn</strong>, nhưng thông báo chỉ nói chung chung: "Không gửi đơn cho người
+    này được. Ô này hiện không nhận thêm đơn." — <strong>không</strong> xuất hiện chữ nào như "đã
+    có tài khoản" hay tên của <code>thanhvien</code>.</li>
+  <li>Thông báo gợi ý "Xin gọi cho Trưởng chi của mình để nói rõ" — không gợi ý chọn người khác kiểu
+    tiết lộ đây đúng là người đã có tài khoản.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-09">
+<h3><span class="ma-so">NT-MOI-09</span> — "Tôi chưa có trong phả" thiếu người thân bị chặn</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người thân đã có trong phả là bắt buộc — không có nó, hồ sơ mới sẽ mồ côi, không
+tính được đời, không tra được danh xưng và không ai biết chi nào duyệt.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập bằng một tài khoản chưa gắn phả (có thể dùng lại tài khoản NT-MOI-08 nếu
+đơn trước đã bị từ chối/rút, hoặc đăng ký thêm <code>nghiem-thu-03@vidu.local</code>). Mở
+<code>/nhan-dien/chua-co</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gõ họ tên, ví dụ <code>Nguyễn Thị Kiểm Thử</code>.</li>
+  <li>Gõ năm sinh, ví dụ <code>1998</code>.</li>
+  <li>Chọn giới tính.</li>
+  <li><strong>Bỏ trống</strong> ô "Người thân ấy là ai".</li>
+  <li>Bấm "Gửi đơn cho Trưởng chi".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Đơn <strong>không gửi được</strong>. Thấy đúng câu: "Xin chỉ ra một người thân đã có trong
+    phả — bố, mẹ, hoặc vợ/chồng. Không có người thân thì hồ sơ mới không nối được vào cây."</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-10">
+<h3><span class="ma-so">NT-MOI-10</span> — Gửi đơn "Tôi chưa có trong phả" hợp lệ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Luồng đầy đủ cho ba tình huống thật: con dâu mới về, cháu mới sinh, hoặc nhánh ở xa
+— và xác nhận <strong>chưa có nhân khẩu nào được tạo</strong> ở bước gửi đơn, chỉ khi Trưởng chi
+duyệt mới tạo.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Tiếp tục từ NT-MOI-09 (cùng tài khoản, cùng màn <code>/nhan-dien/chua-co</code>).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Giữ nguyên họ tên, năm sinh, giới tính đã gõ.</li>
+  <li>Bấm ô "Người thân ấy là ai", gõ tên một người đã có trong phả, ví dụ chọn hồ sơ của
+    <code>truongchi</code> (Chi Bính).</li>
+  <li>Chọn quan hệ "Vợ / chồng của tôi".</li>
+  <li>Bấm "Gửi đơn cho Trưởng chi".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Chuyển tới <code>/nhan-dien/cho-duyet</code>, thấy "Xin được ghi vào phả với tên Nguyễn Thị
+    Kiểm Thử" ở trạng thái "Đang chờ duyệt".</li>
+  <li>Thấy đúng câu: "Hồ sơ trong phả của ông/bà chưa được lập. Chỉ khi đơn được duyệt thì hồ sơ mới
+    có, và lúc ấy ông/bà mới có mặt trong phả." — xác nhận chưa có nhân khẩu ma nào bị tạo ra.</li>
+  <li>Nếu hệ thống dò thấy nghi trùng với tên đã gõ, thấy khối "Đơn đã gửi — có thể ông/bà đã có
+    trong phả" liệt kê số hồ sơ nghi trùng (không bắt buộc phải có nếu tên bịa không trùng ai).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-11">
+<h3><span class="ma-so">NT-MOI-11</span> — Chưa được duyệt thì chưa viết bài được</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Viết bài là tiếng nói của người trong họ — quyết định đã chốt là chỉ người đã được
+duyệt vào phả mới viết được, nhưng nút "Viết bài mới" vẫn phải hiện (cửa thật nằm ở màn soạn bài,
+không giấu nút để người dùng tự đoán).</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập bằng tài khoản đang chờ duyệt (từ NT-MOI-07 hoặc NT-MOI-10).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Từ trang chủ, bấm "Viết bài mới".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Nút "Viết bài mới" hiện bình thường và bấm được (không bị ẩn/mờ).</li>
+  <li>Màn soạn bài mở ra nhưng chặn ngay bằng thông báo: "Chưa được duyệt vào phả" — "Viết bài là
+    tiếng nói của người trong họ, nên chỉ người đã được duyệt vào phả mới viết được." kèm hai lối:
+    "Nhận diện mình trong phả" và "Xem trạng thái đơn đã gửi".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-12">
+<h3><span class="ma-so">NT-MOI-12</span> — Chưa được duyệt thì chưa gửi đính chính được</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kiểm cùng nguyên tắc "chưa có tài khoản đầy đủ trong phả" áp cho luồng đính chính.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập bằng tài khoản đang chờ duyệt. Mở <code>/correction-requests</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát nội dung màn hình.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy thông báo tương đương: "Tài khoản của bạn đang chờ Hội đồng Tộc biểu duyệt, chưa gửi
+    được đề nghị." — không phải một trang lỗi 403 trần trụi.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-13">
+<h3><span class="ma-so">NT-MOI-13</span> — Gửi đơn lại sau khi bị từ chối có giới hạn số lần <span class="chip chip-cabien">CA BIEN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Không giới hạn số lần gửi lại thì màn "tự nhận mình" biến thành cách dò đúng người
+bằng cách thử lần lượt. Trần hiện cấu hình là <strong>5 lần bị từ chối</strong>
+(<code>giapha.membership.claim.max-attempts=5</code>).</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Cần phối hợp hai vai: một tài khoản chưa gắn phả (đăng ký mới, ví dụ
+  <code>nghiem-thu-04@vidu.local</code>) và tài khoản <code>truongchi</code> ở cửa sổ/trình duyệt
+  thứ hai để từ chối đơn liên tục.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Với tài khoản mới: trên <code>/tree</code>, chọn một người còn sống bất kỳ trong Chi Bính
+    chưa có ai gắn, bấm "Đây là tôi", gửi đơn.</li>
+  <li>Với <code>truongchi</code>: mở <code>/quan-ly/don-gia-nhap</code>, tìm đơn vừa gửi, bấm "Từ
+    chối", ghi lý do bất kỳ, xác nhận.</li>
+  <li>Quay lại tài khoản mới, mở <code>/nhan-dien/cho-duyet</code>, đọc dòng "Ông/bà còn {n} lần
+    gửi đơn." rồi bấm "Gửi lại đơn khác".</li>
+  <li>Lặp lại bước 1-3 thêm bốn lần nữa (tổng cộng 5 lần bị từ chối).</li>
+  <li>Sau lần từ chối thứ năm, thử gửi đơn lần thứ sáu.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Sau mỗi lần từ chối, số "còn lại" giảm đúng một đơn vị: 4 → 3 → 2 → 1 → 0.</li>
+  <li>Ở lần còn 1, thấy câu nhấn mạnh: "Đây là lần gửi đơn cuối cùng của ông/bà."</li>
+  <li>Sau khi hết lượt (lần thứ 6), thấy: "Ông/bà đã dùng hết số lần gửi đơn." kèm lời khuyên gọi
+    Trưởng chi hoặc người đã đưa mã mời — <strong>không</strong> cho gửi thêm đơn nào qua giao diện.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-MOI-14">
+<h3><span class="ma-so">NT-MOI-14</span> — Dựng ca "hai người cùng nhận một nhân khẩu" <span class="chip chip-cabien">CA BIEN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kịch bản này <strong>không tự chấm</strong> — nó chỉ dựng dữ liệu để
+<a href="#NT-TC-06">NT-TC-06</a> (phần D) có cái để kiểm: hai tài khoản khác nhau cùng nhận là một
+nhân khẩu, và Trưởng chi phải thấy <strong>cả hai</strong> rồi mới chọn, không được ưu tiên người
+gửi trước.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Hai tài khoản chưa gắn phả khác nhau, ví dụ <code>nghiem-thu-05@vidu.local</code> và
+<code>nghiem-thu-06@vidu.local</code> (đăng ký theo NT-MOI-01 + NT-MOI-03 cho từng cái).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Chọn trước một người còn sống chưa ai gắn (ví dụ ở Chi Đinh, để không đụng dữ liệu các kịch
+    bản khác) — ghi lại tên chính xác.</li>
+  <li>Với tài khoản thứ nhất: trên <code>/tree</code>, chọn đúng người đó, gửi đơn "Đây là tôi" với
+    một số điện thoại và lời giới thiệu bất kỳ.</li>
+  <li>Với tài khoản thứ hai: cũng chọn đúng người đó, gửi đơn "Đây là tôi" với số điện thoại và lời
+    giới thiệu khác.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Cả hai đơn đều gửi thành công, không đơn nào bị chặn ở bước gửi vì "đã có người nhận".</li>
+  <li>Ghi lại tên người và hai số điện thoại đã dùng, dùng tiếp ở NT-TC-06.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>Dựng xong, có dữ liệu cho NT-TC-06</span>
+  <span class="khongdat"><span class="o-vuong"></span>Không dựng được</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<h2 id="c-thanhvien">C. Thành viên (<code>thanhvien</code>)</h2>
+<div class="khung">
+  <p class="nhan">Mục lục phần C</p>
+  <ul>
+    <li><a href="#NT-TV-01">01 · Phả đồ đầy đủ hơn khách</a></li>
+    <li><a href="#NT-TV-02">02 · "Về chỗ tôi" và tìm theo tên trên canvas</a></li>
+    <li><a href="#NT-TV-03">03 · Tra danh xưng giữa hai người</a></li>
+    <li><a href="#NT-TV-04">04 · Chọn mức chia sẻ CLAN, xuất hiện trong danh bạ</a></li>
+    <li><a href="#NT-TV-05">05 · Mức PRIVATE vẫn để Hội đồng đọc được</a></li>
+    <li><a href="#NT-TV-06">06 · Sửa hồ sơ của chính mình</a></li>
+    <li><a href="#NT-TV-07">07 · Không sửa trực tiếp được hồ sơ người khác — gửi đính chính</a></li>
+    <li><a href="#NT-TV-08">08 · Xem lịch giỗ, lọc theo chi</a></li>
+    <li><a href="#NT-TV-09">09 · Cài đặt thông báo đẩy</a></li>
+    <li><a href="#NT-TV-10">10 · Viết bài — nháp tự lưu, gửi duyệt</a></li>
+    <li><a href="#NT-TV-11">11 · Đăng ảnh HEIC bị từ chối kèm cách sửa <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TV-12">12 · Đăng ảnh/video quá khổ bị từ chối kèm cách sửa <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TV-13">13 · Báo cáo ảnh vi phạm trên bài người khác</a></li>
+    <li><a href="#NT-TV-14">14 · Đề nghị vinh danh cho chính mình</a></li>
+    <li><a href="#NT-TV-15">15 · Vinh danh người còn sống — duyệt xong vẫn chỉ chính chủ thấy <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TV-16">16 · Không đổi được ngày giỗ trên sự kiện <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TV-17">17 · Trung tâm thông báo</a></li>
+  </ul>
+</div>
+
+<div class="kich-ban" id="NT-TV-01">
+<h3><span class="ma-so">NT-TV-01</span> — Phả đồ đầy đủ hơn khách, thấy người còn sống trong phạm vi</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đối chứng trực tiếp với NT-KHACH-02: một Thành viên đã đăng nhập phải thấy người
+còn sống, khác hẳn góc nhìn của khách.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>/<code>giapha123</code>. Mở <code>/tree</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát vài node ở đời sâu trong Chi Bính.</li>
+  <li>Bấm mở hồ sơ một người còn sống.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy được node ghi "Còn sống" kèm tên thật (không bị ẩn) — ít nhất trong phạm vi Chi Bính.</li>
+  <li>Hồ sơ người còn sống mở ra có ghi chú "Mức thông tin đang hiển thị" (T1/T2 tuỳ nhóm trường
+    người đó đã chọn chia sẻ) — không phải một trang trắng hay lỗi 403.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-02">
+<h3><span class="ma-so">NT-TV-02</span> — "Về chỗ tôi" và tìm một người theo tên trên canvas</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người dùng phải tìm được chính mình và người khác trong 1.500 người mà không phải
+cuộn dò bằng mắt.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/tree</code>, cuộn/phóng to ra xa khỏi vị
+trí ban đầu.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm nút "Về chỗ tôi".</li>
+  <li>Gõ tên một người khác vào ô tìm trên canvas, chọn kết quả.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Canvas cuộn/phóng về đúng ô của <code>thanhvien</code>, có tô đậm ("Tôi").</li>
+  <li>Gõ tên xong, canvas nhảy tới đúng người vừa chọn, mở đường từ gốc xuống đó.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-03">
+<h3><span class="ma-so">NT-TV-03</span> — Tra danh xưng giữa hai người</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Tính năng cốt lõi: xưng hô đúng chuẩn dòng họ giữa hai người bất kỳ, kèm đường quan
+hệ giải thích vì sao.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/kinship</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Ở ô "Người xưng hô (tôi là…)", gõ và chọn chính hồ sơ của <code>thanhvien</code>.</li>
+  <li>Ở ô "Người được gọi", gõ và chọn một người khác vai vế rõ ràng (ví dụ ông/bà nội, hoặc một
+    người ở đời cao hơn).</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy câu "{tôi} gọi {người kia} là {danh xưng}" bằng tiếng Việt.</li>
+  <li>Thấy khối "Đường quan hệ" với tổ chung (LCA), số đời đi lên/đi xuống.</li>
+  <li>Bấm "Đảo chiều hai người" thì câu đổi đúng theo chiều ngược lại.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-04">
+<h3><span class="ma-so">NT-TV-04</span> — Chọn mức chia sẻ "Cả họ xem", xuất hiện trong Danh bạ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Mô hình riêng tư mới cho chính chủ quyền quyết theo từng nhóm trường — kiểm rằng
+lựa chọn ấy có tác dụng thật, thấy được trong Danh bạ.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở hồ sơ của chính mình (menu tài khoản → hồ sơ,
+hoặc từ phả đồ bấm "Về chỗ tôi" rồi mở hồ sơ).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Cuộn tới khối "Ai xem được gì về tôi".</li>
+  <li>Điền "Nghề nghiệp" và "Nơi ở hiện nay" nếu còn trống (sửa hồ sơ trước nếu cần).</li>
+  <li>Đặt nhóm "Nghề nghiệp &amp; nơi làm việc" và "Nơi ở (tỉnh/thành)" sang mức "Cả họ xem".</li>
+  <li>Bấm "Lưu mức chia sẻ".</li>
+  <li>Mở <code>/danh-ba</code>, tìm tên mình.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Sau khi lưu, thấy "Đã lưu." rồi "Mức chia sẻ đang được áp dụng."</li>
+  <li>Hồ sơ của <code>thanhvien</code> xuất hiện trong Danh bạ với đúng nghề nghiệp và tỉnh/thành đã điền.</li>
+  <li>Bảng "Ai xem được gì" ở dưới khối cho thấy tóm tắt đúng những nhóm vừa mở.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-05">
+<h3><span class="ma-so">NT-TV-05</span> — Mức "Riêng tư" vẫn để Hội đồng đọc được</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">"Riêng tư" trong hệ thống này nghĩa là "chỉ bạn và Hội đồng Tộc biểu", không phải
+"chỉ mình tôi" — người dùng phải được cảnh báo điều này <em>trước khi chọn</em>, không phải sau khi
+phát hiện ra.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Tiếp tục từ NT-TV-04, cùng khối "Ai xem được gì về tôi".</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Đặt nhóm "Liên hệ: điện thoại · thư điện tử · Zalo" về mức "Riêng tư".</li>
+  <li>Đọc chú thích ngay dưới mức "Riêng tư" trong bảng chọn.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đúng câu: "Cần biết trước khi chọn: mức Riêng tư nghĩa là "chỉ bạn và Hội đồng Tộc
+    biểu", chứ không phải "chỉ mình tôi". Hội đồng vẫn đọc được số điện thoại và địa chỉ của bạn để
+    lo việc họ — đó là định nghĩa của mức này, không phải trục trặc."</li>
+</ul>
+<p class="mo-ta">Kiểm chéo phần đọc được ở <a href="#NT-HD-06">NT-HD-06</a> (phần Hội đồng).</p>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-06">
+<h3><span class="ma-so">NT-TV-06</span> — Sửa hồ sơ của chính mình</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Thành viên phải sửa <strong>trực tiếp</strong> được hồ sơ của chính mình, không cần
+qua đường đính chính.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở hồ sơ của chính mình.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Sửa hồ sơ".</li>
+  <li>Đổi nội dung ô "Tiểu sử &amp; ghi chép" thành một câu mới.</li>
+  <li>Bấm "Lưu thay đổi".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Lưu thành công, thấy "Đã lưu thay đổi."</li>
+  <li>Mở lại hồ sơ, thấy đúng câu vừa sửa.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-07">
+<h3><span class="ma-so">NT-TV-07</span> — Không sửa trực tiếp được hồ sơ người khác — gửi đính chính</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Thành viên thường không có quyền ghi trên hồ sơ người khác; lối duy nhất là đề nghị
+đính chính, chờ Trưởng chi/Hội đồng duyệt.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở hồ sơ một người khác trong Chi Bính (còn sống,
+không phải chính mình).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Tìm nút "Sửa hồ sơ" — kiểm xem có hiện không.</li>
+  <li>Bấm "Đề nghị đính chính".</li>
+  <li>Chọn mục "Nghề nghiệp", điền giá trị đề nghị và lý do (ít nhất 10 ký tự).</li>
+  <li>Bấm "Gửi đề nghị".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Không có nút "Sửa hồ sơ" khả dụng cho hồ sơ người khác (hoặc có nhưng bấm vào bị từ chối
+    "Bạn không có quyền sửa hồ sơ này.").</li>
+  <li>Gửi đề nghị đính chính thành công: "Đã gửi đề nghị đính chính. Trưởng chi sẽ xem xét."</li>
+  <li>Mở <code>/correction-requests</code>, tab "Đề nghị của tôi", thấy đề nghị vừa gửi ở trạng thái
+    "Chờ duyệt".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-08">
+<h3><span class="ma-so">NT-TV-08</span> — Xem lịch giỗ, lọc theo chi</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Sự kiện/giỗ phải hiện song lịch âm-dương và lọc đúng theo chi.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/events</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát danh sách "Sắp tới" — mỗi mục có ngày âm và ngày dương tương ứng.</li>
+  <li>Đổi "Kiểu xem" sang "Lịch tháng".</li>
+  <li>Lọc "Lọc theo chi/ngành" về đúng Chi Bính.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Mỗi sự kiện ghi rõ "Ngày {d} tháng {m} âm lịch" và "Dương lịch: {ngày}".</li>
+  <li>Lịch tháng hiện đúng lưới ngày, bấm vào một ngày có việc họ hiện chi tiết bên dưới.</li>
+  <li>Lọc theo Chi Bính vẫn hiện đủ giỗ cấp dòng họ ("Giỗ cấp dòng họ luôn hiện, dù bạn lọc theo chi
+    nào."), nhưng ẩn giỗ riêng của các chi khác.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-09">
+<h3><span class="ma-so">NT-TV-09</span> — Cài đặt thông báo đẩy</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kiểm màn cài đặt kênh nhận nhắc giỗ.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/settings</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát khối "Thông báo trong ứng dụng" và "Thông báo đẩy trên thiết bị này".</li>
+  <li>Bật công tắc thông báo đẩy (nếu trình duyệt hỏi quyền, bấm Cho phép).</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Khối "Thông báo trong ứng dụng" ghi rõ luôn bật, không tắt được, kèm câu "mở ứng dụng là thấy
+    đủ mọi lời nhắc."</li>
+  <li>Bật thành công thì thấy "Đang bật trên thiết bị này". Nếu trình duyệt/máy chủ chưa hỗ trợ
+    (thiếu VAPID hoặc service worker), thấy đúng thông báo lỗi tương ứng
+    (<code>SERVER_NOT_CONFIGURED</code> hoặc <code>NO_SERVICE_WORKER</code>) — không phải một nút
+    câm không phản hồi gì.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-10">
+<h3><span class="ma-so">NT-TV-10</span> — Viết bài: nháp tự động lưu, gửi duyệt</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người viết là "bác 60 tuổi chứ không phải nhà báo" — nháp phải tự lưu để không mất
+công sức đã gõ.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/bai-viet/moi</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gõ tiêu đề, ví dụ "Kiểm nghiệm thu — họp họ cuối năm".</li>
+  <li>Gõ vài câu ở ô nội dung.</li>
+  <li>Đợi vài giây không thao tác gì, quan sát góc màn hình.</li>
+  <li>Tải lại trang (F5) mà không bấm "Gửi duyệt".</li>
+  <li>Mở lại <code>/bai-viet/cua-toi</code>.</li>
+  <li>Mở lại bài nháp, bấm "Gửi duyệt".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Sau vài giây ngừng gõ, thấy "Đang lưu nháp…" rồi "Đã lưu nháp lúc {giờ}".</li>
+  <li>Sau khi tải lại trang, nội dung đã gõ <strong>không bị mất</strong> — mở lại đúng bài nháp ấy
+    vẫn còn tiêu đề và nội dung.</li>
+  <li>Mục "Nháp đang viết dở (1)" trên <code>/bai-viet/cua-toi</code> liệt kê đúng bài này.</li>
+  <li>Sau khi gửi duyệt, trạng thái đổi thành "Đang chờ duyệt" và bài chuyển sang mục "Đã gửi đi".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-11">
+<h3><span class="ma-so">NT-TV-11</span> — Đăng ảnh HEIC bị từ chối kèm cách sửa <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">HEIC là định dạng mặc định của iPhone — người dùng thật <strong>sẽ</strong> gặp ca
+này ngay lần đầu đăng ảnh từ điện thoại. Thông báo phải nói được <strong>cách sửa</strong>, không
+chỉ "tệp không hợp lệ".</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Đăng nhập <code>thanhvien</code>. Chuẩn bị sẵn một tệp <code>.heic</code> bất kỳ trên máy
+  (đổi phần đuôi một ảnh JPEG bất kỳ thành <code>.heic</code> cũng đủ để kiểm nhánh từ chối theo
+  tên tệp/loại MIME sai — kiểm mã nguồn thật dùng chữ ký tệp thật, nếu có ảnh HEIC gốc từ iPhone
+  thì càng chuẩn). Mở một bài nháp đang soạn (từ NT-TV-10 hoặc tạo mới ở <code>/bai-viet/moi</code>).
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Ở khối "Ảnh, video", bấm "Chọn ảnh/video".</li>
+  <li>Chọn tệp <code>.heic</code> đã chuẩn bị.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Tệp bị từ chối, và thấy đúng hướng dẫn sửa theo từng bước, không chỉ một câu "sai định dạng":
+    "Đây là ảnh định dạng HEIC (mặc định của iPhone). Vào Cài đặt &gt; Máy ảnh &gt; Định dạng, chọn
+    "Tương thích nhất" để lưu ảnh dạng JPEG — hoặc mở ảnh này, bấm Chia sẻ &gt; Lưu ảnh gốc dạng
+    tương thích, rồi tải lại."</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-12">
+<h3><span class="ma-so">NT-TV-12</span> — Đăng ảnh/video quá khổ bị từ chối kèm cách sửa <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Trần dung lượng ảnh là <strong>8 MiB</strong>, video là <strong>100 MiB / 120
+giây</strong>, tối đa <strong>12 tệp</strong> một bài. Thông báo vượt trần phải nói rõ số đo và cách
+chữa (nén nhỏ lại / cắt ngắn), không chỉ báo lỗi chung chung.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Đăng nhập <code>thanhvien</code>, đang mở một bài nháp. Chuẩn bị: một ảnh JPEG lớn hơn 8 MiB
+  (chụp ảnh RAW rồi xuất JPEG chất lượng tối đa, hoặc dùng một công cụ tạo tệp giả 9 MB), và/hoặc
+  một video dài hơn 120 giây.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Chọn ảnh/video", chọn ảnh lớn hơn 8 MiB.</li>
+  <li>Quan sát thông báo.</li>
+  <li>(Nếu có video dài hơn 120 giây) lặp lại với video đó.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Với ảnh quá khổ: thấy "Tệp nặng {dung lượng thật}, vượt trần 8 MiB. Xin nén nhỏ lại hoặc chọn
+    tệp khác." — số MiB thật của tệp vừa chọn được nêu ra, không phải một con số cố định sai.</li>
+  <li>Với video quá 120 giây: thấy "Video dài quá 120 giây. Cắt ngắn lại hoặc chia thành nhiều đoạn
+    trước khi tải lên."</li>
+  <li>Thử thêm quá 12 tệp vào cùng một bài (nếu có đủ ảnh mẫu): tệp thứ 13 bị từ chối với "Bài đã đủ
+    12 tệp, tệp này không thêm được nữa."</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-13">
+<h3><span class="ma-so">NT-TV-13</span> — Báo cáo ảnh vi phạm trên bài người khác</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Bất kỳ thành viên nào cũng phải báo được một tấm ảnh có vấn đề (riêng tư, nhận nhầm
+người, không phù hợp, bản quyền) để người duyệt trong phạm vi chi xem lại.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở một bài viết đã đăng có kèm ảnh (nếu chưa có,
+dùng chính bài vừa đăng ở một kịch bản trước, hoặc nhờ <code>truongchi</code> đăng một bài có ảnh
+trước).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm vào một ảnh của bài để mở xem phóng to.</li>
+  <li>Bấm "Báo gỡ tệp này".</li>
+  <li>Chọn lý do "Không phù hợp với bài viết".</li>
+  <li>Bấm "Gửi báo cáo".</li>
+  <li>Thử báo cáo lại chính tệp đó lần thứ hai.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Gửi lần đầu thành công: "Đã ghi nhận — người duyệt trong phạm vi chi sẽ xem lại."</li>
+  <li>Gửi lần hai (cùng tệp, cùng người): "Ông/bà đã báo cáo tệp này và báo cáo đó đang chờ xử lý —
+    chưa gửi thêm được nữa."</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-14">
+<h3><span class="ma-so">NT-TV-14</span> — Đề nghị vinh danh cho chính mình</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Vinh danh là danh sách có cấu trúc gắn với nhân khẩu, không phải một bài viết tự do
+— kiểm luồng đề nghị cơ bản.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/vinh-danh</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Đề nghị vinh danh".</li>
+  <li>Để trống ô "Người được vinh danh" (mặc định là chính mình).</li>
+  <li>Chọn loại "Đỗ đạt", điền tiêu đề, năm, nơi cấp, mô tả.</li>
+  <li>Bấm "Gửi đề nghị".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy dòng "Đề nghị vinh danh cho chính ông/bà" ở đầu biểu mẫu.</li>
+  <li>Gửi thành công, mục vừa gửi xuất hiện ở "Đang chờ duyệt" trên <code>/vinh-danh</code> (nếu
+    <code>thanhvien</code> có quyền xem hàng chờ của chính mình) hoặc biến mất khỏi biểu mẫu kèm
+    xác nhận đã gửi.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-15">
+<h3><span class="ma-so">NT-TV-15</span> — Vinh danh người còn sống: duyệt xong vẫn chỉ chính chủ thấy <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  <strong>Đây là ca dễ bị chấm "KHÔNG ĐẠT" oan nhất trong cả tài liệu.</strong> Vinh danh của người
+  còn sống đi qua đúng bộ lọc riêng tư như mọi dữ liệu cá nhân khác (nhóm trường thứ sáu, mặc định
+  <strong>Riêng tư</strong>). Duyệt một đề nghị vinh danh <strong>không tự động mở chia sẻ</strong> —
+  nếu người được vinh danh chưa từng vào mục "Ai xem được gì về tôi" để mở nhóm này ra, thì sau khi
+  duyệt, tên người ấy vẫn chỉ hiện với <em>chính họ</em> (và Hội đồng). Người khác trong họ —
+  kể cả cùng chi — thấy vinh danh <strong>không kèm tên</strong>, hoặc không thấy mục ấy trong danh
+  sách công khai. <strong>Đây là đúng thiết kế, không phải lỗi</strong> — đừng chấm KHÔNG ĐẠT chỉ vì
+  "tôi không thấy tên bác ấy".
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Cần <code>thanhvien</code> đề nghị một vinh danh cho một người thân <strong>còn sống, khác Chi
+  Bính</strong> (ví dụ một người ở Chi Ất) — dùng lại biểu mẫu NT-TV-14 nhưng gõ tên người ấy vào ô
+  "Người được vinh danh". Sau đó cần <code>truongchi</code> hoặc <code>hoidong</code> duyệt đề nghị
+  này (xem <a href="#NT-TC-10">NT-TC-10</a>) <strong>trước khi</strong> làm tiếp các bước dưới.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Sau khi vinh danh đã được duyệt (trạng thái "Đã duyệt"), đăng xuất khỏi mọi tài khoản.</li>
+  <li>Đăng nhập bằng <code>thanhvien</code> (không phải người vừa được vinh danh, không phải Hội
+    đồng). Mở <code>/vinh-danh</code>.</li>
+  <li>Tìm mục vinh danh vừa duyệt trong khối "Đã duyệt".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Mục vinh danh <strong>vẫn hiện</strong> (loại, tiêu đề, năm) nhưng <strong>không kèm tên
+    người được vinh danh</strong>, hoặc mục này hoàn toàn không xuất hiện trong danh sách của
+    <code>thanhvien</code> nếu <code>thanhvien</code> không phải chính chủ/Hội đồng.</li>
+  <li>Đăng nhập lại bằng chính người được vinh danh (nếu có tài khoản thử nghiệm phù hợp) hoặc bằng
+    <code>hoidong</code>: mục này hiện đầy đủ kèm tên.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-16">
+<h3><span class="ma-so">NT-TV-16</span> — Không đổi được ngày giỗ trên một sự kiện <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta"><code>death_lunar</code> trên hồ sơ nhân khẩu là nguồn sự thật duy nhất cho ngày
+giỗ — sự kiện loại "Giỗ thường" không được phép mang một ngày âm khác với ngày mất đã ghi. Muốn đổi
+ngày giỗ phải sửa ở hồ sơ người đó, không sửa được từ màn sự kiện.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Cần quyền sửa sự kiện — làm kịch bản này bằng <code>truongchi</code> thay vì
+<code>thanhvien</code> (Thành viên thường không có nút sửa sự kiện — xem NT-TC-14 để kiểm việc đó
+riêng). Mở <code>/events</code>, tìm một sự kiện loại "Giỗ thường" gắn với một người cụ thể.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Sửa" trên sự kiện giỗ thường đó.</li>
+  <li>Đổi "Ngày (âm)" hoặc "Tháng (âm)" thành một giá trị khác với ngày mất đã ghi trong hồ sơ
+    người này.</li>
+  <li>Bấm "Lưu".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Máy chủ từ chối lưu, thấy đúng câu: "Ngày giỗ lấy từ hồ sơ nhân khẩu, không khớp ngày mất đã
+    ghi ở đó. Muốn đổi ngày giỗ, hãy sửa ở hồ sơ người này."</li>
+  <li>Ngày giỗ trên sự kiện vẫn giữ nguyên giá trị cũ sau khi tải lại trang.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-17">
+<h3><span class="ma-so">NT-TV-17</span> — Trung tâm thông báo</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Mọi lời nhắc giỗ phải tới trung tâm thông báo trước tiên, đọc/lọc được.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/notifications</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát danh sách thông báo.</li>
+  <li>Lọc theo "Chưa đọc".</li>
+  <li>Bấm "Đánh dấu đã đọc" trên một mục.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Danh sách hiện đúng loại: Nhắc giỗ / Sự kiện dòng họ / Yêu cầu đính chính / Hệ thống.</li>
+  <li>Lọc "Chưa đọc" chỉ còn các mục chưa đọc; số đếm trên chuông thông báo giảm sau khi đánh dấu
+    đã đọc.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<h2 id="d-truongchi">D. Trưởng chi (<code>truongchi</code> — Chi Bính; <code>truongchi.at</code> — Chi Ất)</h2>
+<div class="khung">
+  <p class="nhan">Mục lục phần D</p>
+  <ul>
+    <li><a href="#NT-TC-01">01 · Vào /quan-ly, thấy đủ bốn mục</a></li>
+    <li><a href="#NT-TC-02">02 · Duyệt đơn "nhận mình" hợp lệ</a></li>
+    <li><a href="#NT-TC-03">03 · Duyệt đơn "chưa có trong phả" — tạo nhân khẩu mới</a></li>
+    <li><a href="#NT-TC-04">04 · Từ chối đơn kèm lý do</a></li>
+    <li><a href="#NT-TC-05">05 · Ranh giới phạm vi chi — hai Trưởng chi khác chi <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TC-06">06 · Hai người cùng nhận một nhân khẩu <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TC-07">07 · Gợi ý trùng khi duyệt đơn "chưa có trong phả"</a></li>
+    <li><a href="#NT-TC-08">08 · Duyệt / trả lại bài viết</a></li>
+    <li><a href="#NT-TC-09">09 · Không tự duyệt được bài viết của chính mình <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TC-10">10 · Duyệt vinh danh, thấy cảnh báo chia sẻ</a></li>
+    <li><a href="#NT-TC-11">11 · Xử báo cáo ảnh — gỡ vĩnh viễn / bỏ qua</a></li>
+    <li><a href="#NT-TC-12">12 · Phát lời mời cá nhân cho một cụ</a></li>
+    <li><a href="#NT-TC-13">13 · Sự kiện phạm vi một chi không lộ sang chi khác <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TC-14">14 · Không tạo được sự kiện cấp cả dòng họ</a></li>
+    <li><a href="#NT-TC-15">15 · Nhập liệu Excel — tải mẫu rồi tải lên</a></li>
+  </ul>
+</div>
+
+<div class="kich-ban" id="NT-TC-01">
+<h3><span class="ma-so">NT-TC-01</span> — Vào <code>/quan-ly</code>, thấy đủ bốn mục</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kiểm lối vào phần quản lý — chức năng có nhưng không có lối vào là bằng như chưa có.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>truongchi</code>/<code>giapha123</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Trên thanh đầu trang (máy tính), tìm biểu tượng hình hai người (nhóm) — bấm vào đó. Nếu không
+    thấy, mở thẳng <code>/quan-ly</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đúng bốn mục: "Đơn xin vào phả", "Phát mã và phát lời mời", "Duyệt bài viết", "Duyệt báo
+    cáo ảnh/video".</li>
+  <li>Nếu có đơn đang chờ, huy hiệu số trên biểu tượng nhóm ở thanh đầu trang khớp với số đơn thật.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-02">
+<h3><span class="ma-so">NT-TC-02</span> — Duyệt đơn "nhận mình" hợp lệ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Duyệt xong phải gắn đúng tài khoản vào đúng hồ sơ, mở khoá mọi quyền của thành viên.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Có sẵn đơn từ NT-MOI-07. Đăng nhập <code>truongchi</code>. Mở <code>/quan-ly/don-gia-nhap</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Tìm đúng đơn vừa gửi ở NT-MOI-07 (đối chiếu tên, số điện thoại, lời tự giới thiệu).</li>
+  <li>Bấm "Duyệt — gắn tài khoản".</li>
+  <li>Đọc lời dẫn trong hộp thoại, thêm ghi chú nếu muốn (ví dụ "đã gọi xác nhận").</li>
+  <li>Xác nhận duyệt.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy "Đã duyệt đơn."; đơn biến mất khỏi hàng chờ.</li>
+  <li>Đăng nhập lại bằng tài khoản đã gửi đơn (từ NT-MOI-07): trang chủ không còn banner "đang chờ
+    duyệt"; hồ sơ đã gắn hiện đúng tên, có nút "Sửa hồ sơ".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-03">
+<h3><span class="ma-so">NT-TC-03</span> — Duyệt đơn "chưa có trong phả" — tạo nhân khẩu mới</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Duyệt loại đơn này là <strong>ghi thêm một người vào gia phả</strong> — hệ quả nặng
+hơn hẳn duyệt "nhận mình", và giao diện phải nói rõ điều đó trước khi xác nhận.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Có sẵn đơn từ NT-MOI-10. Đăng nhập <code>truongchi</code>. Mở <code>/quan-ly/don-gia-nhap</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Tìm đơn "Xin được ghi thêm vào phả" của "Nguyễn Thị Kiểm Thử".</li>
+  <li>Đọc khối "Duyệt đơn này là ghi thêm một người vào gia phả" và ba hệ quả liệt kê bên dưới.</li>
+  <li>Bấm "Duyệt — tạo nhân khẩu mới", xác nhận.</li>
+  <li>Mở <code>/tree</code>, tìm người vừa tạo qua ô tìm.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Hộp thoại xác nhận có đúng ba dòng hệ quả: tạo nhân khẩu + nối vào cây qua người thân đã chỉ
+    ra; gia phả không xoá cứng nên người này ở lại vĩnh viễn; nhắc xem lại danh sách nghi trùng.</li>
+  <li>Sau khi duyệt, "Nguyễn Thị Kiểm Thử" xuất hiện trên phả đồ, nối đúng vào <code>truongchi</code>
+    (quan hệ vợ/chồng như đã khai).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-04">
+<h3><span class="ma-so">NT-TC-04</span> — Từ chối đơn kèm lý do</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người gửi có quyền biết vì sao bị từ chối — lý do là bắt buộc, không được để trống.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Cần một đơn đang chờ khác (dựng nhanh: đăng ký một tài khoản mới, chọn một người
+còn sống bất kỳ, gửi đơn "Đây là tôi"). Đăng nhập <code>truongchi</code>, mở
+<code>/quan-ly/don-gia-nhap</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Từ chối" trên đơn đó.</li>
+  <li><strong>Để trống</strong> ô lý do, thử xác nhận.</li>
+  <li>Điền lý do, ví dụ "Đã gọi số này, người nghe máy không phải người trong ảnh.", xác nhận lại.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Để trống lý do thì không xác nhận được: "Xin nêu lý do từ chối. Người gửi có quyền biết vì
+    sao."</li>
+  <li>Sau khi điền lý do và xác nhận: "Đã từ chối đơn và gửi lý do tới người khai."</li>
+  <li>Đăng nhập lại bằng tài khoản vừa bị từ chối: thấy đúng lý do ở "Trưởng chi trả lời" trên màn
+    "đang chờ duyệt", và số lần gửi còn lại đã giảm 1.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-05">
+<h3><span class="ma-so">NT-TC-05</span> — Ranh giới phạm vi chi: hai Trưởng chi khác chi <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Đây là ranh giới RBAC quan trọng nhất của hệ thống. Phải kiểm theo <strong>cả hai chiều</strong>:
+  <code>truongchi</code> (Chi Bính) không được đụng vào đơn/hồ sơ của Chi Ất, và <code>truongchi.at</code>
+  (Chi Ất) không được đụng vào đơn/hồ sơ của Chi Bính. Kiểm một chiều rồi suy ra chiều kia là
+  không đủ — mã phạm vi hai chiều có thể lệch nhau ở một điểm mà kiểm một chiều không thấy.
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Cần một đơn đang chờ thuộc Chi Ất (đăng ký một tài khoản mới, trên <code>/tree</code> chọn một
+  người còn sống ở Chi Ất, gửi đơn "Đây là tôi") và một đơn đang chờ thuộc Chi Bính (tương tự, chọn
+  người ở Chi Bính). Cần cả hai tài khoản <code>truongchi</code> và <code>truongchi.at</code>.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Đăng nhập <code>truongchi</code> (Chi Bính). Mở <code>/quan-ly/don-gia-nhap</code>.</li>
+  <li>Ghi lại danh sách đơn đang thấy.</li>
+  <li>Thử mở trực tiếp hồ sơ người ở Chi Ất bằng cách gõ đường dẫn hồ sơ (<code>/persons/{id}</code>
+    của người Chi Ất) rồi bấm "Sửa hồ sơ".</li>
+  <li>Đăng xuất, đăng nhập <code>truongchi.at</code> (Chi Ất). Mở lại <code>/quan-ly/don-gia-nhap</code>.</li>
+  <li>Ghi lại danh sách đơn đang thấy. Thử sửa hồ sơ một người ở Chi Bính tương tự bước 3.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><code>truongchi</code> chỉ thấy đơn thuộc Chi Bính trong hàng chờ — <strong>không</strong>
+    thấy đơn của Chi Ất đã dựng ở bước chuẩn bị.</li>
+  <li><code>truongchi</code> bấm "Sửa hồ sơ" một người Chi Ất: bị từ chối (403 / "Bạn không có
+    quyền sửa hồ sơ này.") — không lưu được thay đổi nào.</li>
+  <li>Đối xứng: <code>truongchi.at</code> chỉ thấy đơn Chi Ất, không thấy đơn Chi Bính; và không
+    sửa được hồ sơ người Chi Bính.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT (cả hai chiều)</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-06">
+<h3><span class="ma-so">NT-TC-06</span> — Hai người cùng nhận một nhân khẩu <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Trưởng chi phải thấy <strong>cả hai</strong> đơn cạnh nhau rồi mới chọn — không
+được ưu tiên người gửi trước, vì trùng tên trong dòng họ là chuyện thường.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đã dựng ở NT-MOI-14 (hai đơn cùng nhận một người ở Chi Đinh). Đăng nhập tài khoản
+Trưởng chi phụ trách Chi Đinh (nếu không có tài khoản thử nghiệm cho Chi Đinh, dùng <code>hoidong</code>
+để kiểm phần hiển thị "cụm tranh chấp" — quyền duyệt cả họ của Hội đồng vẫn cho thấy đúng giao diện
+này).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/quan-ly/don-gia-nhap</code>.</li>
+  <li>Tìm khung viền đậm màu hổ phách bọc hai thẻ đơn.</li>
+  <li>Đọc tiêu đề khung.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Hai đơn của NT-MOI-14 nằm <strong>trong cùng một khung</strong>, tiêu đề "2 người cùng nhận là
+    {tên}", kèm câu "Xin xem cả hai rồi hãy chọn. Người gửi trước chưa chắc là người đúng…"</li>
+  <li>Hai thẻ đơn <strong>không</strong> sắp theo thời gian gửi trước/sau một cách ưu tiên — cả hai
+    hiện đủ thông tin (số điện thoại, lời giới thiệu) để đối chiếu độc lập.</li>
+  <li>Duyệt một trong hai (ví dụ đơn thứ nhất): thấy cảnh báo trước khi xác nhận — "Còn người khác
+    cùng nhận nhân khẩu này. Duyệt đơn này là từ chối các đơn kia, vì một nhân khẩu chỉ gắn được
+    một tài khoản." Sau khi xác nhận, đơn còn lại tự chuyển sang "Đã từ chối".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-07">
+<h3><span class="ma-so">NT-TC-07</span> — Gợi ý trùng khi duyệt đơn "chưa có trong phả"</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người khai đơn "chưa có trong phả" rất có thể <em>đã</em> có trong phả dưới một tên
+khác (tên huý, tên thường gọi) — bộ dò trùng phải chạy trước khi Trưởng chi quyết, không phải sau.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Dựng một đơn "chưa có trong phả" khai tên/năm sinh <strong>trùng hoặc rất gần</strong> với một
+  người đã có sẵn trong dữ liệu mẫu (ví dụ khai đúng họ tên và năm sinh của một người còn sống có
+  thật trong Chi Giáp, nhưng chọn người thân khác một chút). Đăng nhập Trưởng chi phụ trách chi đó
+  (hoặc <code>hoidong</code>).
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở đơn vừa dựng trong <code>/quan-ly/don-gia-nhap</code>.</li>
+  <li>Tìm khối "Có thể đây là người này".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy danh sách hồ sơ nghi trùng, mỗi hồ sơ kèm điểm giống (%) và các dấu hiệu (trùng tên,
+    trùng năm sinh, cùng chi…).</li>
+  <li>Nếu hệ thống chưa dò được ca nào phù hợp để kiểm, ít nhất xác nhận thấy câu "Hệ thống đã dò
+    khắp dòng họ và không thấy ai giống người khai." — chứng tỏ bộ dò <strong>có chạy</strong>, chứ
+    không phải một khối trống không rõ đã chạy hay chưa.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-08">
+<h3><span class="ma-so">NT-TC-08</span> — Duyệt / trả lại bài viết</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Bài lên trang chủ là tiếng nói của cả dòng họ — phải qua duyệt, ghi rõ ai duyệt và
+lúc nào.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Có sẵn bài "Đang chờ duyệt" từ NT-TV-10 (gửi bởi <code>thanhvien</code>). Đăng nhập
+<code>truongchi</code>. Mở <code>/quan-ly/bai-viet</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Tìm bài của <code>thanhvien</code>.</li>
+  <li>Bấm "Duyệt".</li>
+  <li>Mở <code>/bai-viet</code>, tìm bài vừa duyệt.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Bài chuyển trạng thái "Đã đăng", biến mất khỏi hàng chờ.</li>
+  <li>Bài xuất hiện trên <code>/bai-viet</code> công khai và trên trang chủ (khối "Bài mới"), có
+    dòng "Duyệt bởi {truongchi} lúc {ngày giờ}".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-09">
+<h3><span class="ma-so">NT-TC-09</span> — Không tự duyệt được bài viết của chính mình <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Người duyệt không được là người gửi, kể cả khi người gửi có quyền duyệt (Trưởng
+chi tự viết bài). Cùng nguyên tắc áp cho vinh danh và đính chính.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>truongchi</code>. Viết một bài mới ở <code>/bai-viet/moi</code>, gửi
+duyệt.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/quan-ly/bai-viet</code>.</li>
+  <li>Tìm chính bài vừa gửi.</li>
+  <li>Thử bấm "Duyệt".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Hoặc nút "Duyệt" bị vô hiệu hoá kèm ghi chú "Đây là bài viết của chính ông/bà — một thành
+    viên khác trong Hội đồng hoặc chi/ngành cần là người duyệt.", hoặc bấm vào bị từ chối với đúng
+    câu đó.</li>
+  <li>Đăng nhập <code>hoidong</code>, mở lại <code>/quan-ly/bai-viet</code>: bài của
+    <code>truongchi</code> duyệt được bình thường.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-10">
+<h3><span class="ma-so">NT-TC-10</span> — Duyệt vinh danh, thấy cảnh báo chia sẻ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đây là bước duyệt cần thiết cho NT-TV-15 — kiểm rằng người duyệt được nhắc đúng
+lúc, đúng chỗ về việc "duyệt xong không tự mở chia sẻ", trước khi bấm Duyệt chứ không phải sau.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Có đề nghị vinh danh đang chờ từ NT-TV-15 (khai cho người còn sống ở Chi Ất). Đăng
+nhập <code>truongchi.at</code> (phụ trách Chi Ất) hoặc <code>hoidong</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/vinh-danh</code>.</li>
+  <li>Tìm khối "Đang chờ duyệt".</li>
+  <li>Đọc dòng cảnh báo phía trên danh sách.</li>
+  <li>Bấm "Duyệt" trên đề nghị đó.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đúng câu cảnh báo trước khi duyệt: "Duyệt xong không tự mở chia sẻ: nếu người được vinh
+    danh còn sống và chưa bật chia sẻ, chỉ chính chủ (và người duyệt đúng phạm vi) thấy tên đi kèm
+    — đó là đúng thiết kế, không phải lỗi."</li>
+  <li>Sau khi duyệt, mục chuyển sang "Đã duyệt" — tiếp tục ở NT-TV-15 để kiểm ai thấy được gì.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-11">
+<h3><span class="ma-so">NT-TC-11</span> — Xử báo cáo ảnh: gỡ vĩnh viễn hoặc bỏ qua</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Gỡ ảnh là hành động <strong>không hoàn tác</strong> — giao diện phải cảnh báo rõ
+trước khi cho xác nhận.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Có báo cáo đang chờ từ NT-TV-13. Đăng nhập <code>truongchi</code>. Mở
+<code>/quan-ly/bao-cao-anh</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Tìm báo cáo vừa gửi ở NT-TV-13.</li>
+  <li>Bấm "Gỡ vĩnh viễn".</li>
+  <li>Đọc cảnh báo hiện ra.</li>
+  <li>Bấm "Thôi" để huỷ (không gỡ thật, để giữ dữ liệu cho các kịch bản khác) — hoặc bấm "Bỏ qua báo
+    cáo" thay vì gỡ, nếu muốn giữ nguyên ảnh.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Trước khi gỡ thật, thấy đúng câu: "Gỡ là xoá tệp NGAY LẬP TỨC, không có thời gian ân hạn và
+    không có nút hoàn tác. Hãy chắc chắn trước khi xác nhận." kèm nút xác nhận riêng "Xác nhận gỡ,
+    không thể hoàn tác" (khác nút gỡ ban đầu — hai lượt bấm, không phải một).</li>
+  <li>Bấm "Bỏ qua báo cáo": báo cáo biến mất khỏi hàng chờ, ảnh vẫn còn nguyên trên bài viết.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-12">
+<h3><span class="ma-so">NT-TC-12</span> — Phát lời mời cá nhân cho một cụ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Lời mời cá nhân dành cho người lớn tuổi — Trưởng chi làm hộ từ đầu tới cuối, người
+nhận không phải chờ duyệt.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>truongchi</code>. Mở <code>/quan-ly/phat-ma</code>, chọn tab "Lời
+mời cá nhân".</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Ở ô "Mời ai?", gõ tên một người còn sống trong Chi Bính chưa có tài khoản.</li>
+  <li>Đặt "Hạn dùng" (ví dụ 30 ngày).</li>
+  <li>Bấm "Phát lời mời".</li>
+  <li>Chép mã hiện ra, mở một cửa sổ ẩn danh, dán vào <code>/moi/&lt;mã&gt;</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Sau khi phát, thấy cảnh báo "Mã chỉ hiện một lần. Đóng màn này là không xem lại được nữa" và
+    nút "Chép mã".</li>
+  <li>Mở đúng mã ở cửa sổ ẩn danh: thấy "Lời mời từ {truongchi}" và tên người được mời, nút "Đúng là
+    tôi — nhận lời mời", cùng câu "Không phải chờ duyệt: người mời đã chỉ đích danh ông/bà."</li>
+  <li>Thử tìm chính người vừa mời trong khung "Mời ai?" của một lượt phát mới: người này biến mất
+    khỏi gợi ý (đã có lời mời đang mở), hoặc hệ thống báo đã có lời mời đang hoạt động.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-13">
+<h3><span class="ma-so">NT-TC-13</span> — Sự kiện phạm vi một chi không lộ sang chi khác <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Phạm vi quyết định ai nhận lời nhắc — nhắc nhầm cả họ cho việc của một chi là cách
+nhanh nhất khiến người ta tắt thông báo. Kiểm rằng phạm vi có tác dụng thật trên giao diện, không
+chỉ trên nhãn.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>truongchi</code> (Chi Bính). Mở <code>/events/new</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Điền tiêu đề, ví dụ "Họp Chi Bính nghiệm thu".</li>
+  <li>Chọn loại "Họp họ".</li>
+  <li>Ở "Phạm vi", chọn "Một chi/ngành" → "Chi Bính".</li>
+  <li>Điền ngày âm, bấm "Tạo".</li>
+  <li>Đăng xuất, đăng nhập <code>truongchi.at</code> (Chi Ất). Mở <code>/events</code>, lọc
+    "Cả dòng họ" và lọc riêng "Chi Ất".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Sự kiện tạo thành công, thấy ngay trong danh sách khi đăng nhập lại <code>truongchi</code> và
+    lọc "Chi Bính".</li>
+  <li><code>truongchi.at</code> <strong>không thấy</strong> sự kiện "Họp Chi Bính nghiệm thu" ở bất
+    kỳ bộ lọc nào (không phải việc của Chi Ất, không phải việc cấp dòng họ).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-14">
+<h3><span class="ma-so">NT-TC-14</span> — Không tạo được sự kiện cấp cả dòng họ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Chỉ Hội đồng Tộc biểu / Tộc trưởng mới phát được lời nhắc cho cả dòng họ — cho
+Trưởng chi làm việc này là cho họ gửi thông báo tới toàn bộ dòng họ, đúng thứ phạm vi chi sinh ra để
+chặn.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>truongchi</code>. Mở <code>/events/new</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Ở "Phạm vi", tìm tuỳ chọn "Cả dòng họ".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Tuỳ chọn "Cả dòng họ" bị vô hiệu hoá (mờ đi), kèm chú thích: "Chỉ Hội đồng Tộc biểu / Tộc
+    trưởng mới phát được lời nhắc cho cả dòng họ." — không cho chọn được, chứ không phải chọn được
+    rồi máy chủ mới từ chối khi lưu.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-15">
+<h3><span class="ma-so">NT-TC-15</span> — Nhập liệu Excel: tải mẫu rồi tải lên</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Biểu mẫu Excel là lối duy nhất để đưa một chi thật vào hệ thống mà không phải khai
+tay từng người — kiểm lối vào và một lượt tải lên tối thiểu.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>truongchi</code> (chỉ Chi Bính cho phép nhập với tài khoản này —
+xem bảng <code>canImport</code> trong <code>TAI-KHOAN-THU-NGHIEM.md</code>). Mở <code>/nhap-lieu</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Đọc "Quy trình năm bước" ở đầu trang.</li>
+  <li>Bấm "Lấy mẫu Excel của chi tôi", tải tệp về.</li>
+  <li>Mở tệp — kiểm có đủ 5 trang: Hướng dẫn · Nhân khẩu · Hôn phối · Danh mục · Đã có.</li>
+  <li>Xoá các dòng ví dụ tô nền khác màu trên trang Nhân khẩu, không gõ thêm gì.</li>
+  <li>Quay lại trang web, bấm "Tải tệp đã điền lên", chọn Chi Bính và chính tệp mẫu (rỗng, chỉ để
+    kiểm luồng đọc file — không phải để commit dữ liệu thật).</li>
+  <li>Bấm "Tải lên và đối soát".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Tệp mẫu tải về đúng tên chi, mở được bằng Excel, cột <code>Mã</code> và ngày âm là định dạng
+    Văn bản (kiểm bằng cách gõ thử <code>15/8</code> vào một ô ngày mất — không tự nhảy thành ngày
+    dương lịch).</li>
+  <li>Tải lên chuyển sang màn đối soát (<code>/nhap-lieu/{lô}</code>) mà <strong>chưa ghi gì vào
+    phả</strong> — đúng lời hứa "Tải lên chưa phải là duyệt."</li>
+  <li>Không thấy cột điện thoại, thư điện tử, địa chỉ hay ảnh trong mẫu (người còn sống tự khai
+    phần của mình ở bước 5, không điền hộ).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<h2 id="e-hoidong">E. Hội đồng Tộc biểu (<code>hoidong</code>)</h2>
+<div class="khung">
+  <p class="nhan">Mục lục phần E</p>
+  <ul>
+    <li><a href="#NT-HD-01">01 · Phát mã mời dòng họ mới</a></li>
+    <li><a href="#NT-HD-02">02 · Theo dõi bộ đếm lượt dùng</a></li>
+    <li><a href="#NT-HD-03">03 · Thu hồi mã dòng họ</a></li>
+    <li><a href="#NT-HD-04">04 · Duyệt đơn thuộc bất kỳ chi nào</a></li>
+    <li><a href="#NT-HD-05">05 · Tạo sự kiện cấp cả dòng họ</a></li>
+    <li><a href="#NT-HD-06">06 · Đọc số điện thoại "Riêng tư" của một thành viên</a></li>
+    <li><a href="#NT-HD-07">07 · Vì sao không dùng <code>admin.giapha</code> để kiểm mục 06</a></li>
+  </ul>
+</div>
+
+<div class="kich-ban" id="NT-HD-01">
+<h3><span class="ma-so">NT-HD-01</span> — Phát mã mời dòng họ mới</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Mã mời dòng họ là điểm khởi đầu của toàn bộ phần B — chỉ Hội đồng mới phát được, và
+mã phải có đủ bốn chốt bắt buộc: hạn dùng, thu hồi được, đếm lượt dùng, giới hạn tần suất.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>hoidong</code>/<code>giapha123</code>. Mở <code>/quan-ly/phat-ma</code>,
+tab "Mã mời dòng họ".</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gõ nhãn kênh, ví dụ "Nghiệm thu 22/09".</li>
+  <li>Đặt "Hạn dùng" 30 ngày.</li>
+  <li>Đặt "Trần lượt dùng" là 20.</li>
+  <li>Bấm "Phát mã".</li>
+  <li>Chép mã hiện ra (dùng cho phần B nếu chưa có mã).</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy cảnh báo "Mã chỉ hiện một lần. Đóng màn này là không xem lại được nữa — xin chép hoặc ghi
+    ra giấy ngay." trước khi có thể đóng hộp thoại.</li>
+  <li>Mã mới xuất hiện trong "Các mã đã phát" với đúng nhãn, hạn dùng, và "0 / 20 lượt cho phép".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-HD-02">
+<h3><span class="ma-so">NT-HD-02</span> — Theo dõi bộ đếm lượt dùng của mã dòng họ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đây là chốt quan trọng nhất và dễ bị bỏ qua nhất: không có bộ đếm thì không ai phát
+hiện được mã đã rò ra ngoài.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đã phát mã ở NT-HD-01 và đã dùng mã đó để đăng ký ít nhất một tài khoản (bất kỳ
+kịch bản nào ở phần B dùng đúng mã này).</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở lại <code>/quan-ly/phat-ma</code>, tab "Mã mời dòng họ".</li>
+  <li>Tìm đúng mã vừa phát, đọc dòng "Đã dùng".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Số lượt dùng tăng đúng bằng số lần mã đã được dùng để <strong>lập tài khoản thành công</strong>
+    (không tính lượt gõ sai, không tính lượt bị chặn ở NT-MOI-02).</li>
+  <li>Thấy dòng so sánh "{used} lượt dùng, trong khi dòng họ có {living} người đang sống."</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-HD-03">
+<h3><span class="ma-so">NT-HD-03</span> — Thu hồi mã dòng họ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Khi biết mã đã lan, phải đóng lại ngay mà không ảnh hưởng người đã vào bằng mã đó.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Tiếp tục từ NT-HD-02, cùng mã đó.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Bấm "Thu hồi mã".</li>
+  <li>Điền lý do, ví dụ "mã bị chuyển tiếp ra ngoài dòng họ.".</li>
+  <li>Xác nhận thu hồi.</li>
+  <li>Mở một cửa sổ ẩn danh, thử đăng ký ở <code>/dang-ky</code> bằng đúng mã vừa thu hồi.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy "Đã thu hồi mã." và trạng thái đổi thành "Đã thu hồi", kèm ngày giờ và lý do đã ghi.</li>
+  <li>Thử đăng ký bằng mã đã thu hồi: nhận đúng lỗi "Mã mời này đã bị thu hồi" — không tạo được tài
+    khoản mới.</li>
+  <li>Tài khoản đã đăng ký trước đó (từ NT-HD-02) vẫn đăng nhập và dùng bình thường, không bị ảnh
+    hưởng gì bởi việc thu hồi.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-HD-04">
+<h3><span class="ma-so">NT-HD-04</span> — Duyệt đơn thuộc bất kỳ chi nào</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đối lập với ranh giới của NT-TC-05: Hội đồng có phạm vi <strong>cả họ</strong>, phải
+thấy và duyệt được đơn của mọi chi, không riêng gì một chi.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Có ít nhất hai đơn đang chờ ở hai chi khác nhau (dựng nhanh nếu cần: hai tài khoản
+mới, mỗi tài khoản chọn một người còn sống ở một chi khác nhau, gửi "Đây là tôi"). Đăng nhập
+<code>hoidong</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/quan-ly/don-gia-nhap</code>.</li>
+  <li>Đối chiếu danh sách đơn thấy được với danh sách đơn thật đang mở (từ nhiều chi).</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đủ đơn từ mọi chi đang có đơn mở — không rớt đơn nào so với
+    <code>truongchi</code>/<code>truongchi.at</code> gộp lại.</li>
+  <li>Duyệt/từ chối một đơn bất kỳ ở chi không phải Chi Bính hay Chi Ất (ví dụ Chi Đinh hoặc Chi
+    Giáp) thành công bình thường.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-HD-05">
+<h3><span class="ma-so">NT-HD-05</span> — Tạo sự kiện cấp cả dòng họ</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đối lập với NT-TC-14: chỉ Hội đồng (và Tộc trưởng) mới tạo được việc cấp cả dòng
+họ.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>hoidong</code>. Mở <code>/events/new</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Điền tiêu đề "Giỗ Tổ nghiệm thu 22/09".</li>
+  <li>Chọn loại "Giỗ Tổ".</li>
+  <li>Ở "Phạm vi", chọn "Cả dòng họ".</li>
+  <li>Điền ngày âm, bấm "Tạo".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Tuỳ chọn "Cả dòng họ" chọn được (không mờ, không có chú thích chặn như ở NT-TC-14).</li>
+  <li>Tạo thành công, thấy "Đã tạo việc họ."; sự kiện xuất hiện trong <code>/events</code> cho mọi
+    vai (kiểm nhanh: đăng nhập <code>truongchi.at</code>, thấy sự kiện này dù đang lọc theo Chi Ất —
+    vì đây là "Giỗ cấp dòng họ luôn hiện").</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-HD-06">
+<h3><span class="ma-so">NT-HD-06</span> — Đọc số điện thoại "Riêng tư" của một thành viên</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Kiểm chéo NT-TV-05: "Riêng tư" nghĩa là "chỉ chính chủ và Hội đồng", không phải
+"không ai đọc được".</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đã hoàn tất NT-TV-05 (<code>thanhvien</code> đặt nhóm "Liên hệ" về "Riêng tư", và có
+điền số điện thoại thật trong hồ sơ). Đăng nhập <code>hoidong</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở hồ sơ của <code>thanhvien</code> (qua phả đồ hoặc danh bạ/tìm kiếm).</li>
+  <li>Tìm khối "Liên hệ".</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Số điện thoại của <code>thanhvien</code> <strong>hiện đầy đủ</strong> cho <code>hoidong</code>,
+    dù nhóm này đang đặt "Riêng tư".</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-HD-07">
+<h3><span class="ma-so">NT-HD-07</span> — Vì sao không dùng <code>admin.giapha</code> để kiểm mục 06</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đây là một ghi chú nghiệm thu, không phải một phép thử pass/fail thông thường:
+<code>admin.giapha</code> mang <strong>cả</strong> vai <code>ADMIN</code> lẫn <code>COUNCIL</code>,
+nên nó không cô lập được câu hỏi "vai Hội đồng, một mình nó, có đọc được số Riêng tư không?" — nó sẽ
+đọc được, nhưng không chứng minh được đấy là do <code>COUNCIL</code> chứ không phải do
+<code>ADMIN</code>.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>admin.giapha</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Lặp lại đúng hai bước của NT-HD-06 bằng <code>admin.giapha</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><code>admin.giapha</code> cũng đọc được số điện thoại — <strong>kết quả giống hệt</strong>
+    <code>hoidong</code>. Đây <strong>không phải bằng chứng</strong> rằng vai kỹ thuật Admin một
+    mình có quyền này; ghi vào ô ghi chú đúng câu: "Kết quả giống <code>hoidong</code>, không kết
+    luận thêm được gì về vai ADMIN vì tài khoản này gộp cả hai vai."</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>Đã ghi chú đúng như trên</span>
+  <span class="khongdat"><span class="o-vuong"></span>Chưa làm</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<h2 id="f-chuaduyet">F. Tài khoản chưa gắn phả (<code>chuaduyet</code>)</h2>
+<p>
+  Đây là trạng thái có thật, không phải một lỗi: tài khoản Keycloak tồn tại và đăng nhập được,
+  nhưng <strong>không có hàng <code>app_user</code></strong> tương ứng — khác với NT-MOI (có
+  <code>app_user</code>, chỉ là chưa <code>linkedToTree</code>). Mọi chức năng cần phạm vi phải trả
+  về lời từ chối tử tế, nói rõ việc cần làm, không phải một trang lỗi kỹ thuật.
+</p>
+
+<div class="kich-ban" id="NT-CHUA-01">
+<h3><span class="ma-so">NT-CHUA-01</span> — Đăng nhập và mở trang chủ <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Đăng nhập phải thành công (tài khoản Keycloak có thật) — vấn đề chỉ lộ ra khi ứng
+dụng cần biết "đây là ai trong phả".</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>chuaduyet</code>/<code>giapha123</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát trang chủ.</li>
+  <li>Mở <code>/tree</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Đăng nhập thành công (không bị Keycloak từ chối).</li>
+  <li>Trang chủ <strong>không</strong> hiện banner "đang chờ duyệt" (banner ấy đòi
+    <code>appUserId</code> tồn tại, mà tài khoản này thì không có) — nhưng cũng không có nội dung
+    nào giả vờ tài khoản đã đầy đủ.</li>
+  <li><code>/tree</code> vẫn mở được — ít nhất ở mức công khai/người đã khuất; nếu máy chủ trả một
+    thông báo về tài khoản chưa được khởi tạo đầy đủ ở đây, thông báo đó không phải một trang lỗi
+    trắng trơn.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-CHUA-02">
+<h3><span class="ma-so">NT-CHUA-02</span> — Thử gửi đề nghị đính chính</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Mọi chức năng cần phạm vi chi phải từ chối tử tế với <code>ACCOUNT_NOT_PROVISIONED</code>,
+nói rõ việc cần làm — không phải một 403 trần trụi.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>chuaduyet</code>. Mở <code>/correction-requests</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát nội dung màn hình.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy thông báo tương đương: "Bạn cần đăng nhập bằng tài khoản trong dòng họ mới xem được phần
+    này." hoặc "Chưa tìm thấy ông/bà trong phả" — kèm việc cần làm: gọi cho Trưởng chi hoặc người đã
+    mời, nói rằng tài khoản chưa được nối với hồ sơ trong phả, và việc nối là quyết định của Hội
+    đồng Tộc biểu.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-CHUA-03">
+<h3><span class="ma-so">NT-CHUA-03</span> — Trung tâm thông báo báo đúng lý do hộp thư trống</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Hộp thư trống của tài khoản này không phải "chưa có gì để nhắc" mà là "chưa ghép
+được với ai" — hai lý do khác nhau, câu chữ phải phân biệt được.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>chuaduyet</code>. Mở <code>/notifications</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Quan sát nội dung màn hình.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đúng câu: "Tài khoản của bạn chưa được ghép với nhân khẩu nào trong gia phả." kèm
+    "Vì vậy hộp thư còn trống. Xin liên hệ Hội đồng Tộc biểu hoặc Trưởng chi của bạn để ghép tài
+    khoản với hồ sơ; sau đó bạn sẽ nhận được nhắc giỗ của chi/nhánh mình." — không phải câu chung
+    "Chưa có thông báo nào" dùng cho một hộp thư thật sự trống của người đã có hồ sơ.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<h2 id="g-admin">G. Admin kỹ thuật (<code>admin.giapha</code>)</h2>
+<p>
+  Phần này chỉ kiểm những chỗ <strong>khác</strong> với Hội đồng — vai chức danh dòng họ và vai
+  quản trị kỹ thuật là hai thứ khác nhau dù cùng một người có thể giữ cả hai (xem
+  <a href="#NT-HD-07">NT-HD-07</a>).
+</p>
+
+<div class="kich-ban" id="NT-ADMIN-01">
+<h3><span class="ma-so">NT-ADMIN-01</span> — Vào <code>/quan-ly</code>, thấy đủ như Trưởng chi/Hội đồng</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Vai <code>ADMIN</code> cũng nằm trong danh sách được duyệt/phát mã — kiểm không bị
+chặn nhầm.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>admin.giapha</code>/<code>giapha123</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở <code>/quan-ly</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Thấy đủ bốn mục như <code>hoidong</code>: đơn xin vào phả, phát mã/lời mời, duyệt bài viết,
+    duyệt báo cáo ảnh — không mục nào bị ẩn.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-ADMIN-02">
+<h3><span class="ma-so">NT-ADMIN-02</span> — Sinh và phát nhắc giỗ thủ công (kỹ thuật, không có màn riêng)</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Việc này chạy được <strong>chỉ qua API</strong>, không có nút bấm nào trên giao
+diện — đúng vào việc mà vai quản trị kỹ thuật làm mà chức danh dòng họ không cần làm. Kịch bản này
+xác nhận đường ống vẫn thông, phục vụ khi cần "đẩy tay" một đợt nhắc giỗ mà không chờ tới 01:30.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Lấy access token của <code>admin.giapha</code> (xem lệnh <code>curl</code> lấy token
+trong <code>TAI-KHOAN-THU-NGHIEM.md</code>). Có một cửa sổ dòng lệnh.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gọi <code>POST http://localhost:8088/api/v1/admin/reminders/generate</code> kèm header
+    <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+  <li>Gọi tiếp <code>POST http://localhost:8088/api/v1/admin/reminders/dispatch</code> cùng header.</li>
+  <li>Đăng nhập lại <code>thanhvien</code> trên trình duyệt, mở <code>/notifications</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Cả hai lệnh trả về mã thành công (2xx), không phải 403 — xác nhận vai ADMIN gọi được cặp
+    endpoint quản trị này.</li>
+  <li>Nếu <code>thanhvien</code> có giỗ trong khoảng nhắc (7/3/1 ngày), thông báo tương ứng xuất
+    hiện trong hộp thư sau khi dispatch chạy xong.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-ADMIN-03">
+<h3><span class="ma-so">NT-ADMIN-03</span> — Chẩn đoán thông báo đẩy chưa cấu hình</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Khi một Thành viên gặp lỗi <code>SERVER_NOT_CONFIGURED</code> ở NT-TV-09, người xử
+lý phải là Admin kỹ thuật, không phải Hội đồng — kiểm đường chẩn đoán đúng như câu thông báo đã chỉ.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>admin.giapha</code>, hoặc dùng token của tài khoản này.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gọi <code>GET http://localhost:8088/api/v1/admin/notifications/webpush</code> kèm token.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Nhận được phản hồi cho biết trạng thái cấu hình khoá VAPID (đã cấu hình hay chưa) — đúng
+    đường dẫn mà thông báo lỗi <code>WEBPUSH_NOT_CONFIGURED</code> ở NT-TV-09 đã chỉ tới cho quản
+    trị viên, không phải một endpoint bí ẩn phải đọc mã nguồn mới biết.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<p class="chan-trang" style="margin-top:40px; color:var(--chu-nhat); font-size:13px; border-top:1px solid var(--vien); padding-top:12px;">
+  Tài liệu 09 · 67 kịch bản (15 ca biên) trên bảy vai · mọi câu chữ trích dẫn lấy nguyên văn từ
+  <code>frontend/messages/vi.json</code> tại thời điểm viết · <a href="#muc-luc" class="top-link">↑ về mục lục</a>
+</p>
+
+</div>
+</body>
+</html>

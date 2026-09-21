@@ -210,7 +210,16 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
 - **Privacy is per-field-group (`V8`), not one enum per person.** Five groups
   (`occupation`, `residenceProvince`, `residenceFull`, `contact`, `birthDetailAndPhoto`)
   × three scopes (`PRIVATE`/`BRANCH`/`CLAN`) in one JSONB column, default-closed so a new
-  group needs no migration and has no exposure window. `PrivacyLevel` is gone from the
+  group has no exposure window. **"No migration needed" is true of the data and false of
+  the constraints** — `ck_person_privacy_consent` calls `is_valid_privacy_consent()`, which
+  enumerates the keys explicitly, while `PrivacyConsent.toJson()` writes them all; add a
+  group without `CREATE OR REPLACE`-ing that function and every write is refused by the
+  CHECK. Two more places a new group must be touched, both found the hard way when
+  `honour` was added as the sixth: `PrivacyLevel.toConsent()` must **not** derive the new
+  group from a legacy level (a legacy `BRANCH_OPT_IN` would silently open it to the branch
+  — inferring a consent nobody gave), and `DirectoryService` iterates `values()`, so a
+  group that is not a directory-listing signal must say so or enabling it drags the person
+  into the directory as a blank row. `PrivacyLevel` is gone from the
   contract. `VisibleTier.atLeast()` is **deleted** and `tierFor()` is replaced by
   `Optional<PersonVisibility>` — "guest looking at a living person" is no longer a
   representable state, so the old unwritten "remember to call `canSee()` first" rule is
@@ -233,6 +242,22 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   interface: `Person`, `PersonRepository` and `PrivacyTierService` stay inside. Widen this
   surface only with a reason you can state; each widening is individually reasonable and
   together they erase the boundary.
+- **`membership → genealogy` is always an inverted dependency.** `genealogy` already depends
+  on `membership` twice (`CallerIdentityJdbcAdapter` → `MemberScopeService`,
+  `ChangeRequestApplier` → `ChangeRequestApprovedEvent`), so *any* edge the other way makes
+  `ModularityTests` fail with `Cycle detected: Slice genealogy -> Slice membership -> Slice
+  genealogy`. The claim flow therefore declares its ports in `membership.application`
+  (`ClaimScreeningPort`, `ClaimPersonWriterPort`) and `genealogy.infrastructure.membership`
+  implements them — the cheapest home, because that edge already exists. Those adapters are
+  **type translators only**: no business rule, no authorization check, no SQL, no endpoint.
+  (A separate `vn.giapha.onboarding` bridge module existed briefly for the same reason and
+  has been deleted.)
+- **`GET /persons/{id}` is `no-store` + `Vary: Authorization`, and that is load-bearing.**
+  Its `ETag` is the record `version` — deliberately **identical for every viewer**, because
+  `PATCH` reads it back through `If-Match` for optimistic locking. The body, however, is
+  privacy-filtered per viewer. One ETag over two different bodies is the recipe for a
+  **304 served to the wrong person** on a shared machine. Do not "re-enable caching" here,
+  and do not make the ETag caller-bound — `parseIfMatch` parses it as a `Long`.
 - **CI exists** (`.github/workflows/ci.yml`): four gates — backend `mvn test`, frontend
   static (`typecheck` + `lint` + vitest against a pinned expected-failure list),
   **`next build` as its own gate**, and E2E as a 9-way matrix, one spec file per job.

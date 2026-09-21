@@ -101,6 +101,7 @@ Mở <http://localhost:3000>.
 | **RabbitMQ** | `rabbitmq:4.1-management-alpine` | `5672` (AMQP), `15672` (UI) | <http://localhost:15672> | `giapha` / `giapha` |
 | **MinIO** | `minio/minio:RELEASE.2025-04-22T22-12-26Z` | `9000` (S3 API), `9001` (Console) | <http://localhost:9001> | `giapha` / `giapha123` |
 | **Keycloak** | `quay.io/keycloak/keycloak:26.7` | `8081` | <http://localhost:8081> | admin console: `admin` / `admin` |
+| **Mailpit** (máy chủ thư của máy dev) | `axllent/mailpit:v1.27` | `1025` (SMTP), `8025` (UI) | <http://localhost:8025> | không đặt mật khẩu; nhận mọi thứ |
 | Backend (chạy trên host) | — | `8080` | <http://localhost:8080> | — |
 | Frontend (chạy trên host) | — | `3000` | <http://localhost:3000> | — |
 
@@ -209,10 +210,19 @@ lại sẽ hiện ra dưới dạng HTML trần (vẫn dùng được, chỉ là
 |---|---|
 | `login.ftl` | Đăng nhập — một ô nhận **cả số điện thoại lẫn email** |
 | `login-update-password.ftl` | Đặt mật khẩu mới (`UPDATE_PASSWORD`) |
-| `login-reset-password.ftl` | Quên mật khẩu — **chưa với tới được**, xem dưới |
+| `login-reset-password.ftl` | Quên mật khẩu — **đã bật lại**, xem "Máy chủ thư" |
+| `register.ftl` | **Đăng ký có ô mã mời dòng họ** |
+| `register-commons.ftl` | Khối "điều khoản" (chỉ in khi Hội đồng bật) |
+| `login-verify-email.ftl` | Xác minh địa chỉ thư sau khi đăng ký |
 | `login-page-expired.ftl` | Lượt đăng nhập quá hạn |
 | `error.ftl` · `info.ftl` | Ngõ cụt chung và màn báo tin |
 | `template.ftl` | Khuôn chung: bảng tên, công tắc ngôn ngữ, khối "gọi ai" |
+
+Ngoài `login/` còn có **`themes/giapha/email/`** — theme THƯ, `parent=keycloak`
+(khác `login/` vốn là `parent=base`). Thư không có bộ CSS nào để cãi nhau, nên kế
+thừa ở đó là nhận đủ mọi khuôn thư Keycloak có thể gửi; ta chỉ ghi đè **câu chữ**.
+Realm trỏ tới bằng `"emailTheme": "giapha"` — thiếu khoá ấy thì thư vẫn gửi, chỉ
+là bằng tiếng của phần mềm, và không có lỗi nào in ra.
 
 Chuỗi tiếng Việt và tiếng Anh ở `themes/giapha/login/messages/`. **Dòng đầu mỗi
 tệp phải là `# encoding: UTF-8`** — `java.util.Properties` mặc định đọc
@@ -238,33 +248,272 @@ Tên dòng họ ở dòng 1 lấy từ `realm.displayName`. Đặt nó là **tê
 ("Phả họ Nguyễn") và để phần còn lại cho `giaphaClanSubtitle` — thanh đầu trang
 và bảng tên đều in `displayName`, nên một chuỗi dài sẽ lặp lại hai lần.
 
-#### "Quên mật khẩu" đang TẮT — bật lại cần gì
+#### Đăng ký có kiểm mã mời dòng họ
 
-`realm-giapha.json` đặt `"resetPasswordAllowed": false`. Trước đó cờ này bật
-nhưng realm **không có `smtpServer`**: Keycloak in liên kết "Quên mật khẩu?",
-người dùng bấm, nhập email, nhận màn "đã gửi", rồi ngồi đợi một lá thư **không
-bao giờ tồn tại**. Đã thử lại ngày 19-09-2026 với cờ bật: biểu mẫu gửi đi và
-quay về trang đăng nhập kèm lỗi — không có thư nào.
+`registrationAllowed` **đã bật**, và màn đăng ký **bắt buộc có ô mã mời**. Điểm
+mấu chốt của checklist §1.3: *mã phải được kiểm TRƯỚC khi tạo tài khoản* — tạo
+trước rồi mới hỏi thì một người gõ sai mã vẫn để lại một tài khoản rác, và không
+ai dọn.
 
-Ba điều kiện để bật lại, **theo thứ tự**:
+##### Đường đã chọn, và vì sao
 
-1. **Có `smtpServer` trong realm** (host, port, from, auth) và **gửi thử thành
-   công** bằng nút *Test connection* trong admin console. Không có bước này thì
-   bước 2 chỉ tái lập đúng cái bẫy cũ.
-2. Đặt `"resetPasswordAllowed": true` trong `realm-giapha.json` rồi dựng lại
-   container. Liên kết tự hiện lại — `login.ftl` đã bọc sẵn
-   `<#if realm.resetPasswordAllowed>`, không phải sửa theme.
-3. **Đo lại ngân sách chiều cao trên khung 400px.** `design/06-dang-nhap` §9 đặt
-   trần: *đáy nút "Đăng nhập" cách đáy ô mật khẩu ≤ 120px*, nếu không nút rơi
-   xuống dưới bàn phím ảo. Hiện tại **112px**. Bật liên kết "Quên mật khẩu?" lên
-   thì **thành 156px — vượt trần** (đã đo, không phải ước lượng). Khi ấy phải gộp
-   "Quên mật khẩu?" và "Ghi nhớ đăng nhập" vào cùng một hàng, hoặc bỏ hàng ghi nhớ.
+Ô mã mời **không** phải một ô do `register.ftl` nghĩ ra. Nó là một thuộc tính
+**User Profile** của realm (`maMoiDongHo`), có validator `pattern`. Điều đó quyết
+định tất cả: form action `registration-user-creation` chạy `validate()` cho toàn
+bộ thuộc tính **trước**, rồi mới chạy `success()` — mà `success()` mới là chỗ tạo
+người dùng.
 
-Chừng nào chưa có SMTP, đường đặt lại mật khẩu là **ngoại tuyến**: trưởng chi cấp
-mật khẩu tạm qua điện thoại, Keycloak bắt đổi ngay bằng hành động bắt buộc
-`UPDATE_PASSWORD` (đã đăng ký trong `realm-giapha.json`; trước đây
-`"requiredActions": []` khiến hành động này **không tồn tại trong realm**, nên
-mật khẩu tạm `temporary: true` cũng không ép đổi được).
+**Đã đo, không phải suy luận** (Keycloak 26.7.2, đo bằng trình duyệt thật):
+
+| Việc thử | Kết quả |
+|---|---|
+| Gửi biểu mẫu với mã sai (`XXX-SAI`) | Trang trả về kèm câu "Mã mời này chưa dùng được"; **số tài khoản trong realm giữ nguyên 6 → 6** |
+| Gửi với mã đúng, gõ **chữ thường** (`k7m-2qd`) | Tạo 1 tài khoản (6 → 7); mã được lưu lại trên chính tài khoản ấy (`attributes.maMoiDongHo`) |
+| Ô đã gõ khi mã sai | **Giữ nguyên** — không bắt gõ lại năm ô |
+
+Ba đường khác đã khảo sát và **loại**, ghi lại để người sau khỏi đi lại:
+
+| Đường | Vì sao loại |
+|---|---|
+| **Form Action SPI viết bằng Java** | Đây là đường *đúng* về nguyên tắc: Keycloak gọi thẳng API kiểm mã của máy chủ trong `validate()`, nên đủ cả bốn chốt chặn. **Cái giá:** một module Maven mới + JDK 21 (máy dev hiện có `java` 1.8, và image Keycloak chỉ có **JRE**, không có `javac` — đã kiểm), một cổng CI thứ năm, một `.jar` phải dựng lại và khởi động lại Keycloak cho mỗi lần sửa (theme thì F5 là xong), cộng một lời gọi mạng đồng bộ Keycloak → backend với xác thực và ngữ nghĩa hỏng riêng ("backend chết ⇒ không ai đăng ký được"). **Và cái giá nặng nhất:** hợp đồng của API kiểm mã đang được một agent khác dựng *ngay lúc này* — viết SPI hôm nay là đoán hợp đồng của người khác rồi giao một `.jar` gọi vào một điểm cuối có thể không bao giờ tồn tại. |
+| **Script Authenticator (JS nạp bằng JAR)** | Không cần biên dịch, nhưng tính năng `scripts` là **preview và đã lỗi thời** từ Keycloak 25, vẫn phải đóng gói `.jar`, và `--features=scripts` là một quyết định vận hành. Một nền móng sắp bị gỡ. |
+| **`${env.X}` trong `realm-giapha.json`** | **Không chạy.** Xem khối cảnh báo dưới đây. |
+
+> ⚠️ **`${env.X}` trong tệp realm là một cái bẫy — đã đo trên Keycloak 26.7.2.**
+>
+> | Viết | Kết quả thật |
+> |---|---|
+> | `${env.X:mặc định}` | **LUÔN** ra `mặc định` — kể cả khi `X` có thật trong container (kiểm bằng `docker exec … env`) |
+> | `${env.X}` | giữ nguyên **nguyên văn** chuỗi `${env.X}` |
+>
+> Đúng với cả biến có tiền tố `KC_`. Nghĩa là cú pháp ấy *trông như* đọc biến môi
+> trường, **không bao giờ đọc**, và lặng lẽ trả về đúng giá trị đã commit.
+>
+> **Hệ quả cho `giapha-provisioner`:** secret của nó viết
+> `"${env.GIAPHA_KEYCLOAK_ADMIN_CLIENT_SECRET:dev-only-provisioner-secret}"`, nên
+> giá trị thật đang chạy là `dev-only-provisioner-secret` — **một hằng số trong
+> kho**, không phải một bí mật đến từ môi trường. Ở dev thì vô hại (đó vốn là giá
+> trị dev), nhưng **staging/production không được tin vào cơ chế này**: đặt
+> secret bằng admin console hoặc Admin API.
+
+##### Phát và thu hồi mã — bằng Admin API, không bằng tệp realm
+
+Mẫu trong kho **luôn là `(?!)`** — một regex không bao giờ khớp. Một bản sao kho
+chưa cấu hình gì thì **không ai đăng ký được**: đóng sẵn là mặc định đúng cho một
+cánh cổng, và `kiem-dang-ky.mjs` **đỏ** nếu có ai commit một mẫu khác (một mã mời
+nằm trong git là một mã đã lộ).
+
+```bash
+# phát mã — mã đi qua BIẾN MÔI TRƯỜNG, không qua tham số dòng lệnh
+GIAPHA_CLAN_INVITE_CODE='K7M-2QD' node infra/keycloak/phat-ma-moi.mjs --phat
+
+node infra/keycloak/phat-ma-moi.mjs --xem       # cửa đang mở hay đóng (không in mã)
+node infra/keycloak/phat-ma-moi.mjs --dem       # đã dùng bao nhiêu lượt, ai dùng
+node infra/keycloak/phat-ma-moi.mjs --thu-hoi   # đóng cửa ngay
+```
+
+Có hiệu lực **ngay**, không phải dựng lại container — nên "đóng cửa khi biết mã đã
+lan" mất vài giây chứ không mất phiên của mọi người đang đăng nhập. Script **không
+bao giờ in mã**, kể cả ở `--xem`; nó in **dấu vân** (8 ký tự đầu SHA-256), đủ để
+hai người xác nhận đang nói về cùng một mã, không đủ để dựng lại mã.
+
+##### Bốn chốt chặn của checklist §1.2 — cái nào đã có, cái nào chưa
+
+| Chốt | Hôm nay |
+|---|---|
+| **Thu hồi được** | ✅ `--thu-hoi`, tức thì |
+| **Đếm lượt dùng** · **ai đã dùng mã nào** | ✅ `--dem`. Mã hợp lệ được lưu lên chính tài khoản vừa tạo (`attributes.maMoiDongHo`), nên không cần bảng nào mới |
+| **Có hạn dùng** | ⚠️ **một nửa** — Keycloak không biết ngày tháng. Hôm nay hạn dùng là việc của người vận hành: hẹn lịch chạy `--thu-hoi` |
+| **Giới hạn tần suất** | ❌ **chưa có.** Keycloak **không** áp chống dò mật khẩu lên trang đăng ký. Chốt này phải là reCAPTCHA (`registration-recaptcha-action` có sẵn trong luồng, đang `DISABLED`, cần khoá Google) hoặc giới hạn ở tầng proxy |
+
+**Nói thẳng ranh giới:** Keycloak chỉ so mã với một **mẫu**. Nó không hỏi được máy
+chủ, nên không biết mã đã hết hạn hay bị thu hồi *theo dữ liệu của máy chủ*, và
+không lưu mã dạng băm như mã mời cá nhân đang làm. Bốn chốt đầy đủ chỉ có khi máy
+chủ giữ mã và **máy chủ tạo tài khoản** — tức khi API kiểm mã của backend lên, việc
+tạo tài khoản nên chuyển về đó (backend đã có sẵn tài khoản dịch vụ
+`giapha-provisioner` với quyền `manage-users`, và đã chạy thật cho luồng mời cá
+nhân). Lúc ấy mẫu ở đây quay về `(?!)` và trang đăng ký của Keycloak tắt đi.
+
+##### ⚠️ HAI CỬA ĐANG CÙNG MỞ — và phải đóng bớt một cửa
+
+Máy chủ **đã có** đường đăng ký thật: `POST /api/v1/clan-invites/register`
+(`ClanInviteController`), kèm `POST /api/v1/clan-invites/lookup` để kiểm mã trước.
+Javadoc của nó nói đúng cùng một câu với mục này: *"mã phải được kiểm trước khi
+tài khoản được tạo, không phải tạo rồi mới hỏi"*. Và nó giữ **đủ bốn chốt chặn**:
+mã lưu dạng **băm**, có hạn, thu hồi được, có bộ đếm, có giới hạn tần suất theo IP.
+
+Trang đăng ký của Keycloak chỉ so mã với một **mẫu**. Vậy vì sao nó vẫn bật?
+
+**Vì hôm nay không có màn Next.js nào gọi tới đường của máy chủ.** Đã kiểm:
+`frontend/src/` chỉ gọi nửa **quản trị** của `clan-invites` (`/quan-ly/phat-ma`),
+không gọi `/register` lẫn `/lookup`. Tắt trang Keycloak lúc này là đóng cánh cửa
+**duy nhất** đang chạy được.
+
+> **Cái giá của việc để hai cửa cùng mở, vì nó không hiện ra ở đâu cả:** tài khoản
+> tạo qua trang Keycloak **không** đi qua `ClanInviteRedeemer`, nên nó **không vào
+> sổ lượt dùng của máy chủ**. Bộ đếm Hội đồng thấy ở `/quan-ly/phat-ma` sẽ **đếm
+> thiếu** — mà đếm thiếu thì đúng cái chốt chặn checklist §1.2 gọi là quan trọng
+> nhất (*"không có bộ đếm thì không ai phát hiện được gì"*) mất tác dụng trong im
+> lặng. Trong lúc hai cửa cùng mở, phải cộng tay hai con số:
+> `phat-ma-moi.mjs --dem` đếm phía Keycloak, màn `/quan-ly/phat-ma` đếm phía máy chủ.
+
+**Ngày màn Next.js ấy có — ba việc, làm CÙNG LÚC:**
+
+1. điền `giaphaRegisterUrl` trong `themes/giapha/login/theme.properties` (liên kết
+   "Tôi có mã mời của dòng họ" tự chuyển đích — `login.ftl` đã chừa sẵn đường khâu);
+2. đặt `"registrationAllowed": false` trong `realm-giapha.json`;
+3. `node infra/keycloak/phat-ma-moi.mjs --thu-hoi`.
+
+Làm thiếu việc 3 thì cửa Keycloak vẫn mở dù không còn liên kết nào trỏ tới —
+`/protocol/openid-connect/registrations` là một URL đoán được.
+
+##### Một chỗ hở đã biết, không phải chỗ bị bỏ sót
+
+`usernameExistsMessage` / `emailExistsMessage` **tiết lộ** rằng một số máy hoặc một
+địa chỉ thư đã có tài khoản. Keycloak buộc phải từ chối trùng và không giấu được
+điều ấy nếu không viết SPI. `design/06-dang-nhap` §7.2 luật 6 cấm để câu lỗi thành
+công cụ dò — ở màn *đăng nhập* ta giữ đúng luật ấy (sai mật khẩu và khoá tạm dùng
+chung một câu); ở màn *đăng ký* thì không giữ được.
+
+##### Không có ô mật khẩu trên màn đăng ký, và đó là cố ý
+
+Realm bật `verifyEmail`. Khi ấy `RegistrationPassword` của Keycloak **cố ý** không
+đặt `passwordRequired`, và javadoc của chính nó giải thích: với `verifyEmail` bật,
+mật khẩu đặt **sau** khi địa chỉ thư đã được xác minh — *"this is recommended for
+security reasons"*. Cờ `always_set_password_on_register_form` ép quay lại kiểu cũ và
+Keycloak ghi thẳng rằng cờ ấy **đã lỗi thời**.
+
+Giữ hành vi mặc định vì với sản phẩm này nó tốt hơn thật: một mã mời rò ra cũng
+không tự nó thành một tài khoản sống (phải mở được đúng hộp thư), và màn đăng ký
+ngắn đi hai ô. Luồng thật, **đã chạy từ đầu đến cuối**:
+
+```
+đăng ký (mã mời + họ tên + email + số ĐT)
+   → thư "Xin xác nhận địa chỉ thư"   ← bắt được trong Mailpit
+   → bấm liên kết → màn "Đây có đúng là địa chỉ thư của ông/bà không?"
+   → "Đặt mật khẩu mới"
+   → emailVerified = true
+```
+
+> ⚠️ **Thứ tự hành động bắt buộc: số NHỎ chạy TRƯỚC.** Bản đầu đặt `VERIFY_EMAIL`
+> ưu tiên 50 trong khi `UPDATE_PASSWORD` là 30, nên Keycloak bắt đặt mật khẩu
+> trước, và **lá thư xác minh không bao giờ được gửi**. `VERIFY_EMAIL` phải là
+> **10**. `kiem-dang-ky.mjs` ghim đúng bất biến này.
+
+> ⚠️ **`requiredActions` là danh sách TOÀN QUYỀN.** Khai thiếu một mục là gỡ mục ấy
+> khỏi realm — lặng lẽ. Đã có tiền lệ: `"requiredActions": []` từng làm
+> `UPDATE_PASSWORD` không tồn tại, nên mật khẩu tạm `temporary: true` cũng không ép
+> đổi được.
+
+##### Thứ tự các ô trên màn đăng ký đến từ đâu
+
+Từ **`infra/keycloak/user-profile-giapha.json`**, không từ `register.ftl`. Tệp ấy
+là nguồn đọc được; `realm-giapha.json` chỉ giữ **bản nhúng** (Keycloak lưu cả cấu
+hình User Profile thành *một chuỗi JSON nằm trong một chuỗi JSON khác*, tức một
+dòng vài nghìn ký tự đầy dấu nháy thoát mà không ai sửa tay nổi).
+
+```bash
+node infra/keycloak/dong-goi-user-profile.mjs          # sinh lại bản nhúng
+node infra/keycloak/dong-goi-user-profile.mjs --kiem   # chỉ kiểm, không ghi
+```
+
+Cùng khuôn mẫu với biểu mẫu Excel của `dataimport`: một nguồn, một bản sinh, một
+phép kiểm để chúng không thể lệch nhau trong im lặng.
+
+#### Máy chủ thư
+
+`resetPasswordAllowed` và `verifyEmail` **đã bật lại**, vì realm giờ có
+`smtpServer` **thật**.
+
+##### Máy phát triển — Mailpit bắt thư, không gửi ra ngoài
+
+```bash
+cd infra && docker compose up -d mailpit
+# xem thư đã gửi: http://localhost:8025
+```
+
+Keycloak nối tới `mailpit:1025` **bên trong mạng compose** (không phải
+`localhost`). Hai cổng publish chỉ để xem/kiểm từ máy host. Không gắn volume: hộp
+thư trống sau mỗi lần dựng lại là thứ giúp phép kiểm "bắt được thư" nói đúng sự
+thật.
+
+Điểm mấu chốt: **thư không đi ra Internet**, nên một địa chỉ gõ nhầm trong dữ liệu
+thử không thể làm phiền một người thật, và không cần tài khoản SendGrid/SES nào để
+chạy luồng đặt lại mật khẩu từ đầu đến cuối.
+
+Đã gửi thử và **bắt được** cả hai lá thư (21-09-2026):
+
+| Thư | Tiêu đề bắt được | Tới |
+|---|---|---|
+| Xác minh địa chỉ | *Xin xác nhận địa chỉ thư — trang gia phả dòng họ* | `lan@giapha.local` |
+| Đặt lại mật khẩu | *Đặt lại mật khẩu cho trang gia phả dòng họ* | `lan@giapha.local` |
+
+Cả hai từ `Gia Pha Dong Ho <khong-tra-loi@giapha.local>`, thân thư có đường dẫn
+`action-token` bấm được, và đã bấm thử tới cùng.
+
+> ⚠️ **Tiêu đề thư KHÔNG nhận tham số.** Keycloak định dạng *tiêu đề* bằng một danh
+> sách tham số **rỗng**; chỉ *thân* thư mới nhận `{0}`..`{3}`. Bản đầu viết
+> `emailVerificationSubject=… — {2}` và thư gửi đi có tiêu đề nguyên văn `… — {2}`
+> — bắt được trong Mailpit ngay lượt đầu. Tiêu đề phải đứng vững một mình.
+
+##### Staging / production cần gì
+
+Mailpit **không** dùng cho production — nó cố ý không gửi đi đâu cả. Ở đó cần:
+
+1. **Một máy chủ SMTP thật** trên tên miền của dòng họ, hoặc một dịch vụ gửi thư
+   (SES, SendGrid, Mailgun…). Địa chỉ `from` phải là địa chỉ **thật trên tên miền
+   ấy** — không thì SPF/DKIM trượt và thư rơi thẳng vào hộp thư rác, tức đúng cái
+   bẫy cũ quay lại dưới hình dạng khác: liên kết hiện ra, thư có gửi, và không ai
+   nhận được.
+2. **`auth: true` + `starttls: true` (hoặc `ssl: true`)**. Dev để `false` vì Mailpit
+   nằm trong mạng nội bộ của compose và bắt nó phải có chứng chỉ là dựng một hàng
+   rào không bảo vệ gì.
+3. **SPF, DKIM, DMARC** trên tên miền. Đây là việc DNS, không phải việc code.
+4. **Cấu hình bằng admin console hoặc Admin API**, lấy mật khẩu từ vault.
+
+> **Vì sao bí mật máy chủ thư không nằm trong kho, và cũng không đi vào realm qua
+> `.env`:** cú pháp `${env.X}` trong tệp realm **không chạy** (xem khối cảnh báo ở
+> mục đăng ký). Nên nếu đặt mật khẩu SMTP vào `realm-giapha.json`, nó sẽ là một
+> **mật khẩu thật nằm trong git** — không phải một tham chiếu. `kiem-dang-ky.mjs`
+> **đỏ** nếu `smtpServer.user` hoặc `smtpServer.password` có giá trị trong kho.
+
+##### Ngân sách chiều cao sau khi bật "Quên mật khẩu" — đo lại thật
+
+`design/06-dang-nhap` §9 đặt trần: **đáy nút chính cách đáy ô mật khẩu ≤ 120px**,
+nếu không nút rơi xuống dưới bàn phím ảo trên điện thoại. Bản trước đo được 112px
+khi liên kết "Quên mật khẩu?" còn ẩn, và README này từng dự báo bật lên sẽ thành
+156px.
+
+**Đo lại thật, khung 400px, bằng trình duyệt** (`do-chieu-cao.mjs`):
+
+| Bố cục | Đo được | Kết luận |
+|---|---|---|
+| Liên kết trên **hàng nhãn** ô mật khẩu — *đang dùng* | **112px** | đạt, còn dư 8px |
+| Liên kết trên **hàng riêng giữa ô và nút** — đúng chữ của §9 | **164px** | vượt trần (README cũ đoán 156 — thật ra tệ hơn) |
+| **Gộp** "Quên mật khẩu?" với "Ghi nhớ đăng nhập" — cách README cũ đề nghị | **168px**, và hàng ấy **xuống dòng thành 100px cao** ở khung 400 | **tệ nhất**; cách chữa cũ không chữa được gì |
+
+Cách đã làm: liên kết lên **cùng hàng với nhãn "Mật khẩu"**, tức nằm *phía trên* ô
+mật khẩu. Bàn phím ảo che từ **dưới** lên, nên chiều cao thêm vào ở phía trên không
+tính vào ngân sách; liên kết vẫn nằm trong vùng còn thấy được, và vẫn ở đúng chỗ
+người dùng nghi ngờ mình quên mật khẩu. **Ngân sách giữ nguyên 112px với liên kết
+đã hiện.**
+
+##### Đo thật, không đếm px trên khung dây
+
+```bash
+cd infra && docker compose up -d keycloak mailpit
+node infra/keycloak/do-chieu-cao.mjs
+```
+
+Mở trang **thật** ở khung **400px**, **cả chế độ sáng lẫn tối**, cho **cả màn đăng
+nhập lẫn màn đăng ký**, rồi đo bốn thứ bằng `getBoundingClientRect` và
+`getComputedStyle`: ngân sách chiều cao · cỡ chữ ≥ 16px · vùng chạm ≥ 44×44px ·
+tương phản AA (4.5:1 chữ thường, 3:1 chữ lớn; nền tính bằng cách leo lên tới lớp
+không trong suốt đầu tiên). Kết quả 21-09-2026: **14/14 đạt**.
+
+Chế độ tối không phải trang trí: `prefers-color-scheme` do hệ điều hành quyết,
+người dùng không bật nó trong sản phẩm này — nên một lỗi tương phản ở chế độ tối là
+lỗi mà nửa số người dùng gặp và không ai báo cáo được.
 
 #### Phiên đăng nhập: `ssoSessionIdleTimeout` = 2 giờ
 
@@ -360,7 +609,36 @@ Khi có Zalo OA: thêm một mục vào `identityProviders` của `realm-giapha.
 **Không** nhúng SDK Zalo vào trang — làm thế là mất luồng chuẩn, đúng lý do
 đường 2 ở §3 bị loại. Và Zalo **không bao giờ là nút đầu tiên**.
 
-#### Phép kiểm chặn trôi lệch
+#### Ba phép kiểm chặn trôi lệch
+
+Cả ba **không cần Docker, không cần Keycloak chạy, không cần dựng frontend** —
+một phép kiểm chỉ chạy được khi cả ngăn xếp đã lên là một phép kiểm không ai chạy.
+Nên gắn cả ba vào cổng *frontend static* của `.github/workflows/ci.yml`.
+
+```bash
+node infra/keycloak/kiem-mau-theme.mjs                 # màu + ba cái sàn
+node infra/keycloak/kiem-dang-ky.mjs                   # đăng ký · thư · thông điệp
+node infra/keycloak/dong-goi-user-profile.mjs --kiem   # bản nhúng User Profile
+```
+
+`kiem-dang-ky.mjs` giữ bảy bất biến, và **mỗi cái ứng với một lỗi đã thật sự xảy
+ra ở đây**:
+
+1. `registrationAllowed: true` mà User Profile không có `maMoiDongHo` **bắt buộc +
+   có `pattern`** → cổng đang mở toang, mà nhìn thì y hệt lúc chạy đúng.
+2. Mẫu `maMoiDongHo` trong kho khác `(?!)` → một mã mời nằm trong git là một mã đã lộ.
+3. `resetPasswordAllowed`/`verifyEmail` bật mà `smtpServer` thiếu `host`/`from`, hoặc
+   `smtpServer.user`/`password` có giá trị **trong kho**.
+4. `smtpServer` còn dùng cú pháp `${env....}` — cú pháp không chạy (xem trên).
+5. `requiredActions` khai thiếu, hoặc `VERIFY_EMAIL` có ưu tiên **≥** `UPDATE_PASSWORD`.
+6. Khoá thông điệp bị trỏ hụt: `user-profile-giapha.json` trỏ `${giaphaRegPhone}`
+   mà bộ thông điệp không có → màn hình in ra nguyên văn cái khoá làm nhãn ô. Kiểm
+   ở **cả hai** ngôn ngữ, và kiểm cả việc hai ngôn ngữ phủ cùng một tập khoá.
+7. Dòng đầu mỗi `messages_*.properties` không đúng `# encoding: UTF-8`, hoặc có dấu
+   nháy đơn **không nhân đôi** (`MessageFormat` nuốt im lặng một `'` đứng một mình
+   — bản nháp đầu từng in "Each ancestors record").
+
+Đã thử ngược: sửa hỏng năm chỗ cùng lúc thì nó bắt đủ năm.
 
 ```bash
 node infra/keycloak/kiem-mau-theme.mjs

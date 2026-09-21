@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklist — chức năng cần làm và cải thiện</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/design-doc.css">
+<style>
+  ul.ck { list-style: none; padding-left: 0; }
+  ul.ck > li { padding: 11px 0 11px 30px; position: relative; border-bottom: 1px solid #e8e0d6; }
+  ul.ck > li::before { content: "\2610"; position: absolute; left: 3px; top: 9px; font-size: 17px; color: var(--muc-nhat); }
+  ul.ck > li:last-child { border-bottom: 0; }
+  .vi-sao { display: block; margin-top: 5px; color: var(--muc-nhat); font-size: 14px; line-height: 1.62; }
+  table td:first-child { white-space: nowrap; }
+  .moi { background: var(--vang-nen); color: var(--ho-phach); }
+  .chot-r { background: var(--xanh-nen); color: var(--xanh); }
+  .buoc { counter-reset: b; list-style: none; padding-left: 0; margin: 18px 0; }
+  .buoc > li { counter-increment: b; position: relative; padding: 9px 0 9px 42px; }
+  .buoc > li::before {
+    content: counter(b); position: absolute; left: 0; top: 8px;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--do-nhat);
+    color: var(--do-tram); font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div class="trang">
+
+<h1>Checklist — chức năng cần làm và cải thiện</h1>
+
+<p class="tom-tat">
+  Gộp <strong>góp ý ngày 20/09</strong> với kết quả kiểm mã cùng ngày, và
+  <strong>bảy quyết định chủ dự án đã chốt</strong>. Mục ghi <span class="chip chot-r">đã chốt</span>
+  là quyết định, không bàn lại. Mọi câu về hiện trạng đều dẫn được về một tệp trong kho.
+</p>
+
+<h2>1. Luồng vào hệ thống</h2>
+
+<h3>1.1 · Luồng đã chốt</h3>
+
+<ol class="buoc">
+  <li><strong>Có mã mời dòng họ</strong> — cấp cho <strong>cả họ</strong>
+    <span class="chip chot-r">đã chốt</span>. Không có mã thì không đăng ký được.</li>
+  <li><strong>Đăng ký tài khoản</strong> bằng mã ấy.</li>
+  <li><strong>Xem được phả đồ</strong> ngay, chưa cần duyệt
+    <span class="chip chot-r">đã chốt</span> — vì phải nhìn thấy phả mới tự nhận mình được.</li>
+  <li><strong>Tự nhận mình là ai</strong>: chọn đúng ô của mình, nhập số điện thoại.</li>
+  <li><strong>Trưởng chi hoặc vai cao hơn duyệt</strong> → thành thành viên đầy đủ.</li>
+</ol>
+
+<div class="khoi">
+  <p class="nhan">Hai loại mã, đừng trộn làm một</p>
+  <p>
+    <strong>Mã mời dòng họ</strong> <em>(mới, chưa có)</em> — cấp cho cả họ, nhiều người dùng
+    chung, chỉ mở cửa cho việc đăng ký và xem phả. Dùng xong vẫn phải tự nhận mình và chờ duyệt.
+  </p>
+  <p>
+    <strong>Mã mời cá nhân</strong> <em>(đã làm xong, chạy thật)</em> — trỏ đích danh một nhân
+    khẩu, dùng một lần, <strong>không cần duyệt</strong> vì Trưởng chi đã chỉ đích danh khi phát.
+    Bảng dữ liệu bắt buộc có nhân khẩu (<code>person_id NOT NULL</code>), nên mã dòng họ
+    <strong>không phải biến thể</strong> của nó mà là cơ chế riêng.
+  </p>
+  <p>
+    Giữ cả hai là đúng: mã cá nhân dành cho <strong>các cụ lớn tuổi</strong> — họ sẽ không tự
+    đăng ký rồi tự tìm mình trên phả đồ, Trưởng chi làm hộ từ đầu tới cuối. Mã dòng họ dành cho
+    <strong>người trẻ và người ở xa</strong>.
+  </p>
+</div>
+
+<h3>1.2 · Hệ quả của việc cấp mã cho cả họ — và bốn chốt chặn bắt buộc</h3>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Nói thẳng một lần, rồi làm theo quyết định</p>
+  <p>
+    Mã cấp cho cả họ nghĩa là <strong>ai cầm được mã là xem được danh sách toàn bộ người đang
+    sống của dòng họ</strong> — tên, đời, quan hệ. Và mã ấy <em>sẽ</em> lan: nó được dán vào
+    nhóm Zalo, chuyển tiếp cho người thân, chụp màn hình.
+  </p>
+  <p>
+    Nghĩa là <strong>mã mời mới là ranh giới an toàn thật sự, không phải bước duyệt</strong>.
+    Bước duyệt kiểm soát thứ khác: ai được gắn vào hồ sơ của ai — tức quyền sửa phả và quyền
+    đọc dữ liệu nhạy cảm của chính hồ sơ ấy.
+  </p>
+  <p>
+    Quyết định là của chủ dự án và tôi làm theo. Nhưng vì chỉ còn <em>một</em> lớp bảo vệ, lớp
+    ấy phải quản được — <strong>bốn chốt dưới đây là bắt buộc, không phải tuỳ chọn</strong>.
+  </p>
+</div>
+
+<table>
+  <thead><tr><th>Chốt</th><th>Vì sao bắt buộc</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Có hạn dùng</strong></td>
+      <td>Mã không hạn là mã vĩnh viễn. Một tờ giấy bỏ quên năm 2026 vẫn mở được phả năm 2030.</td>
+    </tr>
+    <tr>
+      <td><strong>Thu hồi được</strong></td>
+      <td>Khi biết mã đã lan, phải có cách đóng lại <em>ngay</em> mà không ảnh hưởng người đã vào.</td>
+    </tr>
+    <tr>
+      <td><strong>Đếm lượt dùng</strong></td>
+      <td>Đây là chốt quan trọng nhất và dễ bị bỏ qua nhất. Hội đồng thấy mã đã dùng 400 lần
+        trong khi dòng họ có 600 người thì <em>biết</em> mà thu hồi.
+        <strong>Không có bộ đếm thì không ai phát hiện được gì</strong> — mã rò ra và mọi thứ
+        trông vẫn bình thường.</td>
+    </tr>
+    <tr>
+      <td><strong>Giới hạn tần suất</strong></td>
+      <td>Chặn việc dò mã bằng máy. Mã ngắn để đọc qua điện thoại thì cũng ngắn để đoán.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Hai việc nên có thêm, rẻ và giúp nhiều: <strong>đổi mã định kỳ</strong> (mã cũ hết hạn, mã
+  mới phát ra — không cần thu hồi thủ công), và <strong>ghi lại ai đã dùng mã nào</strong>,
+  để khi có chuyện thì truy được người đưa mã ra ngoài.
+</p>
+
+<h3>1.3 · Việc cần làm</h3>
+
+<ul class="ck">
+  <li>
+    <strong>Mã mời dòng họ</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Cơ chế mới: dùng nhiều lần, cấp cho cả họ, có hạn, thu hồi được, có bộ đếm và giới hạn
+      tần suất. Lưu <strong>dạng băm</strong> như mã cá nhân đã làm. Hội đồng phát và thu hồi.
+    </span>
+  </li>
+  <li>
+    <strong>Bật tự đăng ký, có kiểm mã</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Realm đang đặt <code>registrationAllowed: false</code>. Bật lên, nhưng màn đăng ký
+      <strong>bắt buộc có ô mã mời</strong>, và mã phải kiểm <em>trước</em> khi tạo tài khoản —
+      không tạo rồi mới hỏi. Trạng thái “có tài khoản, chưa gắn vào phả” đã có sẵn trong dữ
+      liệu (<code>person_id</code> rỗng, trạng thái chờ) nên không phải dựng mới.
+    </span>
+  </li>
+  <li>
+    <strong>Màn “tôi là ai trong phả”</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Chọn ô của mình trên phả đồ, nhập <strong>số điện thoại</strong>, gửi đơn. Nên cho thêm
+      vài dòng tự giới thiệu — <em>con ông nào, bà nào, quê quán</em> — vì đó mới là thứ Trưởng
+      chi dùng để đối chiếu; số điện thoại chỉ giúp gọi kiểm chứng.
+    </span>
+  </li>
+  <li>
+    <strong>Lối “Tôi chưa có trong phả”</strong> <span class="chip chot-r">đã chốt</span>
+    <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Nút thứ hai ngay cạnh ô tìm. Dẫn sang đơn khác: họ tên, năm sinh, và
+      <strong>chỉ ra người thân đã có trong phả</strong> (bố, mẹ, hoặc vợ/chồng). Trưởng chi
+      duyệt thì hệ thống tạo nhân khẩu mới rồi gắn tài khoản vào. Xem năm ràng buộc ở mục 1.5 —
+      đây là lối <em>ghi vào phả</em>, không phải một biểu mẫu liên hệ.
+    </span>
+  </li>
+  <li>
+    <strong>Hàng chờ duyệt cho Trưởng chi và vai cao hơn</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Danh sách đơn, đối chiếu, duyệt hoặc từ chối kèm lý do. Phạm vi theo <code>ltree</code>:
+      Trưởng chi Ất không duyệt được đơn trỏ vào người chi Bính; Hội đồng duyệt được cả họ. Cơ
+      chế gắn tài khoản ↔ nhân khẩu <strong>dùng lại của luồng mời cá nhân</strong>, đã chạy
+      thật — đừng viết đường ghi thứ hai.
+    </span>
+  </li>
+  <li>
+    <strong>Màn phát mã và phát lời mời</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Một màn, hai việc: Hội đồng phát/thu hồi <em>mã dòng họ</em> và xem bộ đếm lượt dùng;
+      Trưởng chi phát <em>lời mời cá nhân</em> cho một cụ cụ thể. Máy chủ đã làm được việc thứ
+      hai và đã kiểm chạy thật, nhưng <strong>không có màn hình nào gọi tới</strong> — hôm nay
+      chỉ phát được bằng dòng lệnh.
+    </span>
+  </li>
+  <li>
+    <strong>Màn “đang chờ duyệt”</strong> <span class="chip should">nên có</span>
+    <span class="vi-sao">
+      Nói rõ đang chờ ai, và trong lúc chờ thì xem được gì. Không có màn này thì người dùng
+      gửi đơn xong rơi vào im lặng và sẽ gửi lại lần hai, lần ba.
+    </span>
+  </li>
+</ul>
+
+<h3>1.4 · Ca biên — năm ca đã rõ, một ca cần giải thích thêm</h3>
+
+<table>
+  <thead><tr><th>Ca</th><th>Cách xử</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Số điện thoại người khai</strong></td>
+      <td><span class="chip chot-r">đã chốt</span> Ghi vào hồ sơ nhân khẩu khi duyệt, nhưng
+        <strong>hiện hay không thì do chính chủ tài khoản quyết</strong>. Khớp sẵn với mô hình
+        riêng tư đang chạy: số điện thoại thuộc nhóm “liên hệ”, và nhóm ấy
+        <strong>mặc định kín</strong> — chủ tài khoản tự mở nếu muốn. Không cần cơ chế mới.</td>
+    </tr>
+    <tr>
+      <td><strong>Người chưa duyệt viết bài</strong></td>
+      <td><span class="chip chot-r">đã chốt</span> Không. Viết bài là tiếng nói của người trong họ.</td>
+    </tr>
+    <tr>
+      <td><strong>Nhận nhầm người đã có tài khoản</strong></td>
+      <td>Chặn lúc gửi đơn — ràng buộc “một nhân khẩu một tài khoản” đã có ở CSDL. Đề xuất nói
+        chung chung (<em>“không gửi đơn cho người này được”</em>) chứ không nói thẳng “đã có tài
+        khoản”, để màn này không thành công cụ dò xem ai đã vào hệ thống.</td>
+    </tr>
+    <tr>
+      <td><strong>Hai người cùng nhận một nhân khẩu</strong></td>
+      <td>Để Trưởng chi thấy <em>cả hai</em> rồi chọn, không ưu tiên người gửi trước — trùng tên
+        trong dòng họ là chuyện thường, và người gửi trước chưa chắc là người đúng.</td>
+    </tr>
+    <tr>
+      <td><strong>Nhận nhầm người đã khuất</strong></td>
+      <td>Chặn cứng ngay lúc chọn. Người đã khuất vốn công khai nên chặn ở bước này không lộ
+        thêm gì.</td>
+    </tr>
+    <tr>
+      <td><strong>Bị từ chối rồi</strong></td>
+      <td>Gửi lại được, nhưng <strong>có giới hạn số lần</strong>. Không giới hạn thì màn này
+        thành cách dò đúng người bằng cách thử lần lượt.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>1.5 · Lối “Tôi chưa có trong phả” <span class="chip chot-r">đã chốt</span></h3>
+
+<div class="khoi">
+  <p class="nhan">Ba tình huống có thật mà lối này giải</p>
+  <p>
+    Đây là ca chủ dự án nói chưa rõ ngữ cảnh, nên xin mô tả bằng ba tình huống có thật:
+  </p>
+  <ul>
+    <li><strong>Con dâu mới về.</strong> Chị ấy là người trong họ, nhưng chưa ai kịp ghi chị
+      vào phả — hôn phối mới diễn ra tháng trước.</li>
+    <li><strong>Cháu mới sinh.</strong> Bố mẹ có trong phả, đứa bé thì chưa.</li>
+    <li><strong>Người ở xa nhiều đời.</strong> Một nhánh ra nước ngoài từ lâu, phả giấy của chi
+      không còn ghi tiếp, nên cả nhánh ấy không có trong dữ liệu.</li>
+  </ul>
+  <p>
+    Cả ba người này <strong>cầm mã mời hợp lệ</strong> — người thân đưa cho — <strong>đăng ký
+    thành công, mở phả đồ ra, và không tìm thấy mình</strong>. Hôm nay họ không có lối đi nào.
+  </p>
+  <p>
+    <strong>Vì sao đáng xử:</strong> không có lối đi thì họ sẽ <em>chọn bừa một người gần
+    đúng</em> — thường là người cùng tên, hoặc bố mình — rồi Trưởng chi nhận một đơn vô nghĩa
+    và không hiểu vì sao. Việc này lặp lại với mọi đám cưới và mọi đứa trẻ mới sinh, tức
+    <strong>vĩnh viễn</strong>, chứ không phải chỉ lúc mới triển khai.
+  </p>
+  <p>
+    <strong>Cách làm đã chốt:</strong> một nút <em>“Tôi chưa có trong phả”</em> ngay cạnh ô tìm,
+    dẫn sang đơn khác — khai họ tên, năm sinh, và <strong>chỉ ra người thân đã có trong
+    phả</strong> (bố, mẹ, hoặc vợ/chồng). Trưởng chi duyệt thì hệ thống <em>tạo nhân khẩu
+    mới</em> rồi gắn tài khoản vào.
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Năm ràng buộc — đây là lối GHI VÀO PHẢ, không phải một biểu mẫu liên hệ</p>
+  <p>
+    Lối này khác mọi lối khác ở một điểm: nó cho <strong>một người chưa được duyệt</strong>
+    khởi tạo việc thêm người vào gia phả. Nếu làm ẩu thì ai cầm mã mời cũng bơm người lạ vào phả
+    được.
+  </p>
+  <ol>
+    <li>
+      <strong>Không tạo nhân khẩu lúc gửi đơn — chỉ tạo khi Trưởng chi duyệt.</strong> Đơn chỉ
+      là đơn. Tạo trước rồi xoá sau là sai hai lần: xoá mềm là luật tuyệt đối của dự án (không
+      bao giờ xoá cứng một nhân khẩu vì nó phá liên kết cây), nên mỗi đơn bị từ chối sẽ để lại
+      một node ma trong phả.
+    </li>
+    <li>
+      <strong>Bắt buộc chỉ ra người thân đã có trong phả.</strong> Không có nó thì nhân khẩu mới
+      thành node mồ côi, không gắn vào cây, không tính được đời, không tra được danh xưng.
+      Người thân ấy cũng là thứ quyết định <em>ai duyệt</em>.
+    </li>
+    <li>
+      <strong>Chạy qua bộ dò trùng trước khi đưa cho Trưởng chi.</strong> Đây đúng là kịch bản
+      bộ dò sinh ra để phục vụ — người khai rất có thể <em>đã</em> có trong phả dưới một tên
+      khác (tên huý, tên thường gọi). Trưởng chi phải thấy ngay
+      <em>“có thể đây là người này”</em> thay vì tạo ra một bản trùng.
+    </li>
+    <li>
+      <strong>Ghi nhân khẩu và ghi quan hệ trong cùng một transaction.</strong> Bất biến của cả
+      hệ thống: cạnh trong đồ thị và dòng trong bảng quan hệ được ghi cùng lúc, hỏng thì cùng
+      quay lại. Đã có test ghim, đừng phá.
+    </li>
+    <li>
+      <strong>Người mới là người còn sống, nên mọi nhóm riêng tư mặc định KÍN.</strong> Rơi ra
+      từ chính cách lưu dữ liệu — không phải nhớ để làm.
+    </li>
+  </ol>
+  <p>
+    <strong>Ai duyệt:</strong> Trưởng chi của chi mà <em>người thân được chỉ ra</em> thuộc về —
+    vì người mới chưa có chi nào. Hội đồng duyệt được cả họ.
+  </p>
+</div>
+
+<h2>2. Trang chủ và bài viết</h2>
+
+<p>
+  Trang chủ hiện là khung tạm của sprint đầu — chính tài liệu mã của
+  <code>home-hero.tsx</code> ghi <em>“deliberately minimal for F0/F1: this sprint only builds
+  chrome”</em>. Không tin tức, không bài viết, không vinh danh.
+</p>
+
+<ul class="ck">
+  <li>
+    <strong>Context bài viết: soạn → gửi duyệt → đăng</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Người <strong>đã được duyệt vào phả</strong> viết được <span class="chip chot-r">đã chốt</span>;
+      Trưởng cành/chi/họ duyệt mới lên bài chính thức. Cần bảng bài viết, máy trạng thái
+      (nháp → chờ duyệt → đã đăng → gỡ), quyền duyệt theo phạm vi.
+      <strong>Mô hình duyệt đã có tiền lệ</strong> — luồng yêu cầu đính chính làm đúng kiểu
+      này; dùng lại cả cách nghĩ lẫn cách kiểm.
+    </span>
+  </li>
+  <li>
+    <strong>Màn soạn bài</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Người viết là bác 60 tuổi chứ không phải nhà báo: tiêu đề, thân bài, vài ảnh, hết.
+      <strong>Lưu nháp tự động</strong> — phiên hết hạn sau 2 giờ không thao tác là có thật, và
+      mất một bài viết dở là cách chắc chắn nhất để người ta không viết bài thứ hai.
+    </span>
+  </li>
+  <li>
+    <strong>Hàng chờ duyệt bài</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Duyệt, trả lại kèm lý do, hoặc sửa nhẹ rồi đăng. Ghi rõ <em>ai</em> duyệt và
+      <em>lúc nào</em> — bài lên trang chủ là tiếng nói của cả dòng họ.
+    </span>
+  </li>
+  <li>
+    <strong>Vinh danh — danh sách có cấu trúc</strong> <span class="chip chot-r">đã chốt</span>
+    <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Không phải một loại bài viết mà là <strong>bản ghi gắn với nhân khẩu</strong>: loại vinh
+      danh (đỗ đạt · chức tước · thành tích · khen thưởng), tiêu đề, năm, nơi cấp, mô tả.
+      Vì gắn với nhân khẩu nên <strong>tra cứu và thống kê được</strong> — “chi nào có bao nhiêu
+      người đỗ đạt”, “các cụ đỗ tiến sĩ trong họ”.
+      <br><strong>Hai điều phải cẩn thận:</strong> vinh danh của <em>người còn sống</em> là dữ
+      liệu cá nhân, nên phải đi qua đúng bộ lọc riêng tư — cân nhắc cho nó thành nhóm trường
+      thứ sáu để chính chủ tự quyết. Và nó cũng cần <strong>duyệt</strong> như bài viết: một
+      danh hiệu tự khai mà lên thẳng trang chủ là chuyện khác hẳn một bài viết.
+    </span>
+  </li>
+  <li>
+    <strong>Trang chủ thật</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Bài mới · vinh danh · <strong>việc họ sắp tới</strong> (mục 3) · lối vào phả đồ và tra
+      danh xưng. Đây cũng là thứ người vừa đăng ký nhìn thấy trong lúc chờ duyệt, nên nó quyết
+      định luôn việc chờ đợi ấy có dễ chịu hay không.
+    </span>
+  </li>
+</ul>
+
+<h2>3. Sự kiện, lễ Tết và hoạt động dòng họ</h2>
+
+<div class="khoi">
+  <p class="nhan">Phát hiện khi kiểm mã</p>
+  <p>
+    <code>EventController</code> chỉ có <strong>hai lối đọc</strong> — <strong>không có lối tạo,
+    sửa hay xoá nào</strong>. Toàn bộ sự kiện hôm nay đến từ <em>ngày giỗ sinh tự động</em> và
+    dữ liệu gieo sẵn. Không ai <strong>cấu hình</strong> được một dịp lễ, một buổi họp họ hay
+    một ngày chạp mả.
+  </p>
+</div>
+
+<ul class="ck">
+  <li>
+    <strong>Tạo và sửa sự kiện dòng họ</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Trưởng cành/chi/họ cấu hình: lễ Tết, chạp mả, họp họ, khánh thành. Dùng đủ 12 loại đã có
+      trong hợp đồng — vừa được tách thành song ánh nên <em>họp họ nay phân biệt được với đám
+      cưới</em> (trước đây cả hai đều thành “khác”). <strong>Ngày âm là mặc định</strong>: việc
+      họ tính theo lịch âm, và bộ chuyển đổi cùng tiết khí đã sẵn sàng phục vụ.
+    </span>
+  </li>
+  <li>
+    <strong>Sự kiện lặp hằng năm</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Chạp mả, giỗ tổ, lễ Tết lặp theo năm âm. Phải xử đúng <strong>tháng nhuận và tháng
+      thiếu</strong> — bộ nhắc giỗ đã gặp và giải bài này rồi (ca thật: ngày 3 tháng 6 nhuận
+      năm 2017 không tồn tại năm 2028), nên dùng lại chứ đừng giải lần hai.
+    </span>
+  </li>
+  <li>
+    <strong>Phạm vi sự kiện</strong> <span class="chip should">nên có</span>
+    <span class="vi-sao">
+      Việc của cả họ, một chi, hay một ngành? Cờ “cấp dòng họ” đã có trong dữ liệu. Nó quyết
+      định <em>ai được nhắc</em> — nhắc nhầm cả họ cho việc của một chi là cách nhanh nhất để
+      người ta tắt thông báo.
+    </span>
+  </li>
+  <li>
+    <strong>Lịch làm kiểu xem mặc định</strong> <span class="chip should">cải thiện</span>
+    <span class="vi-sao">
+      Đã có <code>event-year-calendar.tsx</code> nhưng màn chính vẫn là danh sách. Đề xuất ba
+      kiểu: <em>lịch tháng</em> (mặc định) · <em>lịch năm</em> (đã có, hợp với người lo việc họ
+      cả năm) · <em>danh sách</em> (hợp điện thoại và trình đọc màn hình). Giữ
+      <strong>song lịch âm–dương</strong> ở mọi kiểu xem.
+    </span>
+  </li>
+  <li>
+    <strong>Ghi việc cá nhân vào lịch</strong> <span class="chip should">định hướng</span>
+    <span class="vi-sao">
+      Hướng “app để người trẻ dùng hàng ngày”. Lịch hiện <strong>chỉ đọc</strong> và chỉ có việc
+      họ. Đây là thay đổi về <em>bản chất sản phẩm</em> — chốt phạm vi trước: ghi chú riêng tư
+      hay chia sẻ trong chi? có nhắc không? có đồng bộ với lịch điện thoại không?
+    </span>
+  </li>
+</ul>
+
+<h2>4. Nhập dữ liệu dòng họ thật</h2>
+
+<div class="khoi chot">
+  <p class="nhan">Phần này đã có nhiều hơn góp ý tưởng</p>
+  <p>
+    Biểu mẫu Excel <strong>đã có</strong> và sinh <em>riêng cho từng chi</em>, điền sẵn người đã
+    có trong phả để Trưởng chi nối tiếp chứ không khai lại từ đầu — ở màn
+    <code>/nhap-lieu/mau</code>. Kèm kiểm tra dữ liệu ngay trong Excel, trang hướng dẫn, và mọi
+    cột để định dạng Văn bản: không có điều đó thì Excel nuốt <code>15/8</code> thành ngày dương
+    lịch và <strong>ngày giỗ sai không một dòng nhật ký nào</strong>.
+  </p>
+</div>
+
+<ul class="ck">
+  <li>
+    <strong>Xem lại lối vào màn mẫu</strong> <span class="chip should">cải thiện</span>
+    <span class="vi-sao">
+      Góp ý đề nghị “bổ sung file biểu mẫu” — mà nó đã có. Khi một tính năng đã xong mà người
+      dùng không biết, vấn đề nằm ở <strong>lối vào</strong>, không phải ở tính năng.
+    </span>
+  </li>
+  <li>
+    <strong>Hội đồng nhập chỉ tiêu nhân khẩu từng chi</strong> <span class="chip should">nên có</span>
+    <span class="vi-sao">
+      Bảng đã có nhưng <strong>không có lối ghi</strong>, nên màn tiến độ luôn nói “chưa ai đếm”
+      và bốn chi không biết mình đã nhập được bao nhiêu phần.
+    </span>
+  </li>
+  <li>
+    <strong>Danh mục 34 tỉnh</strong> <span class="chip must">chặn báo cáo</span>
+    <span class="vi-sao">
+      Lược đồ và cột trong mẫu đã sẵn sàng, <strong>cố ý chưa nạp nội dung</strong>: danh mục là
+      văn bản pháp quy, và tên tỉnh giữ lại không phải lúc nào cũng là tên của tỉnh có mã sống
+      sót sau sáp nhập. Mã sai làm báo cáo dân số sai <strong>một cách im lặng</strong>.
+    </span>
+  </li>
+</ul>
+
+<h2>5. Phả đồ — “dàn ra quá to”</h2>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Cảm nhận của chủ dự án, quy ra số đo</p>
+  <p>
+    Tính từ hằng số bố cục trong <code>layout-constants.ts</code>:
+  </p>
+  <ul>
+    <li>Một thẻ nhân khẩu rộng <strong>208px</strong>; một cặp vợ chồng
+      <strong>464px</strong>; cộng khoảng cách sang gia đình kế bên là
+      <strong>544px</strong>.</li>
+    <li><strong>8 gia đình cùng một đời → 4.352px</strong>, tức <strong>ba màn hình 1440px
+      nối nhau</strong>. 15 gia đình → 8.160px, gần <strong>sáu màn hình</strong>.</li>
+    <li>Chiều dọc: 14 đời × 224px = <strong>3.136px</strong>.</li>
+  </ul>
+  <p>
+    Một dòng họ 1.500 người có những đời rộng hơn thế nhiều. Người dùng phải kéo qua vài màn
+    hình mới thấy hết <em>một đời</em> — và trên điện thoại thì gấp bốn lần như vậy.
+    <strong>Cảm nhận “không tốt” là đúng, và nó đo được.</strong>
+  </p>
+</div>
+
+<p>
+  Với luồng mới ở mục 1, việc này <strong>từ “nên cải thiện” thành “chặn”</strong>: phả đồ thôi
+  là màn tra cứu của người đã quen hệ thống, mà trở thành <strong>màn hình đầu tiên của một
+  người chưa biết gì</strong>, dùng để tìm chính mình trong 1.500 người.
+</p>
+
+<ul class="ck">
+  <li>
+    <strong>Thu gọn thẻ và khoảng cách</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Thẻ 208×96px đang chở tên, năm sinh–năm mất, đời, huy hiệu. Với người còn sống thì dòng
+      ngày <em>thường trống</em> (mô hình riêng tư mới), tức thẻ đang giữ chỗ cho thứ không có.
+      Hướng: thẻ hẹp hơn ở mức thu nhỏ, chỉ hiện tên; đủ chi tiết khi phóng to.
+      <strong>Nhưng đừng phá sàn tiếp cận</strong>: chữ 16px và vùng chạm 44px là bắt buộc, và
+      bộ kiểm tự động sẽ đỏ nếu vi phạm — đó là hàng rào đúng, không phải thứ để nới.
+    </span>
+  </li>
+  <li>
+    <strong>Gập nhánh mặc định</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Cách rẻ nhất và hiệu quả nhất: mở ra chỉ hiện <em>đường thẳng từ gốc tới người đang
+      xem</em> cộng con cái trực tiếp, các nhánh khác gập lại có dấu hiệu bung. Người dùng tự
+      mở phần mình cần thay vì nhận cả bức tranh rồi phải tự lọc bằng mắt.
+    </span>
+  </li>
+  <li>
+    <strong>Kiểu xem danh sách theo đời cho điện thoại</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Phần lớn người trong họ ở xa dùng điện thoại. Kéo một bức tranh 4.000px qua một ô cửa
+      390px bằng hai ngón là thao tác khó với người lớn tuổi. Một danh sách theo đời, bấm vào
+      là xuống đời dưới, <strong>giải đúng bài toán mà canvas đang giải tồi</strong>.
+    </span>
+  </li>
+  <li>
+    <strong>Nhảy tới một người theo tên</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Người mới phải tìm được chính mình trong 1.500 người. Không có ô tìm ngay trên canvas thì
+      bước “tự nhận mình” ở mục 1 không dùng được.
+    </span>
+  </li>
+  <li>
+    <strong>Tô đậm node của chính mình, và nút “về chỗ tôi”</strong> <span class="chip should">cải thiện</span>
+    <span class="vi-sao">
+      Máy chủ đã trả về gốc đã chọn nhưng giao diện chưa dùng. Cuộn ba bước là lạc.
+    </span>
+  </li>
+  <li>
+    <strong>Nói rõ đang mở chi nào</strong> <span class="chip should">cải thiện</span>
+    <span class="vi-sao">
+      Trưởng chi Ất mở phả đồ thấy một cụ đời 2 mà không biết vì sao là cụ ấy. Một dòng
+      <em>“Đang mở Chi Ất”</em> kèm lối đổi chi là đủ.
+    </span>
+  </li>
+  <li>
+    <strong>Đăng nhập xong cây lại NHỎ ĐI</strong> <span class="chip should">cải thiện</span>
+    <span class="vi-sao">
+      Đo được: khách thấy 66 node từ Thuỷ tổ; thành viên thường thấy 29 node từ gốc ngành mình.
+      Ý đồ hợp lý nhưng trải nghiệm lần đầu là <em>“tôi đăng nhập xong thì gia phả co lại”</em>.
+    </span>
+  </li>
+</ul>
+
+<h2>6. Còn thiếu ở những phần khác</h2>
+
+<ul class="ck">
+  <li>
+    <strong>Khách tìm kiếm được</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      Máy chủ có lối tìm công khai chạy tốt — gõ có dấu hay không dấu đều ra — nhưng
+      <code>search.ts</code> <strong>không gọi tới nó</strong>, nên khách bấm Tìm kiếm là nhận
+      401, trong khi trang đăng nhập đang <em>hứa</em> điều ngược lại. Lần thứ ba cùng một mẫu
+      hình: tầng công khai xây xong mà giao diện chưa nối vào.
+    </span>
+  </li>
+  <li>
+    <strong>Màn nhập môn sau khi được duyệt</strong> <span class="chip should">nên có</span>
+    <span class="vi-sao">
+      Hợp đồng ghi rằng sau khi vào phả, người dùng đi vào màn nhập môn chứ không vào hồ sơ cá
+      nhân (gần như trống) hay phả đồ (một bức tường người lạ). Màn ấy chưa tồn tại.
+    </span>
+  </li>
+  <li>
+    <strong>Máy chủ thư</strong> <span class="chip must">chặn</span>
+    <span class="vi-sao">
+      “Quên mật khẩu” đang tắt vì chưa có SMTP. <strong>Với tự đăng ký thì đây thành việc
+      chặn</strong>: người tự đăng ký không có Trưởng chi nào đang chờ để đặt lại mật khẩu hộ
+      họ, và cũng không có cách xác minh địa chỉ họ khai.
+    </span>
+  </li>
+  <li>
+    <strong>Xác thực hai lớp cho Hội đồng và Admin</strong> <span class="chip must">an toàn</span>
+    <span class="vi-sao">
+      Tài khoản Hội đồng đọc được số điện thoại, địa chỉ và ngày sinh đầy đủ của
+      <strong>cả dòng họ</strong>, chỉ được bảo vệ bằng một mật khẩu tự đặt. Việc
+      <em>cấu hình</em>, không phải code — và càng gấp khi mở tự đăng ký.
+    </span>
+  </li>
+  <li>
+    <strong>Header bộ nhớ đệm cho hồ sơ nhân khẩu</strong> <span class="chip must">an toàn</span>
+    <span class="vi-sao">
+      <code>GET /persons/{id}</code> lọc theo người gọi nhưng không đặt
+      <code>Cache-Control</code> lẫn <code>Vary</code>. Cùng lớp lỗi với phả đồ vừa vá: bộ nhớ
+      đệm trình duyệt khoá theo URL không thôi, nên người thứ hai trên cùng máy nhận lại thân
+      phản hồi của người thứ nhất. Ba dòng.
+    </span>
+  </li>
+</ul>
+
+<h2>7. Thứ tự đề xuất</h2>
+
+<div class="khoi chot">
+  <p class="nhan">Đợt 1 — mở cửa</p>
+  <p>
+    <strong>Phả đồ gọn lại</strong> (thu gọn thẻ · gập nhánh · tìm theo tên · danh sách cho
+    điện thoại) → <strong>mã mời dòng họ</strong> + bốn chốt chặn →
+    <strong>đăng ký có kiểm mã</strong> → <strong>màn “tôi là ai trong phả”</strong> +
+    <strong>lối “tôi chưa có trong phả”</strong> → <strong>hàng chờ duyệt</strong> →
+    <strong>màn phát mã và phát lời mời</strong> → <strong>SMTP</strong>.
+  </p>
+  <p>
+    Phả đồ đứng <em>trước</em> phần đăng ký là có lý do: bước “tự nhận mình” chạy <strong>trên
+    chính màn phả đồ</strong>. Làm đăng ký trước rồi mới sửa phả đồ thì phải quay lại sửa hai lần.
+  </p>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Đợt 2 — có cái để xem</p>
+  <p>
+    <strong>Bài viết</strong> (soạn → duyệt → đăng) → <strong>vinh danh</strong> (danh sách có
+    cấu trúc) → <strong>trang chủ thật</strong> → <strong>tạo sự kiện dòng họ</strong> →
+    <strong>lịch làm kiểu xem mặc định</strong> → <strong>khách tìm kiếm được</strong>.
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Làm song song — nhỏ nhưng đang là rủi ro</p>
+  <p>
+    2FA cho Hội đồng/Admin · header bộ nhớ đệm cho hồ sơ. Cả hai dưới một ngày công và cả hai
+    <em>đắt hơn nhiều</em> nếu để sau khi có người dùng thật.
+  </p>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Chưa vội</p>
+  <p>
+    <strong>Giai đoạn 3</strong> — di sản, quỹ họ, báo cáo. Ba gói hiện <em>mỗi gói đúng 5 tệp,
+    cả 5 đều rỗng</em>. Cần người chụp ảnh, đo toạ độ mộ, phiên âm Hán-Nôm, viết bài. Code trước
+    khi có họ thì ra bốn màn hình đẹp và trống.
+  </p>
+</div>
+
+<h2>8. Bảy quyết định đã chốt</h2>
+
+<table>
+  <thead><tr><th>#</th><th>Câu hỏi</th><th>Quyết định</th></tr></thead>
+  <tbody>
+    <tr><td><strong>1</strong></td><td>Mã mời cấp theo chi hay cả họ?</td>
+        <td><strong>Cả họ.</strong> Kèm bốn chốt bắt buộc ở mục 1.2</td></tr>
+    <tr><td><strong>2</strong></td><td>Người chưa duyệt thấy phả đồ ở mức nào?</td>
+        <td><strong>Thấy phả đồ</strong> ngay sau khi đăng ký bằng mã — vì phải nhìn thấy mới
+            tự nhận mình được</td></tr>
+    <tr><td><strong>3</strong></td><td>Số điện thoại có ghi vào hồ sơ không?</td>
+        <td><strong>Có</strong>, nhưng hiện hay không do chính chủ quyết — khớp sẵn với nhóm
+            “liên hệ” vốn mặc định kín</td></tr>
+    <tr><td><strong>4</strong></td><td>Người chưa có trong phả thì làm gì?</td>
+        <td><strong>Có nút “Tôi chưa có trong phả”.</strong> Năm ràng buộc ở mục 1.5</td></tr>
+    <tr><td><strong>5</strong></td><td>Người chưa duyệt viết bài được không?</td>
+        <td><strong>Không.</strong> Viết bài là tiếng nói của người trong họ</td></tr>
+    <tr><td><strong>6</strong></td><td>Vinh danh: bài viết hay danh sách có cấu trúc?</td>
+        <td><strong>Danh sách có cấu trúc</strong> gắn với nhân khẩu — tra cứu và thống kê được</td></tr>
+    <tr><td><strong>7</strong></td><td>Phả đồ “chưa tối ưu” ở chỗ nào?</td>
+        <td><strong>Dàn ra quá to.</strong> Quy ra số đo ở mục 5; bốn hướng sửa là việc chặn</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Không còn câu hỏi nào treo. Tài liệu này đủ để bắt đầu đợt 1.
+</p>
+
+<p class="chan-trang">
+  Tài liệu 07 · gộp góp ý 20/09/2026 và bảy quyết định đã chốt · mọi câu về hiện trạng đều dẫn
+  được về một tệp trong kho; mọi đề xuất đều được ghi rõ là đề xuất.
+</p>
+
+</div>
+</body>
+</html>
