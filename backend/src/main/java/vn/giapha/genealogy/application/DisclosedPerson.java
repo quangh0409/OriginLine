@@ -50,6 +50,14 @@ import vn.giapha.shared.vo.LunarDate;
  *        thuộc cùng khối — ví dụ cột {@code native_place_code} do {@code dataimport} tự thêm ở V9.
  *        Đây là cách duy nhất được phép để một context khác "hỏi thêm": nhận lại <i>kết luận</i>
  *        của bộ lọc, chứ không chép lại <i>luật</i> của nó
+ * @param vinhDanhHienDuoc <b>cùng loại với trường trên: một kết luận, không phải một danh sách
+ *        trường.</b> Bằng {@code PersonVisibility#allows(PrivacyFieldGroup.HONOUR)}: người gọi có
+ *        được xem các bản ghi <i>vinh danh</i> của hồ sơ này không (V17, nhóm trường riêng tư thứ
+ *        sáu). Bảng {@code honour} thuộc context {@code content}, nên aggregate của
+ *        {@code genealogy} không chở nội dung ấy — nhưng <b>luật</b> quyết định ai xem được thì
+ *        phải ở lại đây. Cách duy nhất khác là {@code content} tự đọc {@code privacy_consent} và
+ *        tự diễn giải, tức bản luật riêng tư thứ hai, đúng thứ {@link PersonDisclosureService}
+ *        sinh ra để xoá
  */
 @org.springframework.modulith.NamedInterface("loc-rieng-tu")
 public record DisclosedPerson(UUID personId,
@@ -63,5 +71,6 @@ public record DisclosedPerson(UUID personId,
                               Integer namSinh,
                               LunarDate ngayGio,
                               String nguyenQuan,
-                              boolean duLieuNgoaiNhomHienDuoc) {
+                              boolean duLieuNgoaiNhomHienDuoc,
+                              boolean vinhDanhHienDuoc) {
 }

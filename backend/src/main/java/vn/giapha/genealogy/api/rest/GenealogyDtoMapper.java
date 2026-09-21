@@ -206,7 +206,8 @@ public final class GenealogyDtoMapper {
                 consent.scopeOf(PrivacyFieldGroup.RESIDENCE_PROVINCE),
                 consent.scopeOf(PrivacyFieldGroup.RESIDENCE_FULL),
                 consent.scopeOf(PrivacyFieldGroup.CONTACT),
-                consent.scopeOf(PrivacyFieldGroup.BIRTH_DETAIL_AND_PHOTO));
+                consent.scopeOf(PrivacyFieldGroup.BIRTH_DETAIL_AND_PHOTO),
+                consent.scopeOf(PrivacyFieldGroup.HONOUR));
     }
 
     public static ContactInfoDto toDto(ContactInfo contact) {

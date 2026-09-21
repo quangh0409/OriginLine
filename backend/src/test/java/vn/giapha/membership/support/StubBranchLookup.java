@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import vn.giapha.membership.domain.BranchSummary;
 import vn.giapha.membership.domain.port.BranchLookupPort;
 import vn.giapha.shared.vo.BranchPath;
 
@@ -74,6 +75,37 @@ public final class StubBranchLookup implements BranchLookupPort {
     @Override
     public Optional<Long> versionOfPerson(UUID personId) {
         return personId == null ? Optional.empty() : Optional.ofNullable(personVersions.get(personId));
+    }
+
+    /**
+     * Tên dòng họ = <b>tên của chi cấp 1</b>, đúng phép lấy mà adapter thật dùng
+     * ({@code nlevel(path) = 1}).
+     *
+     * <p>Suy từ chính bảng chi đã khai thay vì giữ một trường riêng: hai nguồn chân lý cho cùng một
+     * câu hỏi sẽ lệch nhau, và test sẽ xanh vì lý do sai. Bản giả không có cột {@code name} nên
+     * dùng nhãn gốc của {@code ltree} — đủ để phân biệt "có dòng họ" với "chưa khởi tạo".</p>
+     */
+    /**
+     * Chi ở mức đọc được. Bản giả không có cột {@code name}/{@code branch_kind} nên suy từ nhãn
+     * cuối của {@code ltree} — đủ để phân biệt hai chi và đủ để dựng một chức danh khác rỗng.
+     */
+    @Override
+    public Optional<BranchSummary> summaryOfBranch(UUID branchId) {
+        return pathOfBranch(branchId).map(path -> {
+            String nhan = path.value().substring(path.value().lastIndexOf('.') + 1);
+            boolean laGoc = !path.value().contains(".");
+            return new BranchSummary(branchId, nhan, laGoc ? "DONG_HO" : "CHI", path);
+        });
+    }
+
+    @Override
+    public Optional<String> clanName() {
+        return branchPaths.entrySet().stream()
+                .filter(entry -> !Boolean.TRUE.equals(deleted.get(entry.getKey())))
+                .map(entry -> entry.getValue().value())
+                .filter(path -> !path.contains("."))
+                .sorted()
+                .findFirst();
     }
 
     @Override

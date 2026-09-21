@@ -37,6 +37,22 @@ public class InviteThrottle {
     static final String OUTCOME_PREVIEW_OK = "PREVIEW_OK";
     static final String OUTCOME_ACCEPTED_OK = "ACCEPTED_OK";
 
+    /**
+     * Hai kết quả của luồng <b>mã mời dòng họ</b> (V16) — cùng bảng, cùng bộ đếm, cùng ngưỡng.
+     *
+     * <p><b>Không dựng bộ đếm thứ hai</b>, và đó là quyết định chứ không phải tiết kiệm: câu hỏi mà
+     * cả hai luồng hỏi là một — "người gọi này đã thử sai mã bao nhiêu lần trong một giờ qua?". Hai
+     * bộ đếm tách rời nghĩa là kẻ dò được cấp ngưỡng gấp đôi chỉ bằng cách xen kẽ hai endpoint, và
+     * không ai nhìn ra điều đó khi đọc riêng từng bảng.</p>
+     *
+     * <p>Với mã dòng họ, giới hạn tần suất nặng hơn một bậc so với mã cá nhân: mã cá nhân chết sau
+     * một lần dùng, còn mã dòng họ <b>sống suốt hạn</b> — dò trúng là mở được cửa cho tới khi Hội
+     * đồng thu hồi. Ở luồng cá nhân đây là lớp chống đỡ thứ ba; ở đây nó là lớp thứ nhất.</p>
+     */
+    static final String OUTCOME_CLAN_PREVIEW_OK = "CLAN_PREVIEW_OK";
+
+    static final String OUTCOME_CLAN_REGISTER_OK = "CLAN_REGISTER_OK";
+
     private final InviteThrottlePort attempts;
     private final int maxFailures;
     private final Duration window;
@@ -79,6 +95,18 @@ public class InviteThrottle {
     /** Ghi nhận một lần thử thành công — không tính vào ngưỡng, nhưng vẫn để lại vết. */
     public void recordSuccess(String clientId, boolean accepted) {
         attempts.record(keyOf(clientId), accepted ? OUTCOME_ACCEPTED_OK : OUTCOME_PREVIEW_OK);
+    }
+
+    /**
+     * Lần thử thành công của luồng <b>mã mời dòng họ</b>.
+     *
+     * <p>Tách kết quả chứ không tách bộ đếm: ngưỡng vẫn chung (xem
+     * {@link #OUTCOME_CLAN_PREVIEW_OK}), chỉ nhãn trong nhật ký là khác — để khi đọc
+     * {@code invitation_attempt} còn phân biệt được lượt nào của luồng nào.</p>
+     */
+    public void recordClanSuccess(String clientId, boolean registered) {
+        attempts.record(keyOf(clientId),
+                registered ? OUTCOME_CLAN_REGISTER_OK : OUTCOME_CLAN_PREVIEW_OK);
     }
 
     /**

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import vn.giapha.genealogy.domain.ShareScope;
 
 /**
- * <b>Bản đồng thuận riêng tư</b> — năm nhóm trường, mỗi nhóm một mức độc lập
+ * <b>Bản đồng thuận riêng tư</b> — sáu nhóm trường, mỗi nhóm một mức độc lập
  * (Nghị định 13/2023, BA v2 §10). Khớp schema {@code PrivacySettings} của
  * {@code contracts/openapi.yaml}.
  *
@@ -31,11 +31,16 @@ import vn.giapha.genealogy.domain.ShareScope;
  * @param residenceFull       địa chỉ đầy đủ
  * @param contact             điện thoại · email · Zalo — <b>một khối, không tách lẻ</b>
  * @param birthDetailAndPhoto ngày sinh đầy đủ &amp; ảnh chân dung
+ * @param honour              vinh danh (V17) — đỗ đạt · chức tước · thành tích · khen thưởng.
+ *        Thêm sau nên <b>client cũ không gửi khoá này</b>, và đó là ca mặc-định-kín chạy thật:
+ *        vắng mặt ở {@code POST} ⇒ {@code PRIVATE}, vắng mặt ở {@code PATCH} ⇒ giữ nguyên. Không
+ *        có cửa sổ lộ nào trong lúc giao diện chưa dựng xong công tắc thứ sáu
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record PrivacySettingsDto(ShareScope occupation,
                                  ShareScope residenceProvince,
                                  ShareScope residenceFull,
                                  ShareScope contact,
-                                 ShareScope birthDetailAndPhoto) {
+                                 ShareScope birthDetailAndPhoto,
+                                 ShareScope honour) {
 }

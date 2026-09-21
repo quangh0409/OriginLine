@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
@@ -229,6 +230,58 @@ class PersonConflictPrivacyIT extends AbstractIntegrationTest {
                 Integer.class, id))
                 .as("may nghi ngo, nguoi quyet dinh: xac nhan roi thi phai ghi that")
                 .isEqualTo(1);
+    }
+
+    // =========================================================================================
+    // Bộ nhớ đệm: MỘT ETag, HAI thân phản hồi
+    // =========================================================================================
+
+    /**
+     * {@code ETag} của {@code GET /persons/{id}} là {@code version} của bản ghi, nên nó
+     * <b>giống hệt nhau</b> với mọi người gọi — nó phải thế, vì nó quay lại qua {@code If-Match}
+     * của {@code PATCH}. Nhưng thân phản hồi thì đã lọc theo người gọi, và test ngay trên đã chứng
+     * minh hai vai nhận hai nội dung khác hẳn.
+     *
+     * <p>Một {@code ETag} chung trên hai thân khác nhau là <b>công thức của một {@code 304} sai
+     * người</b>: máy tính nhà thờ họ, Hội đồng đăng nhập rồi đăng xuất, Trưởng chi đăng nhập và
+     * trình duyệt gửi {@code If-None-Match} với đúng số ấy. Máy chủ thấy {@code version} chưa đổi,
+     * trả {@code 304}, và trình duyệt dọn ra <b>thân phản hồi của Hội đồng</b> — có tên huý. Không
+     * một dòng log nào ghi lại, vì lần đọc thứ hai không chạm tới tầng ứng dụng.</p>
+     *
+     * <p>Hai header chặn chuyện ấy. Test này ghim cả hai <b>cùng với</b> mệnh đề khiến chúng cần
+     * thiết, vì tách ra thì ai đó sẽ xoá header để "bật lại cache cho nhanh" mà không thấy hệ
+     * quả.</p>
+     */
+    @Test
+    @DisplayName("một ETag cho hai thân đã lọc khác nhau → bắt buộc no-store + Vary: Authorization")
+    void motETagHaiThan_phaiCoNoStoreVaVary() throws Exception {
+        MvcResult cuaHoiDong = mockMvc.perform(get("/api/v1/persons/{id}", ungVienConSong)
+                        .with(hoiDongTocBieu()))
+                .andExpect(status().isOk())
+                .andReturn();
+        MvcResult cuaTruongChi = mockMvc.perform(get("/api/v1/persons/{id}", ungVienConSong)
+                        .with(truongChiGiap()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Tien de 1: ETag GIONG NHAU — va phai giu nguyen nhu vay, khoa lac quan dua vao no.
+        String etag = cuaHoiDong.getResponse().getHeader(HttpHeaders.ETAG);
+        assertThat(etag).isNotBlank();
+        assertThat(cuaTruongChi.getResponse().getHeader(HttpHeaders.ETAG))
+                .as("ETag la version cua ban ghi; doi no thanh van tay nguoi goi se pha If-Match")
+                .isEqualTo(etag);
+
+        // Tien de 2: THAN KHAC NHAU.
+        assertThat(than(cuaHoiDong)).contains(TEN_HUY_UNG_VIEN);
+        assertThat(than(cuaTruongChi)).doesNotContain(TEN_HUY_UNG_VIEN);
+
+        // Ket luan: phan hoi khong duoc phep nam lai trong bat ky tang dem nao.
+        assertThat(cuaHoiDong.getResponse().getHeader(HttpHeaders.CACHE_CONTROL))
+                .as("thieu no-store thi trinh duyet giu than cua Hoi dong roi doi chieu bang ETag")
+                .contains("no-store");
+        assertThat(cuaHoiDong.getResponse().getHeaderValues(HttpHeaders.VARY))
+                .as("private chi chan proxy dung chung, khong chan dem cua chinh trinh duyet")
+                .anyMatch(value -> String.valueOf(value).contains(HttpHeaders.AUTHORIZATION));
     }
 
     // =========================================================================================

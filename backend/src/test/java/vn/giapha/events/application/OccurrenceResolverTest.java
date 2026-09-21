@@ -3,6 +3,7 @@ package vn.giapha.events.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -184,6 +185,88 @@ class OccurrenceResolverTest {
         Event event = lunarEvent(LunarDate.of(1990, 3, 3));
 
         assertThat(resolver.resolveLunar(event, null, 2026)).isEmpty();
+    }
+
+    /**
+     * {@code resolveAll} là nơi <b>duy nhất</b> biết "lặp hằng năm hay xảy ra một lần".
+     *
+     * <p>Trước khi có nó, phép chọn năm nằm rải ở {@code EventQueryService} và
+     * {@code ReminderBatchGenerator}, và cả hai quét mọi năm trong tầm nhìn cho <i>mọi</i> sự kiện
+     * âm lịch — nên một lễ khánh thành tạo bằng lối ghi mới sẽ lặp lại tới vô tận.</p>
+     */
+    @Nested
+    @DisplayName("resolveAll: lap hang nam vs xay ra mot lan")
+    class LapHayMotLan {
+
+        private final List<Integer> tamNhinAm = List.of(2025, 2026, 2027);
+        private final List<Integer> tamNhinDuong = List.of(2025, 2026, 2027);
+
+        @Test
+        @DisplayName("Su kien lap hang nam sinh mot lan xay ra cho MOI nam am trong tam nhin")
+        void lapHangNamThiMoiNamMotLan() {
+            Event gio = lunarEvent(LunarDate.of(1990, 3, 10));
+
+            List<EventOccurrence> found =
+                    resolver.resolveAll(gio, LunarDate.of(1990, 3, 10), tamNhinAm, tamNhinDuong);
+
+            assertThat(found).hasSize(3);
+            assertThat(found).extracting(EventOccurrence::dueSolarDate)
+                    .doesNotHaveDuplicates();
+        }
+
+        @Test
+        @DisplayName("Su kien MOT LAN theo am lich chi co DUNG MOT lan xay ra, lay nam chep trong so")
+        void motLanThiChiMotLan() {
+            // Khánh thành từ đường: xảy ra đúng một lần, ngày âm mang sẵn năm.
+            LunarDate ngayAm = LunarDate.of(2026, 2, 12);
+            Event khanhThanh = Event.builder(UUID.randomUUID())
+                    .type(vn.giapha.events.domain.EventType.KHANH_THANH)
+                    .title("Khanh thanh tu duong")
+                    .lunarDate(ngayAm)
+                    .lunarBased(true)
+                    .recurring(false)
+                    .clanLevel(true)
+                    .build();
+
+            List<EventOccurrence> found =
+                    resolver.resolveAll(khanhThanh, ngayAm, tamNhinAm, tamNhinDuong);
+
+            assertThat(found).hasSize(1);
+            assertThat(found.get(0).dueSolarDate()).isEqualTo(probe.solarOf(2026, 2, 12, false));
+        }
+
+        @Test
+        @DisplayName("Thang nhuan trong resolveAll cho cung mot cau tra loi voi resolveLunar")
+        void thangNhuanTraLoiGiongResolveLunar() {
+            // Đây là bất biến quan trọng nhất của đợt này: màn lịch và bộ nhắc giỗ phải trả lời
+            // GIỐNG HỆT nhau về cùng một ngày. Cả hai đi qua resolveAll -> resolveLunar, nên phép
+            // giải tháng nhuận chỉ có một bản. Bài test này ghim điều đó lại.
+            int namKhongNhuan = probe.yearWithoutLeapMonth(6);
+            LunarDate ngayAmNhuan = LunarDate.ofLeap(2017, 6, 3);
+            Event event = lunarEvent(ngayAmNhuan);
+
+            EventOccurrence quaResolveAll = resolver
+                    .resolveAll(event, ngayAmNhuan, List.of(namKhongNhuan), List.of())
+                    .get(0);
+            EventOccurrence quaResolveLunar =
+                    resolver.resolveLunar(event, ngayAmNhuan, namKhongNhuan).orElseThrow();
+
+            assertThat(quaResolveAll).isEqualTo(quaResolveLunar);
+            assertThat(quaResolveAll.adjustment()).isEqualTo(OccurrenceAdjustment.LEAP_MONTH_ABSENT);
+        }
+
+        @Test
+        @DisplayName("Su kien mot lan theo am lich ma thieu nam thi bo qua, khong doan bua")
+        void motLanThieuNamThiBoQua() {
+            // ck_event_oneoff_lunar_year (V18) chặn ca này ở CSDL, nhưng dòng ghi trước V18 vẫn có
+            // thể như vậy. Đoán một năm nào đó nghĩa là nhắc cả họ một cái lễ không có thật.
+            Event event = lunarEvent(LunarDate.of(1990, 3, 10));
+            Event motLan = event.toBuilder().recurring(false).lunarDate(LunarDate.of(2030, 3, 10))
+                    .build();
+
+            assertThat(resolver.resolveAll(motLan, LunarDate.of(0, 3, 10), tamNhinAm, tamNhinDuong))
+                    .isEmpty();
+        }
     }
 
     @Test

@@ -72,6 +72,49 @@ public final class EventTypeApiMapper {
     }
 
     /**
+     * Mã hợp đồng khi <b>ghi</b>: đúng một mã, đúng một kết quả.
+     *
+     * @param type     giá trị của {@code ck_event_type}
+     * @param clanLevel {@code TRUE}/{@code FALSE} khi chính mã hợp đồng đã ấn định cấp
+     *                  ({@code GIO_HO} là việc của cả họ, {@code GIO_CHI} là việc của một chi);
+     *                  {@code null} khi mã không nói gì về phạm vi và người gửi phải tự chọn
+     */
+    public record WriteType(EventType type, Boolean clanLevel) {
+    }
+
+    /**
+     * Mã hợp đồng → {@link WriteType}, cho lối ghi.
+     *
+     * <p><b>Mã lạ ở đây ném lỗi</b>, khác hẳn {@link #toDomain(List)} vốn bỏ qua kèm log. Hai chiều
+     * hai luật, và đó là có chủ ý: một bộ lọc không nhận dạng được thì tệ nhất là trả thừa kết quả,
+     * còn một lượt <i>ghi</i> không nhận dạng được loại sẽ lặng lẽ rơi vào {@code KHAC} và thông
+     * tin ấy không khôi phục lại được. Đúng khoản nợ mà V10 vừa trả xong.</p>
+     */
+    public static WriteType toWriteType(String apiType) {
+        if (apiType == null || apiType.isBlank()) {
+            throw new IllegalArgumentException("Thieu eventType");
+        }
+        return switch (apiType.trim().toUpperCase(Locale.ROOT)) {
+            case "GIO_THUONG" -> new WriteType(EventType.GIO, null);
+            case "GIO_TO" -> new WriteType(EventType.GIO_TO, null);
+            case "GIO_HO" -> new WriteType(EventType.TE_LE, Boolean.TRUE);
+            case "GIO_CHI" -> new WriteType(EventType.TE_LE, Boolean.FALSE);
+            case "TIEU_TUONG" -> new WriteType(EventType.TIEU_TUONG, null);
+            case "DAI_TUONG" -> new WriteType(EventType.DAI_TUONG, null);
+            case "CHAP_MA" -> new WriteType(EventType.TAO_MO, null);
+            case "MUNG_THO" -> new WriteType(EventType.MUNG_THO, null);
+            case "SINH_NHAT" -> new WriteType(EventType.SINH_NHAT, null);
+            case "KHANH_THANH" -> new WriteType(EventType.KHANH_THANH, null);
+            case "HOP_HO" -> new WriteType(EventType.HOP_HO, null);
+            case "CUOI_HOI" -> new WriteType(EventType.CUOI_HOI, null);
+            case "KHAC" -> new WriteType(EventType.KHAC, null);
+            default -> throw new IllegalArgumentException("Loai su kien khong hop le: " + apiType
+                    + ". Mot trong: GIO_TO, GIO_HO, GIO_CHI, GIO_THUONG, TIEU_TUONG, DAI_TUONG,"
+                    + " CHAP_MA, MUNG_THO, SINH_NHAT, KHANH_THANH, HOP_HO, CUOI_HOI, KHAC");
+        };
+    }
+
+    /**
      * Mã hợp đồng → tập mã cơ sở dữ liệu.
      *
      * @return tập rỗng nếu không có tham số lọc nào hợp lệ; mã lạ bị bỏ qua kèm log thay vì ném lỗi,

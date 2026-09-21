@@ -85,6 +85,53 @@ public class OccurrenceResolver {
     }
 
     /**
+     * <b>Mọi</b> lần xảy ra của một sự kiện trong tầm nhìn — một chỗ duy nhất biết luật "lặp hằng
+     * năm hay xảy ra đúng một lần".
+     *
+     * <p>Phép chọn năm này trước đây nằm rải ở hai nơi ({@code EventQueryService} và
+     * {@code ReminderBatchGenerator}) và <b>cả hai đều sai giống nhau</b>: chúng quét mọi năm trong
+     * tầm nhìn cho <i>mọi</i> sự kiện theo âm lịch, kể cả sự kiện một lần. Trước lối ghi thủ công
+     * thì không ai thấy, vì bảng chỉ chứa giỗ và giỗ thì lặp; ngay khi Trưởng chi tạo được một lễ
+     * khánh thành thì nó hiện trên lịch <b>mỗi năm một lần cho tới vô tận</b>. Gom về đây để câu
+     * trả lời chỉ có một bản.</p>
+     *
+     * @param effective  ngày âm <b>hiệu lực</b> (xem {@link EffectiveLunarDate}); bỏ qua với sự
+     *                   kiện theo dương lịch
+     * @param lunarYears các năm âm cần xét khi sự kiện lặp hằng năm
+     * @param solarYears các năm dương cần xét khi sự kiện theo dương lịch và lặp hằng năm
+     */
+    public List<EventOccurrence> resolveAll(Event event, LunarDate effective,
+                                            List<Integer> lunarYears, List<Integer> solarYears) {
+        List<EventOccurrence> found = new ArrayList<>();
+        if (event.isLunarBased()) {
+            if (event.isRecurring()) {
+                for (int lunarYear : lunarYears) {
+                    resolveLunar(event, effective, lunarYear).ifPresent(found::add);
+                }
+            } else if (effective == null || effective.year() <= 0) {
+                // ck_event_oneoff_lunar_year (V18) chặn ca này ở CSDL, nhưng dòng cũ ghi trước V18
+                // vẫn có thể rơi vào đây. Bỏ qua kèm WARN thay vì đoán một năm nào đó: đoán sai thì
+                // cả họ được nhắc một cái lễ không có thật.
+                log.warn("Su kien mot lan {} theo am lich nhung ngay am hieu luc khong co nam ({})"
+                        + " - khong xac dinh duoc lan xay ra nao", event.id(), effective);
+            } else {
+                resolveLunar(event, effective, effective.year()).ifPresent(found::add);
+            }
+            return List.copyOf(found);
+        }
+        if (!event.isRecurring()) {
+            // resolveSolar bo qua tham so nam khi su kien khong lap - tra dung ngay chep trong so.
+            resolveSolar(event, event.solarDate() == null ? 0 : event.solarDate().getYear())
+                    .ifPresent(found::add);
+            return List.copyOf(found);
+        }
+        for (int solarYear : solarYears) {
+            resolveSolar(event, solarYear).ifPresent(found::add);
+        }
+        return List.copyOf(found);
+    }
+
+    /**
      * Lần xảy ra của sự kiện trong một năm âm lịch.
      *
      * @param event     sự kiện

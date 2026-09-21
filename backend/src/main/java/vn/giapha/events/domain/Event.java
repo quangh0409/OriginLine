@@ -36,6 +36,7 @@ public final class Event {
     private final boolean clanLevel;
     private final String location;
     private final boolean deleted;
+    private final long version;
 
     private Event(Builder builder) {
         this.id = Objects.requireNonNull(builder.id, "Event.id khong duoc null");
@@ -51,6 +52,7 @@ public final class Event {
         this.clanLevel = builder.clanLevel;
         this.location = builder.location;
         this.deleted = builder.deleted;
+        this.version = builder.version;
         if (this.lunarBased && this.lunarDate == null) {
             throw new IllegalArgumentException(
                     "Su kien theo am lich bat buoc co lunar_date (ck_event_date_source): " + this.id);
@@ -63,10 +65,43 @@ public final class Event {
             throw new IllegalArgumentException(
                     "Su kien cap dong ho khong duoc gan chi/nganh (ck_event_scope): " + this.id);
         }
+        // Bản sao Java của ck_event_oneoff_lunar_year (V18). Một lễ khánh thành xảy ra đúng một
+        // lần: "ngày 12 tháng 2 âm" mà không có năm thì không quy đổi được sang ngày dương nào, và
+        // cái sai ấy không lộ ra lúc ghi — nó lộ ra dưới dạng một sự kiện lặp lại tới vô tận.
+        if (this.lunarBased && !this.recurring && this.lunarDate.year() <= 0) {
+            throw new IllegalArgumentException(
+                    "Su kien mot lan theo am lich bat buoc co nam am (ck_event_oneoff_lunar_year): "
+                            + this.id);
+        }
     }
 
     public static Builder builder(UUID id) {
         return new Builder(id);
+    }
+
+    /**
+     * Builder nạp sẵn mọi giá trị hiện tại — nền của một lần sửa từng phần ({@code PATCH}).
+     *
+     * <p>Sửa bằng cách dựng lại nguyên bản ghi giữ được tính bất biến của lớp này, và quan trọng
+     * hơn: mọi ràng buộc trong constructor ({@code ck_event_scope}, {@code ck_event_date_source},
+     * {@code ck_event_oneoff_lunar_year}) chạy lại trên <b>trạng thái sau khi sửa</b>. Một hàm
+     * {@code setTargetBranchId()} sẽ bỏ qua chính những phép kiểm ấy.</p>
+     */
+    public Builder toBuilder() {
+        return new Builder(id)
+                .personId(personId)
+                .type(type)
+                .title(title)
+                .description(description)
+                .lunarDate(lunarDate)
+                .solarDate(solarDate)
+                .lunarBased(lunarBased)
+                .recurring(recurring)
+                .targetBranchId(targetBranchId)
+                .clanLevel(clanLevel)
+                .location(location)
+                .deleted(deleted)
+                .version(version);
     }
 
     public UUID id() {
@@ -121,14 +156,24 @@ public final class Event {
         return deleted;
     }
 
+    /** Phiên bản khoá lạc quan ({@code event.version}) — cũng là giá trị sinh {@code ETag}. */
+    public long version() {
+        return version;
+    }
+
     /**
-     * Sự kiện có sinh lịch nhắc hằng năm hay không.
+     * Sự kiện có sinh lịch nhắc hay không.
      *
      * <p>Sự kiện đã xoá mềm thì không: xoá mềm là để giữ liên kết dữ liệu, không phải để tiếp tục
      * làm phiền cả họ.</p>
+     *
+     * <p><b>Sự kiện MỘT LẦN cũng được nhắc.</b> Trước lối ghi thủ công, bảng này chỉ chứa giỗ nên
+     * "lặp hằng năm" và "có lịch nhắc" là một. Nay một buổi họp họ vào Chủ nhật tới là sự kiện cần
+     * được nhắc nhất trong cả bảng, và nó không lặp lại năm nào. Khác biệt duy nhất nằm ở chỗ tính
+     * ra <i>lần xảy ra</i>: lặp thì quét nhiều năm âm, một lần thì lấy đúng năm chép trong sổ.</p>
      */
-    public boolean generatesRecurringReminders() {
-        return !deleted && recurring;
+    public boolean generatesReminders() {
+        return !deleted;
     }
 
     @Override
@@ -161,6 +206,7 @@ public final class Event {
         private boolean clanLevel;
         private String location;
         private boolean deleted;
+        private long version;
 
         private Builder(UUID id) {
             this.id = id;
@@ -223,6 +269,11 @@ public final class Event {
 
         public Builder deleted(boolean value) {
             this.deleted = value;
+            return this;
+        }
+
+        public Builder version(long value) {
+            this.version = value;
             return this;
         }
 

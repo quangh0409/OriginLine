@@ -93,6 +93,27 @@ public class KeycloakAdminApi {
         return Optional.of((ObjectNode) found.get(0));
     }
 
+    /**
+     * Tìm theo <b>tên đăng nhập</b> — lối của tài khoản lập bằng số điện thoại, vốn không có
+     * thuộc tính {@code email} để mà tra.
+     *
+     * <p>{@code exact=true} là bắt buộc: không có nó thì Keycloak tìm theo tiền tố và
+     * {@code 0912345678} sẽ khớp cả {@code 09123456789}.</p>
+     */
+    public Optional<ObjectNode> findUserByUsername(String username) {
+        String uri = properties.adminRealmUri() + "/users?exact=true&max=2&username="
+                + URLEncoder.encode(username, StandardCharsets.UTF_8);
+        HttpResponse<String> response = send(get(uri), "tim nguoi dung theo ten dang nhap");
+        requireStatus(response, "tim nguoi dung theo ten dang nhap", HTTP_OK);
+        ArrayNode found = (ArrayNode) readTree(response.body());
+        if (found.isEmpty()) {
+            return Optional.empty();
+        }
+        // Ten dang nhap la duy nhat o moi realm Keycloak, khong phu thuoc cau hinh — nen nhieu hon
+        // mot ket qua nghia la exact=true da bi bo quen o dau do.
+        return Optional.of((ObjectNode) found.get(0));
+    }
+
     public Optional<ObjectNode> findUserById(String userId) {
         HttpResponse<String> response = send(get(properties.adminRealmUri() + "/users/" + userId),
                 "doc nguoi dung");
@@ -113,11 +134,16 @@ public class KeycloakAdminApi {
     public String createUser(String username, String email, String firstName, String lastName) {
         ObjectNode body = objectMapper.createObjectNode();
         body.put("username", username);
-        body.put("email", email);
+        if (email != null && !email.isBlank()) {
+            body.put("email", email);
+            // emailVerified=false: khong ai chung minh dia chi nay la cua ho. Nguoi duoc moi da
+            // duoc Truong chi chi dich danh trong pha, do la bang chung khac va manh hon.
+            body.put("emailVerified", false);
+        }
+        // KHONG dat "email" khi nguoi dung lap tai khoan bang SO DIEN THOAI. Nhet so may vao o email
+        // se bi bo kiem cua realm tu choi, va neu lot thi moi loi gui thu ve sau gui vao hu khong.
+        // username van la dinh danh bat buoc, nen tai khoan khong email van dang nhap duoc.
         body.put("enabled", true);
-        // emailVerified=false: khong ai chung minh dia chi nay la cua ho. Nguoi duoc moi da duoc
-        // Truong chi chi dich danh trong pha, do la bang chung khac va manh hon.
-        body.put("emailVerified", false);
         if (firstName != null && !firstName.isBlank()) {
             body.put("firstName", firstName);
         }

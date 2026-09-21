@@ -80,6 +80,16 @@ public class NotificationDispatchService {
      * <p>Chọn cách xử lý rộng (nhắc cả họ) thay vì hẹp (không nhắc ai): thừa một thông báo thì có
      * người phàn nàn và dữ liệu được sửa; thiếu một thông báo thì không ai biết cho tới khi cái giỗ
      * đã qua.</p>
+     *
+     * <h2>Nhưng "có người phàn nàn rồi dữ liệu được sửa" phải có một lối SỬA thật</h2>
+     * {@code EventScope} chỉ đóng cửa với bản ghi <b>mới</b>; các dòng có trước vẫn nằm đó và vẫn
+     * đi qua đúng nhánh này, mỗi lần là một lượt nhắc cho cả 1.500 người. Lối sửa là
+     * {@code POST /api/v1/admin/events/backfill-scope}
+     * ({@code vn.giapha.events.application.EventScopeBackfillService}) — chạy lại được nhiều lần,
+     * suy chi từ hồ sơ nhân khẩu, và đánh dấu tường minh những dòng thật sự là cấp dòng họ.
+     *
+     * <p>Nhánh này <b>ở lại</b> sau lượt dọn ấy: nó là lớp đỡ cuối, và dòng {@code WARN} dưới đây
+     * là thứ nói cho người vận hành biết đã tới lúc chạy lệnh dọn lần nữa.</p>
      */
     private List<Recipient> resolveRecipients(ReminderDispatch request) {
         boolean clanLevel = request.clanLevel();

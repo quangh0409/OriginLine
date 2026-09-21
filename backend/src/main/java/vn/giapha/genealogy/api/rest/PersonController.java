@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,8 +30,10 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.giapha.genealogy.api.rest.dto.CreatePersonRequest;
 import vn.giapha.genealogy.api.rest.dto.PersonDto;
 import vn.giapha.genealogy.api.rest.dto.UpdatePersonRequest;
+import vn.giapha.genealogy.api.rest.dto.SetAvatarRequest;
 import vn.giapha.genealogy.application.AddPersonService;
 import vn.giapha.genealogy.application.PersonQueryService;
+import vn.giapha.genealogy.application.SetPersonAvatarService;
 import vn.giapha.genealogy.application.SoftDeletePersonService;
 import vn.giapha.genealogy.application.UpdatePersonService;
 import vn.giapha.genealogy.application.view.PersonView;
@@ -62,15 +66,18 @@ public class PersonController {
     private final UpdatePersonService updatePerson;
     private final SoftDeletePersonService softDeletePerson;
     private final PersonQueryService personQuery;
+    private final SetPersonAvatarService personAvatar;
     private final RelationshipSummaryLoader relationshipSummaries;
     private final ObjectMapper objectMapper;
     private final Validator validator;
 
     public PersonController(AddPersonService addPerson, UpdatePersonService updatePerson,
+                            SetPersonAvatarService personAvatar,
                             SoftDeletePersonService softDeletePerson, PersonQueryService personQuery,
                             RelationshipSummaryLoader relationshipSummaries,
                             ObjectMapper objectMapper, Validator validator) {
         this.addPerson = addPerson;
+        this.personAvatar = personAvatar;
         this.updatePerson = updatePerson;
         this.softDeletePerson = softDeletePerson;
         this.personQuery = personQuery;
@@ -95,11 +102,43 @@ public class PersonController {
                 .body(toDtoWithRelationSummaries(created));
     }
 
-    /** Hồ sơ đã lọc theo phân tầng riêng tư; Khách hỏi người còn sống sẽ nhận {@code 404}. */
+    /**
+     * Hồ sơ đã lọc theo phân tầng riêng tư; Khách hỏi người còn sống sẽ nhận {@code 404}.
+     *
+     * <h2>{@code ETag} ở đây là KHOÁ LẠC QUAN, không phải khoá bộ nhớ đệm</h2>
+     * Giá trị của nó là {@code version} của bản ghi — <b>giống hệt nhau với mọi người gọi</b>, vì
+     * nó phải quay lại qua {@code If-Match} của {@code PATCH} để hai người cùng sửa một hồ sơ
+     * không ghi đè nhau. Nhưng <b>thân phản hồi thì không giống nhau</b>: nó đã đi qua bộ lọc
+     * riêng tư V8 của <i>người gọi</i>, nên Hội đồng và Khách nhận hai nội dung khác hẳn dưới cùng
+     * một {@code ETag}.
+     *
+     * <p>Đó là lý do phải có hai header dưới đây, và vì sao cả hai đều cần:</p>
+     * <ul>
+     *   <li><b>{@code no-store}</b> — không có nó, trình duyệt lưu lại thân phản hồi của người thứ
+     *       nhất; người thứ hai đăng nhập trên cùng máy (máy tính nhà thờ họ) gửi
+     *       {@code If-None-Match: "3"}, máy chủ thấy {@code version} vẫn là 3 nên trả
+     *       <b>{@code 304}</b> — và trình duyệt phục vụ lại <i>thân phản hồi đã lọc theo người thứ
+     *       nhất</i>. Số điện thoại của một người đang sống rò ra mà không một dòng log nào ghi
+     *       lại, vì lần đọc thứ hai không bao giờ chạm tới tầng ứng dụng.</li>
+     *   <li><b>{@code Vary: Authorization}</b> — {@code private} chỉ chặn proxy dùng chung, không
+     *       chặn bộ nhớ đệm của chính trình duyệt, vốn coi URL là khoá duy nhất. {@code Vary} nói
+     *       rõ khoá phải gồm cả danh tính người gọi, cho bất kỳ tầng đệm nào bỏ qua
+     *       {@code no-store}.</li>
+     * </ul>
+     *
+     * <p><b>Đừng đổi {@code ETag} thành một giá trị buộc vào người gọi</b> như
+     * {@code TreeController} làm: {@link #parseIfMatch} đọc nó ra một {@code Long} và khoá lạc
+     * quan dựa vào đúng con số ấy. Chỗ nào cần cả hai thì phải tách hai header, không phải trộn
+     * hai nghĩa vào một.</p>
+     */
     @GetMapping("/{id}")
     public ResponseEntity<PersonDto> get(@PathVariable UUID id) {
         PersonView view = personQuery.byId(id);
-        return ResponseEntity.ok().eTag(etagOf(view)).body(toDtoWithRelationSummaries(view));
+        return ResponseEntity.ok()
+                .eTag(etagOf(view))
+                .varyBy(HttpHeaders.AUTHORIZATION)
+                .cacheControl(CacheControl.noStore().cachePrivate())
+                .body(toDtoWithRelationSummaries(view));
     }
 
     @PatchMapping("/{id}")
@@ -110,6 +149,45 @@ public class PersonController {
         UpdatePersonRequest request = readBody(body);
         PersonView updated = updatePerson.update(PersonRequestMapper.toCommand(id, request,
                 presentFieldsOf(body), parseIfMatch(ifMatch)));
+        return ResponseEntity.ok().eTag(etagOf(updated)).body(toDtoWithRelationSummaries(updated));
+    }
+
+    /**
+     * Đặt <b>ảnh chân dung</b>.
+     *
+     * <h2>Nhận {@code mediaId}, KHÔNG nhận một chuỗi khoá</h2>
+     * Cột {@code person.avatar_key} đã tồn tại từ V2 và vẫn là nguồn chân lý của ô avatar — nhưng
+     * cho tới đợt này <b>chưa bao giờ có lối tải lên</b>, nên client chỉ có thể điền vào đó một
+     * chuỗi tự bịa. Lối đúng đi qua {@code media}: xin phiếu → tải thẳng lên kho → xác nhận → rồi
+     * đưa {@code mediaId} vào đây. Khoá đối tượng do backend cấp và chỉ được ghi <b>sau khi</b>
+     * backend tự nhìn thấy tệp; chữ ký của điểm cuối này làm ràng buộc ấy thành một sự thật của
+     * kiểu, không phải một quy ước.
+     *
+     * <h2>Riêng tư: KHÔNG có luật mới</h2>
+     * Ảnh chân dung đi qua nhóm trường {@code birthDetailAndPhoto} đã có (V8/V17). Đường đọc vốn
+     * đã đúng từ trước — {@code PersonDto.avatarKey} chỉ xuất hiện khi nhóm ấy mở, ở cả hồ sơ đầy
+     * đủ lẫn node phả đồ lẫn danh bạ. Đợt này chỉ thêm đường ghi.
+     *
+     * <p>Quyền: chính chủ, Trưởng chi trong phạm vi {@code ltree}, hoặc vai toàn dòng họ — đúng
+     * phép kiểm đã dùng cho mọi lối sửa hồ sơ khác.</p>
+     */
+    @PutMapping("/{id}/avatar")
+    public ResponseEntity<PersonDto> setAvatar(@PathVariable UUID id,
+                                               @RequestBody SetAvatarRequest body) {
+        PersonView updated = personAvatar.setAvatar(id, body.mediaId());
+        return ResponseEntity.ok().eTag(etagOf(updated)).body(toDtoWithRelationSummaries(updated));
+    }
+
+    /**
+     * Gỡ ảnh chân dung.
+     *
+     * <p>Tệp không bị xoá ngay: liên kết bị cắt, nó thành mồ côi, và đường dọn mang đi sau 24 giờ.
+     * Một lần bấm nhầm không được phép làm mất vĩnh viễn một tấm ảnh chân dung cũ đã scan từ ảnh
+     * giấy.</p>
+     */
+    @DeleteMapping("/{id}/avatar")
+    public ResponseEntity<PersonDto> clearAvatar(@PathVariable UUID id) {
+        PersonView updated = personAvatar.clearAvatar(id);
         return ResponseEntity.ok().eTag(etagOf(updated)).body(toDtoWithRelationSummaries(updated));
     }
 

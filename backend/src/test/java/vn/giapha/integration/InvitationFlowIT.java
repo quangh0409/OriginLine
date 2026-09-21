@@ -2,6 +2,10 @@ package vn.giapha.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +15,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.web.servlet.MockMvc;
 import vn.giapha.membership.application.command.AcceptInvitationCommand;
 import vn.giapha.membership.application.InvitationNotUsableException;
 import vn.giapha.membership.application.InvitationPreview;
@@ -45,8 +52,12 @@ import vn.giapha.shared.exception.NotFoundException;
  * </ol>
  */
 @DisplayName("Mời người vào hệ thống")
+@AutoConfigureMockMvc
 @EnabledIf("vn.giapha.integration.AbstractIntegrationTest#dockerAvailable")
 class InvitationFlowIT extends AbstractIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
 
     /** Địa chỉ của người nhận lời mời — khoá của bộ đếm giới hạn tần suất. */
     private static final String IP_BA_LAN = "203.0.113.7";
@@ -313,6 +324,46 @@ class InvitationFlowIT extends AbstractIntegrationTest {
 
         authenticateAs("sub-hoi-dong", "COUNCIL");
         assertThat(invitations.inScope(0, 50)).hasSize(2);
+    }
+
+    /**
+     * Khối {@code invitee} phải đi hết đường ra tới JSON.
+     *
+     * <h2>Vì sao ca này tồn tại: tầng application ĐÃ tra sẵn, chỉ tầng api bỏ rơi</h2>
+     * {@code InvitationService#list} truyền {@code Invitee} vào {@link InvitationView}, nên mọi
+     * bài kiểm gọi thẳng service đều xanh — kể cả khi {@code InvitationDto} không chở trường ấy.
+     * Triệu chứng chỉ hiện ra trên giao diện: mỗi dòng "lời mời đã phát" đọc là "Không rõ nhân
+     * khẩu", và người sửa sẽ đi tìm ở tầng dữ liệu, nơi không có gì hỏng cả.
+     *
+     * <p>Nên ca này <b>phải</b> đi qua HTTP. Gọi service ở đây là kiểm lại đúng thứ đã xanh sẵn.</p>
+     *
+     * <h2>Và ba trường ấy là ĐÚNG BA trường</h2>
+     * Không năm sinh, không nơi ở, không điện thoại. Một danh sách bị chụp màn hình chỉ được tiết
+     * lộ đủ để nhận ra ai, không hơn.
+     */
+    @Test
+    @DisplayName("GET /invitations chở khối invitee — đúng ba trường, không một trường nào hơn")
+    void danhSachChoKhoiNhanKhau() throws Exception {
+        truongChiPhat(lanPersonId);
+
+        mockMvc.perform(get("/api/v1/invitations")
+                        .with(jwt().jwt(b -> b.subject("sub-bon"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_BRANCH_HEAD"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].personId").value(lanPersonId.toString()))
+                // Khong co ba dong nay thi man "loi moi da phat" la mot cot UUID.
+                .andExpect(jsonPath("$[0].invitee.displayName").value("Nguyễn Thị Lan"))
+                .andExpect(jsonPath("$[0].invitee.generation").value(7))
+                .andExpect(jsonPath("$[0].invitee.branchName").value("Chi Giáp"))
+                // ...va KHONG hon. Them mot truong vao day la mo rong dung thu mot anh chup man
+                // hinh se tiet lo.
+                .andExpect(jsonPath("$[0].invitee.birthYear").doesNotExist())
+                .andExpect(jsonPath("$[0].invitee.phone").doesNotExist())
+                .andExpect(jsonPath("$[0].invitee.branchPath").doesNotExist())
+                .andExpect(jsonPath("$[0].invitee.branchId").doesNotExist())
+                // Ma tho va bam cua no khong bao gio roi may chu qua duong nay.
+                .andExpect(jsonPath("$[0].code").doesNotExist())
+                .andExpect(jsonPath("$[0].codeHash").doesNotExist());
     }
 
     // =====================================================================================

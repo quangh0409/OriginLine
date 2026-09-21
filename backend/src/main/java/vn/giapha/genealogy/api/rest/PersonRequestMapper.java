@@ -138,6 +138,7 @@ public final class PersonRequestMapper {
         putScope(map, PrivacyFieldGroup.RESIDENCE_FULL, dto.residenceFull());
         putScope(map, PrivacyFieldGroup.CONTACT, dto.contact());
         putScope(map, PrivacyFieldGroup.BIRTH_DETAIL_AND_PHOTO, dto.birthDetailAndPhoto());
+        putScope(map, PrivacyFieldGroup.HONOUR, dto.honour());
         return map;
     }
 

@@ -203,6 +203,47 @@ springdoc:
 # Cau hinh rieng cua ung dung
 # =====================================================================================
 giapha:
+  # ===========================================================================
+  # KHO DOI TUONG (MinIO / S3) — anh & video cua bai viet, anh chan dung
+  #
+  # KHONG CO KHOA THAT O DAY. Hai gia tri mac dinh duoi day la thong tin dang
+  # nhap cua MAY PHAT TRIEN, va chung da nam cong khai trong
+  # infra/docker-compose.yml + README.md vi chung chi mo duoc mot MinIO chay
+  # tren chinh may cua nguoi phat trien. O moi truong that, MINIO_ACCESS_KEY /
+  # MINIO_SECRET_KEY PHAI den tu bien moi truong.
+  #
+  # BAY: `public-endpoint` VA `endpoint` CO THE KHAC NHAU
+  # Chu ky SigV4 phu ca TEN MAY CHU. Trong Docker Compose, backend goi MinIO qua
+  # http://minio:9000 (ten dich vu trong mang noi bo) nhung trinh duyet KHONG
+  # phan giai duoc ten ay. Ky bang mot ten roi giao cho trinh duyet dung mot ten
+  # khac thi MinIO tra SignatureDoesNotMatch — mot thong bao noi ve chu ky trong
+  # khi loi that nam o ten may chu. De trong = dung lai `endpoint`, dung cho may
+  # phat trien noi ca hai deu la localhost:9000.
+  #
+  # TRAN DUNG LUONG/THOI LUONG KHONG O DAY. Chung o vn.giapha.media.domain
+  # .MediaLimits — MOT cho duy nhat, va MediaLimitsContractTest ghim rang hop
+  # dong OpenAPI khong troi khoi ma. Dat chung o YAML se tai lap dung cai bay ma
+  # ImportMultipartLimitTest sinh ra de chan.
+  #
+  # LUU Y VE spring.servlet.multipart: tran 10 MB o tren KHONG lien quan toi
+  # video. Tep KHONG di qua backend — client PUT thang len kho bang URL da ky.
+  # Dung nang tran ay vi video; no co y khop ImportLimits.MAX_FILE_BYTES.
+  # ===========================================================================
+  media:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${MINIO_PUBLIC_ENDPOINT:}
+    access-key: ${MINIO_ACCESS_KEY:giapha}
+    secret-key: ${MINIO_SECRET_KEY:giapha123}
+    bucket: ${MINIO_MEDIA_BUCKET:giapha-media}
+    # Bat o may phat trien va trong bai kiem tich hop. O moi truong that nen TAT
+    # va de nguoi van hanh tao bucket kem dung chinh sach (khong doc an danh,
+    # versioning, vong doi) — bucket do ung dung tu tao mang chinh sach mac dinh
+    # cua may chu, va mac dinh ay khong phai thu ta muon cho anh nguoi con song.
+    auto-create-bucket: ${MINIO_AUTO_CREATE_BUCKET:true}
+    # Don tep mo coi. 03:15 GMT+7 — KHONG trung 01:30 cua job sinh nhac gio: hai
+    # cong viec dem cung gio se tranh nhau pool ket noi roi cung cham, va nguoi
+    # van hanh thay hai thu hong ma khong biet cai nao keo cai nao.
+    gc-cron: ${GIAPHA_MEDIA_GC_CRON:0 15 3 * * *}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
   security:

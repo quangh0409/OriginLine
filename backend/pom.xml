@@ -30,6 +30,14 @@
     <!-- Doc/sinh .xlsx cho duong ong nhap lieu hang loat (dataimport). Khong nam trong
          spring-boot-dependencies nen phai ghim phien ban o day. -->
     <poi.version>5.4.1</poi.version>
+    <!--
+      SDK cua MinIO (S3-compatible). Ghim o day vi spring-boot-dependencies khong quan ly no.
+      8.5.x chu KHONG phai 9.x: dong 8.5 la dong API on dinh cua MinioClient.builder() /
+      getPresignedObjectUrl / StatObjectArgs ma toan bo vn.giapha.media dang noi, va no keo theo
+      okhttp3 4.x — dung dong ma spring-boot-dependencies 3.3.5 da ghim san (okhttp3.version),
+      nen khong co hai ban okhttp trong classpath.
+    -->
+    <minio.version>8.5.17</minio.version>
   </properties>
 
   <dependencyManagement>
@@ -116,6 +124,19 @@
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
       <version>${poi.version}</version>
+    </dependency>
+
+    <!-- ============ Kho doi tuong: anh/video bai viet, anh chan dung ============ -->
+    <!--
+      LUU Y VE PHAM VI: SDK nay chi duoc phep xuat hien trong
+      vn.giapha.media.infrastructure.minio. Moi noi khac noi chuyen qua ObjectStoragePort —
+      neu mot ngay nao do kho doi tuong doi sang S3 that hay sang mot nha cung cap khac,
+      diem phai sua la MOT lop, khong phai moi cho co anh.
+    -->
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
+      <version>${minio.version}</version>
     </dependency>
 
     <!-- ============ Van hanh ============ -->

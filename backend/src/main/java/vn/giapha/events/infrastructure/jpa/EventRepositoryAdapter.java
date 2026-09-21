@@ -13,6 +13,7 @@ import vn.giapha.events.domain.Event;
 import vn.giapha.events.domain.EventType;
 import vn.giapha.events.domain.port.EventRepository;
 import vn.giapha.events.infrastructure.jdbc.BranchScopeJdbcAdapter;
+import vn.giapha.shared.exception.NotFoundException;
 
 /**
  * Hiện thực {@link EventRepository} trên Spring Data JPA.
@@ -48,8 +49,8 @@ public class EventRepositoryAdapter implements EventRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Event> findRecurringPage(int page, int size) {
-        return toDomain(repository.findByDeletedFalseAndRecurringTrueOrderByIdAsc(
+    public List<Event> findActivePage(int page, int size) {
+        return toDomain(repository.findByDeletedFalseOrderByIdAsc(
                 PageRequest.of(Math.max(0, page), Math.max(1, size))));
     }
 
@@ -79,15 +80,44 @@ public class EventRepositoryAdapter implements EventRepository {
                     && (row.getTargetBranchId() == null || !branchFilter.contains(row.getTargetBranchId()))) {
                 continue;
             }
-            result.add(mapper.toDomain(row));
+            // Mot dong hong khong duoc lam sap ca lo ghi doc — xem EventMapper#toDomainOrSkip.
+            mapper.toDomainOrSkip(row).ifPresent(result::add);
         }
         return List.copyOf(result);
+    }
+
+    @Override
+    @Transactional
+    public Event insert(Event event) {
+        EventJpaEntity entity = new EventJpaEntity(event.id());
+        mapper.applyToEntity(event, entity);
+        return mapper.toDomain(repository.saveAndFlush(entity));
+    }
+
+    /**
+     * <h2>Vì sao {@code saveAndFlush} và vì sao trả về bản vừa ghi</h2>
+     * Hibernate chỉ tăng {@code @Version} lúc flush. Trả về chính đối tượng đầu vào nghĩa là nó
+     * vẫn mang {@code version} cũ, và tầng API dùng giá trị ấy sinh {@code ETag} → {@code ETag} trễ
+     * một nhịp. Lần {@code PATCH} kế tiếp gửi đúng {@code ETag} vừa nhận sẽ bị từ chối
+     * <b>409 "có người khác vừa sửa"</b> trong khi không ai sửa cả — và lỗi này chỉ lộ ra ở lần ghi
+     * <i>thứ hai</i> nên rất dễ lọt qua kiểm thủ công. Cùng một cái bẫy đã ghi ở
+     * {@code PersonRepositoryAdapter.save}.
+     */
+    @Override
+    @Transactional
+    public Event update(Event event, long expectedVersion) {
+        EventJpaEntity entity = repository.findById(event.id())
+                .orElseThrow(() -> NotFoundException.of("Event", event.id()));
+        // @Version cua Hibernate so khop gia tri nay trong menh de WHERE cua cau UPDATE.
+        entity.setVersion(expectedVersion);
+        mapper.applyToEntity(event, entity);
+        return mapper.toDomain(repository.saveAndFlush(entity));
     }
 
     private List<Event> toDomain(List<EventJpaEntity> rows) {
         List<Event> result = new ArrayList<>(rows.size());
         for (EventJpaEntity row : rows) {
-            result.add(mapper.toDomain(row));
+            mapper.toDomainOrSkip(row).ifPresent(result::add);
         }
         return List.copyOf(result);
     }

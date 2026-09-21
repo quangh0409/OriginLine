@@ -143,6 +143,30 @@ public class SecurityConfig {
                                 "/api/v1/invitations/accept",
                                 "/api/v1/invitations/set-password",
                                 "/api/v1/invitations/decline").permitAll()
+                        // MÃ MỜI DÒNG HỌ (V16) — hai đường mở cho người CHƯA có tài khoản.
+                        // Cùng lý do với bốn đường trên: người bấm chính là người chưa đăng nhập
+                        // được. Thẩm quyền là VIỆC SỞ HỮU MÃ.
+                        //
+                        // Khác mã cá nhân ở một điểm làm mọi thứ nặng hơn: mã cá nhân chết sau một
+                        // lần dùng, còn mã dòng họ SỐNG SUỐT HẠN và cấp cho CẢ HỌ — ai cầm được mã
+                        // là đăng ký được và xem được danh sách người đang sống của dòng họ. Vì
+                        // vậy bốn chốt ở ClanInviteService (hạn · thu hồi · bộ đếm · giới hạn tần
+                        // suất) không phải tuỳ chọn: chúng là lớp bảo vệ DUY NHẤT ở đây, còn bước
+                        // duyệt thì kiểm soát thứ khác (ai được gắn vào hồ sơ của ai).
+                        //
+                        // /lookup KHÔNG trả về tên người sống nào — mã dòng họ không trỏ vào ai,
+                        // nên nó chỉ trả tên dòng họ (dữ liệu công khai) và hạn dùng. Đó là khác
+                        // biệt thật so với /invitations/lookup.
+                        //
+                        // /register lập tài khoản Keycloak ở trạng thái CHƯA gắn nhân khẩu, rồi
+                        // trả về liên kết một lần dẫn tới /invitations/set-password đã mở ở trên —
+                        // cố ý dùng lại, vì hai endpoint cho cùng một việc là hai chỗ để lệch nhau.
+                        //
+                        // Liệt kê tường minh từng đường, KHÔNG dùng "/api/v1/clan-invites/**":
+                        // mẫu bao trùm ấy sẽ mở luôn lệnh phát mã và màn xem bộ đếm.
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/clan-invites/lookup",
+                                "/api/v1/clan-invites/register").permitAll()
                         // Quản trị tài khoản & phân quyền: chặn thô ở đây, nhưng phép kiểm THẬT
                         // (vai x phạm vi ltree) nằm ở BranchScopeGuard của context membership.
                         .requestMatchers("/api/v1/branch-assignments/**").hasAnyRole(ROLE_ADMIN, ROLE_COUNCIL)

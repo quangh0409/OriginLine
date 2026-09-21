@@ -30,7 +30,7 @@ class GenerateRemindersServiceTest {
     private final ReminderProperties properties = new ReminderProperties();
 
     private GenerateRemindersService service() {
-        return new GenerateRemindersService(events,
+        return new GenerateRemindersService(events, jobs,
                 new ReminderBatchGenerator(subjects, jobs, resolver), resolver, properties);
     }
 

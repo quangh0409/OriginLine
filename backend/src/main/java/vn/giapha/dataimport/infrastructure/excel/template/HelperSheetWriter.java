@@ -124,8 +124,10 @@ final class HelperSheetWriter {
      * phép che.</p>
      */
     private static final NhanKhauDaCo VI_DU_CON_SONG = new NhanKhauDaCo(
+            // Tham so cuoi (V17) la "vinh danh hien duoc": FALSE, y het cac khoi kia — mot thanh
+            // vien thuong khong xem duoc vinh danh cua nguoi con song khi chinh chu chua mo.
             new DisclosedPerson(null, "Nguyễn Thị Hoa", null, null, null, Gender.FEMALE, 4, true,
-                    null, null, null, false),
+                    null, null, null, false, false),
             "AT-04-012", "AT-03-005", "AT-03-006",
             TemplateVocabulary.nhan(ImportColumn.QUAN_HE, CellCodec.ParentRel.BIO),
             "VN", null, null);

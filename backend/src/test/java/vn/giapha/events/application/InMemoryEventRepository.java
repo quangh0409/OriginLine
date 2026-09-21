@@ -12,15 +12,16 @@ import vn.giapha.events.domain.port.EventRepository;
 /**
  * Bảng {@code event} trong bộ nhớ.
  *
- * <p>Mô phỏng đúng hai điều mà bộ test quan tâm: {@code findRecurringPage} chỉ trả sự kiện
- * <b>lặp lại và chưa xoá mềm</b> (như mệnh đề {@code WHERE} của adapter thật), và phân trang theo
- * offset — nhờ vậy kiểm được vòng quét nhiều lô của {@link GenerateRemindersService}.</p>
+ * <p>Mô phỏng đúng hai điều mà bộ test quan tâm: {@code findActivePage} chỉ trả sự kiện
+ * <b>chưa xoá mềm</b> (như mệnh đề {@code WHERE} của adapter thật — kể cả sự kiện một lần, xem
+ * {@code EventRepository.findActivePage}), và phân trang theo offset — nhờ vậy kiểm được vòng quét
+ * nhiều lô của {@link GenerateRemindersService}.</p>
  */
 final class InMemoryEventRepository implements EventRepository {
 
     private final List<Event> events = new ArrayList<>();
 
-    /** Số lần {@code findRecurringPage} bị gọi — dùng để chứng minh vòng quét dừng đúng lúc. */
+    /** Số lần {@code findActivePage} bị gọi — dùng để chứng minh vòng quét dừng đúng lúc. */
     int pageCalls;
 
     InMemoryEventRepository(Event... seed) {
@@ -38,14 +39,14 @@ final class InMemoryEventRepository implements EventRepository {
     }
 
     @Override
-    public List<Event> findRecurringPage(int page, int size) {
+    public List<Event> findActivePage(int page, int size) {
         pageCalls++;
-        List<Event> recurring = events.stream()
-                .filter(event -> event.isRecurring() && !event.isDeleted())
+        List<Event> active = events.stream()
+                .filter(event -> !event.isDeleted())
                 .toList();
-        int from = Math.min(page * size, recurring.size());
-        int to = Math.min(from + size, recurring.size());
-        return List.copyOf(recurring.subList(from, to));
+        int from = Math.min(page * size, active.size());
+        int to = Math.min(from + size, active.size());
+        return List.copyOf(active.subList(from, to));
     }
 
     @Override
@@ -56,5 +57,18 @@ final class InMemoryEventRepository implements EventRepository {
                 .filter(event -> personId == null || personId.equals(event.personId()))
                 .filter(event -> branchId == null || event.isClanLevel() || branchId.equals(event.targetBranchId()))
                 .toList();
+    }
+
+    @Override
+    public Event insert(Event event) {
+        events.add(event);
+        return event;
+    }
+
+    @Override
+    public Event update(Event event, long expectedVersion) {
+        events.removeIf(existing -> existing.id().equals(event.id()));
+        events.add(event);
+        return event;
     }
 }

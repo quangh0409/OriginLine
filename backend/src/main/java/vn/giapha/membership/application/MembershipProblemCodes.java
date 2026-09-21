@@ -79,6 +79,87 @@ public final class MembershipProblemCodes {
     /** Thử mã quá nhiều lần trong một khoảng thời gian — xem {@code InviteThrottle}. */
     public static final String RATE_LIMITED = "RATE_LIMITED";
 
+    // --- Mã mới của luồng MÃ MỜI DÒNG HỌ và ĐƠN TỰ NHẬN (V16) ---
+
+    /**
+     * Mã mời dòng họ đã <b>dùng hết trần lượt</b> mà Hội đồng đặt — HTTP 409.
+     *
+     * <h2>Vì sao ca này có mã riêng, còn "hết hạn"/"đã thu hồi" thì dùng lại mã của luồng cá nhân</h2>
+     * {@link #INVITATION_EXPIRED} và {@link #INVITATION_REVOKED} nói đúng điều cần nói và dẫn tới
+     * đúng màn hình ấy: "mã hết hạn, hỏi lại người đưa mã". Người dùng không phân biệt được — và
+     * không cần phân biệt — mã cá nhân với mã dòng họ; họ chỉ cầm một dãy ký tự. Đẻ thêm hai mã
+     * song song là bắt giao diện viết hai nhánh cho cùng một câu trả lời.
+     *
+     * <p>"Hết lượt" thì khác thật: nó <b>không</b> tồn tại ở mã cá nhân (mã cá nhân một lần là một
+     * lần, và ca ấy đã có {@link #INVITATION_ALREADY_USED}), và nó dẫn tới một câu khác hẳn — mã
+     * vẫn còn hạn, vẫn chưa bị thu hồi, chỉ là Hội đồng đã đặt trần và trần ấy đầy.</p>
+     */
+    public static final String CLAN_INVITE_EXHAUSTED = "CLAN_INVITE_EXHAUSTED";
+
+    /**
+     * Đơn tự nhận đã được duyệt/từ chối/rút — không xử lý lại. HTTP 409.
+     *
+     * <p>Cố ý <b>không</b> dùng lại {@link #CHANGE_REQUEST_CLOSED}: hai thực thể khác nhau, hai màn
+     * hình khác nhau, và giao diện rẽ nhánh theo {@code code}. Một mã lỗi nói "yêu cầu đính chính
+     * đã đóng" xuất hiện trên màn duyệt đơn nhận người là một thông điệp sai.</p>
+     */
+    public static final String CLAIM_CLOSED = "CLAIM_CLOSED";
+
+    /**
+     * Nhân khẩu được nhận <b>không nhận đơn được</b> — HTTP 422.
+     *
+     * <h2>MỘT mã cho BA lý do, và đó là điểm của nó</h2>
+     * Người đã khuất · nhân khẩu đã có tài khoản · nhân khẩu đã xoá mềm. Gộp ba lý do vào một mã là
+     * thứ giữ cho màn tự nhận <b>không thành công cụ liệt kê ai đã có tài khoản</b>: gửi thử lần
+     * lượt từng ô trên phả đồ rồi đọc mã lỗi sẽ ra danh sách những người <i>chưa</i> đăng ký — tức
+     * danh sách để mạo danh, và với 1.500 người thì nó có giá trị thật.
+     *
+     * <p><b>Vậy vì sao vẫn tách khỏi {@link #VALIDATION_FAILED}?</b> Vì bốn tình huống đang dùng
+     * chung một mã dẫn tới <i>bốn hành động tiếp theo khác nhau</i>, và giao diện buộc phải suy ra
+     * bằng cách nhìn luồng nào đang chạy — đúng hôm nay, âm thầm sai ngày có phép kiểm thứ năm dùng
+     * lại mã ấy. Tách ra không nói thêm gì về <i>người bị nhận</i>; nó chỉ nói cho client biết cái
+     * ô người dùng vừa chọn là thứ không dùng được.</p>
+     *
+     * <p><b>Và vì sao không có endpoint kiểm trước.</b> Bất cứ thứ gì trả lời "node này có nhận đơn
+     * không" <i>chính là</i> công cụ liệt kê ấy, chỉ khác chỗ nó rẻ hơn — không tốn một lượt, không
+     * để lại một dòng đơn. Lý do này đã được nêu và chấp nhận; đừng thêm lối kiểm trước dù giao
+     * diện sẽ dễ hơn.</p>
+     */
+    public static final String CLAIM_TARGET_UNAVAILABLE = "CLAIM_TARGET_UNAVAILABLE";
+
+    /**
+     * Người thân được chỉ ra trong đơn "tôi chưa có trong phả" <b>không dùng để nối được</b> —
+     * HTTP 422.
+     *
+     * <p>Đã xoá mềm, hoặc chưa được gắn vào chi nào. Ca thứ hai đáng nói thẳng: người dùng không
+     * sửa được, nhưng Trưởng chi thì sửa được — và một câu mơ hồ ở đây sẽ khiến họ không bao giờ
+     * biết cần sửa gì.</p>
+     *
+     * <p>Tách khỏi {@link #CLAIM_TARGET_UNAVAILABLE} vì hai luồng dẫn tới hai màn hình khác nhau:
+     * một bên là "chọn ô khác trên phả đồ", bên kia là "chọn người thân khác".</p>
+     */
+    public static final String CLAIM_RELATIVE_UNUSABLE = "CLAIM_RELATIVE_UNUSABLE";
+
+    /**
+     * Người gửi đang có một đơn chờ duyệt — HTTP 409.
+     *
+     * <p>Một tài khoản chỉ có một đơn đang chờ ({@code ux_person_claim_open_requester}). Ca này có
+     * mã riêng vì hành động tiếp theo rất cụ thể và giao diện <b>làm hộ được</b>: rút đơn cũ
+     * ({@code POST /person-claims/&#123;id&#125;/cancel}) rồi gửi lại. Rút <b>không</b> tính vào
+     * giới hạn gửi lại.</p>
+     */
+    public static final String CLAIM_ALREADY_OPEN = "CLAIM_ALREADY_OPEN";
+
+    /**
+     * Người gửi đã bị từ chối quá số lần cho phép — HTTP 422.
+     *
+     * <p>Design 07 §1.4: bị từ chối thì gửi lại được, <b>nhưng có giới hạn số lần</b>. Không giới
+     * hạn thì màn này thành cách dò đúng người bằng cách thử lần lượt — gửi đơn nhận ông A, bị từ
+     * chối, gửi tiếp ông B, cho tới khi trúng. Lối đi tiếp cho người dùng thật là gọi Trưởng chi,
+     * nên thông điệp phải nói ra điều đó chứ không chỉ nói "không được".</p>
+     */
+    public static final String CLAIM_LIMIT_REACHED = "CLAIM_LIMIT_REACHED";
+
     // --- Mã mới của lối lập tài khoản Keycloak (cổng danh tính) ---
 
     /**
@@ -98,6 +179,28 @@ public final class MembershipProblemCodes {
      * lời mời. Tách ra ba mã chỉ nói cho kẻ dò biết mình đang sai ở đâu.</p>
      */
     public static final String SET_PASSWORD_LINK_INVALID = "SET_PASSWORD_LINK_INVALID";
+
+    /**
+     * Định danh (email / số điện thoại) tự khai <b>đã có tài khoản</b> trong realm — HTTP 422.
+     *
+     * <h2>Đây là một phép chặn an ninh, không phải một phép kiểm dữ liệu</h2>
+     * Lối đăng ký bằng mã dòng họ <b>không đòi đăng nhập</b>, nên thứ duy nhất người gọi trình ra
+     * là một mã mà cả họ đang cầm cộng một chuỗi họ tự gõ. Chuỗi ấy <b>không</b> chứng minh được
+     * họ sở hữu địa chỉ thư đó. Nếu địa chỉ ấy đã thuộc về một tài khoản có thật thì mọi thao tác
+     * tiếp theo (đúc liên kết đặt mật khẩu, làm tươi hồ sơ) là thao tác trên tài sản của người
+     * khác — xem {@code ClanInviteService#register}.
+     *
+     * <p>Lối đi tiếp cho người dùng thật: <b>đăng nhập rồi nhập lại mã</b>. Nhánh "đã có token"
+     * của cùng endpoint xử lý trọn ca ấy, và ở đó danh tính là do Keycloak chứng nhận chứ không
+     * phải do người gọi tự khai.</p>
+     *
+     * <p><b>Nó có là một máy dò tài khoản không?</b> Có, ở mức hẹp nhất còn lại: người gọi biết
+     * được "địa chỉ này đã đăng ký". Đổi lại nó được <b>tính vào giới hạn tần suất</b> như một lần
+     * thất bại, nên dò cả danh bạ dòng họ là việc không làm được trong một cửa sổ. Trả một phản
+     * hồi thành công giả cũng không xoá được tín hiệu ấy — nó chỉ chuyển tín hiệu sang chỗ khác,
+     * và đổi lại bằng một lời nói dối với người dùng thật.</p>
+     */
+    public static final String IDENTITY_ALREADY_REGISTERED = "IDENTITY_ALREADY_REGISTERED";
 
     private MembershipProblemCodes() {
     }

@@ -16,6 +16,7 @@ import vn.giapha.genealogy.application.view.PersonView;
 import vn.giapha.genealogy.domain.NameType;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonName;
+import vn.giapha.genealogy.domain.PrivacyFieldGroup;
 import vn.giapha.genealogy.domain.port.BranchRepository;
 import vn.giapha.genealogy.domain.port.PersonRepository;
 
@@ -179,7 +180,10 @@ public class PersonDisclosureService {
                 // ngay gio khong tinh duoc — ca hai deu la null, va khong phan biet duoc.
                 view.death() == null ? null : view.death().lunar(),
                 view.nativePlace(),
-                vis.ungroupedFieldsVisible());
+                vis.ungroupedFieldsVisible(),
+                // V17: KET LUAN ve nhom truong thu sau, khong phai noi dung. Ban ghi vinh danh nam
+                // o context `content`; luat "ai duoc xem" thi o lai day, mot ban duy nhat.
+                vis.allows(PrivacyFieldGroup.HONOUR));
     }
 
     /** Lớp tên phụ đầu tiên thuộc loại này trong danh sách <b>đã lọc</b>; {@code null} nếu không có. */

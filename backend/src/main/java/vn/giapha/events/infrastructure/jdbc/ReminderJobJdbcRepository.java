@@ -58,6 +58,17 @@ public class ReminderJobJdbcRepository implements ReminderJobRepository {
                    j.fire_at, j.status, j.attempt_count, j.last_error, j.dispatched_at
             """;
 
+    /**
+     * Hai trang thai, khong phai mot. Xem javadoc cua
+     * {@code ReminderJobRepository#deleteUnsentByEvent}: mot dong CANCELLED van chiem khoa
+     * ux_reminder_job_occurrence, nen bo sot no la lam luot sinh ke tiep im lang khong ghi gi.
+     */
+    private static final String SQL_DELETE_UNSENT = """
+            DELETE FROM reminder_job
+             WHERE event_id = :eventId
+               AND status IN ('PENDING', 'CANCELLED')
+            """;
+
     private static final String SQL_MARK_STATUS = """
             UPDATE reminder_job
                SET status = :status,
@@ -104,6 +115,21 @@ public class ReminderJobJdbcRepository implements ReminderJobRepository {
                 .addValue("now", Timestamp.from(now))
                 .addValue("limit", Math.max(1, limit));
         return jdbc.query(SQL_CLAIM_DUE, params, ROW_MAPPER);
+    }
+
+    /**
+     * {@code ix_reminder_job_event_unsent} (V20) là chỉ mục riêng phần đỡ đúng câu này — không có
+     * nó thì mỗi lần sửa một sự kiện là một lượt quét toàn bảng {@code reminder_job}. Vị từ của
+     * chỉ mục phải <b>khớp đúng</b> mệnh đề {@code WHERE} ở trên: bản V18 chỉ phủ {@code PENDING},
+     * nên khi câu lệnh mở rộng sang {@code CANCELLED} thì chỉ mục cũ thôi dùng được.
+     */
+    @Override
+    @Transactional
+    public int deleteUnsentByEvent(UUID eventId) {
+        if (eventId == null) {
+            return 0;
+        }
+        return jdbc.update(SQL_DELETE_UNSENT, new MapSqlParameterSource("eventId", eventId));
     }
 
     @Override

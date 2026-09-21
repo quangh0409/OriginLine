@@ -102,6 +102,38 @@ public class AppUserProvisioningService {
         return create(keycloakSub, email, displayName);
     }
 
+    /**
+     * Như {@link #ensureFor}, nhưng cho người gọi <b>chưa chứng minh được mình là ai</b>: tạo mới
+     * thì được, chạm vào một dòng đã có thì không.
+     *
+     * <h2>Vì sao cần một lối thứ hai thay vì một cờ trên lối cũ</h2>
+     * {@link #ensureFor} làm tươi {@code display_name}/{@code email}/{@code last_login_at} từ
+     * token ở mỗi lần đăng nhập — đúng, vì ở đó Keycloak đã chứng nhận danh tính. Lối đăng ký bằng
+     * mã dòng họ thì <b>không</b> có token: định danh là chuỗi người gọi tự gõ. Dùng lại
+     * {@link #ensureFor} ở đó nghĩa là một người chưa đăng nhập sửa được hàng {@code app_user} của
+     * thành viên khác — và {@code display_name} ấy chính là thứ Trưởng chi đọc trong hàng chờ
+     * duyệt đơn tự nhận.
+     *
+     * <p>Hai lối tách rời thì <b>nơi gọi phải chọn</b>, và lựa chọn ấy hiện ra ở chỗ gọi. Một cờ
+     * {@code boolean} với giá trị mặc định thì lối mới nào quên truyền sẽ lặng lẽ rơi vào nhánh
+     * tin tưởng.</p>
+     *
+     * @throws DomainException {@code IDENTITY_ALREADY_REGISTERED} khi {@code keycloak_sub} đã có
+     *                         một dòng {@code app_user} — dòng ấy có chủ, và người gọi chưa chứng
+     *                         minh được mình là chủ
+     */
+    @Transactional
+    public AppUser ensureForUnverified(String keycloakSub, String email, String displayName) {
+        Optional<AppUser> existing = appUsers.byKeycloakSub(keycloakSub);
+        if (existing.isPresent()) {
+            log.warn("Tu choi dung lai app_user {} cho mot nguoi goi khong trinh token",
+                    existing.get().id());
+            throw new DomainException(MembershipProblemCodes.IDENTITY_ALREADY_REGISTERED,
+                    "Dinh danh nay da co tai khoan trong he thong. Hay dang nhap roi thu lai.");
+        }
+        return create(keycloakSub, email, displayName);
+    }
+
     /** Trạng thái tài khoản hiện tại; ném 403 nếu chưa khởi tạo được. */
     @Transactional(readOnly = true)
     public AppUser requireCurrentUser() {

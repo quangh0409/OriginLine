@@ -71,6 +71,19 @@ public final class StubInviteeLookup implements InviteeLookupPort {
                 clanName, stored.alive(), stored.deleted()));
     }
 
+    /**
+     * Mẫu số của bộ đếm mã mời — đếm đúng những nhân khẩu bản giả này biết, lọc theo cờ sống/xoá.
+     *
+     * <p>Suy từ chính bảng đã khai chứ không giữ một con số riêng: hai nguồn chân lý cho cùng một
+     * câu hỏi sẽ lệch nhau, và test sẽ xanh vì lý do sai.</p>
+     */
+    @Override
+    public int countLivingPersons() {
+        return (int) known.values().stream()
+                .filter(person -> person.alive() && !person.deleted())
+                .count();
+    }
+
     @Override
     public Optional<ClanOffice> clanOfficeOf(UUID personId) {
         return personId == null ? Optional.empty() : Optional.ofNullable(offices.get(personId));

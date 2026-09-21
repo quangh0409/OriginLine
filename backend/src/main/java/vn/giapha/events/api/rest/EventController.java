@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -18,12 +17,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import vn.giapha.events.api.rest.dto.BranchRefDto;
 import vn.giapha.events.api.rest.dto.EventDto;
 import vn.giapha.events.api.rest.dto.EventPageDto;
-import vn.giapha.events.api.rest.dto.EventPersonDto;
-import vn.giapha.events.api.rest.dto.LunarDateDto;
-import vn.giapha.events.api.rest.dto.PageMetaDto;
 import vn.giapha.events.application.EventQueryService;
 import vn.giapha.events.application.command.EventQuery;
 import vn.giapha.events.application.view.EventPageView;
@@ -74,7 +69,7 @@ public class EventController {
         EventPageView view = eventQuery.list(new EventQuery(from, to, upcomingDays,
                 EventTypeApiMapper.toDomain(eventType), branchId, personId, page, size, sort));
         log.debug("GET /api/v1/events -> {} su kien", view.items().size());
-        return ResponseEntity.ok(toDto(view));
+        return ResponseEntity.ok(EventDtoMapper.toDto(view));
     }
 
     /**
@@ -83,39 +78,20 @@ public class EventController {
      *
      * <p>Sự kiện đã xoá mềm, hoặc sự kiện của người còn sống khi người gọi là Khách, đều trả
      * <b>404</b> — không phải 403, vì 403 đã xác nhận id ấy có tồn tại.</p>
+     *
+     * <p>Phản hồi mang {@code ETag} = {@code version} của bản ghi. Giá trị ấy phải quay lại qua
+     * {@code If-Match} của {@code PATCH}, nếu không lượt sửa bị từ chối bằng <b>412</b> — hai người
+     * cùng sửa lịch việc họ trước mùa giỗ chạp là chuyện thường ngày.</p>
+     *
+     * <p><b>Đừng đổi {@code ETag} thành một giá trị buộc vào người gọi</b> (như
+     * {@code TreeController} làm cho bộ nhớ đệm): bên {@code PATCH} đọc nó ra một {@code long} và
+     * khoá lạc quan dựa vào đúng con số ấy. Trộn hai nghĩa vào một header là hỏng cả hai.</p>
      */
     @GetMapping("/{id}")
     @Operation(summary = "Chi tiet mot su kien gio/le",
             description = "nextOccurrenceSolar la null neu su kien khong con lan xay ra nao phia truoc.")
     public ResponseEntity<EventDto> byId(@PathVariable UUID id) {
-        return ResponseEntity.ok(toDto(eventQuery.findById(id)));
-    }
-
-    private static EventPageDto toDto(EventPageView view) {
-        List<EventDto> items = new ArrayList<>(view.items().size());
-        for (EventView event : view.items()) {
-            items.add(toDto(event));
-        }
-        return new EventPageDto(List.copyOf(items), PageMetaDto.from(view.page()));
-    }
-
-    private static EventDto toDto(EventView view) {
-        return new EventDto(
-                view.id(),
-                EventTypeApiMapper.toApi(view.type(), view.clanLevel()),
-                view.title(),
-                EventPersonDto.from(view.subject()),
-                LunarDateDto.from(view.lunarDate()),
-                view.nextOccurrenceSolar(),
-                view.nextOccurrenceLunarYear(),
-                view.daysUntil(),
-                BranchRefDto.from(view.targetBranch()),
-                view.clanLevel(),
-                view.reminderOffsets(),
-                view.location(),
-                // graveId: mộ phần liên quan là hạng mục Giai đoạn 3 (context heritage chưa có bảng).
-                null,
-                view.note(),
-                view.adjustmentNote());
+        EventView view = eventQuery.findById(id);
+        return ResponseEntity.ok().eTag(EventDtoMapper.etagOf(view)).body(EventDtoMapper.toDto(view));
     }
 }

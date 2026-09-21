@@ -87,6 +87,10 @@ public class EventJpaEntity {
     protected EventJpaEntity() {
     }
 
+    public EventJpaEntity(UUID id) {
+        this.id = id;
+    }
+
     public UUID getId() {
         return id;
     }
@@ -201,5 +205,14 @@ public class EventJpaEntity {
 
     public long getVersion() {
         return version;
+    }
+
+    /**
+     * Đặt phiên bản kỳ vọng trước khi ghi — Hibernate so khớp giá trị này trong mệnh đề
+     * {@code WHERE} của câu {@code UPDATE}; lệch thì ném
+     * {@code ObjectOptimisticLockingFailureException} và tầng API trả <b>409</b>.
+     */
+    public void setVersion(long version) {
+        this.version = version;
     }
 }

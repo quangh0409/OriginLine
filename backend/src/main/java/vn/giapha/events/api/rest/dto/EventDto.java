@@ -19,6 +19,14 @@ import java.util.UUID;
  *                            ra một ngày khác với sổ mà không giải thích là cách nhanh nhất để cả họ
  *                            mất tin vào hệ thống.
  * @param graveId             mộ phần liên quan — Giai đoạn 3, hiện luôn {@code null}
+ * @param solarDate           ngày dương <b>gốc</b> của sự kiện tính theo dương lịch; {@code null}
+ *                            với sự kiện theo âm lịch (tức gần như mọi việc họ). Đừng nhầm với
+ *                            {@code nextOccurrenceSolar}: cái sau là kết quả quy đổi cho một năm
+ *                            cụ thể và đổi theo từng năm.
+ * @param recurringAnnually   lặp lại hằng năm (chạp mả, giỗ Tổ, lễ Tết) hay xảy ra đúng một lần
+ *                            (khánh thành từ đường)
+ * @param version             phiên bản khoá lạc quan — cũng là giá trị trong {@code ETag}. Gửi lại
+ *                            qua {@code If-Match} khi {@code PATCH}.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(name = "Event", description = "Su kien gio/le cua dong ho")
@@ -36,5 +44,9 @@ public record EventDto(UUID id,
                        String location,
                        UUID graveId,
                        String note,
-                       String adjustmentNote) {
+                       String adjustmentNote,
+                       LocalDate solarDate,
+                       boolean lunarBased,
+                       boolean recurringAnnually,
+                       long version) {
 }

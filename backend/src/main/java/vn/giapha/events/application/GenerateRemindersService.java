@@ -11,11 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import vn.giapha.config.SchedulerConfig;
 import vn.giapha.events.domain.Event;
 import vn.giapha.events.domain.ReminderJob;
 import vn.giapha.events.domain.ReminderPlan;
 import vn.giapha.events.domain.port.EventRepository;
+import vn.giapha.events.domain.port.ReminderJobRepository;
 
 /**
  * Job chạy <b>hằng đêm</b>: quét toàn bộ sự kiện lặp lại, quy đổi ngày âm sang ngày dương của năm
@@ -46,16 +48,52 @@ public class GenerateRemindersService {
     private static final Logger log = LoggerFactory.getLogger(GenerateRemindersService.class);
 
     private final EventRepository events;
+    private final ReminderJobRepository jobs;
     private final ReminderBatchGenerator batchGenerator;
     private final OccurrenceResolver occurrences;
     private final ReminderProperties properties;
 
-    public GenerateRemindersService(EventRepository events, ReminderBatchGenerator batchGenerator,
+    public GenerateRemindersService(EventRepository events, ReminderJobRepository jobs,
+                                    ReminderBatchGenerator batchGenerator,
                                     OccurrenceResolver occurrences, ReminderProperties properties) {
         this.events = events;
+        this.jobs = jobs;
         this.batchGenerator = batchGenerator;
         this.occurrences = occurrences;
         this.properties = properties;
+    }
+
+    /**
+     * Dựng lại lịch nhắc cho <b>đúng một</b> sự kiện vừa được tạo, vừa đổi ngày/phạm vi, hoặc vừa
+     * bị xoá mềm.
+     *
+     * <h2>Vì sao không chờ tới 01:30</h2>
+     * Một buổi họp họ tạo lúc 9 giờ sáng cho Chủ nhật tuần này có mốc D-3 rơi vào <i>ngày mai</i>.
+     * Chờ job đêm nghĩa là mốc ấy vẫn kịp — nhưng một sự kiện tạo cho <i>ngày kia</i> thì mốc D-1
+     * đã trôi mất. Dựng ngay tại lượt ghi, trong <b>cùng transaction</b>, nên sự kiện và lịch nhắc
+     * của nó hoặc cùng có hoặc cùng không.
+     *
+     * <h2>Xoá trước, dựng sau — và xoá chứ không huỷ</h2>
+     * Xem {@link ReminderJobRepository#deleteUnsentByEvent}: một dòng {@code CANCELLED} vẫn chiếm
+     * khoá của chỉ mục chống trùng, nên "huỷ rồi sinh lại" sẽ không sinh được gì. Job đã
+     * {@code QUEUED}/{@code SENT} không bị đụng tới — lời nhắc đã phát đi là chuyện đã rồi.
+     *
+     * @return số job sinh mới
+     */
+    @Transactional
+    public int regenerateFor(Event event) {
+        int removed = jobs.deleteUnsentByEvent(event.id());
+        if (!event.generatesReminders()) {
+            log.info("Su kien {} khong con sinh lich nhac (da xoa mem) - da don {} job chua ban",
+                    event.id(), removed);
+            return 0;
+        }
+        LocalDate today = LocalDate.now(properties.zone());
+        int created = batchGenerator.generate(List.of(event), properties.toPlan(),
+                targetLunarYears(today), targetSolarYears(today), today, Instant.now());
+        log.info("Dung lai lich nhac cho su kien {}: don {} job chua ban, tao moi {}",
+                event.id(), removed, created);
+        return created;
     }
 
     /**
@@ -92,7 +130,7 @@ public class GenerateRemindersService {
         int scanned = 0;
         int batchSize = properties.getBatchSize();
         for (int page = 0; ; page++) {
-            List<Event> batch = events.findRecurringPage(page, batchSize);
+            List<Event> batch = events.findActivePage(page, batchSize);
             if (batch.isEmpty()) {
                 break;
             }

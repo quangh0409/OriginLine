@@ -58,6 +58,28 @@ final class InMemoryReminderJobRepository implements vn.giapha.events.domain.por
         return List.copyOf(result);
     }
 
+    /**
+     * Xoá cả dòng <b>và</b> khoá chống trùng của nó.
+     *
+     * <p>Quên vế thứ hai là mô phỏng sai đúng cái bẫy mà {@code deleteUnsentByEvent} sinh ra để
+     * tránh: nếu khoá còn nằm lại thì lượt sinh kế tiếp sẽ không ghi được gì, và bài test "sửa ngày
+     * rồi dựng lại lịch nhắc" sẽ đỏ vì lý do khác hẳn.</p>
+     */
+    @Override
+    public int deleteUnsentByEvent(UUID eventId) {
+        List<ReminderJob> removing = byId.values().stream()
+                .filter(job -> job.eventId().equals(eventId))
+                // CANCELLED cung phai di: no khong toi tay ai, nhung van chiem khoa chong trung.
+                .filter(job -> job.status() == ReminderStatus.PENDING
+                        || job.status() == ReminderStatus.CANCELLED)
+                .toList();
+        for (ReminderJob job : removing) {
+            byId.remove(job.id());
+            uniqueKeys.remove(key(job));
+        }
+        return removing.size();
+    }
+
     @Override
     public void markStatus(UUID jobId, ReminderStatus status, String error) {
         statusChanges.add(new StatusChange(jobId, status, error));

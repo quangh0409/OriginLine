@@ -40,9 +40,21 @@ class SetPasswordTokenCodecTest {
     void suaMotKyTuLaHong() {
         Instant now = Instant.now();
         String token = codec.mint(SUBJECT, NUA_GIO, now).token();
-        String suaDoi = token.substring(0, token.length() - 1)
-                + (token.endsWith("A") ? "B" : "A");
 
+        // Doi ky tu DAU cua phan chu ky, khong phai ky tu CUOI.
+        //
+        // Ban dau ca nay lat ky tu cuoi, va no do ngau nhien theo dong ho: ky tu cuoi cua mot chuoi
+        // Base64 khong co padding chi mang 2 hoac 4 bit co nghia, nen nhieu ky tu khac nhau giai ra
+        // CUNG mot day byte. Lat trung mot cap nhu the thi chu ky van dung va phep kiem van qua —
+        // mot ca test do khoang mot phan ba so lan chay, va do khong phai loi cua bo ma.
+        //
+        // Ky tu o giua thi luon mang du 6 bit, nen doi no chac chan doi day byte.
+        int dauChuKy = token.indexOf('.') + 1;
+        char cu = token.charAt(dauChuKy);
+        String suaDoi = token.substring(0, dauChuKy) + (cu == 'A' ? 'B' : 'A')
+                + token.substring(dauChuKy + 1);
+
+        assertThat(suaDoi).isNotEqualTo(token);
         assertThat(codec.verify(suaDoi, now)).isEmpty();
     }
 

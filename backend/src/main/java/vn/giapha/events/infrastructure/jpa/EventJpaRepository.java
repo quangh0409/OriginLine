@@ -15,8 +15,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface EventJpaRepository extends JpaRepository<EventJpaEntity, UUID> {
 
-    /** Đầu vào của scheduler: chỉ sự kiện còn hiệu lực và lặp lại hằng năm. */
-    List<EventJpaEntity> findByDeletedFalseAndRecurringTrueOrderByIdAsc(Pageable pageable);
+    /**
+     * Đầu vào của scheduler: sự kiện còn hiệu lực, <b>kể cả sự kiện một lần</b>.
+     *
+     * <p>Điều kiện {@code is_recurring = TRUE} đã bị bỏ có chủ ý — xem
+     * {@code EventRepository.findActivePage}.</p>
+     */
+    List<EventJpaEntity> findByDeletedFalseOrderByIdAsc(Pageable pageable);
 
     List<EventJpaEntity> findByDeletedFalseOrderByIdAsc();
 

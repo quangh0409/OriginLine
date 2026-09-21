@@ -48,4 +48,19 @@ public interface InviteeLookupPort {
      * {@code BRANCH_HEAD} trong {@code branch_assignment}.</p>
      */
     Optional<ClanOffice> clanOfficeOf(UUID personId);
+
+    /**
+     * Số nhân khẩu <b>còn sống, chưa xoá mềm</b> trong cả dòng họ — <b>mẫu số của bộ đếm mã mời</b>.
+     *
+     * <h2>Vì sao một phép đếm lại nằm ở cổng này</h2>
+     * Lập luận của design 07 §1.2 là <i>"mã đã dùng 400 lần trong khi dòng họ có 600 người"</i>.
+     * Vế thứ hai mới làm vế thứ nhất có nghĩa: <b>một bộ đếm không có mẫu số thì không ai phán xét
+     * được</b>. Hội đồng nhìn con số 400 trần trụi sẽ không biết nên lo hay không.
+     *
+     * <p>Đây là {@code count(*) WHERE is_alive}, không phải một báo cáo dân số — nó cố ý
+     * <b>không</b> phân theo chi, không phân theo đời, và không đi qua bộ lọc riêng tư nào, vì nó
+     * không tiết lộ ai cả. Khi context {@code reporting} của Giai đoạn 3 có một con số chính thức
+     * thì chỗ đúng để lấy là ở đó, và chỗ phải sửa chỉ có một.</p>
+     */
+    int countLivingPersons();
 }

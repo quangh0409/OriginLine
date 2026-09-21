@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import vn.giapha.membership.domain.BranchSummary;
 import vn.giapha.membership.domain.port.BranchLookupPort;
 import vn.giapha.shared.vo.BranchPath;
 
@@ -59,6 +61,31 @@ public class BranchLookupJdbcAdapter implements BranchLookupPort {
             SELECT p.primary_branch_id
               FROM person p
              WHERE p.id = :personId
+            """;
+
+    /**
+     * Tên gốc của cả dòng họ — chi cấp 1 của cây {@code ltree}.
+     *
+     * <p>{@code nlevel(path) = 1} là định nghĩa của "gốc"; không dùng {@code parent_id IS NULL} vì
+     * hai cách ấy có thể lệch nhau khi dữ liệu được nhập từ ngoài vào, và {@code ltree} mới là thứ
+     * mọi phép kiểm phạm vi dựa vào. {@code ORDER BY path} để kết quả tất định nếu có nhiều gốc —
+     * ca ấy là lỗi dữ liệu, nhưng một màn hình chập chờn thì khó truy hơn nhiều một màn hình sai
+     * ổn định.</p>
+     */
+    private static final String SQL_BRANCH_SUMMARY = """
+            SELECT b.id, b.name, b.branch_kind, b.path::text AS branch_path
+              FROM branch b
+             WHERE b.id = :branchId
+               AND b.is_deleted = FALSE
+            """;
+
+    private static final String SQL_CLAN_NAME = """
+            SELECT b.name
+              FROM branch b
+             WHERE nlevel(b.path) = 1
+               AND b.is_deleted = FALSE
+             ORDER BY b.path
+             LIMIT 1
             """;
 
     private static final String SQL_PERSON_VERSION = """
@@ -118,6 +145,24 @@ public class BranchLookupJdbcAdapter implements BranchLookupPort {
         }
         return first(jdbc.queryForList(SQL_PERSON_VERSION,
                 new MapSqlParameterSource("personId", personId), Long.class));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<BranchSummary> summaryOfBranch(UUID branchId) {
+        if (branchId == null) {
+            return Optional.empty();
+        }
+        SqlParameterSource params = new MapSqlParameterSource("branchId", branchId);
+        return first(jdbc.query(SQL_BRANCH_SUMMARY, params, (rs, row) -> new BranchSummary(
+                rs.getObject("id", UUID.class), rs.getString("name"), rs.getString("branch_kind"),
+                toBranchPath(rs.getString("branch_path")).orElse(null))));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> clanName() {
+        return first(jdbc.queryForList(SQL_CLAN_NAME, new MapSqlParameterSource(), String.class));
     }
 
     @Override

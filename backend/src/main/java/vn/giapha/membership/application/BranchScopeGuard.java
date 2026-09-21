@@ -39,15 +39,39 @@ public class BranchScopeGuard {
      *         {@code FORBIDDEN} khi không đủ vai
      */
     public void requireWriteAccess(MemberScope caller, BranchPath target) {
-        if (caller.isClanWide()) {
+        requireWriteAccess(caller.isClanWide(), caller.role() == RoleCode.BRANCH_HEAD,
+                caller.managesBranch(target), caller.appUserId(), target);
+    }
+
+    /**
+     * Cùng luật, nhưng nhận {@link MemberScopeView} — <b>kiểu được công bố</b> của context này.
+     *
+     * <h2>Vì sao phải có chồng hàm này</h2>
+     * {@link MemberScope} nằm ở {@code membership.domain}, tức <b>ngoài</b>
+     * {@code @NamedInterface("application")}. Một context khác gọi bản trên là chạm vào package nội
+     * bộ và {@code ModularityTests} đỏ. Hệ quả thực tế đã xảy ra một lần:
+     * {@code dataimport.api.support.ImportScopeGuard} phải <b>chép lại</b> đúng phép kiểm này trên
+     * {@code MemberScopeView}, và javadoc của lớp ấy ghi thẳng rằng cách sửa đúng là thêm chồng hàm
+     * ở đây. Luật phân quyền chép làm hai bản là luật sẽ lệch nhau — chỉ là chưa biết lệch lúc nào.
+     *
+     * @param target chi của <b>đối tượng</b> bị ghi, không phải chi của người gọi; {@code null}
+     *               nghĩa là "chưa gắn chi" và chỉ vai toàn dòng họ được đụng (xem javadoc lớp)
+     */
+    public void requireWriteAccess(MemberScopeView caller, BranchPath target) {
+        requireWriteAccess(caller.clanWide(), RoleCode.BRANCH_HEAD.name().equals(caller.role()),
+                caller.managesBranch(target), caller.appUserId(), target);
+    }
+
+    private void requireWriteAccess(boolean clanWide, boolean branchHead, boolean managesTarget,
+                                    java.util.UUID appUserId, BranchPath target) {
+        if (clanWide) {
             return;
         }
-        if (caller.role() == RoleCode.BRANCH_HEAD) {
-            if (caller.managesBranch(target)) {
+        if (branchHead) {
+            if (managesTarget) {
                 return;
             }
-            log.warn("Tu choi ghi ngoai pham vi: app_user {} nham chi {}",
-                    caller.appUserId(), target);
+            log.warn("Tu choi ghi ngoai pham vi: app_user {} nham chi {}", appUserId, target);
             throw new ForbiddenException(MembershipProblemCodes.BRANCH_SCOPE_VIOLATION,
                     "Tai khoan khong co quyen tren pham vi chi/nganh cua doi tuong nay");
         }
@@ -73,7 +97,16 @@ public class BranchScopeGuard {
 
     /** Bắt buộc vai có phạm vi toàn dòng họ — cấp/thu hồi vai trò, xem nhật ký, khôi phục bản ghi. */
     public void requireClanWide(MemberScope caller, String what) {
-        if (!caller.isClanWide()) {
+        requireClanWide(caller.isClanWide(), what);
+    }
+
+    /** Bản nhận {@link MemberScopeView} — xem ghi chú ở {@link #requireWriteAccess(MemberScopeView, BranchPath)}. */
+    public void requireClanWide(MemberScopeView caller, String what) {
+        requireClanWide(caller.clanWide(), what);
+    }
+
+    private void requireClanWide(boolean clanWide, String what) {
+        if (!clanWide) {
             throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
                     "Chi Hoi dong Toc bieu hoac Quan tri he thong duoc " + what);
         }
@@ -95,7 +128,16 @@ public class BranchScopeGuard {
 
     /** Bắt buộc người gọi đã có tài khoản trong hệ thống (không phải khách, không phải token lạ). */
     public void requireProvisionedAccount(MemberScope caller) {
-        if (caller.isGuest() || caller.appUserId() == null) {
+        requireProvisionedAccount(caller.isGuest(), caller.appUserId());
+    }
+
+    /** Bản nhận {@link MemberScopeView} — xem ghi chú ở {@link #requireWriteAccess(MemberScopeView, BranchPath)}. */
+    public void requireProvisionedAccount(MemberScopeView caller) {
+        requireProvisionedAccount(caller.isGuest(), caller.appUserId());
+    }
+
+    private void requireProvisionedAccount(boolean guest, java.util.UUID appUserId) {
+        if (guest || appUserId == null) {
             throw new ForbiddenException(MembershipProblemCodes.ACCOUNT_NOT_PROVISIONED,
                     "Tai khoan chua duoc khoi tao trong he thong, hay dang nhap lai");
         }
@@ -108,5 +150,57 @@ public class BranchScopeGuard {
             return;
         }
         requireWriteAccess(caller, target);
+    }
+
+    // =========================================================================================
+    // Ba chồng hàm MemberScopeView còn thiếu (đợt `content`)
+    //
+    // Cùng lý do với hai chồng hàm ở trên: MemberScope thuộc membership.domain, ngoài
+    // @NamedInterface("application"), nên context khác không gọi được mà ModularityTests còn xanh.
+    // Thiếu ba hàm này thì `content` phải so chuỗi vai bằng tay để biết ai duyệt được — tức bản
+    // chép luật phân quyền thứ ba, sau ImportScopeGuard.
+    // =========================================================================================
+
+    /**
+     * Bắt buộc quyền <b>duyệt</b> trên dữ liệu thuộc chi {@code target} — bản nhận
+     * {@link MemberScopeView}.
+     *
+     * <p>Y hệt {@link #requireReviewAccess(MemberScope, BranchPath)}: kiểm vai trước (thông điệp
+     * "bạn không có quyền này"), rồi mới kiểm phạm vi (thông điệp "không phải ở chi đó"). Hai mã
+     * lỗi khác nhau vì hai tình huống dẫn tới hai hành động khác nhau của người dùng.</p>
+     */
+    public void requireReviewAccess(MemberScopeView caller, BranchPath target) {
+        if (!vaiCuaNguoiGoi(caller).canReview()) {
+            throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
+                    "Chi Truong chi, Hoi dong Toc bieu hoac Quan tri he thong duoc duyet noi dung nay");
+        }
+        requireWriteAccess(caller, target);
+    }
+
+    /**
+     * {@code true} nếu người gọi duyệt được dữ liệu thuộc chi {@code target} — bản trả boolean,
+     * cho những lối <i>lọc</i> danh sách thay vì <i>chặn</i> một thao tác.
+     *
+     * <p>Phải dùng nó thay vì tự so vai: một hàng đợi lọc theo luật khác với luật của
+     * {@link #requireReviewAccess} sẽ hiện ra bản ghi mà bấm vào thì {@code 403}.</p>
+     */
+    public boolean canReview(MemberScopeView caller, BranchPath target) {
+        if (!vaiCuaNguoiGoi(caller).canReview()) {
+            return false;
+        }
+        return caller.clanWide()
+                || (RoleCode.BRANCH_HEAD.name().equals(caller.role()) && caller.managesBranch(target));
+    }
+
+    /**
+     * Vai của người gọi, <b>không bao giờ {@code null}</b>.
+     *
+     * <p>{@code RoleCode.parse} cố ý trả {@code null} cho chuỗi lạ (vai lạ trong token bị bỏ qua
+     * chứ không làm hỏng request). Ở một lớp kiểm quyền thì {@code null} ấy là một NPE chờ sẵn,
+     * nên nó được quy về {@link RoleCode#GUEST} — vai hẹp nhất. Fail-closed.</p>
+     */
+    private static RoleCode vaiCuaNguoiGoi(MemberScopeView caller) {
+        RoleCode role = caller == null ? null : RoleCode.parse(caller.role());
+        return role == null ? RoleCode.GUEST : role;
     }
 }

@@ -20,6 +20,7 @@ import vn.giapha.membership.domain.ClanTitle;
 import vn.giapha.membership.domain.Invitation;
 import vn.giapha.membership.domain.InvitationCode;
 import vn.giapha.membership.domain.InvitationUsability;
+import vn.giapha.membership.domain.LoginIdentifier;
 import vn.giapha.membership.domain.Invitee;
 import vn.giapha.membership.domain.MemberScope;
 import vn.giapha.membership.domain.port.AppUserRepository;
@@ -108,7 +109,9 @@ public class InvitationService {
     private final MemberScopeService scopes;
     private final BranchScopeGuard guard;
     private final InvitationLinker linker;
+    private final IdentityEnroller enroller;
     private final IdentityProviderPort identityProvider;
+    private final IdentityReclaimPolicy reclaim;
     private final InviteThrottle throttle;
     private final AuditTrailService audit;
     private final int defaultTtlDays;
@@ -117,7 +120,9 @@ public class InvitationService {
     public InvitationService(InvitationRepository invitations, AppUserRepository appUsers,
                              InviteeLookupPort invitees, BranchLookupPort branches,
                              MemberScopeService scopes, BranchScopeGuard guard,
-                             InvitationLinker linker, IdentityProviderPort identityProvider,
+                             InvitationLinker linker, IdentityEnroller enroller,
+                             IdentityProviderPort identityProvider,
+                             IdentityReclaimPolicy reclaim,
                              InviteThrottle throttle, AuditTrailService audit,
                              @Value("${giapha.membership.invitation.ttl-days:7}") int defaultTtlDays) {
         this.invitations = invitations;
@@ -127,7 +132,9 @@ public class InvitationService {
         this.scopes = scopes;
         this.guard = guard;
         this.linker = linker;
+        this.enroller = enroller;
         this.identityProvider = identityProvider;
+        this.reclaim = reclaim;
         this.throttle = throttle;
         this.audit = audit;
         this.defaultTtlDays = defaultTtlDays;
@@ -307,37 +314,77 @@ public class InvitationService {
      * nhập. Đây cũng là lối của người đã vào bằng Google/Zalo nhưng chưa được ghép vào cây.</p>
      */
     private AcceptedInvitation acceptWithToken(Invitation invitation, CurrentUser caller) {
+        // verifiedCaller = TRUE: danh tinh do Keycloak chung nhan trong token, khong phai tu khai.
         AppUser linked = linker.link(invitation.id(), caller.keycloakSub(), caller.email(),
-                caller.username());
+                caller.username(), true);
         return AcceptedInvitation.withoutLink(linked);
     }
 
-    /** Người chưa có tài khoản: lập tài khoản Keycloak rồi mới ghi CSDL. Xem javadoc {@link #accept}. */
+    /**
+     * Người chưa có tài khoản: lập tài khoản Keycloak rồi mới ghi CSDL. Xem javadoc
+     * {@link #accept}.
+     *
+     * <h2>ĐỊNH DANH ĐÃ CÓ CHỦ THÌ DỪNG LẠI — cùng luật với lối mã dòng họ</h2>
+     * Nhánh này <b>không có token</b>: định danh là chuỗi người gọi tự gõ vào ô "email hoặc số điện
+     * thoại", và chuỗi ấy <b>không chứng minh</b> họ sở hữu định danh đó. Nếu
+     * {@code findOrCreate} <i>tìm thấy</i> thay vì tạo, thì mọi bước sau là thao tác trên tài sản
+     * của người khác: một liên kết đặt mật khẩu là một <b>cách đăng nhập mới</b> vào danh tính ấy,
+     * và {@code linker.link} thì chạm vào dòng {@code app_user} của họ.
+     *
+     * <p><b>Quyết định cũ và vì sao nó bị lật.</b> Bản trước chỉ chặn khi
+     * {@code account.hasPassword()}, với lập luận: người được mời đã được Trưởng chi chọn đích
+     * danh, mã là bí mật một lần gửi riêng, nên một cụ từng bấm "Đăng nhập bằng Google" rồi quên
+     * vẫn phải vào được. Lập luận ấy hỏng ở chỗ {@code hasPassword()} trả lời sai câu hỏi: một tài
+     * khoản dựng qua Google/Zalo <b>không có</b> credential mật khẩu, nên nó rơi đúng vào nhánh
+     * "chưa có mật khẩu" — và người cầm mã mời chọn được <i>ai</i> bị chiếm, chỉ bằng cách gõ địa
+     * chỉ thư của người đó. Chủ dự án đã lật quyết định này; xem
+     * {@code InvitationAccountProvisioningTest.taiKhoanChuaCoMatKhauNayBiTuChoi}, nơi bài kiểm cũ
+     * được giữ lại dưới dạng lời kể.
+     *
+     * <p><b>Cái giá, và vì sao nó nằm trong câu lỗi chứ không trong tài liệu.</b> Người bị thiệt là
+     * một cụ từng đăng nhập Google một lần và <b>không nhớ</b> điều đó: với cụ ấy, hệ thống vừa từ
+     * chối một tờ phiếu mời thật. Một câu "không nhận được lời mời" trống rỗng sẽ đẩy cụ đi gọi
+     * Trưởng chi mà không ai đoán ra nguyên nhân. Vì vậy thông điệp <b>gợi</b> đúng nguyên nhân hay
+     * gặp ("có thể đã dùng để đăng nhập trước đây, kể cả bằng Google") mà <b>không xác nhận</b>
+     * định danh ấy có thật — giữ nguyên kỷ luật chống dò tài khoản — và nói ra cả hai lối đi tiếp:
+     * đăng nhập rồi nhập lại mã, hoặc báo Trưởng chi nếu không đăng nhập được.</p>
+     *
+     * <p><b>Lần bấm lại sau một lần hỏng vẫn đi tiếp được.</b> Tài khoản còn lại sau một lượt ghi
+     * hỏng là tài khoản <i>không ai sở hữu</i>, và {@link IdentityReclaimPolicy} nhận ra nó qua hai
+     * dấu hiệu đồng thời — còn treo {@code UPDATE_PASSWORD}, và chưa có dòng {@code app_user} nào
+     * cho {@code sub} ấy — trong một cửa sổ thời gian có hạn. Ngoài cửa sổ đó thì lối gỡ là Hội
+     * đồng xoá tài khoản mồ côi ở realm; dòng {@code WARN} dưới đây mang đủ {@code subject}.</p>
+     */
     private AcceptedInvitation acceptAsNewAccount(Invitation invitation,
                                                   AcceptInvitationCommand command) {
-        String email = command.email() == null ? null : command.email().trim();
-        if (email == null || email.isBlank()) {
-            throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Phai cho biet dia chi thu dien tu de lap tai khoan");
-        }
-        if (!identityProvider.isConfigured()) {
-            // Noi thang la chua cau hinh, khong gia vo la loi cua nguoi dung: ho khong sua duoc.
-            throw new IdentityProviderException(
-                    "He thong chua duoc cau hinh de lap tai khoan moi");
+        // EMAIL HOAC SO DIEN THOAI. Luong nay phuc vu CAC CU LON TUOI — Truong chi lam ho tu
+        // dau toi cuoi — nen no la luong can nhan so dien thoai NHAT, khong phai it nhat.
+        LoginIdentifier login = enroller.readIdentifier(command.email());
+
+        // (2) TIM TRUOC, TAO SAU. Nguoi ay co the da co tai khoan tu truoc, hoac vua bam hai lan,
+        // hoac dang thu lai sau mot lan ghep hong.
+        IdentityAccount account = enroller.findOrCreate(login, command.displayName());
+
+        // (2b) DINH DANH DA CO CHU THI DUNG LAI. Xem javadoc phuong thuc.
+        if (!reclaim.mayClaim(account)) {
+            throttle.recordFailure(command.clientId());
+            // KHONG phai mot su co — xem ghi chu cung cho o ClanInviteService#register.
+            log.warn("Tu choi nhan loi moi {}: dinh danh kieu {} thuoc ve tai khoan Keycloak {} da"
+                    + " co chu, ma nguoi goi khong trinh token", invitation.id(), login.kind(),
+                    account.subject());
+            throw new DomainException(MembershipProblemCodes.IDENTITY_ALREADY_REGISTERED,
+                    "Dia chi nay co the da duoc dung de dang nhap truoc day, ke ca bang Google."
+                            + " Hay dang nhap truoc roi nhap lai ma moi. Neu ban khong dang nhap"
+                            + " duoc, hay dua ma moi nay cho Truong chi de duoc ho tro.");
         }
 
-        // (2) TIM TRUOC, TAO SAU. Nguoi ay co the da co tai khoan tu mot email cu, hoac vua bam
-        // hai lan, hoac dang thu lai sau mot lan ghep hong.
-        IdentityAccount account = identityProvider.findByEmail(email)
-                .orElseGet(() -> identityProvider.createAccount(
-                        new NewIdentityAccount(email, email, command.displayName())));
-
-        // (3) Duc lien ket. Rong khi tai khoan DA co mat khau — xem AcceptedInvitation.
+        // (3) Duc lien ket — chi cho tai khoan VUA DUOC LAP o buoc tren.
         Optional<SetPasswordLink> link = identityProvider.issueSetPasswordLink(account);
 
         // (4) Buoc duy nhat khong dao nguoc duoc.
-        AppUser linked = linker.link(invitation.id(), account.subject(), email,
-                command.displayName() == null ? email : command.displayName());
+        // verifiedCaller = FALSE: danh tinh o nhanh nay do nguoi goi TU KHAI — xem InvitationLinker.
+        AppUser linked = linker.link(invitation.id(), account.subject(), login.emailOrNull(),
+                command.displayName() == null ? login.value() : command.displayName(), false);
 
         log.info("Loi moi {} duoc nhan boi tai khoan Keycloak {} (vua tao: {}), phat lien ket dat"
                         + " mat khau: {}", invitation.id(), account.subject(),
@@ -404,7 +451,11 @@ public class InvitationService {
         Instant now = Instant.now();
         return invitations.inScope(caller.managedBranches(), caller.isClanWide(), limit, offset)
                 .stream()
-                .map(invitation -> InvitationView.from(invitation, now))
+                // Mot luot tra cho moi dong. Danh sach nay bi chan o `limit` (toi da 200) va chi
+                // Truong chi mo, nen day khong phai duong nong; con de giao dien tu goi
+                // GET /persons/{id} cho tung dong thi bai toan N+1 ay chay tren mang cong cong.
+                .map(invitation -> InvitationView.from(invitation, now,
+                        invitees.byId(invitation.personId()).orElse(null)))
                 .toList();
     }
 

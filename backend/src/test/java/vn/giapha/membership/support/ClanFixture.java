@@ -10,6 +10,7 @@ import vn.giapha.audit.support.InMemoryAuditLog;
 import vn.giapha.audit.support.SimpleObjectProvider;
 import vn.giapha.membership.application.AppUserProvisioningService;
 import vn.giapha.membership.application.BranchScopeGuard;
+import vn.giapha.membership.application.IdentityEnroller;
 import vn.giapha.membership.application.InvitationLinker;
 import vn.giapha.membership.application.InvitationService;
 import vn.giapha.membership.application.InviteThrottle;
@@ -149,6 +150,23 @@ public final class ClanFixture {
     public final FakeIdentityProvider identityProvider = new FakeIdentityProvider();
 
     /**
+     * Đồng hồ dùng chung cho realm giả và cho luật đòi lại tài khoản mồ côi.
+     *
+     * <p>Một đồng hồ, không hai: hai đồng hồ lệch nhau thì "tài khoản tạo lúc nào" và "bây giờ là
+     * lúc nào" nói về hai trục thời gian khác nhau, và cửa sổ mồ côi sẽ đúng hay sai tuỳ lúc chạy.</p>
+     */
+    public final MutableClock clock = new MutableClock();
+
+    /** Cửa sổ đòi lại tài khoản mồ côi — bằng hạn liên kết đặt mật khẩu ở production. */
+    public java.time.Duration orphanWindow = java.time.Duration.ofMinutes(30);
+
+    private vn.giapha.membership.application.IdentityReclaimPolicy reclaimPolicy() {
+        identityProvider.useClock(clock);
+        return new vn.giapha.membership.application.IdentityReclaimPolicy(appUsers, orphanWindow,
+                clock);
+    }
+
+    /**
      * {@code InvitationService} thật, nối vào kho dữ liệu giả.
      *
      * <p>{@code MemberScopeService}, {@code BranchScopeGuard}, {@code AppUserProvisioningService}
@@ -164,11 +182,46 @@ public final class ClanFixture {
                 new InvitationLinker(invitations, appUsers, provisioning, auditTrail);
         InviteThrottle throttle = new InviteThrottle(attempts, maxFailures, 60L);
         return new InvitationService(invitations, appUsers, invitees, branches, scopes, guard,
-                linker, identityProvider, throttle, auditTrail, 7);
+                linker, new IdentityEnroller(identityProvider), identityProvider, reclaimPolicy(),
+                throttle, auditTrail, 7);
     }
 
     /** Ngưỡng rộng rãi — dùng cho mọi ca không nhắm vào giới hạn tần suất. */
     public InvitationService invitationService() {
         return invitationService(1000);
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Luồng mã mời dòng họ
+    // -------------------------------------------------------------------------------------
+
+    public final InMemoryClanInviteRepositories clanInvites = new InMemoryClanInviteRepositories();
+
+    /**
+     * {@code ClanInviteService} thật, nối vào kho dữ liệu giả và realm Keycloak giả.
+     *
+     * <p>Dùng chung {@link #identityProvider} với luồng mời cá nhân — đúng như production, nơi cả
+     * hai luồng nói chuyện với một realm. Nhờ vậy dựng được ca "người này đã có tài khoản từ lối
+     * kia", chính là ca mà lỗ hổng chiếm tài khoản đi qua.</p>
+     *
+     * @param maxFailures ngưỡng giới hạn tần suất; đặt thấp để ca "dò" chạy nhanh
+     */
+    public vn.giapha.membership.application.ClanInviteService clanInviteService(int maxFailures) {
+        AppUserProvisioningService provisioning =
+                new AppUserProvisioningService(appUsers, guard, scopes, auditTrail);
+        vn.giapha.membership.application.ClanInviteRedeemer redeemer =
+                new vn.giapha.membership.application.ClanInviteRedeemer(
+                        clanInvites.codeRepository, clanInvites.redemptionRepository, provisioning,
+                        auditTrail);
+        InviteThrottle throttle = new InviteThrottle(attempts, maxFailures, 60L);
+        return new vn.giapha.membership.application.ClanInviteService(clanInvites.codeRepository,
+                clanInvites.redemptionRepository, branches, invitees, scopes, guard, redeemer,
+                new IdentityEnroller(identityProvider), identityProvider, reclaimPolicy(), throttle,
+                auditTrail, 30);
+    }
+
+    /** Ngưỡng rộng rãi — dùng cho mọi ca không nhắm vào giới hạn tần suất. */
+    public vn.giapha.membership.application.ClanInviteService clanInviteService() {
+        return clanInviteService(1000);
     }
 }

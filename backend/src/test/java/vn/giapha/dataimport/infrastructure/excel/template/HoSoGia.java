@@ -98,7 +98,10 @@ final class HoSoGia {
     }
 
     DisclosedPerson xong() {
+        // "Vinh danh hien duoc" (V17) khong lien quan toi mau Excel — mau khong co cot vinh danh
+        // nao. Gan cung FALSE thay vi them mot the xay dung: mot cong tac khong ai bat trong bo
+        // test nay chi la mot cach de no lech voi tep that ma khong ai thay.
         return new DisclosedPerson(null, thuongGoi, huy, thuy, hanNom, gender, doi, conSong,
-                namSinh, ngayGio, nguyenQuan, duLieuNgoaiNhomHienDuoc);
+                namSinh, ngayGio, nguyenQuan, duLieuNgoaiNhomHienDuoc, false);
     }
 }

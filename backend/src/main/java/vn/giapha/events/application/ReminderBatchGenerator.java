@@ -2,7 +2,6 @@ package vn.giapha.events.application;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +19,6 @@ import vn.giapha.events.domain.ReminderJob;
 import vn.giapha.events.domain.ReminderPlan;
 import vn.giapha.events.domain.port.EventSubjectPort;
 import vn.giapha.events.domain.port.ReminderJobRepository;
-import vn.giapha.shared.vo.LunarDate;
 
 /**
  * Sinh lịch nhắc cho <b>một lô</b> sự kiện — đây là ranh giới {@code @Transactional} của việc sinh
@@ -75,20 +73,11 @@ public class ReminderBatchGenerator {
     private int generateForEvent(Event event, EventSubject subject, ReminderPlan plan,
                                  List<Integer> lunarYears, List<Integer> solarYears,
                                  LocalDate today, Instant now) {
-        if (!event.generatesRecurringReminders()) {
+        if (!event.generatesReminders()) {
             return 0;
         }
-        List<EventOccurrence> candidates = new ArrayList<>(lunarYears.size());
-        if (event.isLunarBased()) {
-            LunarDate effective = EffectiveLunarDate.of(event, subject);
-            for (int lunarYear : lunarYears) {
-                occurrences.resolveLunar(event, effective, lunarYear).ifPresent(candidates::add);
-            }
-        } else {
-            for (int solarYear : solarYears) {
-                occurrences.resolveSolar(event, solarYear).ifPresent(candidates::add);
-            }
-        }
+        List<EventOccurrence> candidates = occurrences.resolveAll(event,
+                EffectiveLunarDate.of(event, subject), lunarYears, solarYears);
 
         int created = 0;
         Set<Integer> handledOccurrenceYears = new HashSet<>();

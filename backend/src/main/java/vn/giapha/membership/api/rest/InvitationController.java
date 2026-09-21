@@ -148,7 +148,7 @@ public class InvitationController {
     public AcceptedInvitationDto accept(@Valid @RequestBody AcceptInvitationRequest body,
                                         HttpServletRequest request) {
         return AcceptedInvitationDto.from(invitations.accept(new AcceptInvitationCommand(
-                body.code(), body.email(), body.displayName(), clientIdOf(request))));
+                body.code(), body.dinhDanhDangNhap(), body.displayName(), clientIdOf(request))));
     }
 
     /**

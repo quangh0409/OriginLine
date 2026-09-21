@@ -45,6 +45,21 @@ public interface IdentityProviderPort {
     Optional<IdentityAccount> findByEmail(String email);
 
     /**
+     * Tìm tài khoản theo <b>tên đăng nhập</b> — lối của người lập tài khoản bằng số điện thoại.
+     *
+     * <h2>Vì sao cần cả hai phép tra</h2>
+     * Realm cho đăng nhập bằng email <i>hoặc</i> số điện thoại, nên một tài khoản dùng số máy
+     * <b>không có</b> thuộc tính {@code email} để mà tra — {@link #findByEmail} sẽ trả rỗng, và
+     * lớp trên sẽ tạo một tài khoản thứ hai cho cùng một người. Rồi một trong hai được Trưởng chi
+     * ghép vào phả còn cái kia thì không, và người dùng đăng nhập được mà không thấy gì.
+     *
+     * <p>Với email thì {@code username == email} ở mọi tài khoản do hệ thống này lập, nên hai phép
+     * tra trùng kết quả — nhưng {@link #findByEmail} vẫn giữ, vì realm có thể chứa tài khoản do
+     * người khác tạo với {@code username} khác {@code email}.</p>
+     */
+    Optional<IdentityAccount> findByUsername(String username);
+
+    /**
      * Tạo tài khoản <b>không có mật khẩu</b>, kèm yêu cầu bắt buộc đặt mật khẩu.
      *
      * @throws IdentityProviderException khi nhà cung cấp danh tính từ chối hoặc không với tới được

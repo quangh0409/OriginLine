@@ -216,12 +216,18 @@ public class DirectoryService {
      * Duyệt <b>toàn bộ</b> {@code PrivacyFieldGroup.values()}, không phải một danh sách chép tay.
      *
      * <p>Nhờ vậy một nhóm trường được thêm về sau tự động tính vào điều kiện lọt danh bạ mà không
-     * cần ai nhớ sửa file này — và nếu nó <i>không</i> nên tính thì trình biên dịch cũng không giúp
-     * được, nên hãy đọc javadoc của {@code PrivacyFieldGroup} trước khi thêm nhóm mới.</p>
+     * cần ai nhớ sửa file này.</p>
+     *
+     * <p><b>Trừ nhóm tự khai là mình không tính</b> ({@code grantsDirectoryListing() == false}).
+     * {@code PrivacyFieldGroup.HONOUR} là nhóm đầu tiên như vậy: danh bạ là chỗ tra người liên hệ
+     * được, còn vinh danh thì hiện ở trang chủ và trong hồ sơ. Một cụ mở "cho cả họ xem bằng tiến
+     * sĩ của tôi" mà vì thế lọt vào danh bạ sẽ xuất hiện ở đó như một <i>dòng trống</i> — mọi
+     * trường danh bạ của họ vẫn bị giấu — tức vừa lộ vừa vô dụng. Cờ nằm ở enum để nhóm thứ bảy
+     * buộc người thêm nó phải trả lời câu hỏi này ngay tại chỗ khai báo, chứ không phải ở đây.</p>
      */
     private boolean daMoItNhatMotNhom(PersonVisibility vis) {
         for (PrivacyFieldGroup group : PrivacyFieldGroup.values()) {
-            if (vis.allows(group)) {
+            if (group.grantsDirectoryListing() && vis.allows(group)) {
                 return true;
             }
         }

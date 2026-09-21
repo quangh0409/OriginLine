@@ -85,7 +85,11 @@ public enum PrivacyLevel {
         };
         PrivacyConsent consent = PrivacyConsent.allPrivate();
         for (PrivacyFieldGroup group : PrivacyFieldGroup.values()) {
-            consent = consent.with(group, scope);
+            // Nhom THEM VE SAU khong duoc suy ra tu muc cu: muc cu chua bao gio noi gi ve no,
+            // nen gan cho no BRANCH/CLAN la SUY DIEN MOT SU DONG Y CHUA TUNG DUOC DUA RA.
+            // Bat dau tu HONOUR (V17). Day cung la nhanh ma ham SQL
+            // privacy_consent_from_legacy() phai khop tung chu — PrivacyConsentMigrationIT canh.
+            consent = consent.with(group, group.derivableFromLegacyLevel() ? scope : ShareScope.PRIVATE);
         }
         return consent;
     }

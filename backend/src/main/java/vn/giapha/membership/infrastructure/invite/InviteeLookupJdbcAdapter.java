@@ -89,6 +89,20 @@ public class InviteeLookupJdbcAdapter implements InviteeLookupPort {
              LIMIT 1
             """;
 
+    /**
+     * Mẫu số của bộ đếm mã mời dòng họ. Xem javadoc {@code InviteeLookupPort#countLivingPersons}.
+     *
+     * <p>Đếm cả người chưa gắn chi: họ vẫn là người của dòng họ, và bỏ họ ra sẽ làm mẫu số nhỏ hơn
+     * sự thật — tức làm bộ đếm trông <b>đáng lo hơn</b> thực tế, và một cảnh báo giả lặp lại là
+     * cách nhanh nhất để Hội đồng ngừng nhìn con số ấy.</p>
+     */
+    private static final String SQL_COUNT_LIVING = """
+            SELECT count(*)
+              FROM person p
+             WHERE p.is_alive = TRUE
+               AND p.is_deleted = FALSE
+            """;
+
     private final NamedParameterJdbcTemplate jdbc;
 
     public InviteeLookupJdbcAdapter(NamedParameterJdbcTemplate jdbc) {
@@ -118,6 +132,14 @@ public class InviteeLookupJdbcAdapter implements InviteeLookupPort {
                 (String) row.get("clan_name"),
                 Boolean.TRUE.equals(row.get("is_alive")),
                 Boolean.TRUE.equals(row.get("is_deleted"))));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int countLivingPersons() {
+        Integer count = jdbc.queryForObject(SQL_COUNT_LIVING, new MapSqlParameterSource(),
+                Integer.class);
+        return count == null ? 0 : count;
     }
 
     @Override

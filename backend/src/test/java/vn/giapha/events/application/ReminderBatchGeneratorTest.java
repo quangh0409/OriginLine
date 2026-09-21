@@ -119,13 +119,27 @@ class ReminderBatchGeneratorTest {
         assertThat(jobs.all()).isEmpty();
     }
 
+    /**
+     * <b>Đổi hành vi có chủ ý.</b> Trước lối ghi thủ công, sự kiện một lần không sinh lịch nhắc nào
+     * — điều kiện lọc {@code is_recurring = TRUE} nằm ngay trong câu truy vấn nạp lô. Khi bảng
+     * {@code event} chỉ chứa giỗ thì không ai thấy; ngay khi Trưởng chi tạo được một buổi họp họ
+     * cho Chủ nhật tuần này, đó lại là <b>sự kiện cần nhắc nhất trong cả bảng</b> và là sự kiện duy
+     * nhất im lặng.
+     *
+     * <p>Nay sự kiện một lần cũng được nhắc, nhưng <b>đúng một lần</b>: việc phân biệt "lặp hằng
+     * năm hay xảy ra một lần" đã chuyển vào {@code OccurrenceResolver.resolveAll}.</p>
+     */
     @Test
-    @DisplayName("Su kien mot lan (khong lap) khong sinh lich nhac hang nam")
-    void suKienKhongLapKhongSinh() {
+    @DisplayName("Su kien mot lan VAN sinh lich nhac, nhung dung mot lan xay ra")
+    void suKienMotLanSinhDungMotLan() {
         Event motLan = EventFixtures.solar(UUID.randomUUID(), LocalDate.of(2026, 6, 1), false);
 
-        assertThat(generator.generate(List.of(motLan), PLAN, List.of(2026), List.of(2026),
-                HOM_NAY, BAY_GIO)).isZero();
+        int created = generator.generate(List.of(motLan), PLAN, List.of(2026, 2027),
+                List.of(2026, 2027), HOM_NAY, BAY_GIO);
+
+        assertThat(created).isEqualTo(PLAN.offsetDays().size());
+        assertThat(jobs.all()).extracting(job -> job.dueSolarDate())
+                .containsOnly(LocalDate.of(2026, 6, 1));
     }
 
     @Test
@@ -210,6 +224,11 @@ class ReminderBatchGeneratorTest {
         @Override
         public void markStatus(UUID jobId, vn.giapha.events.domain.ReminderStatus status, String error) {
             delegate.markStatus(jobId, status, error);
+        }
+
+        @Override
+        public int deleteUnsentByEvent(UUID eventId) {
+            return delegate.deleteUnsentByEvent(eventId);
         }
     }
 }

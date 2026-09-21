@@ -13,6 +13,7 @@ import vn.giapha.genealogy.application.command.AddPersonCommand;
 import vn.giapha.genealogy.application.command.LinkRelationshipCommand;
 import vn.giapha.genealogy.application.command.RelationshipLinkCommand;
 import vn.giapha.genealogy.application.command.UpdatePersonCommand;
+import vn.giapha.genealogy.domain.ContactInfo;
 import vn.giapha.genealogy.domain.DatePrecision;
 import vn.giapha.genealogy.domain.FieldChange;
 import vn.giapha.genealogy.domain.HeirKind;
@@ -235,6 +236,58 @@ public class GenealogyBulkWriter {
         audit.record("Person", personId.toString(), AuditPort.Action.UPDATE, truoc,
                 person.auditSnapshot(), List.of("generation"),
                 "Doi thu lay tu cot Doi cua tep nhap lieu vi khong co lien ket nao de suy ra");
+        return true;
+    }
+
+    /**
+     * Đặt <b>số điện thoại</b> cho một người <b>chỉ khi</b> ô liên hệ của người ấy đang trống.
+     *
+     * <h2>Vì sao lối này tồn tại</h2>
+     * Một người tự nhận mình trên phả đồ khai số điện thoại của <i>chính mình</i>, và Trưởng chi
+     * gọi số ấy để kiểm chứng trước khi bấm Duyệt. Khi đơn được duyệt, số ấy đã qua một lần xác
+     * minh của người có thẩm quyền — nó là dữ liệu liên hệ <b>tốt nhất</b> hệ thống có về người
+     * này, và là thứ khiến lời nhắc giỗ gửi tới được. Để nó nằm mãi trên lá đơn thì mỗi lần cần
+     * liên hệ lại phải đi lục hàng chờ đã đóng.
+     *
+     * <h2>Vì sao "chỉ khi còn trống", giống hệt {@link #datDoiNeuTrong}</h2>
+     * Một số đã có trong hồ sơ là số Trưởng chi <b>đã</b> đặt, có thể sau khi đối chiếu sổ giấy
+     * hoặc gọi thử. Ghi đè lặng lẽ bằng số trên một lá đơn tự khai là cách mất một dữ liệu đã kiểm
+     * mà không ai thấy — và triệu chứng sẽ xuất hiện nhiều tháng sau, khi một lời nhắc giỗ gửi vào
+     * một số không còn dùng. Muốn đổi số đã có thì đi đường sửa hồ sơ, nơi có ETag, có người sửa và
+     * có nhật ký nói rõ giá trị nào thay giá trị nào.
+     *
+     * <h2>KHÔNG đụng vào mức chia sẻ</h2>
+     * Nhóm trường {@code contact} của mô hình V8 mặc định <b>kín</b>. Ghi số vào hồ sơ
+     * <b>không</b> mở nó ra: chủ hồ sơ tự mở nếu muốn. Đặt một mức chia sẻ ở đây là tự quyết thay
+     * người ta về đúng loại dữ liệu mà Nghị định 13/2023 bắt phải có đồng ý.
+     *
+     * <p>Số không bao giờ vào {@code audit_log}: {@link Person#auditSnapshot()} cố ý không mang
+     * {@code contact}, nên nhật ký chỉ ghi <b>rằng</b> trường liên hệ đã đổi, không ghi giá trị.</p>
+     *
+     * @return {@code true} nếu thực sự có ghi
+     */
+    public boolean datSoDienThoaiNeuTrong(UUID personId, String phone, String lyDo) {
+        String so = phone == null ? null : phone.trim();
+        if (so == null || so.isEmpty()) {
+            return false;
+        }
+        Person person = load(personId);
+        ContactInfo hienCo = person.contact();
+        if (hienCo != null && hienCo.phone() != null) {
+            log.info("Khong ghi so dien thoai vao person {}: ho so da co so, giu nguyen", personId);
+            return false;
+        }
+        ContactInfo moi = hienCo == null
+                ? new ContactInfo(so, null, null)
+                : new ContactInfo(so, hienCo.email(), hienCo.zaloId());
+        updatePerson.update(new UpdatePersonCommand(personId, null,
+                FieldChange.keep(), FieldChange.keep(), FieldChange.keep(), FieldChange.keep(),
+                FieldChange.keep(), FieldChange.keep(), FieldChange.keep(), FieldChange.keep(),
+                FieldChange.keep(), FieldChange.keep(), FieldChange.keep(), FieldChange.keep(),
+                FieldChange.keep(),
+                FieldChange.set(moi),
+                FieldChange.keep(), FieldChange.keep(),
+                true, lyDo));
         return true;
     }
 

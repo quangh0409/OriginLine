@@ -142,23 +142,24 @@ public class EventQueryService {
      * <p>Duyệt các năm trong tầm nhìn thay vì chỉ năm hiện tại: giỗ tháng Chạp rơi sang tháng 1–2
      * dương lịch của năm sau, và nếu chỉ xét năm nay thì nó biến mất khỏi danh sách "sắp tới" đúng
      * vào lúc người ta cần nhìn thấy nó nhất.</p>
+     *
+     * <p>Việc chọn năm nào đi qua {@link OccurrenceResolver#resolveAll} chứ không làm tại chỗ: đó
+     * là nơi duy nhất biết "lặp hằng năm hay xảy ra một lần", và trước khi gom về đó thì màn danh
+     * sách hiện một lễ khánh thành lặp lại mỗi năm.</p>
      */
     private Optional<EventOccurrence> nextOccurrence(Event event, EventSubject subject, LocalDate today,
                                                      EventQuery.Range range) {
-        List<EventOccurrence> found = new ArrayList<>(properties.getHorizonYears() + 1);
-        if (event.isLunarBased()) {
-            Integer currentLunarYear = occurrences.lunarYearOf(today);
-            int firstLunarYear = currentLunarYear == null ? today.getYear() : currentLunarYear;
-            // Lùi một năm âm: khoảng lọc có thể bắt đầu ở quá khứ (tham số `from`).
-            for (int i = -1; i <= properties.getHorizonYears(); i++) {
-                occurrences.resolveLunar(event, EffectiveLunarDate.of(event, subject), firstLunarYear + i)
-                        .ifPresent(found::add);
-            }
-        } else {
-            for (int i = -1; i <= properties.getHorizonYears(); i++) {
-                occurrences.resolveSolar(event, today.getYear() + i).ifPresent(found::add);
-            }
+        Integer currentLunarYear = occurrences.lunarYearOf(today);
+        int firstLunarYear = currentLunarYear == null ? today.getYear() : currentLunarYear;
+        // Lùi một năm: khoảng lọc có thể bắt đầu ở quá khứ (tham số `from`).
+        List<Integer> lunarYears = new ArrayList<>(properties.getHorizonYears() + 2);
+        List<Integer> solarYears = new ArrayList<>(properties.getHorizonYears() + 2);
+        for (int i = -1; i <= properties.getHorizonYears(); i++) {
+            lunarYears.add(firstLunarYear + i);
+            solarYears.add(today.getYear() + i);
         }
+        List<EventOccurrence> found = occurrences.resolveAll(event,
+                EffectiveLunarDate.of(event, subject), lunarYears, solarYears);
         return found.stream()
                 .filter(occurrence -> range.contains(occurrence.dueSolarDate()))
                 .min(Comparator.comparing(EventOccurrence::dueSolarDate));
@@ -173,6 +174,10 @@ public class EventQueryService {
                 event.title(),
                 subject,
                 event.lunarDate(),
+                event.solarDate(),
+                event.isLunarBased(),
+                event.isRecurring(),
+                event.version(),
                 occurrence == null ? null : occurrence.dueSolarDate(),
                 occurrence == null || occurrence.resolvedLunar() == null
                         ? null : occurrence.resolvedLunar().year(),

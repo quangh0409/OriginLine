@@ -2,6 +2,7 @@ package vn.giapha.membership.domain.port;
 
 import java.util.Optional;
 import java.util.UUID;
+import vn.giapha.membership.domain.BranchSummary;
 import vn.giapha.shared.vo.BranchPath;
 
 /**
@@ -54,4 +55,35 @@ public interface BranchLookupPort {
      * giá trị <i>đúng nhất</i>, vì nó là phiên bản họ thật sự nhìn thấy.</p>
      */
     Optional<Long> versionOfPerson(UUID personId);
+
+    /**
+     * Tên gốc của cả dòng họ — nhãn cấp 1 của {@code ltree}.
+     *
+     * <p>Màn nhập mã mời dòng họ cần nó để nói "Bạn đang vào <b>Dòng họ Nguyễn</b>": người nhận mã
+     * qua một nhóm Zalo chuyển tiếp phải biết mã này của họ nào, nếu không thao tác đầu tiên của họ
+     * trong hệ thống là một cú đoán.</p>
+     *
+     * <p><b>Đây là dữ liệu công khai</b>, không phải ngoại lệ riêng tư: tên dòng họ đã nằm trong
+     * {@code BranchRef} mà cổng công khai trả cho Khách. Khác hẳn {@code InviteeLookupPort}, cổng
+     * này không tiết lộ tên một người đang sống nào.</p>
+     *
+     * <p>Rỗng khi chưa có chi gốc nào — dòng họ chưa được khởi tạo.</p>
+     */
+    Optional<String> clanName();
+
+    /**
+     * Chi ở mức đủ để trả lời <b>"đang chờ ai"</b> — khoá, tên, loại, path.
+     *
+     * <p>Tách khỏi {@link #pathOfBranch} vì hai lúc dùng khác nhau: phép kiểm phạm vi chỉ cần
+     * {@code ltree}, còn màn "đang chờ duyệt" cần một cái tên đọc được. Một UUID không trả lời được
+     * câu hỏi ấy, và người vừa gửi đơn thì rơi vào im lặng rồi gửi lại lần hai, lần ba.</p>
+     *
+     * <p><b>Cổng này cố ý không trả tên hay số điện thoại của Trưởng chi.</b> Chức danh suy từ
+     * {@link BranchSummary#clanTitle()} là một <i>vai</i>, không phải một con người — và một người
+     * chưa được duyệt, chưa ở trong phả mà đọc được danh bạ ban quản trị là một bề mặt không ai
+     * xin (design 06 §7).</p>
+     *
+     * <p>Rỗng khi chi không tồn tại hoặc đã bị xoá mềm.</p>
+     */
+    Optional<BranchSummary> summaryOfBranch(UUID branchId);
 }

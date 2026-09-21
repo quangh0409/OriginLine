@@ -13,6 +13,20 @@
  *   <li>{@code BranchScopeGuard} — kiểm quyền hai chiều (vai trò × phạm vi {@code ltree}).</li>
  * </ul>
  *
+ * <p>Và từ V16, hai <b>cổng SPI</b> mà một module khác hiện thực:</p>
+ * <ul>
+ *   <li>{@code ClaimScreeningPort} — dò trùng cho đơn "tôi chưa có trong phả";</li>
+ *   <li>{@code ClaimPersonWriterPort} — ghi nhân khẩu mới khi Trưởng chi duyệt đơn ấy.</li>
+ * </ul>
+ *
+ * <p><b>Hai cổng này nằm ở {@code application} chứ không ở {@code domain.port}, và đó là hệ quả
+ * của hình dạng đồ thị module chứ không phải một sơ suất.</b> {@code genealogy} <i>đã</i> phụ
+ * thuộc vào {@code membership}, nên chiều ngược lại tạo chu trình — đã kiểm chứng bằng
+ * {@code ModularityTests}, không phải suy đoán. Lối thoát duy nhất là đảo phụ thuộc, và bên hiện
+ * thực cần <i>nhìn thấy</i> cổng; chỉ gói này mang {@code @NamedInterface}. Đặt cổng ở
+ * {@code domain.port} rồi gắn nhãn cho nó là đưa siêu dữ liệu framework vào tầng domain, đúng thứ
+ * mà kỷ luật "domain là POJO thuần" của dự án cấm.</p>
+ *
  * <p>Vai trò trong Keycloak chỉ là <b>một nửa</b> phân quyền; nửa còn lại nằm ở
  * {@code branch_assignment} và không suy ra được từ token. Gom cả hai vào một chỗ để luật chỉ có
  * một bản, thay vì mỗi context tự tra bảng rồi tự diễn giải.</p>

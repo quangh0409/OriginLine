@@ -11,6 +11,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import vn.giapha.membership.application.ClanInviteNotUsableException;
 import vn.giapha.membership.application.InvitationNotUsableException;
 import vn.giapha.membership.application.MembershipProblemCodes;
 import vn.giapha.membership.application.TooManyAttemptsException;
@@ -66,6 +67,39 @@ public class MembershipExceptionHandler {
         ProblemDetail problem = ApiProblems.of(status,
                 status == HttpStatus.CONFLICT ? ProblemTypes.CONFLICT : ProblemTypes.BUSINESS_RULE,
                 "Mã mời không dùng được", ex.getMessage(), ex.getCode(), request);
+        return ResponseEntity.status(status).body(problem);
+    }
+
+    /**
+     * Mã <b>dòng họ</b> khớp một mã có thật nhưng đã hết hạn / bị thu hồi / hết lượt.
+     *
+     * <h2>Cùng mã trạng thái với mã cá nhân, và cố ý như vậy</h2>
+     * {@code 410 Gone} cho "hết hạn" và "thu hồi" — tài nguyên từng tồn tại và nay mất vĩnh viễn,
+     * thử lại không bao giờ đổi kết quả. {@code 409 Conflict} cho "hết lượt" — yêu cầu xung đột với
+     * <i>trạng thái hiện tại</i>, và trạng thái ấy đổi được: Hội đồng nâng trần là mã dùng lại
+     * được. Đó chính là khác biệt giữa hai mã trạng thái, và nó dẫn tới hai lời khuyên khác nhau
+     * cho người dùng.
+     *
+     * <p>Như mọi nơi khác, giao diện phân nhánh theo {@code code} chứ không theo mã HTTP. Hai ca
+     * đầu dùng lại {@code INVITATION_EXPIRED} / {@code INVITATION_REVOKED} của luồng cá nhân: người
+     * dùng chỉ cầm một dãy mười ký tự và không phân biệt được hai loại mã, nên hai tập mã lỗi song
+     * song cho cùng một câu trả lời chỉ bắt giao diện viết hai nhánh giống hệt nhau.</p>
+     */
+    @ExceptionHandler(ClanInviteNotUsableException.class)
+    public ResponseEntity<ProblemDetail> handleClanInviteNotUsable(
+            ClanInviteNotUsableException ex, HttpServletRequest request) {
+        HttpStatus status = switch (ex.usability()) {
+            case EXHAUSTED -> HttpStatus.CONFLICT;
+            case EXPIRED, REVOKED -> HttpStatus.GONE;
+            case USABLE -> HttpStatus.UNPROCESSABLE_ENTITY;
+        };
+        log.info("{} {} - ma moi dong ho khong dung duoc: {}", status.value(),
+                request.getRequestURI(), ex.usability());
+        // KHONG gan nhan ma hay bo dem vao than loi: mot ma hong theo dinh nghia la ma co the dang
+        // nam trong tay nguoi la, va "ma nay da dung 400 lan" la xac nhan giup ho rang ma dang lan.
+        ProblemDetail problem = ApiProblems.of(status,
+                status == HttpStatus.CONFLICT ? ProblemTypes.CONFLICT : ProblemTypes.BUSINESS_RULE,
+                "Mã mời dòng họ không dùng được", ex.getMessage(), ex.getCode(), request);
         return ResponseEntity.status(status).body(problem);
     }
 

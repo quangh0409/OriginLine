@@ -23,6 +23,8 @@ import vn.giapha.audit.application.AuditTrailService;
 import vn.giapha.membership.application.AcceptedInvitation;
 import vn.giapha.membership.application.BranchScopeGuard;
 import vn.giapha.membership.application.InvitationLinker;
+import vn.giapha.membership.application.IdentityEnroller;
+import vn.giapha.membership.application.IdentityReclaimPolicy;
 import vn.giapha.membership.application.InvitationService;
 import vn.giapha.membership.application.InviteThrottle;
 import vn.giapha.membership.application.IssuedInvitation;
@@ -119,9 +121,12 @@ class InvitationKeycloakLiveIT extends AbstractIntegrationTest {
         properties.setSetPasswordUrl("http://localhost:3000/vi/dat-mat-khau?token={token}");
 
         identityProvider = new KeycloakIdentityProviderAdapter(properties, objectMapper);
+        // Luat doi lai tai khoan mo coi doc THANG bang app_user that — dung y nhu production.
         invitations = new InvitationService(invitationRepository, appUserRepository, inviteeLookup,
-                branchLookup, memberScopes, branchScopeGuard, linker, identityProvider, throttle,
-                auditTrail, 7);
+                branchLookup, memberScopes, branchScopeGuard, linker,
+                new IdentityEnroller(identityProvider), identityProvider,
+                new IdentityReclaimPolicy(appUserRepository, java.time.Duration.ofMinutes(30)),
+                throttle, auditTrail, 7);
         setPasswords = new SetPasswordService(identityProvider);
 
         UUID goc = insertBranch("Dòng họ Nguyễn", "goc", null, "DONG_HO");

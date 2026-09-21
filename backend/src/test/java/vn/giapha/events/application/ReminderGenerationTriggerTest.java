@@ -39,7 +39,7 @@ class ReminderGenerationTriggerTest {
     private final ReminderProperties properties = new ReminderProperties();
 
     private ReminderGenerationTrigger trigger() {
-        return new ReminderGenerationTrigger(new GenerateRemindersService(events,
+        return new ReminderGenerationTrigger(new GenerateRemindersService(events, jobs,
                 new ReminderBatchGenerator(subjects, jobs, resolver), resolver, properties), properties);
     }
 
@@ -136,7 +136,7 @@ class ReminderGenerationTriggerTest {
         CountDownLatch dangQuet = new CountDownLatch(1);
         CountDownLatch choThaRa = new CountDownLatch(1);
         ReminderGenerationTrigger trigger = new ReminderGenerationTrigger(
-                new GenerateRemindersService(new BlockingEventRepository(dangQuet, choThaRa),
+                new GenerateRemindersService(new BlockingEventRepository(dangQuet, choThaRa), jobs,
                         new ReminderBatchGenerator(subjects, jobs, resolver), resolver, properties),
                 properties);
 
@@ -176,7 +176,7 @@ class ReminderGenerationTriggerTest {
         }
 
         @Override
-        public List<Event> findRecurringPage(int page, int size) {
+        public List<Event> findActivePage(int page, int size) {
             dangQuet.countDown();
             try {
                 choThaRa.await(5, TimeUnit.SECONDS);
@@ -189,6 +189,16 @@ class ReminderGenerationTriggerTest {
         @Override
         public List<Event> search(List<EventType> types, UUID personId, UUID branchId, boolean includeDeleted) {
             return List.of();
+        }
+
+        @Override
+        public Event insert(Event event) {
+            return event;
+        }
+
+        @Override
+        public Event update(Event event, long expectedVersion) {
+            return event;
         }
     }
 }

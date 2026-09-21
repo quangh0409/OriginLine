@@ -1,10 +1,12 @@
 package vn.giapha.membership.infrastructure.keycloak;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,20 +100,43 @@ public class KeycloakIdentityProviderAdapter implements IdentityProviderPort {
     }
 
     @Override
+    public Optional<IdentityAccount> findByUsername(String username) {
+        requireConfigured();
+        if (username == null || username.isBlank()) {
+            return Optional.empty();
+        }
+        return api.findUserByUsername(username.trim().toLowerCase(java.util.Locale.ROOT))
+                .map(node -> toAccount(node, false));
+    }
+
+    @Override
     public IdentityAccount createAccount(NewIdentityAccount request) {
         requireConfigured();
-        String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
+        // email CO THE null: nguoi lap tai khoan bang so dien thoai khong co truong ay, va realm
+        // ap bo kiem email len thuoc tinh do nen nhet so may vao se bi tu choi. username moi la
+        // dinh danh bat buoc.
+        String email = request.email() == null || request.email().isBlank()
+                ? null : request.email().trim().toLowerCase(java.util.Locale.ROOT);
         String username = request.username() == null || request.username().isBlank()
                 ? email : request.username().trim().toLowerCase(java.util.Locale.ROOT);
+        if (username == null) {
+            throw new IdentityProviderException(
+                    "Khong lap duoc tai khoan: thieu ca ten dang nhap lan dia chi thu");
+        }
+        String tenDangNhap = username;
         try {
-            String id = api.createUser(username, email, null, request.displayName());
-            log.info("Tao tai khoan Keycloak {} cho nguoi duoc moi", id);
-            // Vua tao: chac chan chua co credential nao.
-            return new IdentityAccount(id, username, email, false, true);
+            String id = api.createUser(tenDangNhap, email, null, request.displayName());
+            log.info("Tao tai khoan Keycloak {} cho nguoi duoc moi (co email: {})",
+                    id, email != null);
+            // Vua tao: chac chan chua co credential nao, va createUser luon dat UPDATE_PASSWORD.
+            return new IdentityAccount(id, tenDangNhap, email, false, true, true,
+                    clock.instant());
         } catch (KeycloakUserAlreadyExistsException ex) {
             // Thua cuoc dua (hai lan bam, hoac mot lan thu lai): doc lai ban cua luong kia.
-            log.info("Realm da co tai khoan cho email duoc moi, dung lai thay vi tao moi");
-            return findByEmail(email).orElseThrow(() -> new IdentityProviderException(
+            // Tra theo TEN DANG NHAP chu khong theo email — tai khoan dung so dien thoai khong co
+            // email de ma tra, va tra rong o day se nem mot loi 503 cho mot lan bam lai vo hai.
+            log.info("Realm da co tai khoan cho dinh danh nay, dung lai thay vi tao moi");
+            return findByUsername(tenDangNhap).orElseThrow(() -> new IdentityProviderException(
                     "Realm bao trung tai khoan nhung khong tim lai duoc", ex));
         }
     }
@@ -154,10 +179,34 @@ public class KeycloakIdentityProviderAdapter implements IdentityProviderPort {
         log.info("Tai khoan Keycloak {} da tu dat mat khau qua lien ket mot lan", subject);
     }
 
+    /**
+     * {@code UserRepresentation} → {@link IdentityAccount}.
+     *
+     * <p>{@code requiredActions} và {@code createdTimestamp} đi cùng chuyến: cả hai đã nằm sẵn
+     * trong thân phản hồi mà realm vừa trả về, nên đọc chúng ở đây <b>không tốn một lượt gọi
+     * nào</b> — còn đọc bằng một lời gọi thứ hai thì sẽ có chỗ quên gọi.</p>
+     */
     private IdentityAccount toAccount(ObjectNode node, boolean justCreated) {
         String id = node.path("id").asText();
         return new IdentityAccount(id, node.path("username").asText(null),
-                node.path("email").asText(null), api.hasPasswordCredential(id), justCreated);
+                node.path("email").asText(null), api.hasPasswordCredential(id), justCreated,
+                coTreoDoiMatKhau(node), createdAtOf(node));
+    }
+
+    /** Realm còn treo {@code UPDATE_PASSWORD} — dấu vết riêng của luồng onboarding này. */
+    private static boolean coTreoDoiMatKhau(ObjectNode node) {
+        for (JsonNode action : node.path("requiredActions")) {
+            if (KeycloakRequiredActions.UPDATE_PASSWORD.equals(action.asText())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** {@code createdTimestamp} tính bằng mili-giây; vắng mặt thì trả {@code null}. */
+    private static Instant createdAtOf(ObjectNode node) {
+        JsonNode created = node.path("createdTimestamp");
+        return created.isNumber() ? Instant.ofEpochMilli(created.asLong()) : null;
     }
 
     private void requireConfigured() {
