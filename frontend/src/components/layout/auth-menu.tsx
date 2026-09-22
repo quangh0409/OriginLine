@@ -36,7 +36,11 @@ export function AuthMenu() {
             đầu trang lên 113px, và chiều cao thanh đầu trang chính là chiều cao bị
             lấy mất của phả đồ bên dưới. */}
         <span className="inline-flex">
-          <Button type="text" icon={<LoginOutlined />} disabled>
+          {/* `aria-label`: dưới 640px cái <span> mang nhãn bị `hidden`, tức
+              `display: none`, tức KHÔNG có trong cây trợ năng. Nút khi ấy là một
+              biểu tượng trần, và trình đọc màn hình đọc ra "button" — không tên.
+              Xem chú thích dài ở nút Đăng nhập bên dưới. */}
+          <Button type="text" icon={<LoginOutlined />} disabled aria-label={t("login")}>
             <span className="hidden sm:inline">{t("login")}</span>
           </Button>
         </span>
@@ -51,8 +55,32 @@ export function AuthMenu() {
   }
 
   if (!isAuthenticated) {
+    // `aria-label` là BẮT BUỘC ở đây, không phải trang trí.
+    //
+    // Dưới 640px nhãn bị `hidden` — `display: none` gỡ hẳn phần tử khỏi cây trợ
+    // năng, nên nút còn lại đúng một biểu tượng và trình đọc màn hình đọc ra
+    // "button", không tên. Đó là lỗi nặng hơn cái nó đang đánh đổi.
+    //
+    // VÌ SAO KHÔNG BỎ LUÔN `hidden sm:inline` cho nhãn hiện ra:
+    // design/06 §11 mục 3 muốn thế, và nguyên tắc 3 của định hướng 00 ("biểu
+    // tượng phải có nhãn") đứng về phía ấy. Nhưng cái giá đã được ĐO: cụm bên
+    // phải thanh đầu trang không nằm vừa một dòng trên Pixel 5, thanh đầu trang
+    // nở lên 209px, và chiều cao thanh đầu trang CHÍNH LÀ chiều cao bị lấy mất
+    // của phả đồ bên dưới — tới mức nút bung nhánh không chạm được nữa. Đó là
+    // lý do bộ chuyển ngôn ngữ đã phải rời khỏi đây.
+    //
+    // Nên: vá phần CHỨNG MINH ĐƯỢC là hỏng (không có tên cho trình đọc màn
+    // hình), và để phần cần ĐO lại cho một lượt đo thật. Đổi nhãn thành hiện
+    // mà không đo lại chiều cao là đánh đổi một lỗi trợ năng lấy một lỗi trợ
+    // năng khác, ở đúng màn hình quan trọng nhất của sản phẩm.
     return (
-      <Button type="text" icon={<LoginOutlined />} onClick={login} data-testid="login-button">
+      <Button
+        type="text"
+        icon={<LoginOutlined />}
+        onClick={login}
+        aria-label={t("login")}
+        data-testid="login-button"
+      >
         <span className="hidden sm:inline">{t("login")}</span>
       </Button>
     );
@@ -92,7 +120,16 @@ export function AuthMenu() {
         ],
       }}
     >
-      <Button type="text" icon={<UserOutlined />} data-testid="account-button">
+      {/* Cùng lý do với nút Đăng nhập: dưới 640px `label` bị `hidden` nên nút
+          không còn tên nào cho trình đọc màn hình. Nhãn trợ năng mang luôn tên
+          người dùng, vì "tài khoản" trần thì không phân biệt được với nút nào
+          khác khi người ta duyệt qua danh sách nút. */}
+      <Button
+        type="text"
+        icon={<UserOutlined />}
+        aria-label={label}
+        data-testid="account-button"
+      >
         {/* Tên đầy đủ tiếng Việt dễ dài quá khổ; cắt ở 14rem chứ không để nó
             đẩy thanh đầu trang xuống dòng thứ hai trên điện thoại. */}
         <span

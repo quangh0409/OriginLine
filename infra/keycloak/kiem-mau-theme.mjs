@@ -16,7 +16,13 @@
  * do nó viết bằng regex chứ không import tokens.ts: một phép kiểm chỉ chạy được
  * khi cả ngăn xếp đã lên là một phép kiểm không ai chạy.
  *
- * Gắn vào CI ở cổng "frontend static" của `.github/workflows/ci.yml`.
+ * ĐÃ gắn vào CI ở cổng "frontend static" của `.github/workflows/ci.yml` — bước
+ * "Theme Keycloak — không trôi khỏi bảng màu".
+ *
+ * Dòng này trước đây viết ở thể MỆNH LỆNH ("Gắn vào CI…") và người đọc hiểu
+ * thành một lời khẳng định. Phép kiểm nằm đây nhiều tháng mà CHƯA BAO GIỜ chạy,
+ * trong khi ai đọc tệp cũng tưởng đã có người lo. Đó là kiểu hỏng tệ hơn việc
+ * không viết phép kiểm: rủi ro không biến mất, nó chỉ đổi chỗ nấp.
  */
 
 import fs from "node:fs";

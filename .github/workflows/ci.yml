@@ -112,6 +112,22 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
+      # Hai phép kiểm tĩnh của theme Keycloak. Chúng ĐÃ TỒN TẠI từ lâu và header
+      # của `kiem-mau-theme.mjs` còn tự ghi "Gắn vào CI ở cổng frontend static" —
+      # nhưng chưa bao giờ được gắn thật. Đó là kiểu hỏng tệ hơn việc không viết
+      # phép kiểm: rủi ro không biến mất, nó chuyển từ "chưa ai nghĩ tới" sang
+      # "ai cũng tưởng đã có người lo".
+      #
+      # Chúng ở cổng NÀY chứ không ở một cổng riêng, vì thứ chúng canh là bảng
+      # màu và cỡ chữ — cùng một nguồn `frontend/src/styles/tokens.ts` mà
+      # `tsc`/`lint`/`vitest` đang canh cho phần còn lại của giao diện. Trang
+      # đăng nhập do Keycloak dựng, không với tới `tokens.ts` được, nên màu phải
+      # CHÉP sang CSS của theme — và một bản chép thì cần người canh.
+      - name: "Theme Keycloak — không trôi khỏi bảng màu, và cấu hình đăng ký còn đúng"
+        run: |
+          node infra/keycloak/kiem-mau-theme.mjs
+          node infra/keycloak/kiem-dang-ky.mjs
+
       # vitest trả mã thoát khác 0 vì các ca đỏ CÓ CHỦ Ý, nên phán quyết của
       # cổng do check-vitest.mjs đưa ra, không phải mã thoát của vitest. Nếu
       # vitest sập mà chưa kịp ghi JSON thì `test -f` bên dưới bắt được.

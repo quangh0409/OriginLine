@@ -121,9 +121,14 @@ export function MoreMenu() {
     // nhiễu; với người chưa gắn nhân khẩu thì chúng còn gây hiểu nhầm rằng họ
     // tự duyệt được cho chính mình.
     //
-    // Đây là lối vào DUY NHẤT tới hàng chờ duyệt và màn phát mã. Không có nó
-    // thì lặp lại đúng mẫu hình checklist §4 đã gọi tên: một tính năng làm xong
-    // mà không ai tìm thấy.
+    // Trên ĐIỆN THOẠI, đây là lối vào duy nhất tới hàng chờ duyệt và màn phát
+    // mã. Trên máy tính thì `ManagementQueueLink` ở thanh đầu trang gánh việc
+    // ấy — ngăn kéo này là `md:hidden`.
+    //
+    // Chú thích cũ ở đây ghi "lối vào DUY NHẤT" và câu ấy hết đúng từ lúc
+    // `ManagementQueueLink` vào thanh đầu trang, nhưng nó nằm lại nhiều ngày.
+    // Một tấm bản đồ cũ trong mã nguy hiểm đúng kiểu ấy: nó khiến người sau
+    // tưởng mình đã hiểu bố cục và thôi không đi kiểm.
     ...(hasAccount && canReview
       ? [
           {

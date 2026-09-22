@@ -46,6 +46,7 @@ import type { HonourDto } from "@/lib/api/honours";
 export function HomeHero() {
   const t = useTranslations("home");
   const me = useMe();
+  const hasAccount = Boolean(me.data?.appUserId);
 
   const pendingApproval = Boolean(me.data?.appUserId) && me.data?.linkedToTree === false;
 
@@ -76,9 +77,28 @@ export function HomeHero() {
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/*
+        "Tra danh xưng" CHỈ hiện với người đã có tài khoản — cùng luật mà
+        `header.tsx` áp cho mục cùng tên (`membersOnly: true`).
+
+        Vì sao phải nhắc lại ở đây: hai chỗ cùng mời vào một màn thì phải cùng
+        một luật, nếu không sẽ có một chỗ quên. Đúng chuyện đã xảy ra — thanh
+        đầu trang ẩn mục ấy với khách, còn lối tắt này thì không, nên khách bấm
+        vào là rơi thẳng vào một bảng đòi đăng nhập. `GET /api/v1/kinship`
+        không có lối công khai nào, nên đây không phải chuyện chỉnh giao diện
+        cho gọn: đó là một lời mời mà hệ thống không giữ được.
+
+        Lưới đổi theo số ô còn lại để khách không nhìn thấy một chỗ trống.
+      */}
+      <div
+        className={`mt-8 grid grid-cols-1 gap-4 ${
+          hasAccount ? "sm:grid-cols-3" : "sm:grid-cols-2"
+        }`}
+      >
         <QuickLinkCard href="/tree" icon={<ApartmentOutlined />} titleKey="tree" />
-        <QuickLinkCard href="/kinship" icon={<TeamOutlined />} titleKey="kinship" />
+        {hasAccount && (
+          <QuickLinkCard href="/kinship" icon={<TeamOutlined />} titleKey="kinship" />
+        )}
         <QuickLinkCard href="/events" icon={<CalendarOutlined />} titleKey="events" />
       </div>
 
