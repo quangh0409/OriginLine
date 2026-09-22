@@ -91,7 +91,9 @@ public class ChangeRequestService {
     @Transactional
     public ChangeRequestView submit(SubmitChangeRequestCommand command) {
         MemberScope caller = scopes.currentMemberScope();
-        guard.requireProvisionedAccount(caller);
+        // Chi cua GUI moi doi "da duoc duyet vao pha"; cac loi DOC ben duoi van chi doi co tai
+        // khoan, de nguoi dang cho duyet mo duoc man "de nghi cua toi" (rong) thay vi mot trang loi.
+        guard.requireActiveMember(caller, "gui de nghi dinh chinh");
 
         UUID targetBranchId = command.targetBranchId();
         if (targetBranchId == null && command.personId() != null) {

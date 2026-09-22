@@ -152,11 +152,26 @@ public class InvitationController {
     }
 
     /**
-     * Người được mời tự đặt mật khẩu qua liên kết một lần — <b>không cần token</b>.
+     * Người dùng tự đặt mật khẩu qua liên kết một lần — <b>không cần token đăng nhập</b>.
      *
      * <p>Đòi token ở đây là vô nghĩa: người bấm chính là người chưa đăng nhập được, vì họ chưa có
-     * mật khẩu. Thẩm quyền là token trong {@code setPasswordUrl} — ký HMAC, hạn nửa giờ, và chỉ
-     * dùng được khi tài khoản đích còn chưa có mật khẩu nào.</p>
+     * mật khẩu (hoặc đã quên nó). Thẩm quyền là token trong {@code setPasswordUrl} — ký HMAC, hạn
+     * nửa giờ.</p>
+     *
+     * <h2>Endpoint này nhận HAI loại liên kết, và nó cố ý chỉ có một</h2>
+     * <ul>
+     *   <li><b>Đặt mật khẩu lần đầu</b> (luồng mời): dùng được khi tài khoản đích còn chưa có mật
+     *       khẩu nào — nguồn chân lý là chính Keycloak, không cần bảng nào.</li>
+     *   <li><b>Cấp lại</b> (V21 — Trưởng chi/Hội đồng cấp cho một thành viên đã quên mật khẩu, mà
+     *       tài khoản thì <i>đã</i> có mật khẩu nên nguồn chân lý kia không còn): "một lần" do cột
+     *       {@code password_reset_grant.used_at} canh.</li>
+     * </ul>
+     *
+     * <p>Một endpoint vì người dùng chỉ có <b>một</b> màn {@code /dat-mat-khau} và khuôn địa chỉ ấy
+     * đã nằm trong cấu hình; dựng đường thứ hai là dựng màn hình thứ hai. Hai loại token phân biệt
+     * nhau bằng <b>khoá ký</b> chứ không bằng một cờ trong thân yêu cầu — xem
+     * {@code PasswordResetRedeemer}. Vì vậy không có gì để thêm vào {@link SetPasswordRequest}, và
+     * giao diện không phải biết mình đang cầm loại nào.</p>
      *
      * <p>Trả {@code 204}: không có gì để trả về, và nhất là không trả lại bất cứ mảnh nào của thứ
      * vừa nhận. Sau bước này người dùng đăng nhập bằng Keycloak như mọi thành viên khác.</p>

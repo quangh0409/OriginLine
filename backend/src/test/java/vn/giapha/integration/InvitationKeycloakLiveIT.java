@@ -127,7 +127,8 @@ class InvitationKeycloakLiveIT extends AbstractIntegrationTest {
                 new IdentityEnroller(identityProvider), identityProvider,
                 new IdentityReclaimPolicy(appUserRepository, java.time.Duration.ofMinutes(30)),
                 throttle, auditTrail, 7);
-        setPasswords = new SetPasswordService(identityProvider);
+        setPasswords = new SetPasswordService(identityProvider,
+                vn.giapha.membership.support.FakePasswordResetGateway.khongDungLuongCapLai());
 
         UUID goc = insertBranch("Dòng họ Nguyễn", "goc", null, "DONG_HO");
         chiGiap = insertBranch("Chi Giáp", "goc.chi_giap", goc, "CHI");

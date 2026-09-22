@@ -3,6 +3,7 @@ package vn.giapha.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +35,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
  *       chạy. Một unit test gọi thẳng advice sẽ luôn xanh và chứng minh đúng điều không xảy ra
  *       trong thực tế. Chỉ có cả chuỗi lọc mới lộ ra sự thật.</li>
  *   <li><b>Mã HTTP của tài khoản chưa ghép.</b> Việc dịch {@code ACCOUNT_NOT_PROVISIONED} sang
- *       {@code 409} là hành vi của tầng lỗi; muốn chắc thì phải có một endpoint thật ném ra nó.</li>
+ *       {@code 403} là hành vi của tầng lỗi; muốn chắc thì phải có một endpoint thật ném ra nó.</li>
  * </ul>
  *
  * <h2>Khẳng định theo {@code code}, không theo chuỗi mô tả</h2>
@@ -121,18 +122,23 @@ class ApiErrorContractIT extends AbstractIntegrationTest {
     // =====================================================================================
 
     @Test
-    @DisplayName("tài khoản chưa gắn nhân khẩu nhận 409 ACCOUNT_NOT_PROVISIONED, KHÔNG phải 404")
-    void chuaGanNhanKhau_nhan409() throws Exception {
+    @DisplayName("tài khoản chưa gắn nhân khẩu nhận 403 ACCOUNT_NOT_PROVISIONED, KHÔNG phải 404")
+    void chuaGanNhanKhau_nhan403() throws Exception {
         // Ca that va binh thuong: nguoi vua duoc moi vao, Truong chi chua gan ho voi mot nhan khau.
         // /api/v1/me tu tao app_user o trang thai PENDING, nen sub nay co tai khoan ma khong co
         // person_id — dung trang thai cua tai khoan "chuaduyet" tren he thong dang chay.
         MvcResult result = mockMvc.perform(get("/api/v1/me/person").with(thanhVien("sub-chua-ghep")))
                 .andReturn();
 
+        // BAN DAU ca nay ghim 409, voi ly le "403 noi sai rang ho bi tu choi vinh vien". Ly le ay
+        // giu lai o javadoc cua GlobalExceptionHandler vi no dang doc, nhung no da bi lat boi hai
+        // dieu: RFC 9110 dinh nghia 409 cho tinh huong NGUOI GOI tu go duoc roi gui lai — o day
+        // chi Truong chi go duoc — va cung mot ma loi dang tra HAI status (hai guard va hop dong
+        // deu noi 403). Mot ma, hai status la khiem khuyet nang hon ca hai lua chon.
         assertThat(result.getResponse().getStatus())
                 .as("404 ve giao dien la man 'khong tim thay trang' cho mot nguoi VUA DANG NHAP"
-                        + " THANH CONG; 403 noi sai rang ho bi tu choi vinh vien")
-                .isEqualTo(409);
+                        + " THANH CONG; 403 la thu hai guard va contracts/openapi.yaml deu noi")
+                .isEqualTo(403);
 
         JsonNode than = than(result);
         assertThat(than.path("code").asText()).isEqualTo("ACCOUNT_NOT_PROVISIONED");
@@ -168,6 +174,85 @@ class ApiErrorContractIT extends AbstractIntegrationTest {
 
         assertThat(result.getResponse().getStatus()).isEqualTo(200);
         assertThat(than(result).path("personId").asText()).isEqualTo(nhanKhau.toString());
+    }
+
+    // =====================================================================================
+    // Khiếm khuyết 3 — lỗi kiểm THÂN yêu cầu phải đi qua advice của dự án
+    // =====================================================================================
+
+    /**
+     * <b>Đã đo trên hệ đang chạy:</b> {@code POST /api/v1/person-claims/existing} với thân thiếu
+     * trường bắt buộc trả về
+     * <pre>{"type":"about:blank","title":"Dữ liệu không hợp lệ","status":400,
+     * "detail":"Dữ liệu gửi lên không hợp lệ. Xem chi tiết ở trường errors.","instance":…}</pre>
+     * — tức là câu chữ bảo client đọc {@code errors} trong khi thân <b>không hề có</b>
+     * {@code errors}, và cũng không có {@code code} để client rẽ nhánh.
+     *
+     * <p>Nguyên nhân: {@code spring.mvc.problemdetails.enabled: true} đăng ký
+     * {@code ProblemDetailsExceptionHandler} của Spring ở {@code LOWEST_PRECEDENCE}, ngang với
+     * advice của dự án, và advice của Spring thắng — nên
+     * {@code GlobalExceptionHandler#handleBeanValidation} là mã chết.</p>
+     *
+     * <p>Ca này phải là test tích hợp vì thứ nó đo là <b>thứ tự giữa hai advice</b>, một tính chất
+     * chỉ tồn tại khi cả context Spring MVC được dựng.</p>
+     */
+    @Test
+    @DisplayName("lỗi kiểm thân yêu cầu trả về code VALIDATION_FAILED KÈM mảng errors từng trường")
+    void loiKiemThanYeuCau_coCodeVaErrors() throws Exception {
+        // Thieu ca personId lan phone — hai truong @NotNull/@NotBlank cua SubmitPersonClaimRequest.
+        MvcResult result = mockMvc.perform(post("/api/v1/person-claims/existing")
+                        .with(thanhVien("sub-kiem-than"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(400);
+
+        JsonNode than = than(result);
+        assertThat(than.path("code").asText())
+                .as("khong co code thi client chi con cach doc chuoi mo ta de re nhanh")
+                .isEqualTo("VALIDATION_FAILED");
+        assertThat(than.path("type").asText())
+                .as("about:blank la dau hieu advice cua Spring da thang advice cua du an")
+                .isEqualTo("https://giapha.vn/problems/validation-error");
+        assertThat(than.hasNonNull("timestamp")).isTrue();
+
+        JsonNode errors = than.path("errors");
+        assertThat(errors.isArray())
+                .as("chuoi mo ta bao nguoi doc xem truong errors; truong ay phai co that")
+                .isTrue();
+        assertThat(errors).isNotEmpty();
+        assertThat(errors).allSatisfy(loi -> {
+            assertThat(loi.hasNonNull("field")).isTrue();
+            assertThat(loi.hasNonNull("message")).isTrue();
+        });
+    }
+
+    /**
+     * Chốt giữ ranh giới của bản vá: nâng thứ tự {@code GlobalExceptionHandler} lên trên advice của
+     * Spring <b>không được</b> kéo nó lên trên bốn advice theo ngữ cảnh — chúng khai
+     * {@code HIGHEST_PRECEDENCE} và vẫn phải thắng.
+     */
+    @Test
+    @DisplayName("advice theo ngữ cảnh vẫn thắng advice chung — thứ tự mới không nuốt mã của chúng")
+    void adviceTheoNguCanh_vanThang() throws Exception {
+        // PreconditionRequiredException cua genealogy: PATCH /persons/{id} thieu If-Match.
+        // GenealogyExceptionHandler (HIGHEST_PRECEDENCE) phai la noi tra loi, khong phai advice chung.
+        UUID chi = insertBranch("Chi Ranh Gioi", "goc.chi_ranh_gioi", null, "CHI");
+        authenticateAs("sub-admin-ranh-gioi", "ADMIN");
+        UUID nhanKhau = seed(PersonFixtures.living("Nguyễn Văn Ranh Giới").branch(chi).generation(3));
+
+        MvcResult result = mockMvc.perform(
+                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .patch("/api/v1/persons/" + nhanKhau)
+                                .with(jwt().jwt(b -> b.subject("sub-admin-ranh-gioi"))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}"))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(412);
+        assertThat(than(result).path("code").asText()).isEqualTo("PRECONDITION_REQUIRED");
     }
 
     // =====================================================================================

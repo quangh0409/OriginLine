@@ -171,6 +171,12 @@ public class SecurityConfig {
                         // (vai x phạm vi ltree) nằm ở BranchScopeGuard của context membership.
                         .requestMatchers("/api/v1/branch-assignments/**").hasAnyRole(ROLE_ADMIN, ROLE_COUNCIL)
                         .requestMatchers("/api/v1/audit-logs/**").hasAnyRole(ROLE_ADMIN, ROLE_COUNCIL)
+                        // "/api/v1/password-resets" CỐ Ý không có dòng nào ở đây. Nó rơi vào
+                        // anyRequest().authenticated(), và phép kiểm thật — vai × phạm vi ltree,
+                        // cộng "không ai tự cấp cho chính mình" — nằm ở PasswordResetGrantService.
+                        // Viết hasAnyRole(ADMIN, COUNCIL) ở đây sẽ SAI theo cả hai chiều: nó khoá
+                        // Trưởng chi ra ngoài (họ phải cấp được, trong chi mình), và nó gợi ý sai
+                        // rằng vai là đủ. requestMatchers không diễn đạt được một phạm vi ltree.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         // Cắm LẠI ở đây, không thừa: BearerTokenAuthenticationFilter giữ entry

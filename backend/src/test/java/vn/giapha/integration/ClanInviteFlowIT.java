@@ -413,4 +413,43 @@ class ClanInviteFlowIT extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.remainingUses").doesNotExist())
                 .andExpect(jsonPath("$.label").doesNotExist());
     }
+
+    /**
+     * Hai trạng thái "mã đã chết" đi qua <b>HTTP</b>, không phải qua lời gọi service.
+     *
+     * <p>Khoảng trống đã đo: {@code thuHoiKhongDungToiNguoiDaVao} và {@code maHetHanKhongDungDuoc}
+     * gọi thẳng {@code clanInviteService} nên chúng chỉ chứng minh {@code ClanInviteService} <i>ném
+     * đúng ngoại lệ</i>. Việc {@code MembershipExceptionHandler} có <b>bắt</b> ngoại lệ ấy và dịch
+     * sang {@code 410 GONE} hay không thì không ca nào chạm tới — và đó đúng là chỗ một người cầm
+     * mã đã thu hồi sẽ nhận {@code 500 "Lỗi hệ thống"} thay vì câu "mã này đã bị thu hồi".</p>
+     *
+     * <p>Màn {@code /dang-ky} gọi {@code /lookup} <b>trước</b> mọi thứ khác, nên đây là câu trả lời
+     * đầu tiên người dùng nhận được từ hệ thống.</p>
+     */
+    @Test
+    @DisplayName("mã đã thu hồi / đã hết hạn trả 410 GONE qua HTTP — KHÔNG phải 500")
+    void maDaChetTraVe410QuaHttp() throws Exception {
+        IssuedClanInvite daThuHoi = hoiDongPhat(600);
+        authenticateAs("sub-hoi-dong", "COUNCIL");
+        clanInvites.revoke(daThuHoi.invite().id(), "Ma bi chuyen tiep ra ngoai dong ho");
+
+        mockMvc.perform(post("/api/v1/clan-invites/lookup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"" + daThuHoi.code() + "\"}"))
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.code").value("INVITATION_REVOKED"))
+                // Than loi KHONG duoc mang nhan hay bo dem: mot ma da thu hoi rat co the dang nam
+                // trong tay nguoi la, va moi con so deu xac nhan giup ho rang ma that.
+                .andExpect(jsonPath("$.label").doesNotExist())
+                .andExpect(jsonPath("$.useCount").doesNotExist());
+
+        IssuedClanInvite hetHan = hoiDongPhat(600);
+        datHanVaoQuaKhu(hetHan.invite().id());
+
+        mockMvc.perform(post("/api/v1/clan-invites/lookup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"" + hetHan.code() + "\"}"))
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.code").value("INVITATION_EXPIRED"));
+    }
 }

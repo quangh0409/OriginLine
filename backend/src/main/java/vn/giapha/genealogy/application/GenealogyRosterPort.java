@@ -76,4 +76,35 @@ public interface GenealogyRosterPort {
      * sau — khớp ở tên húy rồi hiện ra tên chính là hành vi đúng, giống hệt tìm kiếm.</p>
      */
     List<UUID> livingPersonIdsMatchingName(String q, int limit);
+
+    /**
+     * Khoá của <b>mọi</b> nhân khẩu đã gắn chi, kèm khoá chi của họ — nguyên liệu thô của
+     * {@code Branch.memberCount}.
+     *
+     * <h2>Vì sao câu này KHÔNG lọc {@code is_deleted} và KHÔNG lọc {@code is_alive}</h2>
+     * Cả hai cờ ấy là đầu vào của luật "người gọi có được biết nhân khẩu này tồn tại không", và
+     * luật ấy đã có đúng một bản ở {@code PrivacyTierService.canSee}. Chép một nửa của nó xuống
+     * mệnh đề {@code WHERE} sẽ cho ra một bộ đếm <i>trông như</i> đã lọc nhưng lại giống nhau với
+     * mọi người gọi — đúng kiểu sai mà không ai phát hiện được bằng mắt. Cổng này vì thế trả về
+     * tập thô, còn việc bỏ ai là của bộ lọc chạy sau.
+     *
+     * <p>Nhân khẩu <b>chưa gắn chi</b> ({@code primary_branch_id IS NULL}) không nằm trong kết
+     * quả: họ không thuộc chi nào nên không được cộng vào bộ đếm của chi nào. Coi "không có chi"
+     * là "thuộc mọi chi" là đúng cái bẫy mà {@code GenealogyAccessGuard} cảnh báo.</p>
+     *
+     * @param branchPathPrefix {@code ltree} của cây con cần đếm ({@code path <@ prefix});
+     *                         {@code null} nghĩa là <b>cả dòng họ</b>
+     * @param limit            trần cứng, cùng ý nghĩa với {@link #livingPersonIds(int)}
+     */
+    List<PersonBranchRef> personBranchRefs(String branchPathPrefix, int limit);
+
+    /**
+     * Một cặp khoá: nhân khẩu và chi của họ.
+     *
+     * <p>Chỉ có khoá, đúng như cam kết ở javadoc của cổng này — không {@code is_alive}, không
+     * {@code is_deleted}, không tên. Người gọi buộc phải nạp lại qua {@code PersonRepository} rồi
+     * đẩy qua {@code PrivacyTierService}.</p>
+     */
+    record PersonBranchRef(UUID personId, UUID branchId) {
+    }
 }

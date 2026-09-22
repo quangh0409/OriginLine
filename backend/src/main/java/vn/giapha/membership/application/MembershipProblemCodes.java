@@ -202,6 +202,36 @@ public final class MembershipProblemCodes {
      */
     public static final String IDENTITY_ALREADY_REGISTERED = "IDENTITY_ALREADY_REGISTERED";
 
+    // --- Mã của lối Trưởng chi/Hội đồng cấp lại liên kết đặt mật khẩu (V21) ---
+
+    /**
+     * Không cấp lại được liên kết đặt mật khẩu cho <b>tài khoản này</b> — HTTP 422.
+     *
+     * <h2>Một mã cho bốn lý do, và đó là chủ ý</h2>
+     * Nhân khẩu chưa có tài khoản · tài khoản không còn {@code ACTIVE} · tài khoản không còn trong
+     * realm · <b>tài khoản có địa chỉ thư</b>. Bốn lý do, một mã, vì với người cấp chúng dẫn tới
+     * cùng một kết luận: "đường này không dành cho người ấy, xem {@code detail} để biết đi lối
+     * nào". Thông điệp trong {@code detail} thì <i>có</i> phân biệt — nó dành cho Trưởng chi, một
+     * người đã đăng nhập và đã qua phép kiểm phạm vi, chứ không dành cho người lạ.
+     *
+     * <p>Lý do thứ tư là lý do quan trọng nhất và cũng dễ bị hiểu nhầm nhất: tài khoản <b>có
+     * email</b> thì <i>đã</i> có đường tự lấy lại mật khẩu (Keycloak gửi thư), nên mở thêm đường
+     * này cho họ chỉ tạo thêm một lối chiếm tài khoản mà không giải quyết vấn đề nào. Xem
+     * {@code PasswordResetGrantService}.</p>
+     */
+    public static final String PASSWORD_RESET_NOT_ALLOWED = "PASSWORD_RESET_NOT_ALLOWED";
+
+    /**
+     * Người gọi đang tự cấp liên kết đặt mật khẩu cho <b>chính mình</b> — HTTP 403.
+     *
+     * <p>"Quên mật khẩu của chính mình" là một luồng khác và đi đường khác. Nếu tự cấp được thì
+     * một phiên đăng nhập bị chiếm sẽ tự gia hạn thành quyền kiểm soát vĩnh viễn tài khoản ấy: kẻ
+     * chiếm đặt lại mật khẩu, chính chủ mất luôn đường vào. Ràng buộc này còn được chặn lần thứ
+     * hai ở CSDL ({@code ck_password_reset_grant_not_self}), vì nó là ràng buộc phân quyền chứ
+     * không phải một phép kiểm dữ liệu.</p>
+     */
+    public static final String SELF_PASSWORD_RESET_FORBIDDEN = "SELF_PASSWORD_RESET_FORBIDDEN";
+
     private MembershipProblemCodes() {
     }
 }

@@ -143,6 +143,41 @@ public class BranchScopeGuard {
         }
     }
 
+    /**
+     * <b>Đã được duyệt vào phả</b>, không chỉ "đã có tài khoản".
+     *
+     * <h2>Vì sao {@link #requireProvisionedAccount} không đủ</h2>
+     * Phép kiểm kia chỉ hỏi "có {@code app_user} chưa". Nhưng {@code app_user} được <b>tự tạo</b> ở
+     * lần gọi {@code /api/v1/me} đầu tiên, nên mọi tài khoản vừa đăng ký xong đều qua được nó trong
+     * khi chưa ai trong họ nhận ra họ là ai. Thứ phân biệt "đã được Trưởng chi duyệt" với "vừa gõ
+     * xong mã mời" là <b>{@code personId}</b>: nó chỉ có sau khi một đơn tự nhận được duyệt.
+     *
+     * <p><b>Đã đo trước khi vá:</b> tài khoản {@code chuaduyet} (có {@code app_user}, {@code
+     * person_id = NULL}) gửi {@code POST /api/v1/change-requests} và nhận {@code 201} — đơn của nó
+     * rơi thẳng vào hàng chờ của Trưởng chi Chi Bính. Cùng lúc ấy {@code ACCOUNT_NOT_ACTIVE} là một
+     * hằng số <b>chưa ai ném</b>, còn giao diện thì đã dịch sẵn câu cho nó
+     * ({@code correction.errors.notActive}) và {@code CorrectionRequestDialog} đã rẽ nhánh theo nó.
+     * Tức là câu trả lời đúng đã được soạn và không bao giờ tới được người đọc.</p>
+     *
+     * <p>Cùng một luật với lối viết bài ({@code AUTHOR_NOT_IN_PHA}) và với bảng "Trong lúc chờ
+     * duyệt thì xem được gì" của tài liệu hướng dẫn: chưa được duyệt thì chưa gửi được gì vào hàng
+     * chờ của người khác.</p>
+     *
+     * <p><b>403, không phải 409.</b> 409 ({@code ACCOUNT_NOT_PROVISIONED}) nói "tài khoản chưa dựng
+     * xong" — sai ở đây, tài khoản dựng xong rồi. Đây là một lời từ chối có điều kiện gỡ được, và
+     * điều kiện ấy nằm trong tay Trưởng chi.</p>
+     *
+     * @param what việc đang bị từ chối, ghép vào câu trả lời
+     */
+    public void requireActiveMember(MemberScope caller, String what) {
+        requireProvisionedAccount(caller);
+        if (caller.personId() == null) {
+            throw new ForbiddenException(MembershipProblemCodes.ACCOUNT_NOT_ACTIVE,
+                    "Tai khoan chua duoc duyet vao pha nen chua " + what + " duoc."
+                            + " Hay tu nhan minh tren pha do va cho Truong chi duyet.");
+        }
+    }
+
     /** Cho phép <b>chính chủ</b> thao tác trên hồ sơ của mình, ngoài ra thì theo luật ghi thường. */
     public void requireSelfOrWriteAccess(MemberScope caller, BranchPath target,
                                          java.util.UUID targetPersonId) {

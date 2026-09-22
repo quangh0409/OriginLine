@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -34,6 +36,22 @@ import vn.giapha.shared.exception.NotFoundException;
  * còn sống. Lỗi 500 chỉ trả câu chung chung, chi tiết nằm ở log phía máy chủ.</p>
  */
 @RestControllerAdvice
+// BAT BUOC phai xep tren ProblemDetailsExceptionHandler cua Spring Boot.
+//
+// `spring.mvc.problemdetails.enabled: true` (application.yml) dang ky san advice ay, va Spring Boot
+// khai no `@Order(0)` — KHONG phai LOWEST_PRECEDENCE nhu ten goi goi y. Advice nay truoc day khong
+// khai @Order nen nam o LOWEST_PRECEDENCE va LUON thua.
+//
+// DA DO tren he dang chay truoc khi va: moi loi kiem THAN yeu cau (MethodArgumentNotValidException)
+// tra ve `type: about:blank`, KHONG co `code`, KHONG co `timestamp` va KHONG co `errors` — trong
+// khi chinh i18n/messages*.properties lai bao nguoi doc "Xem chi tiet o truong errors".
+// handleBeanValidation() ben duoi la ma chet: sua no khong doi duoc gi, va khong co loi nao in ra.
+//
+// HIGHEST_PRECEDENCE + 100: du nho de thang @Order(0) cua Spring Boot, du lon de bon advice theo
+// ngu canh (ImportApiExceptionHandler / EventsExceptionHandler / GenealogyExceptionHandler o
+// HIGHEST_PRECEDENCE, ContentExceptionHandler o HIGHEST_PRECEDENCE + 10) van thang advice chung nay.
+// ApiErrorContractIT ghim ca hai chieu, vi mot con so sai chi lo ra o mot chieu.
+@Order(Ordered.HIGHEST_PRECEDENCE + 100)
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -49,8 +67,32 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * <b>{@code 409}, không phải {@code 404}</b> — tài khoản đăng nhập được nhưng chưa được ghép
-     * với một nhân khẩu trong phả.
+     * <b>{@code 403}, không phải {@code 404} và cũng không phải {@code 409}</b> — tài khoản đăng
+     * nhập được nhưng chưa được ghép với một nhân khẩu trong phả.
+     *
+     * <h2>Vì sao ĐÃ ĐỔI từ {@code 409} sang {@code 403}</h2>
+     * Bản đầu chọn {@code 409}, và lập luận của nó giữ nguyên bên dưới vì nó vẫn đáng đọc — một
+     * quyết định bị đảo mà xoá luôn lý do của bên thua thì người sau sẽ đảo ngược lại lần nữa.
+     * Hai điều đã lật nó:
+     * <ol>
+     *   <li><b>{@code 409} hỏng ở chính định nghĩa của nó.</b> RFC 9110 nói {@code 409} dùng cho
+     *       tình huống <i>"the user might be able to resolve the conflict and resubmit"</i>. Ở đây
+     *       người gọi <b>không thể</b> tự gỡ: chỉ Trưởng chi bấm nút ghép mới gỡ được, và gửi lại
+     *       bao nhiêu lần cũng ra đúng kết quả ấy. Còn lập luận chống {@code 403} bên dưới dựa vào
+     *       một <i>hàm ý</i> ("đã dứt điểm") mà RFC không hề nói — {@code 403} chỉ có nghĩa "hiểu
+     *       yêu cầu nhưng từ chối cấp quyền", và RFC còn mời nói rõ lý do trong thân phản hồi,
+     *       đúng thứ {@code code} + {@code nextStep} đang làm.</li>
+     *   <li><b>Cùng một mã lỗi đang trả HAI status khác nhau.</b> {@code BranchScopeGuard} và
+     *       {@code ImportScopeGuard} ném {@code ACCOUNT_NOT_PROVISIONED} dưới dạng
+     *       {@code ForbiddenException} ⇒ {@code 403}, và {@code contracts/openapi.yaml} cũng ghi
+     *       {@code 403}. Một mã, hai status là khiếm khuyết nặng hơn cả hai lựa chọn: client thứ
+     *       hai đọc hợp đồng sẽ gặp {@code 409} ở một nửa số lời gọi.</li>
+     * </ol>
+     *
+     * <p>Giao diện không đổi hành vi: nó rẽ nhánh theo {@code code} chứ không theo status
+     * ({@code contracts/README} §3), nên đây thuần tuý là chuyện nói đúng với client thứ hai.</p>
+     *
+     * <h2>Lập luận cũ, giữ lại nguyên văn</h2>
      *
      * <h2>Vì sao ba mã kia đều sai</h2>
      * <ul>
@@ -77,8 +119,8 @@ public class GlobalExceptionHandler {
      * về một mã HTTP duy nhất đã được báo cáo cho chủ hợp đồng.</p>
      */
     private ProblemDetail accountNotProvisioned(DomainException ex, HttpServletRequest request) {
-        log.info("409 {} - tai khoan chua san sang: {}", request.getRequestURI(), ex.getMessage());
-        ProblemDetail problem = problem(HttpStatus.CONFLICT, ProblemTypes.ACCOUNT_NOT_PROVISIONED,
+        log.info("403 {} - tai khoan chua san sang: {}", request.getRequestURI(), ex.getMessage());
+        ProblemDetail problem = problem(HttpStatus.FORBIDDEN, ProblemTypes.ACCOUNT_NOT_PROVISIONED,
                 "Tài khoản chưa được ghép vào gia phả",
                 "Tài khoản đã đăng nhập nhưng chưa được ghép với một nhân khẩu trong phả."
                         + " Hãy liên hệ Trưởng chi hoặc Hội đồng Tộc biểu để được ghép.",

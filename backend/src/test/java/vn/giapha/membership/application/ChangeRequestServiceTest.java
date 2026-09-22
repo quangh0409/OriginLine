@@ -98,6 +98,52 @@ class ChangeRequestServiceTest {
             assertThat(view.targetBranchId()).isEqualTo(clan.chiGiapId);
         }
 
+        /**
+         * Khiếm khuyết đã đo trên hệ đang chạy: tài khoản {@code chuaduyet} — có {@code app_user},
+         * {@code person_id = NULL} — gửi {@code POST /api/v1/change-requests} và nhận
+         * <b>{@code 201}</b>. Đơn của một người chưa ai trong họ nhận ra rơi thẳng vào hàng chờ của
+         * Trưởng chi.
+         *
+         * <p>{@code requireProvisionedAccount} không bắt được vì {@code app_user} <b>được tự tạo</b>
+         * ở lần gọi {@code /api/v1/me} đầu tiên, nên ai đăng nhập được cũng có nó. Thứ phân biệt là
+         * {@code personId}.</p>
+         *
+         * <p>Cùng lúc ấy {@code ACCOUNT_NOT_ACTIVE} là hằng số chưa ai ném, còn
+         * {@code correction.errors.notActive} ("Tài khoản của bạn đang chờ Hội đồng Tộc biểu duyệt,
+         * chưa gửi được đề nghị.") đã nằm sẵn trong {@code vi.json} và
+         * {@code CorrectionRequestDialog} đã rẽ nhánh theo nó — câu trả lời đúng đã soạn xong mà
+         * không bao giờ tới được người đọc.</p>
+         */
+        @Test
+        @DisplayName("Tài khoản CHƯA được duyệt vào phả KHÔNG gửi được — ACCOUNT_NOT_ACTIVE")
+        void chuaDuyetVaoPhaThiKhongGuiDuoc() {
+            clan.unlinkedAccount("sub-vua-go-ma-moi");
+            TestSecurity.loginAs("sub-vua-go-ma-moi", "MEMBER");
+            nguoiChiGiap = clan.personIn(clan.chiGiapId);
+
+            assertThatThrownBy(() -> service.submit(new SubmitChangeRequestCommand(
+                    ChangeRequestType.UPDATE_PERSON, nguoiChiGiap, null,
+                    deNghiNguyenQuan(), "Toi nghi cho nay ghi sai")))
+                    .isInstanceOf(ForbiddenException.class)
+                    .satisfies(ex -> assertThat(((ForbiddenException) ex).getCode())
+                            .as("ACCOUNT_NOT_PROVISIONED se noi sai: tai khoan dung xong roi,"
+                                    + " no chi chua duoc duyet vao pha")
+                            .isEqualTo(MembershipProblemCodes.ACCOUNT_NOT_ACTIVE));
+        }
+
+        @Test
+        @DisplayName("Duyệt vào phả xong thì gửi được ngay — cửa này mở lại được")
+        void duyetVaoPhaXongThiGuiDuoc() {
+            // Doi chung cua ca tren: chinh luat ay khong chan nham nguoi da duoc duyet.
+            clan.account("sub-da-duoc-duyet", clan.chiGiapId);
+            TestSecurity.loginAs("sub-da-duoc-duyet", "MEMBER");
+            nguoiChiGiap = clan.personIn(clan.chiGiapId);
+
+            assertThatCode(() -> service.submit(new SubmitChangeRequestCommand(
+                    ChangeRequestType.UPDATE_PERSON, nguoiChiGiap, null,
+                    deNghiNguyenQuan(), "Que quan ghi thieu"))).doesNotThrowAnyException();
+        }
+
         @Test
         @DisplayName("Chi đích được chốt ngay lúc gửi, suy từ chi chính của nhân khẩu")
         void chotChiDichLucGui() {

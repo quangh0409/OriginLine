@@ -131,6 +131,14 @@ tags:
       tư vào được hệ thống**: dòng họ mời người vào, không ai tự đăng ký.
       Hai đường (`/lookup`, `/decline`) **không cần token** — người bấm chính là người chưa
       có tài khoản. / Invitation flow: the only door in; two endpoints need no token.
+  - name: password-resets
+    description: |-
+      **Cấp lại liên kết đặt mật khẩu** cho một thành viên đã quên mật khẩu.
+      Tồn tại vì đường phục hồi duy nhất của Keycloak là **gửi thư**, trong khi sản phẩm cho đăng
+      ký bằng email *hoặc* số điện thoại — và lối số điện thoại sinh ra chính vì các cụ không có
+      email. Chỉ cấp được cho tài khoản **không có địa chỉ thư**: ai có email thì đã tự lấy lại
+      được, và mở thêm đường cho họ chỉ thêm một lối chiếm tài khoản.
+      / Branch-head-issued password reset link, for phone-registered accounts only.
   - name: clan-invites
     description: |-
       **Mã mời dòng họ** — cấp cho cả họ, dùng nhiều lần, chỉ mở cửa đăng ký và xem phả đồ.
@@ -3398,6 +3406,105 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ---------------------------------------------------------------------------
+  # CẤP LẠI MẬT KHẨU / PASSWORD RESETS
+  # ---------------------------------------------------------------------------
+  /password-resets:
+    post:
+      tags: [password-resets]
+      operationId: issuePasswordReset
+      summary: Cấp lại liên kết đặt mật khẩu cho một thành viên / Issue a password reset link
+      description: |-
+        Phản hồi chứa **liên kết**, và đó là **lần duy nhất** nó xuất hiện: CSDL không lưu token,
+        kể cả băm. Không endpoint nào đọc lại được. Cấp lại thì **tự thu hồi** liên kết cũ.
+
+        ### Liên kết đi tới tay người nhận bằng cách nào
+
+        **Người cấp đọc nó trên màn hình rồi đưa tận tay, hoặc nhắn qua Zalo.** Không có cách nào
+        khác: người nhận *không có email* — đó là cả lý do đường này tồn tại. Giao diện phải nói
+        ba câu, và cả ba đều là một phần của phép răn chứ không phải trang trí:
+        "chỉ đưa cho đúng người" · "có hiệu lực tới `expiresAt`" · "**chính chủ đã được thông
+        báo**".
+
+        ### Đây là một lối chiếm tài khoản nếu làm ẩu
+
+        Cấp liên kết cho người khác **nghĩa là** đặt lại được mật khẩu của người ấy trong nửa giờ
+        tới. Không có cách nào làm việc ấy vô hại; chỉ có cách làm cho nó **không im lặng**. Mỗi
+        lượt cấp để lại ba dấu vết: một dòng `password_reset_grant` · một dòng `audit_log` (ai
+        cấp, cho ai, lúc nào) · và **một thông báo gửi thẳng cho chính chủ** trong trung tâm thông
+        báo. Đẩy thông báo hỏng thì cả lượt cấp hỏng theo — chủ ý.
+
+        ### Quyền
+
+        `BRANCH_HEAD` **trong phạm vi chi/ngành được giao** (kiểm bằng `ltree` của nhân khẩu đích,
+        không bằng vai) · `COUNCIL` · `ADMIN`. Cộng một luật riêng: **không ai tự cấp cho chính
+        mình** — "quên mật khẩu của chính mình" đi đường khác, và nếu tự cấp được thì một phiên bị
+        chiếm sẽ tự gia hạn thành quyền kiểm soát vĩnh viễn tài khoản.
+
+        ### Chỉ cấp được cho tài khoản KHÔNG có địa chỉ thư
+
+        Ai có email thì Keycloak đã tự lo được bằng "quên mật khẩu". Phép chặn ấy cũng tự động
+        loại **mọi tài khoản Google/Zalo** (danh tính xã hội luôn kèm email) — nếu không, người
+        cấp đặt được mật khẩu cục bộ lên một tài khoản mà chủ nhân vẫn đăng nhập bằng Google và
+        chủ nhân ấy sẽ không bao giờ nhận ra.
+
+        **Không có `GET` liệt kê**, có chủ ý: một danh sách "ai cấp lại cho ai" nói thẳng ra tài
+        khoản nào không có email, tức tài khoản nào cấp lại được. Câu hỏi tra soát thật thì
+        `audit_log` trả lời đầy đủ hơn.
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssuePasswordResetRequest'
+      responses:
+        '201':
+          description: |-
+            Đã cấp. Thân phản hồi chứa liên kết — **lần duy nhất**. Không có `Location`: không
+            endpoint nào đọc lại được một lượt cấp, và một `Location` trỏ vào chỗ không tồn tại là
+            một lời hứa suông. / Issued; the link appears exactly once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuedPasswordReset'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: |-
+            `BRANCH_SCOPE_VIOLATION` — đúng vai nhưng nhân khẩu đích thuộc chi khác; hoặc
+            `SELF_PASSWORD_RESET_FORBIDDEN` — đang tự cấp cho chính mình. Hai mã, hai hành động
+            khác hẳn nhau của người dùng.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: |-
+            `PASSWORD_RESET_NOT_ALLOWED` — một mã cho bốn lý do: nhân khẩu **chưa có tài khoản**
+            (hãy phát lời mời) · tài khoản không còn `ACTIVE` · tài khoản không còn trong realm ·
+            tài khoản **có địa chỉ thư** nên tự lấy lại được. `detail` phân biệt; nó dành cho
+            người cấp, một người đã đăng nhập và đã qua phép kiểm phạm vi.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          description: Không nói chuyện được với Keycloak (`IDENTITY_PROVIDER_UNAVAILABLE`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  # ---------------------------------------------------------------------------
   # LỜI MỜI / INVITATIONS
   # ---------------------------------------------------------------------------
   /invitations:
@@ -3690,6 +3797,17 @@ paths:
       description: |-
         Đích đến của `setPasswordUrl` mà `POST /invitations/accept` trả về. **Không cần token** —
         chính `token` trong thân yêu cầu là chứng chỉ.
+
+        ### Endpoint này nhận HAI loại liên kết, và nó cố ý chỉ có một
+
+        | Loại | Đến từ | "Một lần" neo vào đâu |
+        |---|---|---|
+        | Đặt mật khẩu **lần đầu** | `POST /invitations/accept`, `POST /clan-invites/register` | trạng thái thật ở Keycloak: tài khoản đã có credential password chưa |
+        | **Cấp lại** | `POST /password-resets` | cột `password_reset_grant.used_at` — vì tài khoản ở đó *đã* có mật khẩu, nên nguồn chân lý kia không dùng được |
+
+        Client **không phải biết mình đang cầm loại nào**, và thân yêu cầu không có trường nào để
+        nói điều đó: hai loại phân biệt nhau bằng **khoá ký của token**, ở phía máy chủ. Một màn
+        hình, một endpoint, vì người dùng chỉ có một màn `/dat-mat-khau`.
 
         Mật khẩu đi **qua** lối này tới Keycloak, nơi chính sách mật khẩu của realm được áp dụng và
         nơi nó được băm. Backend **không sinh, không lưu, và không đọc lại được** mật khẩu.
@@ -10447,6 +10565,103 @@ components:
           description: |-
             Mật khẩu do chính người dùng chọn. Máy chủ **không** lưu nó; nó đi thẳng tới Keycloak,
             nơi chính sách realm phán quyết và nơi nó được băm.
+
+    IssuePasswordResetRequest:
+      type: object
+      title: Cấp lại liên kết đặt mật khẩu
+      description: |-
+        Khoá vào là **nhân khẩu**, không phải tài khoản: người cấp làm việc trên phả đồ, và phép
+        kiểm phạm vi đọc `ltree` của nhân khẩu. Khoá vào bằng tài khoản thì giữa lệnh và phép kiểm
+        có một phép tra, và mọi phép tra ở giữa là một chỗ để lệch.
+
+        **Không có trường hạn.** Hạn là 30 phút và người cấp không chỉnh được: một liên kết đặt
+        lại mật khẩu sống 7 ngày là một liên kết sống lâu hơn cuộc gọi điện đã sinh ra nó, và
+        người cấp không phải người chịu hậu quả nếu nó lọt.
+      required: [personId]
+      properties:
+        personId:
+          type: string
+          format: uuid
+          description: Nhân khẩu của người quên mật khẩu.
+        note:
+          type: string
+          maxLength: 500
+          description: |-
+            Ghi chú của người cấp, ví dụ "cụ gọi điện sáng 12/3". **Không** ghi số điện thoại hay
+            địa chỉ vào đây — nó vào `audit_log` vĩnh viễn, và `audit_log` là bảng chỉ ghi thêm.
+
+    IssuedPasswordReset:
+      type: object
+      title: Liên kết vừa cấp
+      description: |-
+        `url` **không đọc lại được** ở bất cứ endpoint nào. Mất thì cấp lại; cấp lại tự thu hồi
+        liên kết cũ. Đó không phải hạn chế của hiện thực mà là chính điều kiện khiến "một lần" có
+        nghĩa.
+      required: [url, expiresAt, grant]
+      properties:
+        url:
+          type: string
+          description: |-
+            Địa chỉ trao tận tay người quên mật khẩu. Dùng **một lần**. Client không được ghi nó
+            vào tiêu đề trang, `Referer` hay nhật ký phân tích.
+        expiresAt:
+          type: string
+          format: date-time
+        grant:
+          $ref: '#/components/schemas/PasswordResetGrant'
+
+    PasswordResetGrant:
+      type: object
+      title: Bản ghi một lượt cấp lại
+      description: Không chứa liên kết và không chứa mảnh nào của token.
+      properties:
+        id:
+          type: string
+          format: uuid
+        targetPersonId:
+          type: string
+          format: uuid
+        target:
+          type: object
+          description: |-
+            Tên · đời · tên chi của người được cấp — đúng đủ để nhận ra ai. Không năm sinh, không
+            nơi ở, không liên hệ: cùng ranh giới mà màn nhận lời mời đã đặt.
+          properties:
+            displayName:
+              type: string
+            generation:
+              type: integer
+              nullable: true
+            branchName:
+              type: string
+              nullable: true
+        branchId:
+          type: string
+          format: uuid
+          nullable: true
+        issuedBy:
+          type: string
+          format: uuid
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        usedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: |-
+            `null` nghĩa là người ấy **chưa** đặt lại mật khẩu — tức liên kết có thể chưa tới được
+            tay họ. Đây là con số đáng nhìn nhất trên màn hình quản trị.
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: string
+          nullable: true
 
     RedeemInvitationRequest:
       type: object

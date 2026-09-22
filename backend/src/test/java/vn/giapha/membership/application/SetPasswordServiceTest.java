@@ -11,6 +11,7 @@ import vn.giapha.membership.domain.port.IdentityProviderException;
 import vn.giapha.membership.domain.port.SetPasswordLink;
 import vn.giapha.membership.domain.port.SetPasswordNotAllowedException;
 import vn.giapha.membership.support.FakeIdentityProvider;
+import vn.giapha.membership.support.FakePasswordResetGateway;
 import vn.giapha.shared.exception.DomainException;
 
 /**
@@ -30,7 +31,8 @@ class SetPasswordServiceTest {
     @BeforeEach
     void dung() {
         identityProvider = new FakeIdentityProvider();
-        setPasswords = new SetPasswordService(identityProvider);
+        setPasswords = new SetPasswordService(identityProvider,
+                FakePasswordResetGateway.khongDungLuongCapLai());
     }
 
     private String lienKetChoTaiKhoanMoi() {

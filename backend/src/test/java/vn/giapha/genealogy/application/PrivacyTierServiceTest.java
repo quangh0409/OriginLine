@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import vn.giapha.genealogy.application.GenealogyTestDoubles.FakeCallerIdentity;
+import vn.giapha.genealogy.application.view.PersonAccessView;
 import vn.giapha.genealogy.domain.FieldChange;
 import vn.giapha.genealogy.domain.Person;
 import vn.giapha.genealogy.domain.PersonFixtures;
@@ -393,6 +394,127 @@ class PrivacyTierServiceTest {
                     .isEqualTo(VisibleTier.T1);
             assertThat(nhinThay(nguoi, vai(CallerRole.MEMBER, CHI_GIAP), CHI_GIAP).tier())
                     .isEqualTo(VisibleTier.T3);
+        }
+    }
+
+    @Nested
+    @DisplayName("Ba cờ quyền của meta — nói về NGƯỜI GỌI, không về dữ liệu bị giấu")
+    class BaCoQuyen {
+
+        /** Người gọi là chính chủ của {@code person}. */
+        private CallerContext chinhChu(Person person, BranchPath chiNha) {
+            return new CallerContext(CallerRole.MEMBER, person.rawId(), List.of(), chiNha);
+        }
+
+        private PersonAccessView quyenCua(Person person, CallerContext caller, BranchPath chi) {
+            return privacy.accessOf(person, caller, nhinThay(person, caller, chi));
+        }
+
+        /**
+         * Khiếm khuyết đã đo: cờ này từng là hằng số {@code false}, và
+         * {@code CorrectionRequestEntry} của giao diện tự ẩn khi nó sai — nên luồng đính chính
+         * <b>không có điểm bắt đầu nào</b>, trong khi
+         * {@code POST /api/v1/change-requests} vẫn nhận đơn và trả {@code 201}.
+         */
+        @Test
+        @DisplayName("Thành viên thường ĐỀ NGHỊ ĐÍNH CHÍNH được trên hồ sơ người khác")
+        void thanhVienDeNghiDinhChinhDuoc() {
+            Person nguoiKhac = PersonFixtures.nu("Nguyễn Thị Người Khác");
+
+            PersonAccessView quyen = quyenCua(nguoiKhac, vai(CallerRole.MEMBER, CHI_GIAP), CHI_GIAP);
+
+            assertThat(quyen.canEdit())
+                    .as("thanh vien thuong khong ghi thang len ho so nguoi khac")
+                    .isFalse();
+            assertThat(quyen.canRequestCorrection())
+                    .as("khong co co nay thi ho so nguoi khac khong con nut 'De nghi dinh chinh'")
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName("Chính chủ KHÔNG cần đề nghị đính chính — họ sửa thẳng")
+        void chinhChuSuaThang() {
+            Person toi = PersonFixtures.nu("Nguyễn Thị Chính Chủ");
+
+            PersonAccessView quyen = quyenCua(toi, chinhChu(toi, CHI_GIAP), CHI_GIAP);
+
+            assertThat(quyen.isSelf()).isTrue();
+            assertThat(quyen.canEdit()).isTrue();
+            assertThat(quyen.canRequestCorrection())
+                    .as("bat chinh chu di vong qua hang doi duyet la vo nghia")
+                    .isFalse();
+        }
+
+        @Test
+        @DisplayName("Trưởng chi TRONG phạm vi sửa thẳng; NGOÀI phạm vi thì đề nghị đính chính")
+        void truongChiTheoPhamVi() {
+            Person trongChi = PersonFixtures.nu("Nguyễn Thị Trong Chi");
+            Person ngoaiChi = PersonFixtures.nu("Nguyễn Thị Ngoài Chi");
+            CallerContext truongChiGiap = vai(CallerRole.BRANCH_HEAD, CHI_GIAP, CHI_GIAP);
+
+            PersonAccessView trong = quyenCua(trongChi, truongChiGiap, CHI_GIAP);
+            PersonAccessView ngoai = quyenCua(ngoaiChi, truongChiGiap, CHI_AT);
+
+            assertThat(trong.canEdit()).isTrue();
+            assertThat(trong.canRequestCorrection()).isFalse();
+            assertThat(ngoai.canEdit())
+                    .as("ranh gioi ltree: Truong chi Giap khong ghi len Chi At")
+                    .isFalse();
+            assertThat(ngoai.canRequestCorrection())
+                    .as("khong ghi duoc thi phai de nghi duoc, neu khong ho khong con loi nao")
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName("Hội đồng sửa thẳng nên không có cờ đề nghị đính chính")
+        void hoiDongSuaThang() {
+            Person ai = PersonFixtures.nu("Nguyễn Thị Bất Kỳ");
+
+            PersonAccessView quyen = quyenCua(ai, vai(CallerRole.COUNCIL, CHI_GIAP), CHI_AT);
+
+            assertThat(quyen.canEdit()).isTrue();
+            assertThat(quyen.canRequestCorrection()).isFalse();
+        }
+
+        /**
+         * Tài khoản vừa gõ xong mã mời: <b>có</b> {@code app_user} nhưng chưa được duyệt vào phả.
+         *
+         * <p>Đây là ca mà một cờ tính theo "có token" sẽ sai: giao diện sẽ mời họ gửi đính chính,
+         * rồi máy chủ đóng cửa bằng {@code ACCOUNT_NOT_ACTIVE}
+         * ({@code BranchScopeGuard.requireActiveMember}). Hai bên phải nói cùng một câu.</p>
+         */
+        @Test
+        @DisplayName("Tài khoản CHƯA được duyệt vào phả thì chưa đề nghị đính chính được")
+        void chuaDuyetVaoPhaThiChuaDeNghiDuoc() {
+            Person nguoiKhac = PersonFixtures.nu("Nguyễn Thị Người Khác");
+            // personId = null: dung trang thai cua tai khoan vua dang ky bang ma moi dong ho.
+            CallerContext chuaDuyet =
+                    new CallerContext(CallerRole.MEMBER, null, List.of(), CHI_GIAP);
+
+            PersonAccessView quyen = quyenCua(nguoiKhac, chuaDuyet, CHI_GIAP);
+
+            assertThat(quyen.canEdit()).isFalse();
+            assertThat(quyen.canRequestCorrection())
+                    .as("chua duyet thi chua gui duoc gi vao hang cho cua Truong chi")
+                    .isFalse();
+        }
+
+        /**
+         * Bề mặt công khai đòi cả ba cờ phải tắt — {@code PublicVisibilityGuard} ném
+         * {@code IllegalStateException} nếu không, nên ca này canh đúng bất biến ấy tại nguồn.
+         */
+        @Test
+        @DisplayName("Khách KHÔNG đề nghị đính chính được — bề mặt công khai đòi cả ba cờ tắt")
+        void khachKhongCoCoNao() {
+            Person daKhuat = PersonFixtures.daKhuat("Cụ Tổ Công Khai", Gender.MALE);
+            CallerContext khach = CallerContext.guest();
+
+            PersonAccessView quyen = quyenCua(daKhuat, khach, CHI_GIAP);
+
+            assertThat(quyen.canEdit()).isFalse();
+            assertThat(quyen.canDelete()).isFalse();
+            assertThat(quyen.canRequestCorrection()).isFalse();
+            assertThat(quyen.isSelf()).isFalse();
         }
     }
 

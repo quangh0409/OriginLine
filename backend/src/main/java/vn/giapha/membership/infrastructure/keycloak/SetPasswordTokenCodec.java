@@ -36,6 +36,12 @@ public final class SetPasswordTokenCodec {
     /** Chuỗi phân tách miền; đổi nó là làm mọi liên kết đang lưu hành hết hiệu lực. */
     private static final String DOMAIN_SEPARATION = "giapha:set-password-link:v1";
 
+    /**
+     * Chuỗi phân tách miền của luồng <b>cấp lại</b> (Trưởng chi cấp liên kết cho một thành viên đã
+     * quên mật khẩu) — xem {@link #forPasswordReset(String)}.
+     */
+    private static final String DOMAIN_SEPARATION_RESET = "giapha:password-reset-link:v1";
+
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
@@ -43,13 +49,38 @@ public final class SetPasswordTokenCodec {
 
     private final byte[] signingKey;
 
+    /** Codec của liên kết đặt mật khẩu <b>lần đầu</b> (luồng mời). */
     public SetPasswordTokenCodec(String clientSecret) {
+        this(clientSecret, DOMAIN_SEPARATION);
+    }
+
+    /**
+     * Codec của liên kết <b>cấp lại</b> — Trưởng chi/Hội đồng cấp cho một thành viên đã quên mật
+     * khẩu.
+     *
+     * <h2>Hai codec, hai khoá ký, và đó là một phép chứng minh chứ không phải một quy ước</h2>
+     * Hai loại token đi vào <b>cùng một endpoint</b> và <b>cùng một màn hình</b>, vì người dùng chỉ
+     * có một màn {@code /dat-mat-khau} và khuôn địa chỉ ấy đã nằm trong cấu hình. Nếu chúng dùng
+     * chung khoá ký thì việc phân biệt "token này thuộc luồng nào" sẽ phải dựa vào nội dung —
+     * {@code subject} của luồng mời là {@code sub} của Keycloak, của luồng này là khoá một dòng
+     * {@code password_reset_grant}, và <b>cả hai đều là UUID</b>. Một phép đoán, nghĩa là một chỗ
+     * sẽ đoán sai.
+     *
+     * <p>Khoá khác nhau thì {@code verify} của bên này luôn trả rỗng cho token của bên kia, không
+     * cần ai nhớ quy ước gì. Quan trọng hơn: một token đặt-mật-khẩu-lần-đầu <b>không thể</b> bị
+     * đem dùng như một lượt cấp lại, kể cả khi hai khoá tra tình cờ trùng giá trị.</p>
+     */
+    public static SetPasswordTokenCodec forPasswordReset(String clientSecret) {
+        return new SetPasswordTokenCodec(clientSecret, DOMAIN_SEPARATION_RESET);
+    }
+
+    private SetPasswordTokenCodec(String clientSecret, String purpose) {
         if (clientSecret == null || clientSecret.isBlank()) {
             throw new IllegalArgumentException(
                     "Khong dan xuat duoc khoa ky khi chua co bi mat client dich vu");
         }
         this.signingKey = hmac(clientSecret.getBytes(StandardCharsets.UTF_8),
-                DOMAIN_SEPARATION.getBytes(StandardCharsets.UTF_8));
+                purpose.getBytes(StandardCharsets.UTF_8));
     }
 
     /** Token cho một {@code subject}, hết hạn sau {@code ttl}. */

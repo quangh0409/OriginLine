@@ -35,8 +35,12 @@ public class NotificationDispatchService {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationDispatchService.class);
 
-    /** Kênh phát cho một lượt nhắc ở Giai đoạn 1. Thêm {@code Channel.ZALO} là đủ cho Giai đoạn 2. */
-    private static final List<Channel> REMINDER_CHANNELS = List.of(Channel.INAPP, Channel.WEBPUSH);
+    /**
+     * Bộ kênh của Giai đoạn 1, dùng chung cho <b>mọi</b> loại tin đi ra từ lớp này — nhắc giỗ lẫn
+     * thông báo hệ thống. Thêm {@code Channel.ZALO} là đủ cho Giai đoạn 2, và nó phải có hiệu lực
+     * với cả hai cùng lúc: hai danh sách kênh tách rời là hai thứ sẽ lệch nhau.
+     */
+    private static final List<Channel> MVP_CHANNELS = List.of(Channel.INAPP, Channel.WEBPUSH);
 
     private final RecipientDirectory recipients;
     private final NotificationPublisher publisher;
@@ -63,14 +67,48 @@ public class NotificationDispatchService {
             return 0;
         }
         for (Recipient recipient : targets) {
-            for (Channel channel : REMINDER_CHANNELS) {
+            for (Channel channel : MVP_CHANNELS) {
                 publisher.publish(toMessage(request, recipient, channel));
             }
         }
         log.info("Da day lich nhac {} (su kien {}, D-{}) toi {} nguoi nhan tren {} kenh",
                 request.reminderJobId(), request.eventId(), request.offsetDays(),
-                targets.size(), REMINDER_CHANNELS.size());
+                targets.size(), MVP_CHANNELS.size());
         return targets.size();
+    }
+
+    /**
+     * Đẩy một thông báo hệ thống tới <b>đúng một người</b> — xem {@link SystemNotice}.
+     *
+     * <h2>Vì sao phương thức này tồn tại, thay vì bên gọi tự đẩy tin</h2>
+     * {@code notification} là context sở hữu hình dạng của một tin, tên hai queue, và luật "mỗi
+     * kênh một tin". Một context khác tự dựng {@code NotificationMessage} rồi gọi thẳng
+     * {@code NotificationPublisher} là chép ba thứ ấy ra ngoài, và bản chép sẽ lệch ở lần sửa đầu
+     * tiên — ví dụ khi thêm {@code Channel.ZALO} cho Giai đoạn 2.
+     *
+     * <h2>Lời gọi này KHÔNG chờ gửi xong</h2>
+     * Nó ghi vào broker rồi trả về, y như {@link #dispatchReminder}. Bên gọi đầu tiên là luồng web
+     * của {@code membership} (Trưởng chi cấp lại liên kết đặt mật khẩu), và luồng web thì không bao
+     * giờ được chờ một gateway bên ngoài.
+     *
+     * <p><b>Ngoại lệ được để lan lên, có chủ ý.</b> Bên gọi ấy đặt lời gọi này <i>trong</i>
+     * transaction của mình chính vì thế: broker chết ⇒ cả lượt cấp hỏng ⇒ không có liên kết nào
+     * sống mà chủ tài khoản không được báo. Đừng "nuốt lỗi cho chắc" ở đây — nuốt là biến một sự cố
+     * hạ tầng thành một lượt cấp im lặng.</p>
+     */
+    public void dispatchSystemNotice(SystemNotice notice) {
+        Recipient recipient = new Recipient(notice.recipientPersonId(),
+                notice.recipientAppUserId(), notice.locale());
+        for (Channel channel : MVP_CHANNELS) {
+            publisher.publish(new NotificationMessage(
+                    // reminderJobId = null: khong co khoa chong trung. Xem javadoc SystemNotice.
+                    null, null, null, recipient, channel, NotificationCategory.SYSTEM,
+                    notice.title().forLocale(recipient.locale()),
+                    notice.body().forLocale(recipient.locale()),
+                    notice.deepLink(), null, null));
+        }
+        log.info("Da day mot thong bao he thong toi nhan khau {} tren {} kenh",
+                notice.recipientPersonId(), MVP_CHANNELS.size());
     }
 
     /**

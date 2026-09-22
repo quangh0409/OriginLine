@@ -9,8 +9,13 @@
 # ha tang cua W0 (vn.giapha.shared.api.HealthGraphQlController). No khong thuoc hop dong
 # voi frontend nen khong duoc dua nguoc len contracts/.
 #
-# Truong nao chua co resolver (kinship, events, notifications, branches, me) se bao loi
-# khi client hoi toi - do la cac workstream khac, khong phai loi cua schema.
+# Truong nao chua co resolver (events, notifications, me, va branch(id:)) se bao loi khi
+# client hoi toi - do la cac workstream khac, khong phai loi cua schema.
+#
+# `branches` DA CO resolver (BranchGraphQlController) cho dung nam truong ma client hoi:
+# id / name / path / region / memberCount. Bon truong con lai cua type Branch - parent,
+# children, head, persons - van chua co, va do la co y: head/persons keo theo tron bo loc
+# cong bo nhan khau, tuc mot hang muc rieng.
 # =============================================================================
 
 # =============================================================================

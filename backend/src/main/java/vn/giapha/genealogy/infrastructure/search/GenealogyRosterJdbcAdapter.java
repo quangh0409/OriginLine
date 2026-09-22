@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import vn.giapha.genealogy.application.GenealogyRosterPort;
+import vn.giapha.genealogy.application.GenealogyRosterPort.PersonBranchRef;
 
 /**
  * Hiện thực {@link GenealogyRosterPort} bằng SQL thuần trên bảng {@code person}.
@@ -105,6 +106,36 @@ public class GenealogyRosterJdbcAdapter implements GenealogyRosterPort {
              LIMIT :limit
             """;
 
+    /**
+     * Cặp (nhân khẩu, chi) cho phép đếm {@code Branch.memberCount}.
+     *
+     * <p><b>Không</b> có {@code p.is_deleted = FALSE} và <b>không</b> có {@code p.is_alive} ở đây —
+     * xem javadoc của {@link GenealogyRosterPort#personBranchRefs}. Hai cờ ấy là đầu vào của luật
+     * hiển thị, và luật ấy chạy trong tiến trình.</p>
+     *
+     * <p>{@code b.is_deleted = FALSE} thì khác: một chi đã xoá không xuất hiện trong danh sách trả
+     * về nên cũng không có bộ đếm nào để cộng vào. Đây là dọn dẹp cấu trúc, không phải phân quyền.</p>
+     */
+    private static final String PERSON_BRANCH_IN_CLAN = """
+            SELECT p.id AS person_id, b.id AS branch_id
+              FROM person p
+              JOIN branch b ON b.id = p.primary_branch_id
+             WHERE b.is_deleted = FALSE
+             ORDER BY p.id ASC
+             LIMIT :limit
+            """;
+
+    /** Như trên, giới hạn trong một cây con. {@code <@} đọc là "nằm trong" — xem javadoc của lớp. */
+    private static final String PERSON_BRANCH_IN_SUBTREE = """
+            SELECT p.id AS person_id, b.id AS branch_id
+              FROM person p
+              JOIN branch b ON b.id = p.primary_branch_id
+             WHERE b.is_deleted = FALSE
+               AND b.path <@ CAST(:prefix AS ltree)
+             ORDER BY p.id ASC
+             LIMIT :limit
+            """;
+
     /** Ký tự đại diện của {@code LIKE} và chính ký tự thoát, phải được thoát trước khi ghép. */
     private static final java.util.regex.Pattern LIKE_META =
             java.util.regex.Pattern.compile("([\\\\%_])");
@@ -154,5 +185,26 @@ public class GenealogyRosterJdbcAdapter implements GenealogyRosterPort {
                 .addValue("q", LIKE_META.matcher(q.trim()).replaceAll("\\\\$1"))
                 .addValue("limit", limit);
         return jdbc.query(LIVING_BY_NAME, params, (rs, row) -> rs.getObject("id", UUID.class));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonBranchRef> personBranchRefs(String branchPathPrefix, int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource("limit", limit);
+        String sql;
+        if (branchPathPrefix == null || branchPathPrefix.isBlank()) {
+            sql = PERSON_BRANCH_IN_CLAN;
+        } else {
+            sql = PERSON_BRANCH_IN_SUBTREE;
+            params.addValue("prefix", branchPathPrefix);
+        }
+        List<PersonBranchRef> rows = jdbc.query(sql, params, (rs, row) -> new PersonBranchRef(
+                rs.getObject("person_id", UUID.class), rs.getObject("branch_id", UUID.class)));
+        log.debug("Nhan khau da gan chi trong pham vi {}: {} (chua loc rieng tu)",
+                branchPathPrefix, rows.size());
+        return rows;
     }
 }

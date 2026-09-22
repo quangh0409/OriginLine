@@ -191,12 +191,41 @@ public class PrivacyTierService {
                 null);
     }
 
-    /** Quyền của người gọi trên hồ sơ này - nói về <i>người gọi</i>, không nói về dữ liệu bị giấu. */
+    /**
+     * Quyền của người gọi trên hồ sơ này - nói về <i>người gọi</i>, không nói về dữ liệu bị giấu.
+     *
+     * <h2>{@code canRequestCorrection} = "có tài khoản" ∧ "KHÔNG ghi thẳng được"</h2>
+     * Truoc day o cho nay la mot hang so {@code false}, va hang so ay <b>khoa han</b> luong dinh
+     * chinh tren giao dien that: {@code CorrectionRequestEntry} tra ve {@code null} khi co nay sai,
+     * nen ho so nguoi khac khong con nut "De nghi dinh chinh" nao, con
+     * {@code /persons/{id}/correction} ve cau "chua co tai khoan trong dong ho" cho dung mot thanh
+     * vien da duoc duyet vao pha. May chu thi van nhan don ({@code POST /api/v1/change-requests}
+     * tra {@code 201}) — tuc la cua da mo san ma khong co loi nao dan toi.
+     *
+     * <p>Thanh vien thuong moi la nguoi phat hien sai sot nhieu nhat (ho biet ro nha minh) va cung
+     * chinh ho la nguoi <b>khong</b> duoc ghi thang. Don dinh chinh la cay cau giua hai dieu do.
+     * Nguoc lai, Hoi dong / Quan tri / Truong chi trong pham vi cua minh <b>khong</b> can co nay:
+     * ho sua thang, bat ho di vong qua hang doi cua chinh minh la vo nghia. Chinh chu cung vay —
+     * BA v2 §10 mo Tang 3 cho chinh chu nen ho tu sua.
+     *
+     * <p>Khach khong nam trong do: khach con khong thay nguoi song nao de ma de nghi sua.</p>
+     *
+     * <h2>Dieu kien la {@code personId != null}, KHONG phai "co token"</h2>
+     * Mot tai khoan vua go xong ma moi da co {@code app_user} (no duoc tu tao o lan goi
+     * {@code /api/v1/me} dau tien) nhung <b>chua duoc duyet vao pha</b>. Lay "co tai khoan" lam
+     * dieu kien se mo loi dinh chinh cho dung nhom ay — trai voi luat "chua duyet thi chua gui
+     * duoc gi vao hang cho cua nguoi khac" ma loi viet bai da giu bang {@code AUTHOR_NOT_IN_PHA},
+     * va trai voi chinh cau {@code correction.errors.notActive} cua giao dien. May chu chan bang
+     * {@code BranchScopeGuard.requireActiveMember}; co nay phai noi <b>cung mot cau</b>, neu khong
+     * giao dien lai moi nguoi ta bam vao mot cai cua se dong sam.
+     */
     public PersonAccessView accessOf(Person person, CallerContext caller, PersonVisibility vis) {
         boolean clanWide = caller.role().isClanWide();
         boolean branchHead = caller.role() == CallerRole.BRANCH_HEAD && vis.inBranchScope();
-        return new PersonAccessView(vis.tier(), clanWide || branchHead || vis.self(),
-                clanWide || branchHead, false, vis.self(), caller.role());
+        boolean canEdit = clanWide || branchHead || vis.self();
+        boolean daVaoPha = caller.role() != CallerRole.GUEST && caller.personId() != null;
+        return new PersonAccessView(vis.tier(), canEdit,
+                clanWide || branchHead, daVaoPha && !canEdit, vis.self(), caller.role());
     }
 
     // -------------------------------------------------------------------------------------

@@ -22,6 +22,13 @@ import vn.giapha.shared.exception.DomainException;
  * và trả về thân rỗng, và không có biến thể nào trả về URL. Muốn có thì phải cắm một SPI riêng vào
  * máy chủ Keycloak.
  *
+ * <h2>Lớp này phục vụ HAI luồng, không phải một</h2>
+ * Từ V21 nó còn là đuôi của luồng <b>cấp lại</b> (Trưởng chi cấp liên kết cho một thành viên đã
+ * quên mật khẩu — {@code PasswordResetGrantService}). Hai luồng dùng chung endpoint và chung màn
+ * hình vì người dùng chỉ có một màn {@code /dat-mat-khau}; chúng được phân biệt bằng <b>khoá ký của
+ * token</b>, không bằng một cờ trong thân yêu cầu và không bằng hình dạng chuỗi — xem
+ * {@link PasswordResetRedeemer}.
+ *
  * <p>Nên hình dạng hôm nay là: liên kết do backend đúc (ký HMAC, hạn ngắn, một lần), và mật khẩu
  * người dùng chọn đi <i>qua</i> lớp này tới Keycloak — nơi chính sách mật khẩu của realm được áp
  * dụng và nơi nó được băm. Backend không sinh mật khẩu, không lưu mật khẩu, không đọc lại được.
@@ -34,9 +41,12 @@ public class SetPasswordService {
     private static final Logger log = LoggerFactory.getLogger(SetPasswordService.class);
 
     private final IdentityProviderPort identityProvider;
+    private final PasswordResetRedeemer resetRedeemer;
 
-    public SetPasswordService(IdentityProviderPort identityProvider) {
+    public SetPasswordService(IdentityProviderPort identityProvider,
+                              PasswordResetRedeemer resetRedeemer) {
         this.identityProvider = identityProvider;
+        this.resetRedeemer = resetRedeemer;
     }
 
     /**
@@ -55,6 +65,17 @@ public class SetPasswordService {
         if (rawPassword == null || rawPassword.isBlank()) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
                     "Mat khau khong duoc rong");
+        }
+        // HAI LOAI TOKEN, MOT ENDPOINT. Hoi luong cap lai truoc, va cau hoi ay duoc tra loi bang
+        // KHOA KY chu khong bang hinh dang chuoi: readGrantRef chi doc duoc token do luong cap lai
+        // duc ra. Token cua luong moi luon cho ra rong o day va di tiep xuong duoi.
+        //
+        // Thu tu giua hai luong khong anh huong tinh dung — hai khoa ky khac nhau nen khong token
+        // nao doc duoc boi ca hai — nhung dat luong cap lai truoc giu cho nhanh duoi nguyen ven
+        // dung nhu truoc khi co V21.
+        if (resetRedeemer.completeIfResetToken(token, rawPassword)) {
+            log.info("Mot thanh vien vua dat lai mat khau qua lien ket do Truong chi cap");
+            return;
         }
         if (!identityProvider.isConfigured()) {
             throw new IdentityProviderException(
