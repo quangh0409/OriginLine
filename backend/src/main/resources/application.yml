@@ -157,8 +157,25 @@ spring:
 
   mvc:
     problemdetails:
-      # Bat de ca ngoai le san co cua Spring MVC cung tra ve RFC 7807.
-      enabled: true
+      # TAT CO CHU DICH, va `false` o day KHONG co nghia la "bo RFC 7807".
+      #
+      # Co nay dang ky `ProblemDetailsExceptionHandler` cua Spring Boot — mot @RestControllerAdvice
+      # ke thua ResponseEntityExceptionHandler, khai @Order(0) (KHONG phai LOWEST_PRECEDENCE nhu
+      # ten goi goi y). No dich 20 ngoai le khung sang RFC 7807 nhung than loi chi co
+      # `type: about:blank`, KHONG `code`, KHONG `timestamp` — tuc la thieu dung thu duy nhat
+      # client duoc phep re nhanh theo (contracts/README §3).
+      #
+      # vn.giapha.shared.api.GlobalExceptionHandler nay DA ke thua chinh
+      # ResponseEntityExceptionHandler ay, o HIGHEST_PRECEDENCE + 100, va override
+      # handleExceptionInternal de gan `code` + `timestamp` + `type` cho CA 20 ngoai le do. Nen
+      # advice cua Spring vua thua vua lam roi khi doc thu tu advice — giu no bat chi de lai mot
+      # advice khong bao gio thang, va nguoi sau se mat thoi gian doan xem ai dang tra loi.
+      #
+      # DAT LAI `true` la vo hai NHUNG vo nghia. Dieu THUC SU nguy hiem la go
+      # `extends ResponseEntityExceptionHandler` khoi GlobalExceptionHandler: luc ay khong con ai
+      # dich 20 ngoai le khung, va chung roi xuong UnexpectedErrorHandler => sau lop loi client
+      # thanh 500. Da xay ra mot lan; ApiErrorContractIT ghim ca sau.
+      enabled: false
     throw-exception-if-no-handler-found: true
 
   web:

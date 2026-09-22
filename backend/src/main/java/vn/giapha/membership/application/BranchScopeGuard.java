@@ -171,7 +171,50 @@ public class BranchScopeGuard {
      */
     public void requireActiveMember(MemberScope caller, String what) {
         requireProvisionedAccount(caller);
-        if (caller.personId() == null) {
+        requireLinkedToTree(caller.personId(), what);
+    }
+
+    /**
+     * Bản nhận {@link MemberScopeView} — <b>và lý do kỹ thuật khiến bản vá trước dừng lại ở đúng
+     * một context.</b>
+     *
+     * <h2>Thiếu chồng hàm này là một lỗ hổng, không phải một bất tiện</h2>
+     * {@code membership} và {@code genealogy} gọi được bản {@link MemberScope}; nhưng
+     * {@code media}, {@code content} và {@code events} chỉ cầm {@link MemberScopeView} (kiểu được
+     * công bố), nên khi luật "chưa duyệt vào phả thì chưa gửi được gì vào hàng chờ của người khác"
+     * được vá, ba context ấy <b>không có hàm để gọi</b> và ở lại với
+     * {@link #requireProvisionedAccount}. Hậu quả đo được: một tài khoản {@code person_id = NULL}
+     * vẫn mở được đơn báo gỡ ảnh ({@code MediaReportService}) và ném thẳng vào hàng chờ của Trưởng
+     * chi — đúng cái cửa mà bản vá kia vừa đóng ở {@code change-requests}.
+     *
+     * <p>Xem javadoc lớp: luật phân quyền chép làm hai bản là luật sẽ lệch nhau; ở đây nó đã lệch
+     * bằng cách bản thứ hai <i>không tồn tại</i>.</p>
+     *
+     * @param what việc đang bị từ chối, ghép vào câu trả lời
+     */
+    public void requireActiveMember(MemberScopeView caller, String what) {
+        requireProvisionedAccount(caller);
+        requireLinkedToTree(caller.personId(), what);
+    }
+
+    /**
+     * <b>Đã biết và CHƯA vá: phép kiểm này không đọc {@code app_user.status}.</b>
+     *
+     * <p>Tên hàm, mã lỗi {@code ACCOUNT_NOT_ACTIVE} và {@code contracts/openapi.yaml}
+     * (<i>"tài khoản tồn tại nhưng đang bị khoá hoặc chờ duyệt"</i>) đều hứa rằng trạng thái đã
+     * được kiểm; thực tế chỉ {@code personId} được kiểm. Lý do là {@link MemberScope} và
+     * {@link MemberScopeView} <b>không mang {@code status} sang</b>, nên guard không thể kiểm dù
+     * muốn — không phải vì ai quên.</p>
+     *
+     * <p>Chưa nổ vì chưa endpoint nào gọi {@code AppUser.changeStatus}. Nhưng ngày nút "khoá tài
+     * khoản" được nối, một thành viên {@code SUSPENDED} vẫn gửi được đề nghị đính chính và
+     * <b>tên hàm sẽ nói rằng điều đó đã được kiểm</b>. {@code PasswordResetGrantService} thì
+     * <i>có</i> đọc {@code status} — hai lối trong cùng một context đang hiểu {@code ACTIVE} theo
+     * hai nghĩa. Vá đúng = mang {@code status} vào cả hai kiểu phạm vi; đã báo cáo, cố ý không tự
+     * mở rộng ở đây.</p>
+     */
+    private void requireLinkedToTree(java.util.UUID personId, String what) {
+        if (personId == null) {
             throw new ForbiddenException(MembershipProblemCodes.ACCOUNT_NOT_ACTIVE,
                     "Tai khoan chua duoc duyet vao pha nen chua " + what + " duoc."
                             + " Hay tu nhan minh tren pha do va cho Truong chi duyet.");

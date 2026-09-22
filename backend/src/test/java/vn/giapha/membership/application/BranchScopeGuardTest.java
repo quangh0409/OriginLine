@@ -259,6 +259,86 @@ class BranchScopeGuardTest {
         }
     }
 
+    /**
+     * <b>Chồng hàm {@link MemberScopeView} — lỗ hổng nằm ở chỗ nó KHÔNG tồn tại.</b>
+     *
+     * <p>Luật "chưa được duyệt vào phả thì chưa gửi được gì vào hàng chờ của người khác" từng chỉ
+     * có bản nhận {@link MemberScope}. {@code media} / {@code content} / {@code events} chỉ cầm
+     * {@link MemberScopeView} nên không có hàm để gọi, và {@code MediaReportService} ở lại với
+     * {@code requireProvisionedAccount} — tức là một tài khoản {@code person_id = NULL} vẫn mở
+     * được đơn báo gỡ và ném thẳng vào hàng chờ Trưởng chi.</p>
+     *
+     * <p>Hai vai của cùng một luật phải <b>ném cùng một mã</b>, nếu không giao diện rẽ nhánh theo
+     * {@code code} sẽ hiện hai câu khác nhau cho cùng một tình huống.</p>
+     */
+    @Nested
+    @DisplayName("Đã được duyệt vào phả (bản MemberScopeView)")
+    class DaDuyetVaoPha {
+
+        private MemberScopeView chuaDuyet() {
+            // Dung trang thai cua mot tai khoan vua go xong ma moi: CO app_user (no tu tao o lan
+            // goi /api/v1/me dau tien), person_id van NULL.
+            return new MemberScopeView(UUID.randomUUID(), null, RoleCode.MEMBER.name(),
+                    false, List.of(), CHI_GIAP);
+        }
+
+        private MemberScopeView daDuyet() {
+            return new MemberScopeView(UUID.randomUUID(), UUID.randomUUID(), RoleCode.MEMBER.name(),
+                    false, List.of(), CHI_GIAP);
+        }
+
+        @Test
+        @DisplayName("person_id NULL -> ACCOUNT_NOT_ACTIVE, không phải ACCOUNT_NOT_PROVISIONED")
+        void chuaDuyetThiChan() {
+            assertThatThrownBy(() -> guard.requireActiveMember(chuaDuyet(), "bao go tep dinh kem"))
+                    .isInstanceOf(ForbiddenException.class)
+                    .extracting(ex -> ((ForbiddenException) ex).getCode())
+                    .as("ACCOUNT_NOT_PROVISIONED noi 'chua co tai khoan' — sai o day, tai khoan co"
+                            + " that; giao dien da dich san cau cho ACCOUNT_NOT_ACTIVE")
+                    .isEqualTo(MembershipProblemCodes.ACCOUNT_NOT_ACTIVE);
+        }
+
+        @Test
+        @DisplayName("Khách vẫn dừng ở ACCOUNT_NOT_PROVISIONED — hai tình huống, hai lối đi")
+        void khachVanLaChuaKhoiTao() {
+            assertThatThrownBy(() ->
+                    guard.requireActiveMember(MemberScopeView.guest(), "bao go tep dinh kem"))
+                    .isInstanceOf(ForbiddenException.class)
+                    .extracting(ex -> ((ForbiddenException) ex).getCode())
+                    .isEqualTo(MembershipProblemCodes.ACCOUNT_NOT_PROVISIONED);
+        }
+
+        @Test
+        @DisplayName("Thành viên đã được ghép vào phả thì đi qua")
+        void daDuyetThiQua() {
+            assertThatCode(() -> guard.requireActiveMember(daDuyet(), "bao go tep dinh kem"))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("Hai bản MemberScope / MemberScopeView ném cùng một mã cho cùng một ca")
+        void haiBanKhongDuocLech() {
+            UUID appUserId = UUID.randomUUID();
+            MemberScope banDomain = new MemberScope(appUserId, null, RoleCode.MEMBER,
+                    List.of(), CHI_GIAP, false);
+            MemberScopeView banView = new MemberScopeView(appUserId, null, RoleCode.MEMBER.name(),
+                    false, List.of(), CHI_GIAP);
+
+            assertThat(maLoiCua(() -> guard.requireActiveMember(banDomain, "lam viec nay")))
+                    .isEqualTo(maLoiCua(() -> guard.requireActiveMember(banView, "lam viec nay")))
+                    .isEqualTo(MembershipProblemCodes.ACCOUNT_NOT_ACTIVE);
+        }
+
+        private String maLoiCua(Runnable phep) {
+            try {
+                phep.run();
+                return null;
+            } catch (ForbiddenException ex) {
+                return ex.getCode();
+            }
+        }
+    }
+
     @Test
     @DisplayName("Mã lỗi giữ nguyên văn hợp đồng với frontend")
     void maLoiOnDinh() {

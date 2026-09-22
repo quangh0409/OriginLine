@@ -166,7 +166,7 @@ public class PrivacyTierService {
                 person.updatedAt(),
                 person.version(),
                 List.of(),
-                accessOf(person, caller, vis));
+                accessOf(person, caller, vis, path));
     }
 
     /** Dạng gọn cho danh sách và node phả đồ - chỉ dữ liệu phả hệ, không có khối nhạy cảm nào. */
@@ -218,10 +218,28 @@ public class PrivacyTierService {
      * va trai voi chinh cau {@code correction.errors.notActive} cua giao dien. May chu chan bang
      * {@code BranchScopeGuard.requireActiveMember}; co nay phai noi <b>cung mot cau</b>, neu khong
      * giao dien lai moi nguoi ta bam vao mot cai cua se dong sam.
+     *
+     * <h2>{@code branchHead} tinh bang {@code managesBranch}, KHONG bang {@code inBranchScope}</h2>
+     * {@code vis.inBranchScope()} duoc dung o {@link #visibility} la
+     * {@code managesBranch(...) || sharesBranchWith(...)} — mot khai niem <b>HIEN THI</b> (Tang 2
+     * "cung chi", BA v2 §10). Luat <b>GHI</b> ({@code GenealogyAccessGuard.requireWriteAccess})
+     * chi dung {@code managesBranch}. "Cung chi nha" khong phai quyen ghi.
+     *
+     * <p><b>Ca hong da do:</b> Truong chi quan {@code chi_giap.nganh_truong}, nhan khau cua chinh
+     * ong o {@code chi_giap}; mo ho so mot nguoi thuoc {@code chi_giap.nganh_hai}. Luc ay
+     * {@code managesBranch} sai, {@code sharesBranchWith} dung ⇒ {@code inBranchScope} dung ⇒
+     * {@code canEdit = true} (sai) VA {@code canRequestCorrection = false}. Giao dien hien "sua
+     * thang duoc" nhung {@code PATCH} tra {@code 403}, dong thoi nut "De nghi dinh chinh" — duong
+     * vong DUNG — bi tat. Doi mot nut mat tich lay mot nut dan toi loi, ca hai cung luc.</p>
+     *
+     * @param personBranch chi cua NHAN KHAU (khong phai cua nguoi goi); {@code null} = chua gan
+     *                     chi, va khi do chi vai toan dong ho moi ghi duoc
      */
-    public PersonAccessView accessOf(Person person, CallerContext caller, PersonVisibility vis) {
+    public PersonAccessView accessOf(Person person, CallerContext caller, PersonVisibility vis,
+                                     BranchPath personBranch) {
         boolean clanWide = caller.role().isClanWide();
-        boolean branchHead = caller.role() == CallerRole.BRANCH_HEAD && vis.inBranchScope();
+        boolean branchHead = caller.role() == CallerRole.BRANCH_HEAD
+                && caller.managesBranch(personBranch);
         boolean canEdit = clanWide || branchHead || vis.self();
         boolean daVaoPha = caller.role() != CallerRole.GUEST && caller.personId() != null;
         return new PersonAccessView(vis.tier(), canEdit,

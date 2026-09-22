@@ -4,23 +4,32 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import vn.giapha.shared.exception.DomainException;
 import vn.giapha.shared.exception.ForbiddenException;
 import vn.giapha.shared.exception.NotFoundException;
@@ -34,27 +43,56 @@ import vn.giapha.shared.exception.NotFoundException;
  *
  * <p><b>Nguyên tắc riêng tư (Nghị định 13/2023):</b> thông điệp lỗi không được rò rỉ dữ liệu người
  * còn sống. Lỗi 500 chỉ trả câu chung chung, chi tiết nằm ở log phía máy chủ.</p>
+ *
+ * <h2>Vì sao lớp này KẾ THỪA {@link ResponseEntityExceptionHandler}</h2>
+ * Đây là điểm đã hỏng một lần và hỏng nặng, nên chép lại nguyên nhân:
+ * <ol>
+ *   <li>{@code ExceptionHandlerExceptionResolver} duyệt advice <b>theo thứ tự</b> và dừng ở advice
+ *       <b>đầu tiên có bất kỳ phương thức nào khớp</b> — không phải ở phương thức khớp sát nhất
+ *       trên toàn bộ các advice.</li>
+ *   <li>Lớp này được nâng lên {@code HIGHEST_PRECEDENCE + 100} để giành lại
+ *       {@code MethodArgumentNotValidException} từ {@code ProblemDetailsExceptionHandler} của
+ *       Spring Boot ({@code @Order(0)}).</li>
+ *   <li>Nhưng lúc ấy nó <b>vẫn giữ một {@code @ExceptionHandler(Exception.class)}</b>. Một handler
+ *       bắt-tất khớp với <i>mọi</i> ngoại lệ, nên advice ưu tiên cao này nuốt trọn danh sách mà
+ *       {@code ResponseEntityExceptionHandler} từng dịch sang đúng mã HTTP.</li>
+ * </ol>
+ * <b>Đã đo trên hệ đang chạy:</b> sáu lớp lỗi của client cùng rơi xuống {@code 500} — thân JSON
+ * hỏng (400), thiếu {@code Content-Type} (415), tham số sai kiểu (400), thiếu tham số bắt buộc
+ * (400), {@code Accept: application/xml} (406), sai method (405). Màn tải Excel là nơi nhìn thấy
+ * hậu quả sớm nhất: {@code POST /api/v1/import-batches} khai {@code consumes=multipart/form-data}
+ * + {@code @RequestPart("file")}, nên hai lỗi client thường gặp nhất ở màn ấy đều thành
+ * {@code 500} và người vận hành đọc nó là "máy chủ hỏng".
+ *
+ * <p>Cách vá <b>không</b> phải là hạ {@code @Order} xuống — làm thế là trả lại khiếm khuyết
+ * {@code about:blank} cũ. Cái sai là <b>advice ưu tiên cao lại chứa handler bắt-tất</b>. Nên:</p>
+ * <ul>
+ *   <li>lớp này kế thừa {@link ResponseEntityExceptionHandler} ⇒ tự nó trả đúng status cho cả 20
+ *       ngoại lệ khung, và {@link #handleExceptionInternal} gắn {@code code} + {@code timestamp}
+ *       + {@code type} cho tất cả — thứ mà advice của Spring không bao giờ làm được;</li>
+ *   <li>{@code spring.mvc.problemdetails.enabled} đặt {@code false} ({@code application.yml}) vì
+ *       advice ấy nay thừa và chỉ làm rối khi đọc thứ tự;</li>
+ *   <li>handler bắt-tất dọn sang {@link UnexpectedErrorHandler} ở {@code LOWEST_PRECEDENCE} — nơi
+ *       duy nhất nó vô hại.</li>
+ * </ul>
+ *
+ * <p>{@code HIGHEST_PRECEDENCE + 100} vẫn đủ lớn để các advice theo ngữ cảnh
+ * ({@code ImportApiExceptionHandler} / {@code EventsExceptionHandler} /
+ * {@code GenealogyExceptionHandler} ở {@code HIGHEST_PRECEDENCE}, {@code ContentExceptionHandler}
+ * và {@code MembershipExceptionHandler} ở {@code +10}, {@code MediaExceptionHandler} ở {@code +11})
+ * thắng advice chung này. {@code ApiErrorContractIT} ghim cả hai chiều, vì một con số sai chỉ lộ ra
+ * ở một chiều.</p>
  */
 @RestControllerAdvice
-// BAT BUOC phai xep tren ProblemDetailsExceptionHandler cua Spring Boot.
-//
-// `spring.mvc.problemdetails.enabled: true` (application.yml) dang ky san advice ay, va Spring Boot
-// khai no `@Order(0)` — KHONG phai LOWEST_PRECEDENCE nhu ten goi goi y. Advice nay truoc day khong
-// khai @Order nen nam o LOWEST_PRECEDENCE va LUON thua.
-//
-// DA DO tren he dang chay truoc khi va: moi loi kiem THAN yeu cau (MethodArgumentNotValidException)
-// tra ve `type: about:blank`, KHONG co `code`, KHONG co `timestamp` va KHONG co `errors` — trong
-// khi chinh i18n/messages*.properties lai bao nguoi doc "Xem chi tiet o truong errors".
-// handleBeanValidation() ben duoi la ma chet: sua no khong doi duoc gi, va khong co loi nao in ra.
-//
-// HIGHEST_PRECEDENCE + 100: du nho de thang @Order(0) cua Spring Boot, du lon de bon advice theo
-// ngu canh (ImportApiExceptionHandler / EventsExceptionHandler / GenealogyExceptionHandler o
-// HIGHEST_PRECEDENCE, ContentExceptionHandler o HIGHEST_PRECEDENCE + 10) van thang advice chung nay.
-// ApiErrorContractIT ghim ca hai chieu, vi mot con so sai chi lo ra o mot chieu.
 @Order(Ordered.HIGHEST_PRECEDENCE + 100)
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /** Mã dùng cho mọi lỗi 4xx do khung sinh ra - xem {@link #maKhung}. */
+    private static final String CODE_VALIDATION = "VALIDATION_FAILED";
+
+    private static final String CODE_NOT_FOUND = "NOT_FOUND";
 
     @ExceptionHandler(NotFoundException.class)
     public ProblemDetail handleNotFound(NotFoundException ex, HttpServletRequest request) {
@@ -144,33 +182,218 @@ public class GlobalExceptionHandler {
                 "Vi phạm quy tắc nghiệp vụ", ex.getMessage(), ex.getCode(), request);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleBeanValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION,
-                "Dữ liệu gửi lên không hợp lệ", "Một hoặc nhiều trường không hợp lệ",
-                "VALIDATION_FAILED", request);
-        List<Map<String, String>> errors = new ArrayList<>();
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            errors.add(Map.of(
-                    "field", fieldError.getField(),
-                    "message", fieldError.getDefaultMessage() == null ? "" : fieldError.getDefaultMessage()));
-        }
-        for (var globalError : ex.getBindingResult().getGlobalErrors()) {
-            errors.add(Map.of(
-                    "field", globalError.getObjectName(),
-                    "message", globalError.getDefaultMessage() == null ? "" : globalError.getDefaultMessage()));
-        }
-        problem.setProperty("errors", errors);
-        return problem;
+    // =========================================================================================
+    // Ngoại lệ của khung — override, KHÔNG khai @ExceptionHandler
+    //
+    // ResponseEntityExceptionHandler.handleException() da khai san ca 20 kieu trong MOT
+    // @ExceptionHandler. Khai lai bat ky kieu nao trong so do o lop con se lam
+    // ExceptionHandlerMethodResolver nem "Ambiguous @ExceptionHandler method mapped for ..."
+    // NGAY LUC KHOI DONG. Do la ly do handleBeanValidation() va handleNoHandler() cu bien mat
+    // khoi day: chung tro thanh override ben duoi (va NoHandlerFoundException nay do chinh lop
+    // cha tra 404), khong phai bi xoa.
+    // =========================================================================================
+
+    /**
+     * Lỗi kiểm thân yêu cầu — {@code 400} kèm mảng {@code errors} từng trường.
+     *
+     * <p><b>Thân lỗi không bao giờ chở giá trị bị từ chối.</b> Mỗi phần tử {@code errors} có đúng
+     * hai khoá {@code field} + {@code message}. Thêm {@code fieldError.getRejectedValue()} vào đây
+     * là đưa số điện thoại / ngày sinh của một người <b>đang sống</b> ra một phản hồi {@code 400}
+     * mà bất kỳ ai gõ sai biểu mẫu cũng nhận được — một đường rò Tầng 3 (Nghị định 13/2023) trông
+     * y như một cải tiến trải nghiệm, và {@code SensitiveFieldRedactorTest} sẽ <b>không</b> đỏ vì
+     * nó chỉ canh nhật ký kiểm toán. {@code ApiErrorContractIT} ghim rằng mỗi phần tử chỉ có đúng
+     * hai khoá ấy.</p>
+     */
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status,
+            WebRequest request) {
+        return loiKiemTruong(ex, ex.getBindingResult(), headers, request);
     }
 
+    /** Cùng hình dạng thân lỗi với {@link #handleMethodArgumentNotValid} — gắn {@code @ModelAttribute}. */
+    @Override
+    protected ResponseEntity<Object> handleBindException(
+            BindException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return loiKiemTruong(ex, ex.getBindingResult(), headers, request);
+    }
+
+    private ResponseEntity<Object> loiKiemTruong(Exception ex, BindingResult ketQua,
+                                                 HttpHeaders headers, WebRequest request) {
+        ProblemDetail problem = ApiProblems.of(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION,
+                "Dữ liệu gửi lên không hợp lệ", "Một hoặc nhiều trường không hợp lệ",
+                CODE_VALIDATION, duongDan(request));
+        problem.setProperty("errors", tungTruong(ketQua));
+        return handleExceptionInternal(ex, problem, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    private static List<Map<String, String>> tungTruong(BindingResult ketQua) {
+        List<Map<String, String>> errors = new ArrayList<>();
+        for (FieldError fieldError : ketQua.getFieldErrors()) {
+            // CHI hai khoa. Xem javadoc handleMethodArgumentNotValid.
+            errors.add(Map.of("field", fieldError.getField(),
+                    "message", cau(fieldError.getDefaultMessage())));
+        }
+        for (var globalError : ketQua.getGlobalErrors()) {
+            errors.add(Map.of("field", globalError.getObjectName(),
+                    "message", cau(globalError.getDefaultMessage())));
+        }
+        return errors;
+    }
+
+    private static String cau(String message) {
+        return message == null ? "" : message;
+    }
+
+    /**
+     * Tham số sai kiểu ({@code /persons/khong-phai-uuid}) — {@code 400}, và <b>không nhắc lại giá
+     * trị đã gửi</b>.
+     *
+     * <p>Mặc định của Spring dựng {@code detail} là {@code Failed to convert 'x' with value: 'y'}.
+     * Chuỗi ấy đi thẳng vào thân phản hồi <i>và</i> vào log, mang theo nguyên văn thứ client vừa
+     * gõ — mà một trường ngày tháng bị gõ nhầm số điện thoại vào là ca thường gặp, không phải ca
+     * giả định. Tên tham số đủ để sửa lỗi; giá trị thì không thêm gì ngoài rủi ro.</p>
+     */
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status,
+            WebRequest request) {
+        String ten = ex.getPropertyName();
+        ProblemDetail problem = ApiProblems.of(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION,
+                "Dữ liệu gửi lên không hợp lệ",
+                ten == null ? "Một tham số sai kiểu dữ liệu."
+                        : "Tham số " + ten + " sai kiểu dữ liệu.",
+                CODE_VALIDATION, duongDan(request));
+        return handleExceptionInternal(ex, problem, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    /**
+     * <b>Cửa duy nhất</b> mọi ngoại lệ khung đi qua trước khi thành phản hồi — nơi gắn
+     * {@code code}, {@code timestamp}, {@code type} và {@code instance}.
+     *
+     * <p>Không có bước này thì lỗi khung trả {@code type: about:blank} và <b>không có
+     * {@code code}</b>, tức client chỉ còn cách đọc chuỗi tiếng Việt trong {@code detail} để rẽ
+     * nhánh — đúng khiếm khuyết mà {@code ApiErrorContractIT} đã ghim cho
+     * {@code MethodArgumentNotValidException}, chỉ là ở 19 ngoại lệ còn lại.</p>
+     *
+     * <p>Chỉ <i>điền chỗ trống</i>: các override bên trên đã đặt sẵn {@code code} thì giữ nguyên.</p>
+     */
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception ex, Object body, HttpHeaders headers, HttpStatusCode statusCode,
+            WebRequest request) {
+        ResponseEntity<Object> response =
+                super.handleExceptionInternal(ex, body, headers, statusCode, request);
+        if (response == null) {
+            return null;
+        }
+        if (response.getBody() instanceof ProblemDetail problem) {
+            boSungChoKhung(problem, statusCode, request);
+        }
+        ghiNhat(ex, statusCode, request);
+        return response;
+    }
+
+    private static void boSungChoKhung(ProblemDetail problem, HttpStatusCode status,
+                                       WebRequest request) {
+        Map<String, Object> props = problem.getProperties();
+        if (props == null || !props.containsKey("code")) {
+            problem.setProperty("code", maKhung(status));
+        }
+        if (props == null || !props.containsKey("timestamp")) {
+            problem.setProperty("timestamp", Instant.now().toString());
+        }
+        URI type = problem.getType();
+        if (type == null || "about:blank".equals(type.toString())) {
+            problem.setType(loaiKhung(status));
+            problem.setTitle(tieuDeKhung(status));
+        }
+        if (problem.getInstance() == null) {
+            String duongDan = duongDan(request);
+            if (duongDan != null) {
+                problem.setInstance(URI.create(duongDan));
+            }
+        }
+    }
+
+    /**
+     * Mã lỗi cho ngoại lệ khung, lấy <b>trong danh sách đóng</b> {@code ProblemCode} của
+     * {@code contracts/openapi.yaml}.
+     *
+     * <p>Cố ý <b>không</b> mở ba mã mới ({@code METHOD_NOT_ALLOWED} / {@code NOT_ACCEPTABLE} /
+     * {@code UNSUPPORTED_MEDIA_TYPE}): danh sách ấy là hợp đồng đóng, thêm mã là việc phải có chữ
+     * ký của cả BE lẫn FE. Ba tình huống ấy cũng là lỗi <i>client gọi sai giao thức</i>, không phải
+     * lỗi người dùng sửa được trên màn hình, nên FE không có nhánh nào để rẽ; chính {@code status}
+     * của RFC 7807 đã nói đủ chính xác. Nếu có ngày FE cần phân biệt, đó là lúc mở hợp đồng.</p>
+     */
+    private static String maKhung(HttpStatusCode status) {
+        if (status.value() == HttpStatus.NOT_FOUND.value()) {
+            return CODE_NOT_FOUND;
+        }
+        return status.is4xxClientError() ? CODE_VALIDATION : "INTERNAL_ERROR";
+    }
+
+    private static URI loaiKhung(HttpStatusCode status) {
+        if (status.value() == HttpStatus.NOT_FOUND.value()) {
+            return ProblemTypes.NOT_FOUND;
+        }
+        return status.is4xxClientError() ? ProblemTypes.VALIDATION : ProblemTypes.INTERNAL;
+    }
+
+    private static String tieuDeKhung(HttpStatusCode status) {
+        return switch (status.value()) {
+            case 400 -> "Dữ liệu gửi lên không hợp lệ";
+            case 404 -> "Không tìm thấy endpoint";
+            case 405 -> "Phương thức HTTP không được hỗ trợ";
+            case 406 -> "Không đáp ứng được Accept của yêu cầu";
+            case 415 -> "Kiểu nội dung không được hỗ trợ";
+            default -> status.is4xxClientError() ? "Yêu cầu không hợp lệ" : "Lỗi hệ thống";
+        };
+    }
+
+    /**
+     * <b>Lỗi của client không được ghi ở mức ERROR, và không được ghi kèm thông điệp gốc.</b>
+     *
+     * <p>Hai lý do, cả hai đã thành sự thật một lần khi handler bắt-tất nuốt các ngoại lệ này:</p>
+     * <ul>
+     *   <li>Mọi thân JSON hỏng, mọi {@code Accept} lạ, mọi lượt dò endpoint đều thành một stack
+     *       trace ERROR — cảnh báo vận hành chìm trong nhiễu do chính người ngoài gây ra.</li>
+     *   <li>Thông điệp của Jackson ({@code InvalidFormatException}) <b>nhúng giá trị bị từ chối</b>.
+     *       Một số điện thoại gõ nhầm vào trường ngày sẽ nằm nguyên trong log ở mức ERROR — đường
+     *       rò Tầng 3 sang nhật ký, nơi {@code SensitiveFieldRedactor} không với tới.</li>
+     * </ul>
+     * Nên 4xx chỉ ghi <i>tên lớp ngoại lệ</i> ở mức {@code INFO}; ai cần nội dung thì bật
+     * {@code DEBUG} cho logger này một cách có chủ ý.
+     */
+    private static void ghiNhat(Exception ex, HttpStatusCode status, WebRequest request) {
+        if (status.is4xxClientError()) {
+            log.info("{} {} - {}", status.value(), duongDan(request), ex.getClass().getSimpleName());
+            log.debug("Chi tiet loi {} tai {}", ex.getClass().getSimpleName(), duongDan(request), ex);
+        } else {
+            log.error("{} {} - loi khung", status.value(), duongDan(request), ex);
+        }
+    }
+
+    private static String duongDan(WebRequest request) {
+        if (request instanceof ServletWebRequest servlet) {
+            return servlet.getRequest().getRequestURI();
+        }
+        return null;
+    }
+
+    // =========================================================================================
+    // Ngoại lệ ngoài danh sách của khung
+    // =========================================================================================
+
     @ExceptionHandler(ConstraintViolationException.class)
-    public ProblemDetail handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
+    public ProblemDetail handleConstraintViolation(ConstraintViolationException ex,
+                                                   HttpServletRequest request) {
         ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION,
                 "Dữ liệu gửi lên không hợp lệ", "Một hoặc nhiều tham số không hợp lệ",
-                "VALIDATION_FAILED", request);
+                CODE_VALIDATION, request);
         List<Map<String, String>> errors = new ArrayList<>();
         for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+            // CHI hai khoa - khong bao gio them violation.getInvalidValue().
             errors.add(Map.of(
                     "field", String.valueOf(violation.getPropertyPath()),
                     "message", violation.getMessage()));
@@ -180,9 +403,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
-        return problem(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION, "Dữ liệu gửi lên không hợp lệ",
-                ex.getMessage(), "VALIDATION_FAILED", request);
+    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex,
+                                               HttpServletRequest request) {
+        return problem(HttpStatus.BAD_REQUEST, ProblemTypes.VALIDATION,
+                "Dữ liệu gửi lên không hợp lệ", ex.getMessage(), CODE_VALIDATION, request);
     }
 
     /**
@@ -199,7 +423,8 @@ public class GlobalExceptionHandler {
      * đi qua {@link ApiProblems}.</p>
      */
     @ExceptionHandler(AuthenticationException.class)
-    public ProblemDetail handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+    public ProblemDetail handleAuthentication(AuthenticationException ex,
+                                              HttpServletRequest request) {
         log.debug("401 {} - {}", request.getRequestURI(), ex.getMessage());
         return problem(HttpStatus.UNAUTHORIZED, ProblemTypes.UNAUTHORIZED, "Chưa đăng nhập",
                 "Yêu cầu cần một JWT hợp lệ do Keycloak cấp", ApiProblems.CODE_UNAUTHENTICATED,
@@ -218,22 +443,10 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleOptimisticLock(ObjectOptimisticLockingFailureException ex,
                                               HttpServletRequest request) {
         log.info("409 {} - {}", request.getRequestURI(), ex.getMessage());
-        return problem(HttpStatus.CONFLICT, ProblemTypes.CONFLICT, "Dữ liệu đã bị người khác thay đổi",
+        return problem(HttpStatus.CONFLICT, ProblemTypes.CONFLICT,
+                "Dữ liệu đã bị người khác thay đổi",
                 "Bản ghi đã được cập nhật bởi người dùng khác, hãy tải lại và thử lại",
                 "OPTIMISTIC_LOCK_CONFLICT", request);
-    }
-
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ProblemDetail handleNoHandler(NoHandlerFoundException ex, HttpServletRequest request) {
-        return problem(HttpStatus.NOT_FOUND, ProblemTypes.NOT_FOUND, "Không tìm thấy endpoint",
-                ex.getRequestURL() + " không tồn tại", "NOT_FOUND", request);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ProblemDetail handleUnexpected(Exception ex, HttpServletRequest request) {
-        log.error("500 {} - loi khong luong truoc", request.getRequestURI(), ex);
-        return problem(HttpStatus.INTERNAL_SERVER_ERROR, ProblemTypes.INTERNAL, "Lỗi hệ thống",
-                "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.", "INTERNAL_ERROR", request);
     }
 
     /** Uỷ quyền cho {@link ApiProblems} để thân lỗi ở đây và ở tầng lọc bảo mật không lệch nhau. */

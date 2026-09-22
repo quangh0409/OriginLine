@@ -68,6 +68,22 @@ public class MediaAccessGuard {
         return caller;
     }
 
+    /**
+     * Người gọi <b>đã được duyệt vào phả</b> — chặt hơn {@link #requireProvisioned} đúng một bậc,
+     * và đó là bậc quan trọng.
+     *
+     * <p>{@code app_user} được <b>tự tạo</b> ở lần gọi {@code /api/v1/me} đầu tiên, nên
+     * {@link #requireProvisioned} chỉ loại được khách vãng lai: một tài khoản vừa gõ xong mã mời,
+     * {@code person_id = NULL}, chưa ai trong họ nhận ra là ai, vẫn qua được nó. Với các lối
+     * <i>đọc</i> thì đúng như vậy là đủ; với lối <b>ném việc vào hàng chờ của người khác</b> thì
+     * không — xem {@code BranchScopeGuard.requireActiveMember}.</p>
+     */
+    public MemberScopeView requireActiveMember(String what) {
+        MemberScopeView caller = caller();
+        guard.requireActiveMember(caller, what);
+        return caller;
+    }
+
     // =====================================================================================
     // Định tuyến câu hỏi sang module sở hữu bản ghi
     // =====================================================================================

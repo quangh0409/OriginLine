@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,9 @@ class ApiErrorContractIT extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private org.springframework.context.ApplicationContext context;
 
     // =====================================================================================
     // Khiếm khuyết 1 — 401 phải có thân RFC 7807
@@ -253,6 +258,182 @@ class ApiErrorContractIT extends AbstractIntegrationTest {
 
         assertThat(result.getResponse().getStatus()).isEqualTo(412);
         assertThat(than(result).path("code").asText()).isEqualTo("PRECONDITION_REQUIRED");
+    }
+
+    // =====================================================================================
+    // Khiếm khuyết 4 — SÁU lớp lỗi client từng bị một handler bắt-tất nuốt thành 500
+    //
+    // Hồi quy đã đo trên hệ đang chạy: GlobalExceptionHandler được nâng lên
+    // HIGHEST_PRECEDENCE + 100 (đúng, để giành lại MethodArgumentNotValidException) NHƯNG vẫn giữ
+    // @ExceptionHandler(Exception.class). ExceptionHandlerExceptionResolver duyệt advice THEO THỨ
+    // TỰ và dừng ở advice ĐẦU TIÊN có bất kỳ phương thức nào khớp — một handler bắt-tất khớp với
+    // mọi thứ — nên advice ấy nuốt trọn danh sách mà ResponseEntityExceptionHandler từng dịch.
+    //
+    // 2.771 ca vẫn xanh suốt trong khi sáu lớp lỗi này thành 500. Nghĩa là KHÔNG ca nào ghim
+    // chiều ấy. Sáu ca dưới đây ghim từng cái một; chúng cố ý KHÔNG gộp thành một
+    // @ParameterizedTest vì mỗi ca có một mã HTTP riêng và một cách hỏng riêng, và một ca đỏ phải
+    // gọi đúng tên thứ đã hỏng.
+    // =====================================================================================
+
+    @Test
+    @DisplayName("thân JSON hỏng trả 400, không phải 500 — và có code để client rẽ nhánh")
+    void thanJsonHong_tra400() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/person-claims/existing")
+                        .with(thanhVien("sub-json-hong"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\": "))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus())
+                .as("500 noi 'may chu hong' cho mot loi hoan toan cua client")
+                .isEqualTo(400);
+        assertThat(than(result).path("code").asText()).isEqualTo("VALIDATION_FAILED");
+    }
+
+    /**
+     * <b>Đây là ca có hậu quả nhìn thấy được ngoài đời.</b> {@code ImportBatchController} khai
+     * {@code consumes = multipart/form-data} + {@code @RequestPart("file")}, nên sai
+     * {@code Content-Type} ở màn tải Excel — một trong hai lỗi client hay gặp nhất tại đó — trả
+     * {@code 500}, và người vận hành đọc nó là "máy chủ hỏng" rồi gọi người trực.
+     */
+    @Test
+    @DisplayName("thiếu Content-Type trả 415, không phải 500")
+    void thieuContentType_tra415() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/person-claims/existing")
+                        .with(thanhVien("sub-thieu-content-type"))
+                        .content("{}"))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(415);
+    }
+
+    @Test
+    @DisplayName("tham số sai kiểu trả 400 — và thân lỗi KHÔNG nhắc lại giá trị đã gửi")
+    void thamSoSaiKieu_tra400() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/public/persons/khong-phai-uuid")).andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(400);
+
+        JsonNode than = than(result);
+        assertThat(than.path("code").asText()).isEqualTo("VALIDATION_FAILED");
+        assertThat(than.path("detail").asText())
+                .as("mac dinh cua Spring la \"Failed to convert 'id' with value: 'x'\" — chuoi ay"
+                        + " cho nguyen van thu client vua go vao than loi VA vao log ERROR")
+                .doesNotContain("khong-phai-uuid")
+                .contains("id");
+        // `instance` VAN la duong dan yeu cau, va do la dung RFC 7807 — no khong phai duong ro:
+        // duong dan nam san trong access log, con `detail` thi khong.
+        assertThat(than.path("instance").asText())
+                .isEqualTo("/api/v1/public/persons/khong-phai-uuid");
+    }
+
+    @Test
+    @DisplayName("thiếu tham số bắt buộc trả 400, không phải 500")
+    void thieuThamSoBatBuoc_tra400() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/public/persons/search")).andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(400);
+        assertThat(than(result).path("code").asText()).isEqualTo("VALIDATION_FAILED");
+    }
+
+    @Test
+    @DisplayName("Accept không phục vụ được trả 406, không phải 500")
+    void acceptKhongPhucVuDuoc_tra406() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/public/persons/search")
+                        .param("q", "nguyen")
+                        .header("Accept", MediaType.APPLICATION_XML_VALUE))
+                .andReturn();
+
+        // Chi ghim STATUS. Khi Accept khong phuc vu duoc thi than loi cung khong phuc vu duoc —
+        // Spring co y bo qua thay vi de quy vo tan; day la hanh vi dung cua RFC 9110 §15.5.7.
+        assertThat(result.getResponse().getStatus()).isEqualTo(406);
+    }
+
+    @Test
+    @DisplayName("sai method HTTP trả 405, không phải 500")
+    void saiMethod_tra405() throws Exception {
+        MvcResult result = mockMvc.perform(post("/actuator/health")).andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(405);
+    }
+
+    /**
+     * Chốt còn lại của bản vá: handler bắt-tất <b>vẫn phải tồn tại</b>, chỉ là ở
+     * {@code LOWEST_PRECEDENCE} ({@code UnexpectedErrorHandler}). Không có nó thì một ngoại lệ
+     * thật rơi xuống {@code BasicErrorController} và mất thân RFC 7807.
+     *
+     * <p>Không có cách nào ném một ngoại lệ tuỳ ý qua HTTP mà không thêm endpoint giả, nên ca này
+     * ghim bằng thứ quan sát được: lớp ấy có mặt trong context và khai đúng thứ tự.</p>
+     */
+    @Test
+    @DisplayName("handler bắt-tất vẫn còn, nhưng ở LOWEST_PRECEDENCE và trong một lớp RIÊNG")
+    void handlerBatTat_oCuoiHangVaTachLop() {
+        assertThat(context.getBean(vn.giapha.shared.api.UnexpectedErrorHandler.class)).isNotNull();
+
+        assertThat(org.springframework.core.annotation.AnnotationUtils.findAnnotation(
+                        vn.giapha.shared.api.UnexpectedErrorHandler.class,
+                        org.springframework.core.annotation.Order.class))
+                .isNotNull()
+                .extracting(org.springframework.core.annotation.Order::value)
+                .isEqualTo(org.springframework.core.Ordered.LOWEST_PRECEDENCE);
+
+        assertThat(vn.giapha.shared.api.GlobalExceptionHandler.class.getDeclaredMethods())
+                .as("mot @ExceptionHandler(Exception.class) trong advice uu tien cao khop voi MOI"
+                        + " ngoai le va nuot ca 20 ngoai le khung — dung dieu vua phai va")
+                .noneSatisfy(method -> {
+                    var handler = method.getAnnotation(
+                            org.springframework.web.bind.annotation.ExceptionHandler.class);
+                    assertThat(handler).isNotNull();
+                    assertThat(handler.value()).contains(Exception.class);
+                });
+    }
+
+    // =====================================================================================
+    // Khiếm khuyết 5 — thân lỗi kiểm trường KHÔNG được chở giá trị bị từ chối
+    // =====================================================================================
+
+    /**
+     * <b>Bất biến chưa ai canh.</b> Hôm nay mỗi phần tử {@code errors} có đúng hai khoá
+     * {@code field} + {@code message} — đã xác minh: không {@code rejectedValue}, không
+     * {@code ${validatedValue}} ở bất kỳ {@code messages*.properties} nào.
+     *
+     * <p>Nhưng không bài kiểm nào ghim điều đó, nên người kế tiếp "cải tiến trải nghiệm" bằng
+     * {@code fieldError.getRejectedValue()} sẽ đưa <b>số điện thoại của một người đang sống</b>
+     * vào thân một {@code 400} mà ai cũng lấy được, và {@code SensitiveFieldRedactorTest} sẽ
+     * <b>không</b> đỏ — nó chỉ canh nhật ký kiểm toán, không canh thân phản hồi.</p>
+     *
+     * <p>Ca này chọn đúng trường {@code phone} của {@code SubmitPersonClaimRequest}
+     * ({@code @Size(max = 32)}) để thứ bị từ chối <i>là</i> một số điện thoại thật, chứ không phải
+     * một chuỗi vô hại.</p>
+     */
+    @Test
+    @DisplayName("errors[] chỉ có field + message — không bao giờ chở giá trị bị từ chối")
+    void thanLoiKhongChoGiaTriBiTuChoi() throws Exception {
+        String soDienThoai = "0912345678901234567890123456789012345";
+
+        MvcResult result = mockMvc.perform(post("/api/v1/person-claims/existing")
+                        .with(thanhVien("sub-khong-ro-ri"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"personId\":\"11111111-1111-1111-1111-111111111111\","
+                                + "\"phone\":\"" + soDienThoai + "\"}"))
+                .andReturn();
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(400);
+
+        JsonNode errors = than(result).path("errors");
+        assertThat(errors.isArray()).isTrue();
+        assertThat(errors).isNotEmpty();
+        assertThat(errors).allSatisfy(loi -> {
+            List<String> khoa = new ArrayList<>();
+            loi.fieldNames().forEachRemaining(khoa::add);
+            assertThat(khoa)
+                    .as("them bat ky khoa nao nua — nhat la rejectedValue — la mot duong ro Tang 3")
+                    .containsExactlyInAnyOrder("field", "message");
+        });
+
+        assertThat(chuoi(result))
+                .as("so dien thoai cua nguoi con song khong duoc nam trong mot than loi 400")
+                .doesNotContain(soDienThoai);
     }
 
     // =====================================================================================

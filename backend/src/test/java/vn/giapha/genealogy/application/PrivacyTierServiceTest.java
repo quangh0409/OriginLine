@@ -407,7 +407,7 @@ class PrivacyTierServiceTest {
         }
 
         private PersonAccessView quyenCua(Person person, CallerContext caller, BranchPath chi) {
-            return privacy.accessOf(person, caller, nhinThay(person, caller, chi));
+            return privacy.accessOf(person, caller, nhinThay(person, caller, chi), chi);
         }
 
         /**
@@ -463,6 +463,70 @@ class PrivacyTierServiceTest {
             assertThat(ngoai.canRequestCorrection())
                     .as("khong ghi duoc thi phai de nghi duoc, neu khong ho khong con loi nao")
                     .isTrue();
+        }
+
+        /**
+         * <b>Ca mà {@link #truongChiTheoPhamVi} không bao giờ chạm tới.</b>
+         *
+         * <p>Ca kia dựng vai và nhân khẩu ở hai chi khác hẳn nhau, nên {@code managesBranch} và
+         * {@code sharesBranchWith} <i>cùng</i> sai — hai vế của một phép {@code ||} không bao giờ
+         * tách ra được. Ca này tách đúng hai vế ấy: Trưởng chi được giao
+         * {@code chi_giap.nganh_truong}, nhưng nhân khẩu của <b>chính ông</b> ở {@code chi_giap},
+         * và ông mở hồ sơ một người thuộc {@code chi_giap.nganh_hai}.</p>
+         *
+         * <ul>
+         *   <li>{@code managesBranch(nganh_hai)} = sai — {@code nganh_truong} không phải tổ tiên
+         *       {@code ltree} của {@code nganh_hai};</li>
+         *   <li>{@code sharesBranchWith(nganh_hai)} = đúng — chi nhà {@code chi_giap} là tổ tiên
+         *       của nó. Đó là Tầng 2 "cùng chi", một khái niệm <b>hiển thị</b>.</li>
+         * </ul>
+         *
+         * <p>Khi {@code branchHead} còn tính theo {@code inBranchScope} thì hai cờ cùng sai một
+         * lượt: {@code canEdit} bật (giao diện mời bấm "Sửa" → {@code PATCH} trả {@code 403}) và
+         * {@code canRequestCorrection} tắt (đường vòng đúng thì biến mất). Đổi một nút mất tích
+         * lấy một nút dẫn tới lỗi.</p>
+         */
+        @Test
+        @DisplayName("Trưởng chi CÙNG CHI NHÀ nhưng NGOÀI phạm vi được giao: không sửa thẳng, "
+                + "nhưng phải đề nghị được")
+        void cungChiNhaKhongPhaiQuyenGhi() {
+            BranchPath nganhTruong = BranchPath.of("goc.chi_giap.nganh_truong");
+            BranchPath nganhHai = BranchPath.of("goc.chi_giap.nganh_hai");
+            Person nguoiNganhHai = PersonFixtures.nu("Nguyễn Thị Ngành Hai");
+            // Chi nha = chi_giap (cha cua ca hai nganh); pham vi duoc giao = nganh_truong.
+            CallerContext truongNganhTruong =
+                    vai(CallerRole.BRANCH_HEAD, CHI_GIAP, nganhTruong);
+
+            PersonAccessView quyen = quyenCua(nguoiNganhHai, truongNganhTruong, nganhHai);
+
+            assertThat(quyen.canEdit())
+                    .as("GenealogyAccessGuard chi cho ghi khi managesBranch dung;"
+                            + " cung chi nha khong phai quyen ghi — bam Sua se an 403")
+                    .isFalse();
+            assertThat(quyen.canDelete())
+                    .as("xoa mem di theo dung luat voi ghi — cung mot phep tinh branchHead")
+                    .isFalse();
+            assertThat(quyen.canRequestCorrection())
+                    .as("khong ghi duoc thi duong vong phai mo, neu khong ho khong con loi nao")
+                    .isTrue();
+        }
+
+        /** Chiều ngược lại, để phép sửa không biến thành "Trưởng chi không bao giờ ghi được". */
+        @Test
+        @DisplayName("Trưởng chi ĐÚNG phạm vi được giao vẫn sửa thẳng ở một ngành con sâu hơn")
+        void dungPhamViThiVanGhiDuoc() {
+            BranchPath nganhTruong = BranchPath.of("goc.chi_giap.nganh_truong");
+            BranchPath canhSau = BranchPath.of("goc.chi_giap.nganh_truong.canh_mot");
+            Person nguoiCanhSau = PersonFixtures.nu("Nguyễn Thị Cành Một");
+            CallerContext truongNganhTruong =
+                    vai(CallerRole.BRANCH_HEAD, CHI_GIAP, nganhTruong);
+
+            PersonAccessView quyen = quyenCua(nguoiCanhSau, truongNganhTruong, canhSau);
+
+            assertThat(quyen.canEdit())
+                    .as("ngu nghia @> cua ltree: pham vi duoc giao trum len moi cay con")
+                    .isTrue();
+            assertThat(quyen.canRequestCorrection()).isFalse();
         }
 
         @Test

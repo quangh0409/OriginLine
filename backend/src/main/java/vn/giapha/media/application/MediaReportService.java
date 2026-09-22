@@ -104,10 +104,19 @@ public class MediaReportService {
      * <p><b>Chỉ báo được thứ mình nhìn thấy.</b> Phép kiểm {@code canView} ở đây không phải thủ
      * tục: thiếu nó thì điểm cuối này thành công cụ dò — gửi một dãy {@code mediaId} và đọc mã trả
      * về để biết tệp nào có thật.</p>
+     *
+     * <h2>{@code requireActiveMember}, KHÔNG phải {@code requireProvisioned}</h2>
+     * Đây là một cửa <b>ném việc vào hàng chờ của Trưởng chi</b>, nên nó theo đúng luật của
+     * {@code change-requests} và của lối viết bài ({@code AUTHOR_NOT_IN_PHA}): chưa được duyệt vào
+     * phả thì chưa gửi được gì vào hàng chờ của người khác. {@code requireProvisioned} chỉ hỏi
+     * "có {@code app_user} chưa", mà {@code app_user} tự tạo ở lần gọi {@code /api/v1/me} đầu
+     * tiên — <b>đã đo:</b> một tài khoản {@code person_id = NULL} mở được đơn báo gỡ, vì chốt duy
+     * nhất còn lại ({@code PostMediaAccessAdapter}) chỉ loại khách rồi trả {@code true} cho mọi
+     * bài đã đăng.
      */
     @Transactional
     public MediaReportView report(UUID mediaId, ReportReason reason, String note) {
-        MemberScopeView caller = access.requireProvisioned();
+        MemberScopeView caller = access.requireActiveMember("bao go tep dinh kem");
         MediaAsset asset = servableAsset(mediaId);
         MediaLink link = ownerOf(asset);
         if (!access.canView(link.ownerType(), link.ownerId())) {
