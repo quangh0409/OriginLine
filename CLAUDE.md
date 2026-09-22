@@ -204,7 +204,7 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   (POI event API, `.xlsx` only, detected by file signature) → staging tables → 15 blocking
   rules + 11 warning rules → duplicate/kỵ-húy scan reusing `genealogy`'s scorers → commit
   into the phả in one all-or-nothing transaction (AGE edges and `relationship` rows
-  together, topologically ordered by đời) → rollback. Flyway now runs `V1..V13`.
+  together, topologically ordered by đời) → rollback.
   Per-branch Excel templates are generated from the same `ImportColumn`/`MarriageColumn`
   enums the reader consumes, so generator and reader cannot drift.
 - **Privacy is per-field-group (`V8`), not one enum per person.** Five groups
@@ -225,13 +225,29 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   representable state, so the old unwritten "remember to call `canSee()` first" rule is
   now held by the compiler. `meta.visibleTier` is a summary derived from the filter
   result; never branch on it to predict which fields are present.
-- **Test status.** Backend `mvn test` → **2304 tests, 0 failures, 0 errors, 0 skipped**,
+- **Flyway runs `V1..V21`.** Keep this line current — it is the first thing an agent
+  reads before picking a version number, and a stale range here means two people take
+  the same number and Flyway aborts with *"Found more than one migration with version
+  N"*. Roughly: `V1..V7` core · `V8` per-field privacy · `V9..V13` import · `V14`
+  duplicate decisions · `V15..V16` invitations + claims · `V17` posts/honours + the
+  sixth privacy group · `V18`/`V20` manual events · `V19` media · `V21` password-reset
+  grant.
+- **`registrationAllowed` in the realm is `false` ON PURPOSE — do not "fix" it.**
+  Self-registration happens at `/dang-ky` in the app, not on Keycloak's own page, and
+  the reason is written in `infra/keycloak/themes/giapha/login/theme.properties`:
+  Keycloak's register form only matches the clan code against a *pattern*, so accounts
+  created there never pass through `ClanInviteRedeemer` and never land in the
+  redemption ledger — which silently defeats the use-counter, the single most important
+  of the four gates the clan-wide code depends on.
+- **Test status.** Backend `mvn test` → **2742 tests, 0 failures, 0 errors, 1 skipped**
+  (the skip is `InvitationKeycloakLiveIT`, which needs a real Keycloak plus a
+  provisioner secret and is opt-in),
   including Testcontainers integration tests against real Postgres + AGE — among them the
   AGE-edge/`relationship` same-transaction invariant (written together, rolled back
   together), the per-field privacy matrix (5 groups × 3 scopes × 4 viewer kinds), the
   legacy-privacy migration proving it discloses nothing new, and the full import pipeline
   driven **only through HTTP** (no test writes to a table to get past a gate).
-  Frontend: **1297 vitest** with **4 deliberate reds** (2 Dâu/Rể badge hexes and 2
+  Frontend: **1880 vitest** with **4 deliberate reds** (2 Dâu/Rể badge hexes and 2
   `accent` contrast cases, all awaiting a Hội đồng ruling — CI pins this set exactly, so
   an extra red *or* one of these turning green fails the gate), `tsc` and `next lint`
   clean, `next build` green, **134 Playwright E2E** across desktop-chromium and Pixel 5.

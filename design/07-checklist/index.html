@@ -25,6 +25,25 @@
     color: var(--do-tram); font-weight: 700; font-size: 13px;
     display: flex; align-items: center; justify-content: center;
   }
+
+  /* ---- Bản ghi trạng thái, thêm ngày 22/09/2026 ------------------------
+     Nguyên tắc của lần sửa này: ĐỔI TRẠNG THÁI, GIỮ NGUYÊN LẬP LUẬN.
+     Phần "vì sao" của mỗi mục vẫn đúng kể cả khi việc đã xong — nó là thứ
+     giải thích cho người đọc sau này rằng vì sao việc ấy đáng làm. Nên
+     không xoá dòng nào; chỉ thêm một dòng trạng thái bên dưới. ------------ */
+  .chip.xong { background: var(--xanh-nen); color: var(--xanh); }
+  .chip.dang { background: var(--vang-nen); color: var(--ho-phach); }
+  ul.ck > li.xong::before { content: "\2611"; color: var(--xanh); }
+  .tt {
+    display: block; margin-top: 7px; padding: 6px 0 6px 11px;
+    border-left: 3px solid var(--xanh); color: var(--muc);
+    font-size: 14px; line-height: 1.62;
+  }
+  .tt.dang { border-left-color: var(--ho-phach); }
+  .tt.chua { border-left-color: var(--do-loi); }
+  .tt b { color: var(--xanh); }
+  .tt.dang b { color: var(--ho-phach); }
+  .tt.chua b { color: var(--do-loi); }
 </style>
 </head>
 <body>
@@ -37,6 +56,30 @@
   <strong>bảy quyết định chủ dự án đã chốt</strong>. Mục ghi <span class="chip chot-r">đã chốt</span>
   là quyết định, không bàn lại. Mọi câu về hiện trạng đều dẫn được về một tệp trong kho.
 </p>
+
+<div class="khoi chot">
+  <p class="nhan">Viết 20/09/2026 · <strong>cập nhật trạng thái 22/09/2026</strong></p>
+  <p>
+    Đây là <strong>bản ghi lịch sử, không phải bản viết đè</strong>. Phần
+    <em>lập luận</em> của mọi mục giữ nguyên từng chữ — nó giải thích <em>vì sao</em> mỗi việc
+    đáng làm, và lập luận ấy vẫn đúng sau khi việc đã xong. Chỉ có <strong>trạng thái</strong>
+    được cập nhật, bằng một dòng thêm vào dưới mỗi mục:
+  </p>
+  <ul>
+    <li><span class="chip xong">đã xong</span> — đã chạy thật, có tệp dẫn chứng trong kho.</li>
+    <li><span class="chip dang">đang làm</span> — có phần, chưa dùng được đầu-cuối.</li>
+    <li>Không có chip mới — <strong>vẫn còn nguyên</strong>, chưa ai làm.</li>
+  </ul>
+  <p>
+    <strong>Mục 8 (bảy quyết định đã chốt) không bị đụng tới.</strong> Đó là quyết định của chủ
+    dự án, không phải trạng thái công việc — nó không "xong" hay "chưa xong" được.
+  </p>
+  <p class="phu">
+    Lý do bản cập nhật này tồn tại: tệp này đã trở thành <em>tấm bản đồ cũ</em> — tài liệu 08
+    (hướng dẫn sử dụng) chép theo nó và nói sai bốn điểm về chính sản phẩm. Một bản vẽ lỗi thời
+    nằm lại trong kho thì người đọc sau sẽ dựng lại đúng những lỗi vừa xoá.
+  </p>
+</div>
 
 <h2>1. Luồng vào hệ thống</h2>
 
@@ -55,8 +98,9 @@
 <div class="khoi">
   <p class="nhan">Hai loại mã, đừng trộn làm một</p>
   <p>
-    <strong>Mã mời dòng họ</strong> <em>(mới, chưa có)</em> — cấp cho cả họ, nhiều người dùng
-    chung, chỉ mở cửa cho việc đăng ký và xem phả. Dùng xong vẫn phải tự nhận mình và chờ duyệt.
+    <strong>Mã mời dòng họ</strong> <em>(lúc viết: mới, chưa có — <strong>22/09: đã chạy
+    thật</strong>)</em> — cấp cho cả họ, nhiều người dùng chung, chỉ mở cửa cho việc đăng ký và
+    xem phả. Dùng xong vẫn phải tự nhận mình và chờ duyệt.
   </p>
   <p>
     <strong>Mã mời cá nhân</strong> <em>(đã làm xong, chạy thật)</em> — trỏ đích danh một nhân
@@ -125,63 +169,121 @@
 <h3>1.3 · Việc cần làm</h3>
 
 <ul class="ck">
-  <li>
+  <li class="xong">
     <strong>Mã mời dòng họ</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Cơ chế mới: dùng nhiều lần, cấp cho cả họ, có hạn, thu hồi được, có bộ đếm và giới hạn
       tần suất. Lưu <strong>dạng băm</strong> như mã cá nhân đã làm. Hội đồng phát và thu hồi.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> <code>V16__membership_clan_invite_and_claim.sql</code> +
+      <code>membership/domain/ClanInviteCode.java</code>, <code>ClanInviteService</code>,
+      <code>ClanInviteRedeemer</code>, <code>ClanInviteController</code>.
+      Đủ <strong>cả bốn chốt</strong> của mục 1.2: băm (<code>ClanInviteCodeRepositoryAdapter</code>),
+      hạn + thu hồi (<code>ClanInviteStatus</code>, <code>ClanInviteUsability</code>), bộ đếm
+      (<code>ClanInviteRedemption</code> — một dòng mỗi lượt, nên đếm được <em>ai</em> chứ không
+      chỉ <em>bao nhiêu</em>), giới hạn tần suất (<code>InviteThrottle</code> +
+      <code>InviteThrottleJdbcAdapter</code>).
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Bật tự đăng ký, có kiểm mã</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Realm đang đặt <code>registrationAllowed: false</code>. Bật lên, nhưng màn đăng ký
       <strong>bắt buộc có ô mã mời</strong>, và mã phải kiểm <em>trước</em> khi tạo tài khoản —
       không tạo rồi mới hỏi. Trạng thái “có tài khoản, chưa gắn vào phả” đã có sẵn trong dữ
       liệu (<code>person_id</code> rỗng, trạng thái chờ) nên không phải dựng mới.
     </span>
+    <span class="tt">
+      <b>22/09 — đạt được, nhưng bằng đường KHÁC đường đã đề xuất; ghi lại kẻo người sau
+      “sửa” ngược.</b> Mục tiêu (tự đăng ký có kiểm mã trước) đã xong ở
+      <code>/dang-ky</code> (<code>RegisterScreen</code> → <code>POST /clan-invites/lookup</code>
+      rồi mới <code>POST /clan-invites/register</code>). Nhưng
+      <code>registrationAllowed</code> <strong>vẫn là <code>false</code> và phải giữ nguyên
+      như thế</strong>: trang đăng ký của Keycloak chỉ so mã với một <em>mẫu</em>, và tài khoản
+      tạo qua đường ấy không đi qua <code>ClanInviteRedeemer</code> nên
+      <strong>không vào sổ lượt dùng</strong> — tức chốt quan trọng nhất của mục 1.2 mất tác
+      dụng trong im lặng. Lý do đầy đủ nằm ở
+      <code>infra/keycloak/themes/giapha/login/theme.properties</code> (khoá
+      <code>giaphaRegisterUrl</code>), kèm cảnh báo rằng ba việc — trỏ khoá sang
+      <code>/dang-ky</code>, đặt cờ về <code>false</code>, thu hồi mẫu mã cũ — phải làm cùng
+      lúc, làm lẻ một cái là để hở.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Màn “tôi là ai trong phả”</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Chọn ô của mình trên phả đồ, nhập <strong>số điện thoại</strong>, gửi đơn. Nên cho thêm
       vài dòng tự giới thiệu — <em>con ông nào, bà nào, quê quán</em> — vì đó mới là thứ Trưởng
       chi dùng để đối chiếu; số điện thoại chỉ giúp gọi kiểm chứng.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật, kèm cả phần tự giới thiệu đã đề xuất.</b>
+      <code>frontend/src/app/[locale]/nhan-dien/</code> (+ <code>/cho-duyet</code>,
+      <code>/chua-co</code>), bảng <code>person_claim</code> ở <code>V16</code>.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Lối “Tôi chưa có trong phả”</strong> <span class="chip chot-r">đã chốt</span>
     <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Nút thứ hai ngay cạnh ô tìm. Dẫn sang đơn khác: họ tên, năm sinh, và
       <strong>chỉ ra người thân đã có trong phả</strong> (bố, mẹ, hoặc vợ/chồng). Trưởng chi
       duyệt thì hệ thống tạo nhân khẩu mới rồi gắn tài khoản vào. Xem năm ràng buộc ở mục 1.5 —
       đây là lối <em>ghi vào phả</em>, không phải một biểu mẫu liên hệ.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> <code>nhan-dien/chua-co/page.tsx</code>;
+      <code>person_claim.target_branch_id</code> (<code>V16</code>) mang đúng chi suy từ người
+      thân được chỉ ra — tức ràng buộc số 2 và “ai duyệt” ở mục 1.5 được giữ bằng lược đồ, không
+      phải bằng trí nhớ.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Hàng chờ duyệt cho Trưởng chi và vai cao hơn</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Danh sách đơn, đối chiếu, duyệt hoặc từ chối kèm lý do. Phạm vi theo <code>ltree</code>:
       Trưởng chi Ất không duyệt được đơn trỏ vào người chi Bính; Hội đồng duyệt được cả họ. Cơ
       chế gắn tài khoản ↔ nhân khẩu <strong>dùng lại của luồng mời cá nhân</strong>, đã chạy
       thật — đừng viết đường ghi thứ hai.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> <code>/quan-ly/don-gia-nhap</code>,
+      <code>membership-queue-screen.tsx</code>; chỉ mục
+      <code>ix_person_claim_branch</code> trên <code>target_branch_id</code>.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Màn phát mã và phát lời mời</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Một màn, hai việc: Hội đồng phát/thu hồi <em>mã dòng họ</em> và xem bộ đếm lượt dùng;
       Trưởng chi phát <em>lời mời cá nhân</em> cho một cụ cụ thể. Máy chủ đã làm được việc thứ
       hai và đã kiểm chạy thật, nhưng <strong>không có màn hình nào gọi tới</strong> — hôm nay
       chỉ phát được bằng dòng lệnh.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật, và bộ đếm nay là con số ĐẦY ĐỦ.</b>
+      <code>/quan-ly/phat-ma</code> + <code>personal-invite-panel.tsx</code>. Vì cửa Keycloak đã
+      đóng (xem mục trên), không phải cộng tay với <code>phat-ma-moi.mjs --dem</code> nữa.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Màn “đang chờ duyệt”</strong> <span class="chip should">nên có</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Nói rõ đang chờ ai, và trong lúc chờ thì xem được gì. Không có màn này thì người dùng
       gửi đơn xong rơi vào im lặng và sẽ gửi lại lần hai, lần ba.
+    </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> <code>nhan-dien/cho-duyet</code>, cộng một dải nhắc trên
+      trang chủ cho người chưa được gắn (<code>home.pendingNotice.*</code>) — đúng ý “trong lúc
+      chờ thì xem được gì”.
     </span>
   </li>
 </ul>
@@ -307,9 +409,19 @@
   chrome”</em>. Không tin tức, không bài viết, không vinh danh.
 </p>
 
+<div class="khoi chot">
+  <p class="nhan">22/09 — cả mục 2 đã xong</p>
+  <p>
+    Câu mở đầu ở trên là hiện trạng <em>ngày 20/09</em>, giữ lại để đọc được mạch việc.
+    Dòng tài liệu mã ấy không còn: <code>home-hero.tsx</code> nay mở đầu bằng
+    <em>“Trang chủ thật”</em> và dựng đúng bốn khối đã đề xuất. Chi tiết ở từng mục dưới.
+  </p>
+</div>
+
 <ul class="ck">
-  <li>
+  <li class="xong">
     <strong>Context bài viết: soạn → gửi duyệt → đăng</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Người <strong>đã được duyệt vào phả</strong> viết được <span class="chip chot-r">đã chốt</span>;
       Trưởng cành/chi/họ duyệt mới lên bài chính thức. Cần bảng bài viết, máy trạng thái
@@ -317,25 +429,49 @@
       <strong>Mô hình duyệt đã có tiền lệ</strong> — luồng yêu cầu đính chính làm đúng kiểu
       này; dùng lại cả cách nghĩ lẫn cách kiểm.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> <code>V17__content_post_honour.sql</code>, gói
+      <code>vn.giapha.content</code>; bốn trạng thái
+      <code>DRAFT → PENDING → PUBLISHED · WITHDRAWN</code>. Quyền duyệt theo
+      <code>post.branch_id</code>, <em>chụp lại lúc tạo nháp</em> — đúng khuôn
+      <code>change_request.target_branch_id</code> như đã đề xuất.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Màn soạn bài</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Người viết là bác 60 tuổi chứ không phải nhà báo: tiêu đề, thân bài, vài ảnh, hết.
       <strong>Lưu nháp tự động</strong> — phiên hết hạn sau 2 giờ không thao tác là có thật, và
       mất một bài viết dở là cách chắc chắn nhất để người ta không viết bài thứ hai.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật, và cái bẫy “phiên hết hạn” đã được xử đúng.</b>
+      <code>/bai-viet/moi</code>; nháp tự lưu <em>trên máy chủ</em> mỗi ~8 giây khi có thay đổi.
+      Phiên hết giữa chừng thì chữ đang gõ <strong>ở lại trên màn hình</strong> và có nút
+      <em>“Đã đăng nhập lại, lưu tiếp”</em> (<code>posts.compose.sessionRetry</code>) — chứ
+      không phải một màn đăng nhập nuốt mất bài.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Hàng chờ duyệt bài</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Duyệt, trả lại kèm lý do, hoặc sửa nhẹ rồi đăng. Ghi rõ <em>ai</em> duyệt và
       <em>lúc nào</em> — bài lên trang chủ là tiếng nói của cả dòng họ.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> <code>/quan-ly/bai-viet</code>,
+      <code>post-review-queue-screen.tsx</code>; <code>posts.reviewMeta.approvedAtBy</code> in
+      đúng <em>ai</em> và <em>lúc nào</em>, và người viết không tự duyệt được bài mình.
+      Thêm một hàng chờ ngoài dự kiến ban đầu: <code>/quan-ly/bao-cao-anh</code> cho báo cáo
+      ảnh/video (<code>V19__media_asset_link_report.sql</code>).
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Vinh danh — danh sách có cấu trúc</strong> <span class="chip chot-r">đã chốt</span>
     <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Không phải một loại bài viết mà là <strong>bản ghi gắn với nhân khẩu</strong>: loại vinh
       danh (đỗ đạt · chức tước · thành tích · khen thưởng), tiêu đề, năm, nơi cấp, mô tả.
@@ -346,13 +482,36 @@
       thứ sáu để chính chủ tự quyết. Và nó cũng cần <strong>duyệt</strong> như bài viết: một
       danh hiệu tự khai mà lên thẳng trang chủ là chuyện khác hẳn một bài viết.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật, và “cân nhắc” ở trên đã thành quyết định: CÓ nhóm trường thứ
+      sáu.</b> <code>PrivacyFieldGroup.HONOUR</code> (<code>V17</code> §17.3–17.4) là nhóm thứ
+      sáu, mặc định <code>PRIVATE</code>, và <strong>không</strong> suy ra được từ mức riêng tư
+      cũ — gán <code>BRANCH</code>/<code>CLAN</code> cho nó là suy diễn một sự đồng ý chưa từng
+      được đưa ra. Công tắc đã nối vào giao diện
+      (<code>PRIVACY_GROUPS</code> trong <code>types/api.ts</code>,
+      <code>privacy-sharing-card.tsx</code>, khoá <code>privacy.group.honour</code> ở cả
+      <code>vi.json</code> lẫn <code>en.json</code>).
+      <br>Hai điều đáng ghi lại vì chúng chỉ lộ ra khi làm thật:
+      (1) <code>HonourService</code> phải tách <em>“ai được XỬ LÝ”</em> khỏi <em>“ai được
+      XEM”</em> — áp bộ lọc riêng tư lên cả hai thì hàng chờ duyệt của Trưởng chi luôn rỗng và
+      bản ghi nằm đó vĩnh viễn; (2) nhóm này <strong>không</strong> đưa người ta vào danh bạ
+      (<code>grantsDirectoryListing = false</code>) — danh bạ là chỗ tra người liên hệ được, và
+      một người chỉ mở vinh danh sẽ xuất hiện ở đó như một dòng trống.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Trang chủ thật</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Bài mới · vinh danh · <strong>việc họ sắp tới</strong> (mục 3) · lối vào phả đồ và tra
       danh xưng. Đây cũng là thứ người vừa đăng ký nhìn thấy trong lúc chờ duyệt, nên nó quyết
       định luôn việc chờ đợi ấy có dễ chịu hay không.
+    </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật, đủ bốn khối.</b> <code>home-hero.tsx</code>: 4 bài · 4 vinh
+      danh đã duyệt · 3 việc họ trong 60 ngày · ba ô lối tắt. Vế thứ hai cũng giữ được: không
+      khối nào tự lọc theo <code>linkedToTree</code>, nên người đang chờ duyệt đọc được mọi thứ
+      như người khác; riêng dải <code>home.pendingNotice.*</code> là phần nói về chính họ.
     </span>
   </li>
 </ul>
@@ -360,48 +519,87 @@
 <h2>3. Sự kiện, lễ Tết và hoạt động dòng họ</h2>
 
 <div class="khoi">
-  <p class="nhan">Phát hiện khi kiểm mã</p>
+  <p class="nhan">Phát hiện khi kiểm mã <em>(ngày 20/09)</em></p>
   <p>
     <code>EventController</code> chỉ có <strong>hai lối đọc</strong> — <strong>không có lối tạo,
     sửa hay xoá nào</strong>. Toàn bộ sự kiện hôm nay đến từ <em>ngày giỗ sinh tự động</em> và
     dữ liệu gieo sẵn. Không ai <strong>cấu hình</strong> được một dịp lễ, một buổi họp họ hay
     một ngày chạp mả.
   </p>
+  <p class="phu">
+    <strong>22/09 — đã sửa.</strong> <code>V18__event_cau_hinh_thu_cong.sql</code> mở đường ghi,
+    và <code>V20__event_rang_buoc_gio_va_don_lich_nhac.sql</code> siết thêm hai ràng buộc lúc
+    làm thật: một <em>giỗ thường</em> luôn phải gắn một người
+    (<code>ck_event_gio_has_person</code>), và một việc <em>chỉ diễn ra một lần</em> luôn phải có
+    năm âm (<code>ck_event_oneoff_lunar_year</code>). Giữ đoạn trên để người đọc sau thấy điểm
+    xuất phát.
+  </p>
 </div>
 
 <ul class="ck">
-  <li>
+  <li class="xong">
     <strong>Tạo và sửa sự kiện dòng họ</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Trưởng cành/chi/họ cấu hình: lễ Tết, chạp mả, họp họ, khánh thành. Dùng đủ 12 loại đã có
       trong hợp đồng — vừa được tách thành song ánh nên <em>họp họ nay phân biệt được với đám
       cưới</em> (trước đây cả hai đều thành “khác”). <strong>Ngày âm là mặc định</strong>: việc
       họ tính theo lịch âm, và bộ chuyển đổi cùng tiết khí đã sẵn sàng phục vụ.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> <code>V18__event_cau_hinh_thu_cong.sql</code>,
+      <code>/events/new</code> và <code>/events/[id]/edit</code>,
+      <code>events/event-form.tsx</code>. Danh sách nay <strong>13</strong> loại
+      (<code>EVENT_TYPES</code>), ngày âm là trường gốc.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Sự kiện lặp hằng năm</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Chạp mả, giỗ tổ, lễ Tết lặp theo năm âm. Phải xử đúng <strong>tháng nhuận và tháng
       thiếu</strong> — bộ nhắc giỗ đã gặp và giải bài này rồi (ca thật: ngày 3 tháng 6 nhuận
       năm 2017 không tồn tại năm 2028), nên dùng lại chứ đừng giải lần hai.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật.</b> Cờ <code>recurringAnnually</code> + ô “Tháng nhuận” trên
+      form; việc một lần bắt buộc có năm âm, giữ bằng ràng buộc CSDL
+      <code>ck_event_oneoff_lunar_year</code> chứ không bằng phép kiểm ở giao diện.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Phạm vi sự kiện</strong> <span class="chip should">nên có</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Việc của cả họ, một chi, hay một ngành? Cờ “cấp dòng họ” đã có trong dữ liệu. Nó quyết
       định <em>ai được nhắc</em> — nhắc nhầm cả họ cho việc của một chi là cách nhanh nhất để
       người ta tắt thông báo.
     </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật, và đã phải vá một cái bẫy do chính nó sinh ra.</b>
+      Hai ô “loại việc” và “phạm vi” lúc đầu là hai điều khiển độc lập, nên chọn
+      <em>Giỗ họ</em> + phạm vi mặc định <em>Một chi</em> là hỏng chắc chắn — và với một Trưởng
+      chi thì hỏng ấy <strong>không sửa được</strong>, vì ô “Cả dòng họ” bị khoá theo vai.
+      Nay <code>EVENT_TYPE_FORCED_SCOPE</code> khớp hai ô với nhau và khoá ô còn lại, còn
+      <em>Giỗ họ</em> bị lọc khỏi danh sách của người không có quyền phát lời nhắc cả họ, kèm
+      một câu chỉ sang lối đúng (<code>eventTypeGioHoHiddenHint</code>) thay vì một lỗi
+      <code>422</code> nói chung chung.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Lịch làm kiểu xem mặc định</strong> <span class="chip should">cải thiện</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Đã có <code>event-year-calendar.tsx</code> nhưng màn chính vẫn là danh sách. Đề xuất ba
       kiểu: <em>lịch tháng</em> (mặc định) · <em>lịch năm</em> (đã có, hợp với người lo việc họ
       cả năm) · <em>danh sách</em> (hợp điện thoại và trình đọc màn hình). Giữ
       <strong>song lịch âm–dương</strong> ở mọi kiểu xem.
+    </span>
+    <span class="tt">
+      <b>22/09 — đã chạy thật, đúng ba kiểu và đúng mặc định.</b>
+      <code>events-screen.tsx</code> mở ở <code>"month"</code>, trừ khi mở từ một lời nhắc
+      (có <code>?event=</code>) — lúc ấy vào thẳng danh sách để cuộn tới đúng mục. Ô lọc chi chỉ
+      hiện khi dòng họ có từ hai chi trở lên, và màn rỗng-vì-lọc nói khác màn rỗng-vì-không-có.
     </span>
   </li>
   <li>
@@ -410,6 +608,13 @@
       Hướng “app để người trẻ dùng hàng ngày”. Lịch hiện <strong>chỉ đọc</strong> và chỉ có việc
       họ. Đây là thay đổi về <em>bản chất sản phẩm</em> — chốt phạm vi trước: ghi chú riêng tư
       hay chia sẻ trong chi? có nhắc không? có đồng bộ với lịch điện thoại không?
+    </span>
+    <span class="tt chua">
+      <b>22/09 — VẪN CÒN NGUYÊN.</b> Lịch nay <em>ghi</em> được, nhưng chỉ ghi
+      <strong>việc họ</strong>: cả 13 loại trong <code>EVENT_TYPES</code> đều là việc dòng họ, và
+      phạm vi chỉ có <code>CLAN</code> hoặc <code>BRANCH</code> — không có chỗ cho một việc của
+      riêng một người. Ba câu hỏi phạm vi ở trên <strong>vẫn chưa ai trả lời</strong>, và vẫn
+      phải trả lời trước khi viết dòng mã đầu tiên.
     </span>
   </li>
 </ul>
@@ -428,11 +633,22 @@
 </div>
 
 <ul class="ck">
-  <li>
+  <li class="xong">
     <strong>Xem lại lối vào màn mẫu</strong> <span class="chip should">cải thiện</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Góp ý đề nghị “bổ sung file biểu mẫu” — mà nó đã có. Khi một tính năng đã xong mà người
       dùng không biết, vấn đề nằm ở <strong>lối vào</strong>, không phải ở tính năng.
+    </span>
+    <span class="tt">
+      <b>22/09 — đã sửa, và hoá ra vấn đề rộng hơn một màn.</b> Không chỉ màn mẫu:
+      <strong>cả nhánh <code>/nhap-lieu</code></strong> — tám tệp dựng nên nó — không có một
+      liên kết nào trong toàn bộ giao diện trỏ tới; gõ tay đường dẫn là cách duy nhất.
+      Nay <code>/quan-ly</code> có ô thứ năm <em>“Nhập liệu ban đầu”</em>
+      (<code>quan-ly/page.tsx</code>). Cùng đợt ấy sửa thêm ba lối vào khác trúng đúng mẫu hình
+      câu này gọi tên: <code>/bai-viet</code> và <code>/vinh-danh</code> vào thanh đầu trang máy
+      tính, <code>/quan-ly</code> có <code>ManagementQueueLink</code>, và
+      <code>/dang-ky</code> có nút ở cổng viết bài.
     </span>
   </li>
   <li>
@@ -441,6 +657,12 @@
       Bảng đã có nhưng <strong>không có lối ghi</strong>, nên màn tiến độ luôn nói “chưa ai đếm”
       và bốn chi không biết mình đã nhập được bao nhiêu phần.
     </span>
+    <span class="tt chua">
+      <b>22/09 — VẪN CÒN NGUYÊN, y nguyên như mô tả.</b> <code>import_branch_target</code> có ở
+      <code>V13</code>; <code>BranchProgressJdbcAdapter</code> chỉ <code>LEFT JOIN</code> để
+      <em>đọc</em>, không có một câu <code>INSERT</code> nào trong toàn bộ mã nguồn. Vắng dòng ⇒
+      mẫu số <code>NULL</code> ⇒ màn tiến độ vẫn nói “chưa ai đếm”.
+    </span>
   </li>
   <li>
     <strong>Danh mục 34 tỉnh</strong> <span class="chip must">chặn báo cáo</span>
@@ -448,6 +670,12 @@
       Lược đồ và cột trong mẫu đã sẵn sàng, <strong>cố ý chưa nạp nội dung</strong>: danh mục là
       văn bản pháp quy, và tên tỉnh giữ lại không phải lúc nào cũng là tên của tỉnh có mã sống
       sót sau sáp nhập. Mã sai làm báo cáo dân số sai <strong>một cách im lặng</strong>.
+    </span>
+    <span class="tt chua">
+      <b>22/09 — VẪN CÒN NGUYÊN, và vẫn đúng là nên như thế.</b> Không có tệp migration nào nạp
+      danh mục tỉnh (đã soát <code>V1..V21</code>). Đây <strong>không phải việc của lập
+      trình</strong>: nó chờ văn bản pháp quy. Đừng ai “làm cho xong” bằng một danh sách chép
+      trên mạng — đó đúng là cách làm báo cáo sai trong im lặng.
     </span>
   </li>
 </ul>
@@ -481,8 +709,9 @@
 </p>
 
 <ul class="ck">
-  <li>
+  <li class="xong">
     <strong>Thu gọn thẻ và khoảng cách</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Thẻ 208×96px đang chở tên, năm sinh–năm mất, đời, huy hiệu. Với người còn sống thì dòng
       ngày <em>thường trống</em> (mô hình riêng tư mới), tức thẻ đang giữ chỗ cho thứ không có.
@@ -490,48 +719,95 @@
       <strong>Nhưng đừng phá sàn tiếp cận</strong>: chữ 16px và vùng chạm 44px là bắt buộc, và
       bộ kiểm tự động sẽ đỏ nếu vi phạm — đó là hàng rào đúng, không phải thứ để nới.
     </span>
+    <span class="tt">
+      <b>22/09 — đã xong, và sàn tiếp cận giữ nguyên.</b> <code>lib/tree/layout-constants.ts</code>:
+      thẻ <strong>208 → 160px</strong>, khe vợ chồng 48 → 36, khe gia đình 80 → 56, khe đời
+      128 → 112. Một đời 8 gia đình: <strong>4.352 → 3.296px (−24%)</strong>.
+      Cách giữ sàn: tên <em>xuống hai dòng</em> thay vì cắt bằng dấu ba chấm, còn chiều cao
+      <strong>không</strong> thu (96px) vì vùng chạm nút bung nhánh ăn lên 40px và “chạm giữa
+      thẻ thì mở hồ sơ” phải còn đúng. Cả ba số đều có test ghim.
+      <br>Tự nó <em>không</em> giải xong bài toán — 3.296px vẫn hơn hai màn hình; phần còn lại
+      do mục kế bên gánh.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Gập nhánh mặc định</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Cách rẻ nhất và hiệu quả nhất: mở ra chỉ hiện <em>đường thẳng từ gốc tới người đang
       xem</em> cộng con cái trực tiếp, các nhánh khác gập lại có dấu hiệu bung. Người dùng tự
       mở phần mình cần thay vì nhận cả bức tranh rồi phải tự lọc bằng mắt.
     </span>
+    <span class="tt">
+      <b>22/09 — đã xong.</b> <code>lib/tree/focus-path.ts</code>. Đi <em>ngược</em> từ người
+      ấy lên gốc chứ không tìm xuôi: chi phí theo <strong>chiều sâu</strong> (14 đời) chứ không
+      theo <strong>số người</strong> (1.500) — tìm xuôi là duyệt cả cây con, đúng thứ màn này
+      sinh ra để tránh. BFS chứ không phải vòng lặp, vì con nuôi và người kế tự có hai đường lên.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Kiểu xem danh sách theo đời cho điện thoại</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Phần lớn người trong họ ở xa dùng điện thoại. Kéo một bức tranh 4.000px qua một ô cửa
       390px bằng hai ngón là thao tác khó với người lớn tuổi. Một danh sách theo đời, bấm vào
       là xuống đời dưới, <strong>giải đúng bài toán mà canvas đang giải tồi</strong>.
     </span>
+    <span class="tt">
+      <b>22/09 — đã xong.</b> Kiểu xem <em>Theo đời</em> (<code>tree.list.*</code>), có nút
+      “Xuống đời” và một dải <em>“Đường đã đi trong phả đồ”</em> để không lạc.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Nhảy tới một người theo tên</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Người mới phải tìm được chính mình trong 1.500 người. Không có ô tìm ngay trên canvas thì
       bước “tự nhận mình” ở mục 1 không dùng được.
     </span>
+    <span class="tt">
+      <b>22/09 — đã xong.</b> Ô <em>“Tìm một người trên phả đồ”</em> (<code>tree.jump.*</code>)
+      ngay trên canvas, gõ có dấu hay không dấu đều ra.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Tô đậm node của chính mình, và nút “về chỗ tôi”</strong> <span class="chip should">cải thiện</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Máy chủ đã trả về gốc đã chọn nhưng giao diện chưa dùng. Cuộn ba bước là lạc.
     </span>
+    <span class="tt">
+      <b>22/09 — đã xong.</b> <code>tree.goToSelf</code> (“Về chỗ tôi”) + nhãn
+      <code>tree.youAreHere</code> (“Tôi”) trên chính ô ấy; nút vừa đưa khung nhìn về vừa
+      <em>mở đường từ gốc xuống đó</em>.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Nói rõ đang mở chi nào</strong> <span class="chip should">cải thiện</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Trưởng chi Ất mở phả đồ thấy một cụ đời 2 mà không biết vì sao là cụ ấy. Một dòng
       <em>“Đang mở Chi Ất”</em> kèm lối đổi chi là đủ.
     </span>
+    <span class="tt">
+      <b>22/09 — đã xong.</b> <code>tree.rootBanner.withBranch</code>:
+      <em>“Đang mở {branch}, từ cụ {name}”</em> + nút “Đổi chi khác”.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Đăng nhập xong cây lại NHỎ ĐI</strong> <span class="chip should">cải thiện</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Đo được: khách thấy 66 node từ Thuỷ tổ; thành viên thường thấy 29 node từ gốc ngành mình.
       Ý đồ hợp lý nhưng trải nghiệm lần đầu là <em>“tôi đăng nhập xong thì gia phả co lại”</em>.
+    </span>
+    <span class="tt dang">
+      <b>22/09 — đã xử, nhưng bằng cách đổi câu hỏi chứ không phải bằng cách nới gốc.</b>
+      Nay phả đồ mở ra hỏi <em>“Phả đồ bắt đầu từ ai?”</em> (<code>tree.rootPicker.*</code>):
+      người dùng tự chọn gốc, hoặc bấm <em>“Mở phả đồ mặc định của dòng họ”</em>. Cây không còn
+      <em>lặng lẽ</em> co lại — người xem biết mình đang đứng ở đâu và đổi được.
+      <br><em>Chưa đo lại</em> hai con số 66/29 sau thay đổi này; nếu ai muốn đóng mục cho dứt
+      khoát thì đo lại là việc còn thiếu duy nhất.
     </span>
   </li>
 </ul>
@@ -539,13 +815,25 @@
 <h2>6. Còn thiếu ở những phần khác</h2>
 
 <ul class="ck">
-  <li>
+  <li class="xong">
     <strong>Khách tìm kiếm được</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       Máy chủ có lối tìm công khai chạy tốt — gõ có dấu hay không dấu đều ra — nhưng
       <code>search.ts</code> <strong>không gọi tới nó</strong>, nên khách bấm Tìm kiếm là nhận
       401, trong khi trang đăng nhập đang <em>hứa</em> điều ngược lại. Lần thứ ba cùng một mẫu
       hình: tầng công khai xây xong mà giao diện chưa nối vào.
+    </span>
+    <span class="tt">
+      <b>22/09 — đã nối.</b> <code>person-search-screen.tsx</code> chọn lối gọi theo
+      <code>useTreeAudience()</code>: khách đi <code>/public/persons/search</code>, thành viên đi
+      <code>/persons/search</code>. Hai ô lọc <em>Chi/Ngành</em> và <em>Quê quán</em>
+      <strong>ẩn hẳn</strong> với khách vì bề mặt công khai không nhận chúng — ẩn chứ không làm
+      mờ, để không mời người ta bấm một ô không có tác dụng.
+      <br><em>Lần thứ tư của cùng mẫu hình đã xuất hiện ngay sau đó</em>: thanh điều hướng hiện
+      mục “Tra danh xưng” cho cả khách, trong khi màn ấy đòi tài khoản — nay ẩn mục với khách và
+      in một khối nói thẳng (<code>KinshipGuestNotice</code>). Mẫu hình này đáng được kiểm định
+      kỳ, không chỉ sửa từng ca.
     </span>
   </li>
   <li>
@@ -554,13 +842,30 @@
       Hợp đồng ghi rằng sau khi vào phả, người dùng đi vào màn nhập môn chứ không vào hồ sơ cá
       nhân (gần như trống) hay phả đồ (một bức tường người lạ). Màn ấy chưa tồn tại.
     </span>
+    <span class="tt chua">
+      <b>22/09 — VẪN CÒN NGUYÊN.</b> Không có tuyến nào trong
+      <code>frontend/src/app/[locale]/</code> phục vụ việc này. Đã bớt gấp so với hôm 20/09 vì
+      trang chủ nay có nội dung thật (mục 2), nhưng bước <em>“vừa được duyệt xong thì đi đâu”</em>
+      vẫn chưa ai dẫn.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Máy chủ thư</strong> <span class="chip must">chặn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       “Quên mật khẩu” đang tắt vì chưa có SMTP. <strong>Với tự đăng ký thì đây thành việc
       chặn</strong>: người tự đăng ký không có Trưởng chi nào đang chờ để đặt lại mật khẩu hộ
       họ, và cũng không có cách xác minh địa chỉ họ khai.
+    </span>
+    <span class="tt">
+      <b>22/09 — đã xong cho máy phát triển.</b> Mailpit trong
+      <code>infra/docker-compose.yml</code> (SMTP 1025, xem thư ở 8025, thư
+      <strong>không ra Internet</strong>), <code>smtpServer</code> nằm thẳng trong
+      <code>realm-giapha.json</code> vì Keycloak 26.7.2 <em>không</em> đọc biến môi trường lúc
+      nhập realm, và <code>resetPasswordAllowed</code> bật lại được.
+      <br><b>Nhưng việc này chỉ đóng MỘT NỬA bài toán</b>, và nửa còn lại là một mục riêng ở mục
+      7: thư chỉ tới được người có <em>địa chỉ thư</em>. Tài khoản đăng ký bằng
+      <strong>số điện thoại</strong> vẫn không có đường đặt lại mật khẩu.
     </span>
   </li>
   <li>
@@ -570,14 +875,34 @@
       <strong>cả dòng họ</strong>, chỉ được bảo vệ bằng một mật khẩu tự đặt. Việc
       <em>cấu hình</em>, không phải code — và càng gấp khi mở tự đăng ký.
     </span>
+    <span class="tt chua">
+      <b>22/09 — VẪN CÒN NGUYÊN, và nay GẤP HƠN hôm 20/09.</b>
+      <code>realm-giapha.json</code> không có <code>otpPolicy</code>, không có
+      <code>CONFIGURE_TOTP</code> trong <code>requiredActions</code> — đã soát cả tệp, không một
+      chữ <code>OTP</code>/<code>TOTP</code> nào. Trong khi đó tự đăng ký <em>đã mở</em> (mục 1),
+      tức đúng điều kiện mà câu “càng gấp khi mở tự đăng ký” nói tới đã xảy ra.
+      Vẫn là việc <strong>cấu hình</strong>, không phải code.
+      <br><b>23/09 — gấp thêm một nấc nữa, vì một lý do mới:</b> lối giảm rủi ro song song với
+      nó — rút ngắn thời hạn phiên riêng cho vai Hội đồng/Admin — vừa được chứng minh là
+      <b>không dựng được</b> (tài liệu 06 §1.2: Keycloak không có thời hạn theo vai). Hai lớp
+      còn một; lớp còn lại gánh cả hai phần. Xem mục 7.1, nay đứng đầu bảng.
+    </span>
   </li>
-  <li>
+  <li class="xong">
     <strong>Header bộ nhớ đệm cho hồ sơ nhân khẩu</strong> <span class="chip must">an toàn</span>
+    <span class="chip xong">đã xong</span>
     <span class="vi-sao">
       <code>GET /persons/{id}</code> lọc theo người gọi nhưng không đặt
       <code>Cache-Control</code> lẫn <code>Vary</code>. Cùng lớp lỗi với phả đồ vừa vá: bộ nhớ
       đệm trình duyệt khoá theo URL không thôi, nên người thứ hai trên cùng máy nhận lại thân
       phản hồi của người thứ nhất. Ba dòng.
+    </span>
+    <span class="tt">
+      <b>22/09 — đã vá.</b> <code>PersonController</code> nay đặt cả hai, kèm javadoc ghi rõ vì
+      sao <code>private</code> một mình không đủ (nó chặn proxy dùng chung, không chặn bộ đệm của
+      chính trình duyệt) nên phải có <code>Vary: Authorization</code>.
+      <code>DirectoryController</code> đi xa hơn: <code>no-store</code> + <code>private</code>,
+      vì phản hồi ở đó <em>toàn bộ</em> là dữ liệu người còn sống.
     </span>
   </li>
 </ul>
@@ -585,7 +910,7 @@
 <h2>7. Thứ tự đề xuất</h2>
 
 <div class="khoi chot">
-  <p class="nhan">Đợt 1 — mở cửa</p>
+  <p class="nhan">Đợt 1 — mở cửa <span class="chip xong">đã xong</span></p>
   <p>
     <strong>Phả đồ gọn lại</strong> (thu gọn thẻ · gập nhánh · tìm theo tên · danh sách cho
     điện thoại) → <strong>mã mời dòng họ</strong> + bốn chốt chặn →
@@ -597,22 +922,44 @@
     Phả đồ đứng <em>trước</em> phần đăng ký là có lý do: bước “tự nhận mình” chạy <strong>trên
     chính màn phả đồ</strong>. Làm đăng ký trước rồi mới sửa phả đồ thì phải quay lại sửa hai lần.
   </p>
+  <p class="phu">
+    <strong>22/09: xong cả bảy chặng</strong>, và thứ tự ấy tỏ ra đúng — không phải quay lại sửa
+    phả đồ lần thứ hai. Riêng <em>SMTP</em> xong ở mức máy phát triển và chỉ đóng nửa bài toán
+    (xem mục 6 và phần “còn lại” bên dưới).
+  </p>
 </div>
 
-<div class="khoi">
-  <p class="nhan">Đợt 2 — có cái để xem</p>
+<div class="khoi chot">
+  <p class="nhan">Đợt 2 — có cái để xem <span class="chip xong">đã xong</span></p>
   <p>
     <strong>Bài viết</strong> (soạn → duyệt → đăng) → <strong>vinh danh</strong> (danh sách có
     cấu trúc) → <strong>trang chủ thật</strong> → <strong>tạo sự kiện dòng họ</strong> →
     <strong>lịch làm kiểu xem mặc định</strong> → <strong>khách tìm kiếm được</strong>.
   </p>
+  <p class="phu">
+    <strong>22/09: xong cả sáu chặng.</strong> Phát sinh thêm ngoài danh sách này, vì làm rồi
+    mới thấy cần: ảnh/video trong bài (<code>V19</code>, kèm hàng chờ xử lý báo cáo),
+    nhóm trường riêng tư thứ sáu cho vinh danh (<code>V17</code>), và một đợt vá
+    <strong>lối vào</strong> cho bốn màn đã xong mà không ai tìm thấy.
+  </p>
 </div>
 
 <div class="khoi canh-bao">
-  <p class="nhan">Làm song song — nhỏ nhưng đang là rủi ro</p>
+  <p class="nhan">Làm song song — <strong>một việc đã xong, một việc CHƯA và nay gấp hơn</strong></p>
   <p>
     2FA cho Hội đồng/Admin · header bộ nhớ đệm cho hồ sơ. Cả hai dưới một ngày công và cả hai
     <em>đắt hơn nhiều</em> nếu để sau khi có người dùng thật.
+  </p>
+  <p>
+    <strong>22/09:</strong> header bộ nhớ đệm <span class="chip xong">đã xong</span>.
+    <strong>2FA thì chưa</strong>, và điều kiện khiến nó gấp đã xảy ra: tự đăng ký đã mở, nên
+    số tài khoản có thể tiếp cận dữ liệu dòng họ chỉ tăng lên. Câu “đắt hơn nhiều nếu để sau khi
+    có người dùng thật” giờ là một cái đồng hồ đang chạy, không còn là một lời cảnh báo chung.
+  </p>
+  <p>
+    <strong>23/09 — và nay nó đứng đầu bảng 7.1.</strong> Không phải vì ai đổi ý, mà vì lớp bảo
+    vệ song song của nó đã bị loại: thời hạn phiên <em>không</em> đặt riêng theo vai được. Khi
+    hai cách giảm cùng một rủi ro rút còn một, cách còn lại không giữ nguyên mức ưu tiên cũ.
   </p>
 </div>
 
@@ -623,9 +970,91 @@
     cả 5 đều rỗng</em>. Cần người chụp ảnh, đo toạ độ mộ, phiên âm Hán-Nôm, viết bài. Code trước
     khi có họ thì ra bốn màn hình đẹp và trống.
   </p>
+  <p class="phu">
+    <strong>22/09: đúng nguyên văn, đã soát lại.</strong>
+    <code>heritage</code> · <code>fund</code> · <code>reporting</code> vẫn mỗi gói 5 tệp
+    <code>package-info.java</code>, không một lớp nào. Đây là <em>cố ý</em>, không phải việc bị
+    bỏ quên — đừng ai “dọn dẹp” bằng cách viết mã vào đó.
+  </p>
+</div>
+
+<h3>7.1 · Còn lại đúng bốn việc <span class="chip moi">soát 22/09, xếp lại 23/09</span></h3>
+
+<p>
+  Soát từng mục trong mã, không chép từ danh sách cũ. Sau hai đợt, đây là <strong>tất cả</strong>
+  những gì tệp này còn đòi — <strong>xếp theo mức gấp</strong>, không theo thứ tự các mục ở trên:
+</p>
+
+<table>
+  <thead><tr><th>Việc</th><th>Trạng thái đo được</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>2FA cho Hội đồng và Admin</strong>
+        <br><span class="chip must">an toàn</span> <span class="chip moi">ưu tiên cao nhất</span></td>
+      <td>
+        Chưa có gì trong <code>realm-giapha.json</code>: không <code>otpPolicy</code>, không
+        <code>CONFIGURE_TOTP</code>. Vẫn là việc <b>cấu hình</b>, không phải viết mã — không ai
+        phải mở một đợt cho nó.
+        <div class="tt chua" style="margin-top:8px">
+          <b>23/09 — việc này vừa ĐỔI HẠNG, và không phải vì ai đổi ý.</b>
+          <br>Nó lên đầu vì <b>một chốt khác đã được chứng minh là không dựng được</b>: đề xuất
+          rút ngắn thời hạn phiên riêng cho vai Hội đồng/Admin (tài liệu 06 §1.2)
+          <b>bất khả thi</b> — Keycloak chỉ đặt thời hạn ở mức <i>realm</i> và <i>client</i>, không
+          có mức vai, và cả dòng họ đăng nhập qua một client trình duyệt duy nhất. Chi tiết và ba
+          lý do đầy đủ ở tài liệu 06 §1.2.
+          <br>Hai việc ấy vốn là <b>hai cách giảm cùng một rủi ro</b>: một tài khoản đọc được
+          điện thoại, địa chỉ và ngày sinh đầy đủ của <i>cả dòng họ</i>, chỉ được bảo vệ bằng một
+          mật khẩu tự đặt. Cách thứ nhất là <i>thu hẹp cửa sổ thời gian</i>; cách thứ hai là
+          <i>siết cửa vào</i>. Cách thứ nhất nay đã loại hẳn, nên
+          <b>cách còn lại gánh cả hai phần</b> — và nó gánh trong lúc cửa vào vừa rộng thêm, vì
+          tự đăng ký đã mở (mục 1).
+          <br>Ghi ra đây để người đọc sau hiểu đây là <b>hệ quả của một phát hiện kỹ thuật</b>,
+          không phải một lần xếp lại ưu tiên tuỳ hứng.
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Đường cấp lại mật khẩu cho tài khoản dùng số điện thoại</strong>
+        <br><span class="chip dang">đang làm</span></td>
+      <td>Thư chỉ tới được người có địa chỉ thư. <strong>Đã có phần dưới:</strong>
+        <code>V21__membership_password_reset_grant.sql</code>,
+        <code>PasswordResetGrant</code>, <code>PasswordResetGrantRepository</code>,
+        <code>PasswordResetGrantJdbcAdapter</code>, <code>SetPasswordTokenCodec</code> — kể cả
+        ràng buộc <code>ck_password_reset_grant_not_self</code> (không tự cấp cho chính mình).
+        <strong>Chưa có phần trên:</strong> không có service, không có controller, không có màn
+        hình nào. Nên <em>hôm nay vẫn chưa dùng được</em>: cách duy nhất là gọi Trưởng chi.
+        Tài liệu 08 mục 2.2 đang mô tả đúng như thế — <strong>đừng viết như thể đã xong</strong>
+        cho tới khi có đường HTTP và một màn hình.</td>
+    </tr>
+    <tr>
+      <td><strong>Ghi việc riêng vào lịch</strong><br><span class="chip should">định hướng</span></td>
+      <td>Lịch ghi được nhưng chỉ ghi việc họ. Ba câu hỏi phạm vi ở mục 3 vẫn chưa ai trả lời,
+        và phải trả lời trước khi viết mã.</td>
+    </tr>
+    <tr>
+      <td><strong>Giai đoạn 3</strong> — di sản · mộ phần · quỹ họ · báo cáo</td>
+      <td>Chưa bắt đầu, <em>đúng kế hoạch</em>. Chờ người và chờ tư liệu, không chờ lập trình.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ba việc nhỏ hơn cũng còn, đừng để rơi</p>
+  <ul>
+    <li><strong>Lối ghi chỉ tiêu nhân khẩu từng chi</strong> (mục 4) — bảng có, lối ghi không.</li>
+    <li><strong>Danh mục 34 tỉnh</strong> (mục 4) — chờ văn bản pháp quy, không phải chờ code.</li>
+    <li><strong>Màn nhập môn sau khi được duyệt</strong> (mục 6) — bớt gấp vì trang chủ đã có
+      nội dung thật, nhưng vẫn chưa ai dẫn người vừa được duyệt đi đâu.</li>
+  </ul>
 </div>
 
 <h2>8. Bảy quyết định đã chốt</h2>
+
+<p class="phu">
+  <strong>Bảng này không bị đụng tới trong bản cập nhật 22/09/2026</strong>, kể cả một dấu phẩy.
+  Đây là quyết định của chủ dự án, không phải trạng thái công việc — nó không “xong” hay “chưa
+  xong” được, và cả bảy vẫn đang được thi hành đúng như đã chốt.
+</p>
 
 <table>
   <thead><tr><th>#</th><th>Câu hỏi</th><th>Quyết định</th></tr></thead>
@@ -653,9 +1082,20 @@
   Không còn câu hỏi nào treo. Tài liệu này đủ để bắt đầu đợt 1.
 </p>
 
+<div class="khoi">
+  <p class="nhan">Câu trên viết ngày 20/09. Ngày 22/09 thì đợt 1 và đợt 2 đã xong.</p>
+  <p>
+    Câu hỏi còn treo hôm nay <strong>không nằm ở đây nữa</strong> mà ở mục 7.1: ba câu về phạm
+    vi việc riêng trên lịch, và chỗ đặt đường cấp lại mật khẩu. Hai thứ ấy cần một quyết định,
+    không cần thêm một vòng kiểm mã.
+  </p>
+</div>
+
 <p class="chan-trang">
-  Tài liệu 07 · gộp góp ý 20/09/2026 và bảy quyết định đã chốt · mọi câu về hiện trạng đều dẫn
-  được về một tệp trong kho; mọi đề xuất đều được ghi rõ là đề xuất.
+  Tài liệu 07 · gộp góp ý 20/09/2026 và bảy quyết định đã chốt ·
+  <strong>trạng thái cập nhật 22/09/2026</strong> (lập luận giữ nguyên, chỉ đổi trạng thái —
+  xem khối đầu tài liệu) · mọi câu về hiện trạng đều dẫn được về một tệp trong kho; mọi đề xuất
+  đều được ghi rõ là đề xuất.
 </p>
 
 </div>

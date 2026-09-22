@@ -237,12 +237,20 @@ nghĩa là khối tương ứng **không in ra** — chứ không phải in ra m
 | Khoá | Dùng cho |
 |---|---|
 | `giaphaClanSubtitle` | Dòng 2 bảng tên: *"Từ đường Đại Lan · Thanh Trì · Hà Nội"* |
-| `giaphaClanScale` | Dòng 3: *"14 đời · 1.509 người có tên trong phả"* — **chỉ điền khi có số đếm được thật** |
+| `giaphaClanScale` | Dòng 3: *"14 đời · 1.506 người có tên trong phả"* — **chỉ điền khi có số đếm được thật**, và đếm bằng `is_deleted = FALSE` (xem ghi chú dưới bảng) |
 | `giaphaHelpName` / `giaphaHelpPhone` | Tên và số máy của trưởng chi, in ở mọi ngõ cụt |
 | `giaphaGuestUrl` | Lối vào chế độ khách; rỗng thì dùng `client.baseUrl` |
-| `giaphaInviteUrl` | Nút "Tôi có mã mời"; rỗng vì tuyến `/moi/[token]` chưa tồn tại |
+| `giaphaInviteUrl` | Nút "Tôi có mã mời"; rỗng **cố ý** — mã mời luôn đi kèm trong tin nhắn, nên một đường `/moi/` trần không có mã là ngõ cụt. (Tuyến thật tên là `/moi/[ma]` và **đã tồn tại**.) |
 | `giaphaPublicBrowsingReady` | `false` — xem "Chế độ khách" bên dưới |
 | `giaphaPrimaryLocale` | Ngôn ngữ đứng trước trong công tắc; **phải trùng `defaultLocale` của realm** |
+
+> **`giaphaClanScale` — đếm cho đúng, vì con số này in ra trước mặt mọi người.**
+> Dùng `SELECT count(*) FROM person WHERE is_deleted = FALSE`, **không** dùng
+> `count(*)` trần. Xoá mềm là luật tuyệt đối của dự án: nhân khẩu đã xoá vẫn nằm
+> trong bảng để cây phả không gãy, nhưng không ai nhìn thấy họ — đếm cả những
+> hàng ấy là nói với cả dòng họ một con số lớn hơn sự thật. Trên CSDL phát triển
+> ngày 23/09/2026: bảng có **1.509** dòng, trong đó **1.506** chưa xoá mềm.
+> Chi tiết ở `TAI-KHOAN-THU-NGHIEM.md`.
 
 Tên dòng họ ở dòng 1 lấy từ `realm.displayName`. Đặt nó là **tên ngắn**
 ("Phả họ Nguyễn") và để phần còn lại cho `giaphaClanSubtitle` — thanh đầu trang
@@ -615,6 +623,17 @@ Cả ba **không cần Docker, không cần Keycloak chạy, không cần dựng
 một phép kiểm chỉ chạy được khi cả ngăn xếp đã lên là một phép kiểm không ai chạy.
 Nên gắn cả ba vào cổng *frontend static* của `.github/workflows/ci.yml`.
 
+> **23/09/2026 — cả ba HÔM NAY VẪN CHƯA nằm trong CI, và đó là một cái bẫy.**
+> Soát `.github/workflows/ci.yml`: cổng 2 chỉ chạy `typecheck`, `lint`, `vitest`;
+> không một dòng `run:` nào gọi ba tệp trên. Chữ "nên gắn" ở đoạn trên là **đúng**
+> — nhưng phần đầu của chính `kiem-mau-theme.mjs` lại tự khai *"Gắn vào CI ở cổng
+> frontend static"*, tức nó nói như việc ấy đã xong. Chú thích ấy sai, và cái sai
+> ấy nguy hiểm hơn việc chưa gắn: rủi ro không biến mất, nó chuyển từ *"chưa ai
+> nghĩ tới"* sang *"ai cũng tưởng đã có người lo"*. Một phép kiểm chặn trôi lệch
+> mà không chạy thì không chặn được gì.
+>
+> Chừng nào chưa gắn xong: **chạy tay cả ba trước mỗi lần đụng vào theme**.
+
 ```bash
 node infra/keycloak/kiem-mau-theme.mjs                 # màu + ba cái sàn
 node infra/keycloak/kiem-dang-ky.mjs                   # đăng ký · thư · thông điệp
@@ -683,9 +702,23 @@ Ghi lại để người sau khỏi đi tìm lại, và để chủ dự án bi�
    năm trạng thái; theme này phủ được **hai** (sai mật khẩu / khoá tạm) cộng
    trang "lượt đăng nhập quá hạn". `ACCOUNT_NOT_ACTIVE`, `ACCOUNT_NOT_PROVISIONED`
    và "phiên hết hạn giữa chừng" nổ ra **sau khi** đăng nhập thành công, ở tầng
-   ứng dụng — Keycloak không bao giờ nhìn thấy chúng. Chúng cần các tuyến
-   `/tai-khoan/chua-noi`, `/tai-khoan/cho-duyet` và một hộp thoại tại chỗ trong
-   `frontend/`, đúng như §3 phân ranh giới.
+   ứng dụng — Keycloak không bao giờ nhìn thấy chúng.
+
+   > **Cập nhật 23/09/2026 — đã làm, nhưng KHÔNG bằng hai tuyến mà §3 vẽ ra.**
+   > Các tuyến `/tai-khoan/chua-noi` và `/tai-khoan/cho-duyet` **không tồn tại** và
+   > sẽ không được dựng. Hai trạng thái tài khoản do `AccountStateGate` xử **tại
+   > chỗ**: nó thay nội dung trang bằng lời giải thích mà **giữ nguyên URL**. Lý do
+   > quyết định là một lỗi mà bản vẽ bỏ sót — trang đích cũng gọi API, cũng nhận
+   > đúng lỗi ấy, nên điều hướng sang đó là một **vòng lặp**. Chi tiết ở
+   > `design/06-dang-nhap` §7.1.
+   >
+   > Hai điều nữa cần biết khi gỡ lỗi ở vùng này:
+   > **(a)** mã HTTP đã chốt là **`403`**, nhưng `GlobalExceptionHandler` còn trả
+   > `409` cho một đường và đang được sửa — **so theo trường `code`, đừng so mã
+   > HTTP**; **(b)** `AccountStateGate` **giữ** trạng thái đã bắt cho tới khi tải
+   > lại trang (cố ý, để màn hình không nhấp nháy), nên sau khi một lời gọi hỏng,
+   > mọi trang bấm sang đều hiện khối giải thích — bấm F5 trước khi kết luận là
+   > một trang khác cũng hỏng.
 
 **Một chỗ lệch có chủ ý so với danh mục kiểm §11:** mục #4 đòi điểm dừng Tab đầu
 tiên là "Bỏ qua, tới nội dung chính". Ô định danh có `autofocus`, nên tiêu điểm

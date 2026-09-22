@@ -8,6 +8,30 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Piazzolla:opsz,wght@8..30,500;8..30,700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap">
 <link rel="stylesheet" href="../assets/design-doc.css">
+<style>
+  /* ---- Lớp trạng thái, thêm ngày 22/09/2026 --------------------------------
+     Cùng quy ước với tài liệu 07: ĐỔI TRẠNG THÁI, GIỮ NGUYÊN LẬP LUẬN.
+     Không một câu nào của bản 20/09 bị xoá hay viết lại. Mỗi chỗ đã đổi ngoài
+     thực tế được ghi bằng một khối `.tt` đặt NGAY DƯỚI đoạn nó nói về, để đọc
+     xuôi vẫn thấy bản vẽ gốc trước, rồi mới tới thứ đã xảy ra.
+     ------------------------------------------------------------------------ */
+  .tt {
+    margin: 10px 0 18px; padding: 10px 14px;
+    border-left: 3px solid var(--xanh); background: var(--xanh-nen);
+    border-radius: 0 4px 4px 0; font-size: 15px; line-height: 1.66;
+  }
+  .tt.lech { border-left-color: var(--ho-phach); background: var(--vang-nen); }
+  .tt.chua { border-left-color: var(--do-loi); background: var(--do-loi-nen); }
+  .tt > :first-child { margin-top: 0; }
+  .tt > :last-child { margin-bottom: 0; }
+  .tt .nhan-tt {
+    display: block; font-weight: 700; font-size: 13.5px; letter-spacing: .03em;
+    text-transform: uppercase; color: var(--xanh); margin-bottom: 5px;
+  }
+  .tt.lech .nhan-tt { color: var(--ho-phach); }
+  .tt.chua .nhan-tt { color: var(--do-loi); }
+  td .tt { margin: 8px 0 0; font-size: 14px; }
+</style>
 </head>
 <body>
 <div class="trang">
@@ -33,6 +57,30 @@
   </p>
 </header>
 
+<div class="tt">
+  <span class="nhan-tt">Viết 20/09/2026 · rà lại và cập nhật trạng thái 22/09/2026</span>
+  <p>
+    <b>Tài liệu này đã được thi hành, và phần lớn đề xuất trong nó nay là mã đang chạy.</b>
+    Bản 20/09 giữ nguyên từng chữ — kể cả những câu nay đã sai về hiện trạng, vì chúng là điểm
+    xuất phát và không đọc được lập luận nếu xoá chúng đi. Mỗi chỗ đã đổi được ghi bằng một khối
+    có viền màu như khối này, đặt ngay dưới đoạn nó nói về:
+  </p>
+  <ul>
+    <li><span style="color:var(--xanh);font-weight:700">Viền xanh</span> — đã làm, <b>đúng như
+      đề xuất</b>.</li>
+    <li><span style="color:var(--ho-phach);font-weight:700">Viền hổ phách</span> — đã làm nhưng
+      <b>khác bản vẽ</b>. Mỗi khối nói rõ <b>mã đúng hay tài liệu đúng</b>, và vì sao.</li>
+    <li><span style="color:var(--do-loi);font-weight:700">Viền đỏ</span> — <b>vẫn chưa</b>, hoặc
+      đã làm nhưng <b>không chạy</b>.</li>
+  </ul>
+  <p>
+    <b>Ba chỗ đáng đọc trước nếu không có thì giờ:</b> mục 3 (phép kiểm chặn trôi lệch
+    <i>đã viết nhưng không nằm trong CI</i> — tức chưa chặn được gì), mục 7 (một mã lỗi nay trả
+    <i>hai</i> mã HTTP khác nhau tuỳ đường đi, và hợp đồng ghi một mã thứ ba), và mục 5 (mô hình
+    ba cửa đã thành bốn cửa do một quyết định <i>sau</i> tài liệu này).
+  </p>
+</div>
+
 <h2>0. Cách đọc, phạm vi, quy ước</h2>
 
 <div class="luoi">
@@ -51,6 +99,13 @@
       mục <code>design/</code>). Mọi vùng chạm trong khung dây ≥ 44×44.
     </p>
     <p class="day">Mọi số px ở đây là <b>đề xuất vẽ ra</b>, không phải số đo từ trình duyệt — khác tài liệu 02 vốn đo trên sản phẩm đang chạy. Xem mục 12.</p>
+    <p class="day" style="border-left:3px solid var(--xanh);padding-left:9px;margin-top:8px">
+      <b>22/09: không còn đúng nữa, và đó là tin tốt.</b>
+      <code>infra/keycloak/do-chieu-cao.mjs</code> mở trang đăng nhập thật bằng Playwright ở khung
+      400px, <b>cả chế độ sáng lẫn tối</b>, rồi đo bốn ràng buộc: ngân sách chiều cao ≤120px
+      (mục 9), sàn chữ 16px, sàn vùng chạm 44×44 <i>đo hộp bao</i>, và tương phản WCAG AA.
+      Những con số trong tài liệu này đã thành điều kiện kiểm được.
+    </p>
   </div>
   <div class="the">
     <h4>Nguồn số liệu</h4>
@@ -89,6 +144,31 @@
   </p>
 </div>
 
+<div class="tt">
+  <span class="nhan-tt">22/09 — kết luận của cả mục 1 đã hết hiệu lực: màn đăng nhập nay tồn tại</span>
+  <p>
+    <code>realm-giapha.json</code> nay khai <code>"loginTheme": "giapha"</code>, và theme ấy có
+    thật ở <code>infra/keycloak/themes/giapha/login/</code>. Đi theo <b>đường 3</b> của mục 3,
+    đúng như đề xuất.
+  </p>
+  <p>
+    <b>Và nó đi xa hơn ba trang mà mục 3 vạch ra.</b> Bản vẽ nói Keycloak sở hữu
+    <code>login.ftl</code>, <code>login-reset-password.ftl</code>,
+    <code>login-update-password.ftl</code>. Thực tế có thêm <code>template.ftl</code>,
+    <code>error.ftl</code>, <code>info.ftl</code>, <code>login-page-expired.ftl</code>,
+    <code>login-verify-email.ftl</code>, <code>register.ftl</code>,
+    <code>register-commons.ftl</code>, một theme <i>email</i> riêng, gói thông điệp VI/EN, CSS,
+    JS, và <b>phông chữ tự lưu</b> (<code>resources/fonts/</code>, 10 tệp woff2).
+  </p>
+  <p>
+    <b>Tài liệu thiếu, mã đúng.</b> Ba trang ấy là ba trang <i>chạm vào mật khẩu</i>, nhưng người
+    dùng còn rơi vào trang lỗi, trang “phiên hết hạn”, trang xác minh thư — bỏ chúng lại giao
+    diện gốc thì bảy nguyên tắc vẫn mất hiệu lực, chỉ là ở chỗ ít người thấy hơn. Phông tự lưu
+    cũng không có trong bản vẽ và là điều đúng: trang đăng nhập tải phông từ Google là một lời
+    hứa về quyền riêng tư bị phá ở đúng giây người dùng gõ mật khẩu.
+  </p>
+</div>
+
 <h3>1.1 · Bảy nguyên tắc, đối chiếu với thứ đang chạy</h3>
 
 <div class="cuon">
@@ -105,12 +185,19 @@
     <tr>
       <td>2 · Sàn 16px / 44×44px</td>
       <td class="xau">Không kiểm soát được</td>
-      <td>Trang đăng nhập do Keycloak dựng; <code>loginTheme</code> không được khai trong <code>realm-giapha.json</code>.</td>
+      <td>Trang đăng nhập do Keycloak dựng; <code>loginTheme</code> không được khai trong <code>realm-giapha.json</code>.
+        <div class="tt"><b>22/09:</b> đã khai <code>"loginTheme": "giapha"</code>, và
+          <code>do-chieu-cao.mjs</code> nay <i>đo</i> cả hai sàn trên chính trang ấy.</div></td>
     </tr>
     <tr>
       <td>3 · Biểu tượng luôn kèm chữ</td>
       <td class="xau">Vi phạm, kiểm được</td>
-      <td><code>auth-menu.tsx</code>: nhãn nút bọc trong <code>className="hidden sm:inline"</code>. Dưới 640px — tức là <b>trên mọi điện thoại</b> — nút đăng nhập chỉ còn cái biểu tượng mũi tên vào cửa, <b>không chữ</b>.</td>
+      <td><code>auth-menu.tsx</code>: nhãn nút bọc trong <code>className="hidden sm:inline"</code>. Dưới 640px — tức là <b>trên mọi điện thoại</b> — nút đăng nhập chỉ còn cái biểu tượng mũi tên vào cửa, <b>không chữ</b>.
+        <div class="tt chua"><b>22/09 — VẪN HỎNG, y nguyên.</b> Soát lại
+          <code>auth-menu.tsx</code>: cả ba nhánh (chế độ giả lập, đang tải, chưa đăng nhập) vẫn
+          bọc nhãn trong <code>&lt;span className="hidden sm:inline"&gt;</code>. Đây là điều kiện
+          số 3 của danh mục kiểm mục 11, và nó là thứ <i>duy nhất</i> trong cả tài liệu này được
+          chỉ đích danh một tệp một dòng mà vẫn chưa ai sửa.</div></td>
     </tr>
     <tr>
       <td>4 · Không thao tác khó thu hồi trong im lặng</td>
@@ -120,7 +207,10 @@
     <tr>
       <td>5 · Nói tiếng của dòng họ</td>
       <td class="xau">Vi phạm</td>
-      <td>Trang Keycloak nói “Username or email”, “Sign in”. Không có chữ <em>dòng họ</em>, <em>chi</em>, <em>phả</em> nào.</td>
+      <td>Trang Keycloak nói “Username or email”, “Sign in”. Không có chữ <em>dòng họ</em>, <em>chi</em>, <em>phả</em> nào.
+        <div class="tt"><b>22/09:</b> đã có gói thông điệp riêng
+          (<code>themes/giapha/login/messages/messages_{vi,en}.properties</code>) — câu chữ là của
+          dòng họ, không còn là bản dịch của Keycloak.</div></td>
     </tr>
     <tr>
       <td>6 · Song ngữ không đối xứng</td>
@@ -130,7 +220,13 @@
     <tr>
       <td>7 · Quyền riêng tư nhìn thấy được</td>
       <td class="xau">Vi phạm</td>
-      <td>Màn đăng nhập không nói một chữ nào về việc khách xem được gì. Khách không hề biết mình có thể vào xem người đã khuất mà không cần tài khoản.</td>
+      <td>Màn đăng nhập không nói một chữ nào về việc khách xem được gì. Khách không hề biết mình có thể vào xem người đã khuất mà không cần tài khoản.
+        <div class="tt"><b>22/09:</b> đã có, và <b>có kèm số đo</b>. Theme in khối “khách xem được
+          gì” theo khoá <code>giaphaGuestPath={lang}/tree</code>; chú thích trong
+          <code>theme.properties</code> ghi rõ khối ấy bật vì cổng công khai đã được đo thật ngày
+          19/09 (<code>/public/tree</code> → 200, 66 node; <code>/public/persons/search</code> →
+          200, 20 kết quả), chứ không phải vì hy vọng. Khoá <code>{lang}</code> được thay theo
+          <i>ngôn ngữ người dùng vừa chọn trên chính trang ấy</i>.</div></td>
     </tr>
   </tbody>
 </table>
@@ -146,31 +242,71 @@
       <td class="so">1</td>
       <td><b>“Quên mật khẩu” hiện ra nhưng thư không bao giờ gửi.</b></td>
       <td><code>realm-giapha.json</code>: <code>resetPasswordAllowed: true</code>, và <b>không có khoá <code>smtpServer</code></b>.</td>
-      <td>Keycloak in liên kết “Forgot Password?” lên trang đăng nhập vì cờ kia bật. Người dùng bấm, nhập email, nhận màn “đã gửi”, rồi ngồi đợi một lá thư không tồn tại. <b>Tệ hơn là không có liên kết ấy</b> — nó tiêu mất một lượt cầu cứu.</td>
+      <td>Keycloak in liên kết “Forgot Password?” lên trang đăng nhập vì cờ kia bật. Người dùng bấm, nhập email, nhận màn “đã gửi”, rồi ngồi đợi một lá thư không tồn tại. <b>Tệ hơn là không có liên kết ấy</b> — nó tiêu mất một lượt cầu cứu.
+        <div class="tt"><b>22/09 — đã sửa.</b> Mailpit trong
+          <code>infra/docker-compose.yml</code> (SMTP 1025, xem thư ở 8025, <b>thư không ra
+          Internet</b>), và <code>smtpServer</code> nằm thẳng trong <code>realm-giapha.json</code>
+          — <i>không</i> qua biến môi trường, vì Keycloak 26.7.2 không đọc biến lúc nhập realm và
+          <code>${env.X:mặc định}</code> luôn trả về giá trị mặc định kể cả khi biến có thật.
+          <br><b>Nửa còn lại chưa xong:</b> thư chỉ tới được người <i>có</i> địa chỉ thư. Tài khoản
+          lập bằng số điện thoại — đúng nhóm mà phương án B ở mục 2.1 sinh ra để phục vụ — vẫn
+          không có đường tự phục vụ. Xem điểm yếu số 1 ở mục 12.1: nó đã thành sự thật.</div></td>
     </tr>
     <tr>
       <td class="so">2</td>
       <td><b>Không có đường đăng ký nào, kể cả cho người được mời.</b></td>
       <td><code>registrationAllowed: false</code>. Không có tuyến <code>moi/</code> hay <code>dang-ky/</code> trong <code>src/app/[locale]/</code>.</td>
-      <td>Tài khoản chỉ ra đời nếu ai đó vào bảng quản trị Keycloak tạo tay. Ba tài khoản đang có (<code>admin.giapha</code>, <code>truongchi</code>, <code>thanhvien</code>) là tài khoản seed. Không có cách nào đưa người thứ tư vào.</td>
+      <td>Tài khoản chỉ ra đời nếu ai đó vào bảng quản trị Keycloak tạo tay. Ba tài khoản đang có (<code>admin.giapha</code>, <code>truongchi</code>, <code>thanhvien</code>) là tài khoản seed. Không có cách nào đưa người thứ tư vào.
+        <div class="tt lech"><b>22/09 — đã có hai cửa, và <code>registrationAllowed</code> VẪN
+          <code>false</code>. Cả hai điều cùng đúng, và đó không phải mâu thuẫn.</b>
+          <br>Tuyến <code>/moi/[ma]</code> (lời mời cá nhân) và <code>/dang-ky</code> (mã mời dòng
+          họ) đều có thật. Nhưng chúng là tuyến <i>của ứng dụng</i>, gọi
+          <code>POST /clan-invites/lookup</code> rồi mới <code>POST /clan-invites/register</code>
+          — <b>không</b> phải trang đăng ký của Keycloak.
+          <br><b>Cờ realm phải giữ ở <code>false</code> vĩnh viễn</b>, và lý do không hiển nhiên:
+          trang đăng ký của Keycloak chỉ so mã với một <i>mẫu</i>, nên tài khoản tạo ở đó không
+          bao giờ đi qua <code>ClanInviteRedeemer</code> và <b>không vào sổ đếm lượt dùng</b> —
+          tức vô hiệu hoá âm thầm chốt quan trọng nhất trong bốn chốt của checklist 07 §1.2.
+          Lý do đầy đủ nằm ở <code>theme.properties</code> (khoá <code>giaphaRegisterUrl</code>).
+          Nay đã là một luật trong <code>CLAUDE.md</code>.</div></td>
     </tr>
     <tr>
       <td class="so">3</td>
       <td><b><code>ACCOUNT_NOT_PROVISIONED</code> không có chỗ nào để hiện.</b></td>
       <td><code>MembershipProblemCodes.java:31</code>; ném ở <code>AppUserProvisioningService.requireCurrentUser()</code>. Vùng <code>auth</code> trong <code>messages/vi.json</code> có <b>bảy khoá, không khoá nào là lỗi</b>.</td>
-      <td>Người đăng nhập thành công nhưng chưa được nối với nhân khẩu nào sẽ nhận lỗi này từ <em>bất kỳ</em> lời gọi API nào. Không màn nào đón nó.</td>
+      <td>Người đăng nhập thành công nhưng chưa được nối với nhân khẩu nào sẽ nhận lỗi này từ <em>bất kỳ</em> lời gọi API nào. Không màn nào đón nó.
+        <div class="tt"><b>22/09 — đã có màn đón.</b> <code>AccountStateGate</code> +
+          <code>AccountStateNotice</code> + <code>use-account-problem.ts</code>, cộng các khoá câu
+          chữ trong <code>messages/{vi,en}.json</code>. Chi tiết về <i>cách</i> nó đón — khác bản
+          vẽ, và khác có lý — ở mục 7.1.</div></td>
     </tr>
     <tr>
       <td class="so">4</td>
       <td><b>Trưởng chi không có quyền nối tài khoản với nhân khẩu.</b></td>
       <td><code>AppUserProvisioningService.linkToPerson()</code> gọi <code>guard.requireClanWide(...)</code> — tức chỉ <code>COUNCIL</code> và <code>ADMIN</code>.</td>
-      <td>Mọi thiết kế “trưởng chi mời người của chi mình” <b>chưa chạy được</b> hôm nay. Hoặc sửa backend, hoặc mọi lời mời phải qua Hội đồng. Đây là ràng buộc nghiệp vụ, không phải chi tiết kỹ thuật — xem mục 5.6.</td>
+      <td>Mọi thiết kế “trưởng chi mời người của chi mình” <b>chưa chạy được</b> hôm nay. Hoặc sửa backend, hoặc mọi lời mời phải qua Hội đồng. Đây là ràng buộc nghiệp vụ, không phải chi tiết kỹ thuật — xem mục 5.6.
+        <div class="tt lech"><b>22/09 — <code>linkToPerson</code> VẪN <code>requireClanWide</code>,
+          và đó là câu trả lời, không phải việc còn sót.</b>
+          <br>Tài liệu đặt hai lựa chọn: sửa backend, hoặc mọi lời mời qua Hội đồng. Mã chọn
+          <b>đường thứ ba</b>: <code>InvitationService.issue</code> cho Trưởng chi phát lời mời
+          trong phạm vi chi mình, còn <code>linkToPerson</code> — ghép <i>thẳng</i> — vẫn chỉ
+          Hội đồng và Quản trị.
+          <br><b>Mã đúng, và lý do nằm ngay trong javadoc của nó:</b> ghép thẳng là thao tác
+          <i>một phía</i> — không ai hỏi người bị ghép, không ai xác nhận. Ghép qua lời mời thì
+          người ở đầu kia phải bấm “Đúng là tôi”, và có nút “Không phải tôi” để nói ngược lại.
+          Trưởng chi được nới quyền ở lối <b>có con người xác nhận</b>, không phải ở lối im lặng.
+          Javadoc còn dặn người sau: trước khi nới phép kiểm này, hãy hỏi vì sao Trưởng chi cần
+          ghép mà không mời.</div></td>
     </tr>
     <tr>
       <td class="so">5</td>
       <td><b>Chế độ khách hứa nhiều hơn backend trả.</b></td>
       <td><code>design/README.md</code> đã ghi: <code>SecurityConfig</code> dành sẵn <code>/api/v1/public/**</code> nhưng <b>không controller nào ánh xạ vào đó</b>.</td>
-      <td>Mọi lời mời “xem phần công khai” ở mục 8 là lời hứa <b>chưa có hàng</b>. Thiết kế vẫn nên vẽ, nhưng phải gắn nhãn phụ thuộc.</td>
+      <td>Mọi lời mời “xem phần công khai” ở mục 8 là lời hứa <b>chưa có hàng</b>. Thiết kế vẫn nên vẽ, nhưng phải gắn nhãn phụ thuộc.
+        <div class="tt"><b>22/09 — đã có hàng.</b> <code>genealogy/api/rest/public_/</code> phục vụ
+          <code>/api/v1/public/**</code>, và giao diện đã nối vào: khách tìm kiếm đi
+          <code>/public/persons/search</code> (<code>person-search-screen.tsx</code> chọn lối gọi
+          theo <code>useTreeAudience()</code>).</div></td>
     </tr>
   </tbody>
 </table>
@@ -190,6 +326,69 @@
     <b>Cái giá:</b> một máy tính bảng để quên ở nhà từ đường vẫn còn phiên suốt buổi chiều. Với vai
     <code>COUNCIL</code>/<code>ADMIN</code> thì <b>giữ nguyên 30 phút</b> — họ đọc được Tầng 3 và
     duyệt được đính chính, nên cái giá đổi chiều. Xem trạng thái lỗi số 5 ở mục 7.
+  </p>
+</div>
+
+<div class="tt lech">
+  <span class="nhan-tt">22/09 — đã nâng, nhưng nâng một nửa và bỏ phần chia theo vai</span>
+  <p>
+    <code>ssoSessionIdleTimeout</code> nay là <b>7200</b> (2 giờ), không phải 1800 như tài liệu
+    ghi, cũng không phải 8 giờ như tài liệu đề xuất. <code>accessTokenLifespan: 900</code> và
+    <code>ssoSessionMaxLifespan: 36000</code> giữ nguyên.
+  </p>
+  <p>
+    <b>Phần bị bỏ là phần quan trọng hơn:</b> đề xuất chia <i>theo vai</i> — 8 giờ cho
+    <code>MEMBER</code>, giữ 30 phút cho <code>COUNCIL</code>/<code>ADMIN</code> — <b>không được
+    thực hiện</b>. Một con số duy nhất áp cho mọi người, nên tài khoản Hội đồng (đọc được Tầng 3
+    của cả dòng họ) nay có phiên <i>dài gấp bốn</i> lúc tài liệu này được viết.
+  </p>
+  <p>
+    2 giờ là một thoả hiệp hợp lý cho người đọc chậm. Nhưng nó cộng dồn với việc <b>2FA vẫn chưa
+    có</b> (checklist 07 §6) theo đúng một chiều: cửa vào rộng hơn, phiên sống lâu hơn, và lớp thứ
+    hai thì không có.
+  </p>
+</div>
+
+<div class="tt">
+  <span class="nhan-tt">22/09 — ĐÃ KIỂM: Keycloak KHÔNG đặt được thời hạn phiên theo vai. Đề xuất chia-theo-vai là bất khả thi, và đó là câu trả lời</span>
+  <p>
+    Đề xuất “8 giờ cho <code>MEMBER</code>, giữ 30 phút cho <code>COUNCIL</code>/<code>ADMIN</code>”
+    không phải việc bị bỏ quên — <b>nó không làm được</b>. Ba dữ kiện, kiểm trong realm và trong
+    tài liệu Keycloak 26:
+  </p>
+  <ol>
+    <li>
+      Keycloak đặt thời hạn phiên ở đúng <b>hai</b> mức: <b>realm</b> (Realm settings → Sessions)
+      và <b>client</b> (Clients → Advanced). <b>Không có mức vai.</b> Vai là thứ nằm <i>trong</i>
+      token, không phải thứ quyết định vòng đời của token.
+    </li>
+    <li>
+      Ghi đè ở mức client chỉ <b>rút ngắn</b> được, không nới dài: thời hạn realm luôn thắng, và
+      phiên client bị xoá khi mốc realm tới. Nên lối “realm 8 giờ + một client ngắn hơn cho Hội
+      đồng” là lối duy nhất còn lại về mặt kỹ thuật.
+    </li>
+    <li>
+      <b>Nhưng lối ấy cũng chết ở đây</b>, vì một lý do nằm trong chính
+      <code>realm-giapha.json</code>: cả dòng họ đăng nhập qua <b>một</b> client trình duyệt duy
+      nhất, <code>giapha-frontend</code> (hai client còn lại là
+      <code>giapha-backend</code> — chỉ nhận bearer token, và <code>giapha-provisioner</code> —
+      chỉ <code>client_credentials</code>). Muốn Hội đồng có client riêng thì phải có <b>một cửa
+      đăng nhập thứ hai</b>, mà client được chọn <i>trước</i> khi Keycloak biết người gõ là ai —
+      tức người dùng phải tự khai “tôi là Hội đồng” trước khi xác thực. Vừa vô lý với một cụ
+      trưởng họ, vừa là một <b>chỉ dấu rò rỉ</b>: nó chỉ thẳng cho người dò biết cửa nào dẫn tới
+      nhóm tài khoản có quyền cao nhất.
+    </li>
+  </ol>
+  <p>
+    <b>Kết luận, và nó thuộc về tài liệu chứ không phải danh sách việc treo:</b> một con số duy
+    nhất ở mức realm là thứ khả thi duy nhất. <b>7200 là câu trả lời</b>, không phải một nửa việc.
+    Mục 13 câu 7 coi như đã đóng.
+  </p>
+  <p>
+    <b>Và nó làm luận cứ cho 2FA mạnh hẳn lên.</b> Nếu <i>không siết được thời gian</i> cho tài
+    khoản đọc được Tầng 3 của cả dòng họ, thì thứ duy nhất còn siết được là <i>cửa vào</i>. Hai
+    việc ấy vốn là hai cách giảm cùng một rủi ro; nay chỉ còn một cách, nên 2FA thôi là “nên có”
+    (checklist 07 §6) mà thành thứ <b>gánh cả phần việc của cái kia</b>.
   </p>
 </div>
 
@@ -231,6 +430,29 @@
     </tr>
   </tbody>
 </table>
+</div>
+
+<div class="tt lech">
+  <span class="nhan-tt">22/09 — chọn phương án B, nhưng chuẩn hoá về <code>0…</code> chứ không <code>+84…</code></span>
+  <p>
+    <code>membership/domain/LoginIdentifier.java</code> nhận <b>cả email lẫn số điện thoại</b> ở
+    lối lập tài khoản, đúng tinh thần phương án B. Javadoc của nó nói thẳng vì sao lớp này phải
+    tồn tại: realm được cấu hình cho cả hai <i>ở ô đăng nhập</i>, nhưng hai lối <i>lập</i> tài
+    khoản từng chỉ nhận email — nên một cụ 70 tuổi gõ đúng thứ mà màn đăng nhập sẽ nhận lại bị từ
+    chối vì khuôn dữ liệu. “Đó là mâu thuẫn của sản phẩm, không phải lỗi của người dùng.”
+  </p>
+  <p>
+    <b>Khác bản vẽ ở dạng chuẩn hoá.</b> Tài liệu đề xuất ghi <code>+84…</code>; mã quy về
+    <code>0…</code> (mẫu <code>^0\d{8,10}$</code>, nhận vào cả <code>+84</code>, <code>84</code>,
+    dấu cách, dấu chấm, dấu gạch). <b>Mã đúng:</b> <code>0912 345 678</code> là dạng người Việt
+    đọc cho nhau qua điện thoại và in lên phiếu mời ở hình 4 — chuẩn hoá về đúng dạng người dùng
+    nhìn thấy thì khi đối chiếu bằng mắt không ai phải dịch trong đầu.
+  </p>
+  <p>
+    Khoảng 9–11 chữ số cũng là một quyết định có ghi lý do: di động nay 10 số, nhưng
+    <b>máy bàn theo mã vùng thì ngắn hơn</b>, và siết chặt hơn là loại đúng nhóm người mà thay đổi
+    này sinh ra để phục vụ.
+  </p>
 </div>
 
 <p><b>Ba cái giá của phương án B, nói rõ:</b></p>
@@ -391,6 +613,52 @@
     theme, rồi khẳng định bốn giá trị bắt buộc trùng nhau — đỏ trầm, nền kem, cỡ chữ thân bài,
     chiều cao nút. Không có phép kiểm này thì sau sáu tháng hai bên sẽ lệch màu, và <em>người dùng
     sẽ nhìn thấy sự lệch ấy ở đúng giây họ cần tin tưởng nhất</em>.
+  </p>
+</div>
+
+<div class="tt">
+  <span class="nhan-tt">22/09 — chọn đường 3, và ranh giới được giữ gần như đúng</span>
+  <p>
+    Theme Keycloak có thật (xem mục 1). Ranh giới “Next.js sở hữu phần còn lại” cũng được giữ,
+    nhưng <b>tên tuyến khác bản vẽ</b> — đây là chuyện đặt tên, không phải chuyện thiết kế:
+  </p>
+  <table>
+    <thead><tr><th>Bản vẽ 20/09</th><th>Tuyến thật 22/09</th></tr></thead>
+    <tbody>
+      <tr><td><code>/moi/[token]</code></td><td><code>/moi/[ma]</code> — cùng một thứ</td></tr>
+      <tr><td><code>/xin-nhan-ho</code></td><td><code>/nhan-dien/chua-co</code></td></tr>
+      <tr><td><code>/tai-khoan/cho-duyet</code></td><td><code>/nhan-dien/cho-duyet</code></td></tr>
+      <tr><td><code>/tai-khoan/chua-noi</code></td><td><b>không tồn tại</b> — thay bằng một lớp
+        chặn tại chỗ, xem mục 7.1</td></tr>
+      <tr><td><i>(không có trong bản vẽ)</i></td><td><code>/dang-ky</code>,
+        <code>/nhan-dien</code> — sinh ra từ quyết định “mã cấp cho cả họ”, xem mục 5</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="tt chua">
+  <span class="nhan-tt">22/09 — phép kiểm chặn trôi lệch ĐÃ VIẾT nhưng KHÔNG CHẠY</span>
+  <p>
+    <code>infra/keycloak/kiem-mau-theme.mjs</code> tồn tại và làm đúng việc mục này đòi: đọc
+    <code>frontend/src/styles/tokens.ts</code> và
+    <code>themes/giapha/login/resources/css/giapha.css</code>, đối chiếu bốn khoá
+    (<code>primary</code>, <code>bgPage</code>, <code>bgCard</code>, <code>textMain</code>), trả
+    <code>0</code> nếu khớp và <code>1</code> nếu lệch. Nó còn trích <i>nguyên văn</i> câu cảnh
+    báo ở trên vào phần đầu tệp. Viết bằng regex chứ không import <code>tokens.ts</code>, có lý
+    do đúng: “một phép kiểm chỉ chạy được khi cả ngăn xếp đã lên là một phép kiểm không ai chạy.”
+  </p>
+  <p>
+    <b>Nhưng nó không nằm trong CI.</b> Phần đầu tệp tự khai “Gắn vào CI ở cổng <i>frontend
+    static</i>”; soát <code>.github/workflows/ci.yml</code> thì cổng 2 chỉ chạy
+    <code>typecheck</code>, <code>lint</code> và <code>vitest</code> — <b>không một dòng nào gọi
+    tệp này</b> (cũng không gọi <code>kiem-dang-ky.mjs</code> hay
+    <code>do-chieu-cao.mjs</code>).
+  </p>
+  <p>
+    <b>Mã đúng, chú thích sai, và hậu quả đúng bằng việc chưa viết gì cả.</b> Một phép kiểm chặn
+    trôi lệch mà không chạy trong CI thì không chặn được gì; nó chỉ chuyển cái rủi ro từ “không
+    ai nghĩ tới” sang “ai cũng tưởng đã có”. Hai việc: sửa dòng chú thích cho khỏi nói dối, và
+    thêm một bước vào cổng 2 — ước một dòng <code>run:</code>.
   </p>
 </div>
 
@@ -654,6 +922,39 @@
   Nhưng đứng đúng chỗ mà không có cửa nào thì cũng không đi được. Phải thiết kế <b>ba cánh cửa</b>,
   và ba cửa ấy dành cho ba người rất khác nhau.
 </p>
+
+<div class="tt lech">
+  <span class="nhan-tt">22/09 — ba cửa thành bốn, và trật tự bị lật ngược. Do một QUYẾT ĐỊNH sau tài liệu này, không phải do mã đi lệch</span>
+  <p>
+    Câu mở đầu mục 5 — “Không có <i>đăng ký</i> trong sản phẩm này… đề xuất giữ
+    <code>registrationAllowed: false</code> vĩnh viễn” — <b>đúng một nửa, và nửa sai là nửa quan
+    trọng hơn</b>. Cờ realm giữ nguyên <code>false</code> (xem mục 1.2 #2), nhưng sản phẩm
+    <i>có</i> đăng ký: ngày 20/09 chủ dự án chốt <b>mã mời cấp cho CẢ HỌ</b> (quyết định số 1,
+    checklist 07 §8), và điều đó dựng nên một cửa mà tài liệu này không có.
+  </p>
+  <table>
+    <thead><tr><th>Bản vẽ 20/09</th><th>Thực tế 22/09</th></tr></thead>
+    <tbody>
+      <tr><td><b>Cửa 1</b> — có mã mời cá nhân → nối sẵn nhân khẩu, không chờ duyệt</td>
+        <td><b>Giữ nguyên</b>, ở <code>/moi/[ma]</code>. Đúng như vẽ.</td></tr>
+      <tr><td><b>Cửa 2</b> — “Xin nhận họ”: gửi yêu cầu, <i>chưa có tài khoản</i>, chờ Hội đồng
+        duyệt</td>
+        <td><b>Đã tách làm ba và lật ngược trật tự.</b> Có <i>tài khoản trước</i> (mã dòng họ ở
+          <code>/dang-ky</code>), rồi mới tự chỉ ra mình trên phả đồ
+          (<code>/nhan-dien</code>), hoặc khai mình chưa có trong phả
+          (<code>/nhan-dien/chua-co</code>). Trưởng chi duyệt, không phải Hội đồng.</td></tr>
+      <tr><td><b>Cửa 3</b> — người lạ → chế độ khách</td>
+        <td><b>Giữ nguyên</b>, và nay có hàng thật (mục 1.2 #5).</td></tr>
+    </tbody>
+  </table>
+  <p>
+    <b>Tài liệu bị vượt qua, không phải bị làm sai.</b> Trật tự mới đổi một thứ có thật: người
+    dùng <i>xem được phả đồ</i> trong lúc chờ duyệt — và đó là điều kiện bắt buộc để họ tự tìm
+    được mình trong 1.500 người. Cái giá cũng có thật và đã được nói thẳng ở checklist 07 §1.2:
+    ai cầm mã là xem được tên, đời và quan hệ của <i>mọi người đang sống</i>, nên
+    <b>mã mời mới là ranh giới an toàn thật sự, không phải bước duyệt</b>.
+  </p>
+</div>
 
 <div class="cuon">
 <table>
@@ -1189,6 +1490,22 @@
 </figcaption>
 </figure>
 
+<div class="tt chua">
+  <span class="nhan-tt">22/09 — lời tiên đoán ở cuối hình 8 đã thành sự thật, đúng từng chữ</span>
+  <p>
+    <code>MeController</code> không trả một trường nào cho biết Trưởng chi phụ trách là ai, tên gì,
+    số máy nào. Vì thế ba màn ấy <b>đã tụt về đúng chỗ tài liệu này cảnh báo</b>: phản hồi lỗi
+    mang <code>nextStep = "CONTACT_BRANCH_HEAD"</code> và câu chữ
+    <i>“Hãy liên hệ Trưởng chi hoặc Hội đồng Tộc biểu”</i> — <b>một lời khuyên không kèm số điện
+    thoại</b>.
+  </p>
+  <p>
+    Không phải lỗi của ai: dữ kiện ấy chưa bao giờ được đưa vào hợp đồng. Nhưng nó là chỗ khoảng
+    cách giữa bản vẽ và sản phẩm còn <i>rộng nhất</i>, và là khoảng cách mà người dùng cảm thấy
+    đúng lúc họ bí nhất. Một trường trong <code>GET /me</code> là đủ.
+  </p>
+</div>
+
 <h3>7.1 · Cái bẫy định tuyến của <code>ACCOUNT_NOT_PROVISIONED</code></h3>
 
 <div class="khoi canh-bao">
@@ -1207,6 +1524,87 @@
     — javadoc của <code>MembershipProblemCodes</code> đã dặn đúng điều này, và nói thêm rằng bốn mã
     của W6 <em>chưa</em> có trong <code>contracts/openapi.yaml</code>. Phải bổ sung trước khi giao
     diện dựa vào chúng.
+  </p>
+</div>
+
+<div class="tt">
+  <span class="nhan-tt">22/09 — lời khuyên “bám vào <code>code</code>, không bám mã HTTP” là thứ đã cứu màn này</span>
+  <p>
+    <code>use-account-problem.ts</code> làm đúng như vậy, và javadoc của nó nói thẳng vì sao:
+    <i>“Bảng dưới đây <b>không quan tâm</b> nó đổi thành 403, 409 hay ở nguyên 404: nhánh giao
+    diện bám vào <code>code</code>, nên nó đúng trước và sau đợt sửa, và không có một nhịp nào
+    hai bên lệch nhau.”</i> Bốn mã W6 nay <b>đã có</b> trong <code>contracts/openapi.yaml</code>.
+  </p>
+</div>
+
+<div class="tt chua">
+  <span class="nhan-tt">22/09 — nhưng cái bẫy chưa được gỡ, nó chỉ ĐỔI HÌNH: một mã lỗi, hai mã HTTP, và hợp đồng ghi mã thứ ba</span>
+  <p>Ba nguồn đang nói ba điều khác nhau về <b>cùng một</b> mã lỗi:</p>
+  <ul>
+    <li><code>GlobalExceptionHandler.accountNotProvisioned()</code> trả <b>409 CONFLICT</b>, kèm
+      một javadoc lập luận vì sao 404, 401 và 403 đều sai.</li>
+    <li><code>BranchScopeGuard.requireProvisionedAccount</code> và <code>ImportScopeGuard</code>
+      ném cùng mã ấy dưới dạng <code>ForbiddenException</code> ⇒ <b>403</b>. Chính javadoc kia
+      thừa nhận: <i>“Đã biết và cố ý chưa đụng tới… có test ghim 403… đã được báo cáo cho chủ hợp
+      đồng.”</i></li>
+    <li><code>contracts/openapi.yaml</code> ghi <b>403</b>.</li>
+  </ul>
+  <p>
+    Thêm nữa, javadoc của <code>requireCurrentUser()</code> viết “ném 403” trong khi thân hàm ném
+    <code>NotFoundException</code> — một dòng chú thích nói sai về chính hàm nó đứng trên.
+  </p>
+  <p>
+    <b>Hậu quả hôm nay: không có.</b> Đúng vì giao diện nghe lời tài liệu này mà bám vào
+    <code>code</code>. <b>Hậu quả ngày mai thì có:</b> người viết một client thứ hai — kịch bản
+    kiểm, một app khác, một tích hợp — sẽ đọc hợp đồng, thấy 403, và gặp 409 ở nửa số đường gọi.
+  </p>
+</div>
+
+<div class="tt">
+  <span class="nhan-tt">22/09 — ĐÃ CHỐT: <code>403</code>. Chủ dự án quyết, bốn lý do</span>
+  <ol>
+    <li><b>Hợp đồng đã ghi <code>403</code>, và client được xây theo hợp đồng.</b> Sửa hợp đồng
+      cho khớp mã là để mã dẫn dắt hợp đồng — ngược chiều.</li>
+    <li><b>Hai guard đã ném <code>403</code> và có test ghim.</b> Đổi chúng là phải gỡ hai bài
+      kiểm đang đúng.</li>
+    <li><b>Ngữ nghĩa HTTP đứng về phía <code>403</code>:</b> “đã xác thực, chưa đủ quyền cho phạm
+      vi này”. <code>409</code> hàm ý một xung đột trạng thái mà client <i>tự gỡ được bằng cách
+      gửi lại</i> — ở đây gửi lại bao nhiêu lần cũng vô ích, phải có <b>người khác</b> gắn mình
+      vào phả.</li>
+    <li><b>Không người dùng nào thấy khác biệt</b>, vì giao diện rẽ theo <code>code</code>. Việc
+      sửa này thuần tuý để <i>client thứ hai</i> đừng gặp <code>409</code> ở nửa số lời gọi.</li>
+  </ol>
+  <p>
+    Chỗ sửa: <code>GlobalExceptionHandler.accountNotProvisioned()</code>.
+    <b>Lập luận <code>409</code> trong javadoc được giữ lại dưới dạng lời kể</b> — nó viết tốt, và
+    nó giải thích vì sao từng có người chọn khác. Một quyết định bị đảo mà xoá luôn lý do của bên
+    thua thì người sau sẽ đảo ngược lại lần nữa.
+  </p>
+  <p class="day">
+    <b>Hệ quả cho tài liệu 09:</b> mọi kịch bản nghiệm thu nhắc tới mã này phải ghi
+    <code>403</code>.
+  </p>
+</div>
+
+<div class="tt lech">
+  <span class="nhan-tt">22/09 — không điều hướng sang một tuyến riêng; thay nội dung tại chỗ. MÃ ĐÚNG</span>
+  <p>
+    Bản vẽ đề xuất đẩy sang <code>/vi/tai-khoan/chua-noi</code>. Tuyến ấy
+    <b>không tồn tại</b>, và <code>AccountStateGate</code> thay nội dung trang tại chỗ. Javadoc
+    của nó nêu ba lý do, và lý do thứ hai là lý do quyết định:
+  </p>
+  <ul>
+    <li><b>giữ nguyên URL</b> — Hội đồng nối xong tài khoản thì đúng một lượt tải lại là người
+      dùng ở lại chính trang họ đang muốn mở, không phải tìm đường về;</li>
+    <li><b>không có vòng lặp điều hướng</b> — trang đích cũng gọi API, cũng nhận cùng lỗi ấy, và
+      một lần đẩy nữa là một vòng lặp. <i>Bản vẽ đã bỏ sót điều này;</i></li>
+    <li>không phải thêm một tuyến vào bộ định tuyến để dựng một màn thuộc về mình.</li>
+  </ul>
+  <p>
+    Javadoc còn rào đúng chỗ đáng rào: lớp này <b>không phải một lớp phân quyền</b> — máy chủ đã
+    từ chối trước rồi, gỡ nó đi thì màn hình xấu lại chứ không hở thêm một trường nào.
+    <br>Luật số 1 của mục 7.2 cũng được giữ: mã kỹ thuật được truyền vào
+    (<code>technicalCode</code>) nhưng <i>không hiện ra ngay</i>.
   </p>
 </div>
 
@@ -1416,6 +1814,26 @@
 
 <p>Viết dưới dạng khẳng định để dùng thẳng làm điều kiện nghiệm thu.</p>
 
+<div class="tt lech">
+  <span class="nhan-tt">22/09 — bốn điều đã có máy đo, một điều vẫn hỏng, một điều có máy nhưng máy không chạy</span>
+  <ul>
+    <li><b>#1, #2, #9 và tương phản</b> — <code>do-chieu-cao.mjs</code> đo cả bốn trên trang thật,
+      ở khung 400px, <i>cả chế độ sáng lẫn tối</i>. Chế độ tối không phải trang trí: nó do hệ điều
+      hành quyết, người dùng không bật nó trong sản phẩm này, nên một lỗi tương phản ở đó là lỗi
+      mà nửa số người dùng gặp và không ai báo cáo được.</li>
+    <li><b>#3 — vẫn hỏng.</b> <code>auth-menu.tsx</code> còn nguyên
+      <code>hidden sm:inline</code>. Xem mục 1.1.</li>
+    <li><b>#4 — đã xong</b>, và hoá ra lỗi sâu hơn một tầng so với mô tả: trước đợt sửa,
+      <code>grep '&lt;main'</code> không trả kết quả nào — <b>không có mốc nào để bỏ qua
+      TỚI</b>. Nay <code>app-shell.tsx</code> có cả <code>&lt;SkipLink&gt;</code> lẫn
+      <code>&lt;main&gt;</code>.</li>
+    <li><b>#11 — có phép kiểm, nhưng nó không nằm trong CI.</b> Xem khối đỏ ở mục 3. Điều kiện
+      nghiệm thu này hôm nay <i>không được kiểm ở đâu cả</i>.</li>
+    <li><b>#13</b> — NFR-1 đã đo cho ứng dụng (807 ms máy tính / 750 ms Pixel 5, trần 2000 ms),
+      nhưng <i>trang đăng nhập do Keycloak phục vụ</i> nằm ngoài phép đo ấy.</li>
+  </ul>
+</div>
+
 <div class="cuon">
 <table>
   <thead><tr><th>#</th><th>Điều kiện</th><th>Đo thế nào</th></tr></thead>
@@ -1459,6 +1877,13 @@
         cho một nhóm người làm việc không công. Con số 2% là <b>tôi ước lượng</b>, không có nguồn.
         Nếu thật ra là 10% thì luồng này sụp bằng đúng cái cách mà không ai kịp nhận ra: các trưởng
         chi lặng lẽ ngừng nghe máy.
+        <div class="tt lech"><b>22/09 — đã thành sự thật, và đang được xử.</b> Có SMTP rồi thì
+          người <i>có email</i> tự phục vụ được; người đăng ký bằng số máy thì không, đúng như
+          đoạn này dự đoán. Tài liệu 08 (hướng dẫn sử dụng) mục 2.2 nay nói thẳng với người dùng
+          rằng cách duy nhất hôm nay là gọi Trưởng chi. Một đường <i>Trưởng chi cấp lại liên kết
+          đặt mật khẩu</i> đang làm dở — có migration và hạ tầng, chưa có API và màn hình — nên
+          con số “30 cuộc điện thoại mỗi năm” vẫn là con số phải trả. Ước lượng 2% vẫn chưa có
+          nguồn, và vẫn chưa ai đo.</div>
       </td>
       <td>Trưởng chi, rồi tới người quên mật khẩu</td>
     </tr>
@@ -1604,6 +2029,34 @@
 </table>
 </div>
 
+<div class="tt lech">
+  <span class="nhan-tt">22/09 — cả bảy câu đã có câu trả lời trong mã; hai câu được trả lời một nửa</span>
+  <table>
+    <thead><tr><th>#</th><th>Đã quyết ra sao</th></tr></thead>
+    <tbody>
+      <tr><td class="so">1</td><td><b>Cả hai.</b> Phương án B — <code>LoginIdentifier</code> nhận
+        email lẫn số máy, chuẩn hoá về <code>0…</code>. Xem mục 2.1.</td></tr>
+      <tr><td class="so">2</td><td><b>Theme Keycloak</b> (đường 3), và rộng hơn ba trang đã vạch.
+        Xem mục 1 và mục 3.</td></tr>
+      <tr><td class="so">3</td><td><b>Không, và có đường khác.</b> Trưởng chi <i>mời</i> được
+        trong chi mình, nhưng không <i>ghép thẳng</i> được. Xem mục 1.2 #4.</td></tr>
+      <tr><td class="so">4</td><td><b>Có</b> — màn nhận lời mời hiện tên, chi và đời của hồ sơ
+        được mời, kèm nút “Không phải tôi” huỷ mã và báo lại người mời.</td></tr>
+      <tr><td class="so">5</td><td><b>Cấu hình SMTP.</b> Mailpit cho máy phát triển. Nhưng chỉ
+        đóng được nửa bài toán — tài khoản dùng số điện thoại vẫn chưa có đường tự phục vụ, và
+        <i>đường Trưởng chi cấp lại đang làm dở</i>: đã có
+        <code>V21__membership_password_reset_grant.sql</code> cùng
+        <code>PasswordResetGrant</code> và adapter, <b>chưa có service, controller hay màn
+        hình</b>. Đừng ai mô tả nó như đã xong.</td></tr>
+      <tr><td class="so">6</td><td><b>Có.</b> <code>/api/v1/public/**</code> chạy thật và giao
+        diện đã nối vào. Xem mục 1.2 #5.</td></tr>
+      <tr><td class="so">7</td><td><b>Nâng lên 2 giờ ở mức realm. Chia theo vai: ĐÃ KIỂM, không
+        làm được</b> — Keycloak chỉ có mức realm và mức client, và cả dòng họ dùng chung một
+        client trình duyệt. Câu này <b>đã đóng</b>; xem khối xanh ở mục 1.2.</td></tr>
+    </tbody>
+  </table>
+</div>
+
 <footer class="chan-trang">
   <p>
     Tài liệu 06 · <b>đề xuất</b>, chưa phải lệnh thi công. Thứ tự ưu tiên khi mâu thuẫn:
@@ -1613,6 +2066,23 @@
     Không có dòng mã sản phẩm nào được viết hay sửa cho tài liệu này. Mọi số nói về hiện trạng đều
     dẫn tệp trong kho; mọi số còn lại là đề xuất và được ghi rõ là đề xuất. Chỗ tôi phải đoán nằm
     ở mục 12.2, tất cả, không giấu mục nào.
+  </p>
+  <p>
+    <b>Cập nhật trạng thái 22/09/2026.</b> Bản 20/09 giữ nguyên từng chữ; phần thêm vào nằm trọn
+    trong các khối có viền màu và không sửa một câu nào của bản gốc. Bốn việc còn nợ, theo thứ tự
+    rẻ-trước: <b>(1)</b> bỏ <code>hidden sm:inline</code> ở <code>auth-menu.tsx</code> — một dòng,
+    và là điều kiện số 3 của mục 11; <b>(2)</b> gắn <code>kiem-mau-theme.mjs</code> vào cổng 2 của
+    CI, cộng sửa dòng chú thích đang khai sai rằng nó đã ở đó; <b>(3)</b> đưa
+    <code>ACCOUNT_NOT_PROVISIONED</code> về <b><code>403</code></b> ở
+    <code>GlobalExceptionHandler</code> — đã chốt, xem mục 7.1; <b>(4)</b> thêm
+    người phụ trách chi vào <code>GET /me</code> để ba màn lỗi ở hình 8 nói được một số điện thoại
+    thay vì một lời khuyên.
+  </p>
+  <p>
+    Hai câu treo lâu nhất của tài liệu này <b>đã đóng</b> trong bản cập nhật: mã HTTP của
+    <code>ACCOUNT_NOT_PROVISIONED</code> (chốt <code>403</code>), và thời hạn phiên theo vai
+    (<b>không làm được</b> — Keycloak không có mức vai; 7200 ở mức realm là câu trả lời, và nó
+    dồn toàn bộ gánh nặng sang 2FA).
   </p>
 </footer>
 
