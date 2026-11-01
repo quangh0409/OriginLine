@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ghi lỗi kiểm thử — Gia Phả Dòng Họ</title>
+<style>
+  :root{
+    --nen:#fbf7ee; --the:#fff; --vien:#ddd0b8; --vien-dam:#b99a63; --chu:#2c2418; --nhat:#6b6152;
+    --do:#7a2e2e; --do-nen:#f6e6e0; --xanh:#2f5d43; --xanh-nen:#e3f0e6; --vang:#8a6d16; --vang-nen:#fbf0d0;
+    --xam:#f0ece0; --cam:#a5521b; --cam-nen:#fbe7d6; --lam:#22507f; --lam-nen:#e3ecf7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--nen);color:var(--chu);font:15px/1.5 "Segoe UI","Be Vietnam Pro",Arial,sans-serif}
+  header{background:var(--do);color:#fff;padding:12px 20px}
+  header h1{margin:0;font-size:20px}
+  header .phu{opacity:.85;font-size:13px}
+  .phien{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end;background:var(--the);border-bottom:1px solid var(--vien);padding:10px 20px}
+  .phien label{display:flex;flex-direction:column;font-size:12px;color:var(--nhat);gap:2px}
+  .phien input{min-width:150px}
+  .phien .nut-nhom{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+  nav{display:flex;gap:4px;padding:10px 20px 0;border-bottom:2px solid var(--vien)}
+  nav button{border:1px solid var(--vien);border-bottom:none;background:var(--xam);border-radius:8px 8px 0 0;padding:8px 16px;font-weight:600;color:var(--nhat);cursor:pointer}
+  nav button.on{background:var(--the);color:var(--do);position:relative;top:2px}
+  main>section{display:none;padding:16px 20px 60px}
+  main>section.on{display:block}
+  input,select,textarea{font:inherit;border:1px solid var(--vien);border-radius:6px;padding:6px 8px;background:#fff;color:var(--chu)}
+  textarea{width:100%;min-height:90px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--vien-dam);outline-offset:0}
+  button{font:inherit;border:1px solid var(--vien-dam);background:#fff;color:var(--chu);border-radius:6px;padding:6px 12px;cursor:pointer}
+  button:hover{background:var(--xam)}
+  button.chinh{background:var(--do);border-color:var(--do);color:#fff;font-weight:600}
+  button.chinh:hover{background:#5f2222}
+  button.nho{padding:2px 8px;font-size:13px}
+  button.xoa{color:var(--do);border-color:#d9a9a2}
+  .loc{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .dem{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .the-dem{background:var(--the);border:1px solid var(--vien);border-radius:8px;padding:6px 12px;font-size:13px}
+  .the-dem b{font-size:18px;margin-right:4px}
+  table.ds{width:100%;border-collapse:collapse;background:var(--the);border:1px solid var(--vien);border-radius:8px;overflow:hidden}
+  table.ds th{background:var(--xam);text-align:left;font-size:13px;padding:8px;border-bottom:1px solid var(--vien)}
+  table.ds td{padding:8px;border-bottom:1px solid #eee5d3;vertical-align:top;font-size:14px}
+  table.ds tr.dong{cursor:pointer} table.ds tr.dong:hover td{background:#fdf8ec}
+  .rong{color:var(--nhat);text-align:center;padding:30px!important}
+  .huy{display:inline-block;border-radius:10px;padding:1px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+  .md-1{background:var(--do);color:#fff} .md-2{background:var(--cam-nen);color:var(--cam)} .md-3{background:var(--vang-nen);color:var(--vang)} .md-4{background:var(--xam);color:var(--nhat)}
+  .tt-moi{background:var(--do-nen);color:var(--do)} .tt-bao{background:var(--lam-nen);color:var(--lam)} .tt-sua{background:var(--vang-nen);color:var(--vang)}
+  .tt-dong{background:var(--xanh-nen);color:var(--xanh)} .tt-khong{background:var(--xam);color:var(--nhat)} .tt-mo-lai{background:var(--do);color:#fff}
+  .ma{font-family:Consolas,monospace;font-size:13px;color:var(--nhat);white-space:nowrap}
+  form{max-width:1050px}
+  .luoi{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px 16px}
+  .o{display:flex;flex-direction:column;gap:3px}
+  .o>span{font-size:13px;font-weight:600}
+  .o>span .bb{color:var(--do)}
+  .o small{color:var(--nhat);font-size:12px}
+  .rong-het{grid-column:1/-1}
+  .hai-o{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  @media (max-width:700px){.hai-o{grid-template-columns:1fr}}
+  fieldset{border:1px solid var(--vien);border-radius:10px;background:var(--the);padding:12px 16px 16px;margin:0 0 14px}
+  legend{font-weight:700;color:var(--do);padding:0 6px}
+  .kb-chon{display:flex;gap:6px} .kb-chon select{flex:1;min-width:0}
+  .kb-mo-ta{font-size:13px;color:var(--nhat);margin-top:2px}
+  .kb-mo-ta a{color:var(--do)}
+  .tha{border:2px dashed var(--vien-dam);border-radius:10px;padding:18px;text-align:center;color:var(--nhat);background:#fffdf7}
+  .tha.dang-keo{background:var(--vang-nen);border-color:var(--vang)}
+  .anh-ds{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:10px}
+  .anh{border:1px solid var(--vien);border-radius:8px;background:#fff;padding:6px;display:flex;flex-direction:column;gap:4px}
+  .anh img{width:100%;height:130px;object-fit:contain;background:var(--xam);border-radius:4px;cursor:zoom-in}
+  .anh .hang{display:flex;gap:4px;justify-content:space-between;align-items:center}
+  .anh .co{font-size:11px;color:var(--nhat)}
+  .chan{position:sticky;bottom:0;background:linear-gradient(transparent,var(--nen) 30%);padding:16px 0 4px;display:flex;gap:8px;align-items:center}
+  .canh{background:var(--vang-nen);border-left:4px solid var(--vang);padding:8px 12px;border-radius:4px;font-size:14px;margin:8px 0}
+  .loi-o{border-color:var(--do)!important;background:var(--do-nen)!important}
+  #trang-thai{font-size:13px;color:var(--nhat)}
+  dialog{border:none;border-radius:12px;padding:0;box-shadow:0 10px 40px rgba(0,0,0,.35);max-width:96vw;max-height:94vh}
+  dialog::backdrop{background:rgba(30,20,10,.6)}
+  #xem-anh img{display:block;max-width:94vw;max-height:86vh}
+  #xem-anh .chu-thich{padding:8px 12px;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  #ve .cong-cu{display:flex;gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--vien);flex-wrap:wrap}
+  #ve .cong-cu button.on{background:var(--do);color:#fff;border-color:var(--do)}
+  #ve .khung{overflow:auto;max-width:94vw;max-height:78vh;background:#555}
+  #ve canvas{display:block;cursor:crosshair}
+  .huong-dan{max-width:900px;background:var(--the);border:1px solid var(--vien);border-radius:10px;padding:8px 24px 20px}
+  .huong-dan h2{color:var(--do);font-size:18px;margin-top:22px}
+  .huong-dan table{border-collapse:collapse;width:100%;font-size:14px}
+  .huong-dan td,.huong-dan th{border:1px solid var(--vien);padding:6px 8px;text-align:left;vertical-align:top}
+  .huong-dan th{background:var(--xam)}
+  kbd{border:1px solid var(--vien-dam);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:13px;background:#fff}
+  @media (max-width:700px){ .phien .nut-nhom{margin-left:0} table.ds .an-dt{display:none} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Ghi lỗi kiểm thử</h1>
+  <div class="phu">Ghi lại các ca kiểm thử bị lỗi, kèm ảnh chụp màn hình. Dữ liệu lưu ngay trong trình duyệt này; cuối buổi bấm <b>Xuất báo cáo</b> để gửi cho đội phát triển.</div>
+</header>
+
+<div class="phien" id="phien">
+  <label>Người kiểm <input id="p-nguoi" placeholder="Nguyễn Văn A"></label>
+  <label>Đợt kiểm <input id="p-dot" placeholder="Nghiệm thu đợt C"></label>
+  <label>Bản build / commit <input id="p-ban" placeholder="8262aa4"></label>
+  <label>Địa chỉ hệ thống <input id="p-dia-chi" placeholder="http://localhost:3000"></label>
+  <div class="nut-nhom">
+    <button class="chinh" id="nut-moi">+ Ghi lỗi mới</button>
+    <button id="nut-bao-cao" title="Một tệp HTML có cả ảnh — gửi qua Zalo/email, hoặc đặt vào bao-cao/&lt;ngày&gt;/">⬇ Xuất báo cáo HTML</button>
+    <button id="nut-csv" title="Bảng tính (không có ảnh)">⬇ CSV</button>
+    <button id="nut-json" title="Sao lưu đầy đủ, có ảnh — để chuyển máy hoặc gộp với người kiểm khác">⬇ Sao lưu (.json)</button>
+    <button id="nut-nap" title="Nạp tệp sao lưu .json — gộp vào danh sách hiện có">⬆ Nạp sao lưu</button>
+    <input type="file" id="tep-nap" accept=".json,application/json" hidden>
+  </div>
+</div>
+
+<nav id="tabs">
+  <button data-tab="danh-sach" class="on">Danh sách lỗi <span id="dem-tong"></span></button>
+  <button data-tab="ghi">Ghi / sửa lỗi</button>
+  <button data-tab="huong-dan">Hướng dẫn</button>
+</nav>
+
+<main>
+<section id="danh-sach" class="on">
+  <div class="dem" id="dem"></div>
+  <div class="loc">
+    <input id="l-tim" placeholder="Tìm mã, tiêu đề, kịch bản…" size="28">
+    <select id="l-muc"><option value="">Mọi mức độ</option></select>
+    <select id="l-tt"><option value="">Mọi trạng thái</option></select>
+    <select id="l-nhom"><option value="">Mọi nhóm kịch bản</option></select>
+    <span id="trang-thai"></span>
+  </div>
+  <table class="ds">
+    <thead><tr><th>Mã</th><th>Tiêu đề</th><th class="an-dt">Kịch bản</th><th>Mức độ</th><th>Trạng thái</th><th class="an-dt">Ảnh</th><th class="an-dt">Ngày</th></tr></thead>
+    <tbody id="bang"></tbody>
+  </table>
+</section>
+
+<section id="ghi">
+<form id="f" autocomplete="off" onsubmit="return false">
+  <div id="f-dau" style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px">
+    <h2 style="margin:0;color:var(--do);font-size:19px" id="f-tieu-de">Ghi lỗi mới</h2>
+    <span class="ma" id="f-ma"></span>
+  </div>
+
+  <fieldset>
+    <legend>1. Lỗi ở đâu</legend>
+    <div class="luoi">
+      <label class="o rong-het"><span>Kịch bản nghiệm thu</span>
+        <div class="kb-chon"><select id="f-kich-ban"></select></div>
+        <div class="kb-mo-ta" id="kb-mo-ta"></div>
+      </label>
+      <label class="o rong-het"><span>Tiêu đề lỗi <b class="bb">*</b></span>
+        <input id="f-tieu-de-loi" placeholder="Ví dụ: Khách thấy số điện thoại của người còn sống trên trang chủ">
+        <small>Một câu: <b>ở đâu</b> + <b>sai gì</b>. Đọc tiêu đề là biết lỗi gì, không cần mở ra.</small>
+      </label>
+      <label class="o"><span>Màn hình / đường dẫn</span><input id="f-url" placeholder="/vi/pha-do"></label>
+      <label class="o"><span>Đăng nhập bằng tài khoản</span><select id="f-tai-khoan"></select></label>
+      <label class="o"><span>Thiết bị</span><select id="f-thiet-bi"></select></label>
+      <label class="o"><span>Trình duyệt</span><input id="f-trinh-duyet"><small>Tự điền theo máy đang dùng; sửa nếu kiểm trên máy khác.</small></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Lỗi thế nào</legend>
+    <div class="luoi">
+      <label class="o"><span>Mức độ <b class="bb">*</b></span><select id="f-muc"></select><small id="muc-giai-thich"></small></label>
+      <label class="o"><span>Loại lỗi</span><select id="f-loai"></select></label>
+      <label class="o"><span>Tần suất</span><select id="f-tan-suat"></select></label>
+      <label class="o"><span>Chặn nghiệm thu?</span><select id="f-chan"><option value="">— chưa xét —</option><option>Có — không qua được kịch bản</option><option>Không — kịch bản vẫn qua</option></select></label>
+      <label class="o rong-het"><span>Các bước tái hiện <b class="bb">*</b></span>
+        <textarea id="f-buoc" placeholder="1. Đăng nhập bằng thanhvien&#10;2. Mở Phả đồ, bấm vào cụ Nguyễn Văn A&#10;3. Bấm Sửa"></textarea>
+        <small>Mỗi bước một dòng, bắt đầu từ lúc chưa làm gì. Người khác làm đúng theo đó phải thấy lại được lỗi.</small>
+      </label>
+      <div class="rong-het hai-o">
+        <label class="o"><span>Kết quả mong đợi</span><textarea id="f-mong-doi" placeholder="Chép từ mục Kết quả mong đợi của kịch bản"></textarea></label>
+        <label class="o"><span>Kết quả thực tế <b class="bb">*</b></span><textarea id="f-thuc-te" placeholder="Đúng những gì màn hình hiện, kể cả câu báo lỗi nguyên văn"></textarea></label>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Ảnh chụp màn hình</legend>
+    <div class="tha" id="tha" tabindex="0">
+      <b>Dán ảnh</b> (<kbd>Ctrl</kbd>+<kbd>V</kbd>) · <b>kéo thả</b> ảnh vào đây · hoặc <button type="button" id="nut-chon-anh">Chọn ảnh…</button>
+      <input type="file" id="tep-anh" accept="image/*" multiple hidden>
+      <div style="font-size:12.5px;margin-top:6px">Chụp nhanh trên Windows: <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> rồi <kbd>Ctrl</kbd>+<kbd>V</kbd> vào trang này. Ảnh lớn được tự thu nhỏ. Bấm <b>✎ Đánh dấu</b> để khoanh chỗ lỗi hoặc <b>che</b> thông tin riêng tư.</div>
+    </div>
+    <div class="anh-ds" id="anh-ds"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Theo dõi</legend>
+    <div class="luoi">
+      <label class="o"><span>Trạng thái</span><select id="f-tt"></select></label>
+      <label class="o"><span>Người kiểm</span><input id="f-nguoi"></label>
+      <label class="o"><span>Bản build lúc gặp lỗi</span><input id="f-ban"></label>
+      <label class="o rong-het"><span>Ghi chú / kết quả kiểm lại</span>
+        <textarea id="f-ghi-chu" style="min-height:60px" placeholder="Ngày kiểm lại, trên bản nào, kết quả…"></textarea>
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="chan">
+    <button type="button" class="chinh" id="nut-luu">💾 Lưu lỗi</button>
+    <button type="button" id="nut-luu-moi">Lưu và ghi lỗi tiếp</button>
+    <button type="button" id="nut-huy">Về danh sách</button>
+    <span style="flex:1"></span>
+    <button type="button" class="xoa" id="nut-xoa">Xoá lỗi này</button>
+  </div>
+</form>
+</section>
+
+<section id="huong-dan">
+<div class="huong-dan">
+  <h2>1. Trang này để làm gì</h2>
+  <p>Khi chạy <a href="index.html">kịch bản nghiệm thu</a> mà một ca <b>không qua</b>, ghi lại lỗi ở đây: chọn kịch bản, mô tả, dán ảnh. Cuối buổi xuất <b>một tệp báo cáo HTML</b> (có ảnh bên trong) gửi cho đội phát triển.</p>
+  <ul>
+    <li><b>Không cần mạng, không cần cài gì.</b> Mở tệp này bằng Chrome/Edge là dùng được.</li>
+    <li>Dữ liệu và ảnh <b>lưu trong trình duyệt của máy này</b>, đóng mở lại vẫn còn. Đổi máy, đổi trình duyệt, hoặc xoá dữ liệu duyệt web là mất — nên cuối mỗi buổi bấm <b>⬇ Sao lưu (.json)</b>.</li>
+    <li>Nhiều người cùng kiểm: mỗi người ghi trên máy mình, cuối đợt một người <b>⬆ Nạp sao lưu</b> của những người kia để gộp lại thành một danh sách, rồi xuất báo cáo chung.</li>
+  </ul>
+
+  <h2>2. Ghi một lỗi tốt</h2>
+  <table>
+    <tr><th>Phần</th><th>Viết thế nào</th><th>Ví dụ</th></tr>
+    <tr><td>Tiêu đề</td><td>Ở đâu + sai gì. Không viết "lỗi", "không được".</td><td>✔ <i>Phả đồ công khai hiện tên người còn sống</i><br>✘ <i>Phả đồ bị lỗi</i></td></tr>
+    <tr><td>Các bước</td><td>Từ lúc mở trang, mỗi bước một dòng, ghi rõ tài khoản và dữ liệu đã nhập.</td><td>1. Đăng xuất · 2. Mở /vi/pha-do · 3. Mở rộng nhánh Chi Bính</td></tr>
+    <tr><td>Mong đợi</td><td>Chép từ kịch bản (mục "Kết quả mong đợi"), đừng tự diễn giải.</td><td>Chỉ thấy người đã khuất</td></tr>
+    <tr><td>Thực tế</td><td>Đúng những gì màn hình hiện, kể cả câu thông báo lỗi nguyên văn.</td><td>Thấy "Nguyễn Văn Bình (1990)" — người còn sống</td></tr>
+    <tr><td>Ảnh</td><td>Chụp <b>cả màn hình</b> (có thanh địa chỉ), rồi khoanh đỏ chỗ sai.</td><td></td></tr>
+  </table>
+
+  <h2>3. Chọn mức độ</h2>
+  <table id="bang-muc"></table>
+  <div class="canh"><b>Lộ dữ liệu người còn sống luôn là Nghiêm trọng</b> — dù chỉ một dòng, dù trông như lỗi giao diện. Hệ thống phải giấu người còn sống với khách (Nghị định 13/2023), nên một tên, năm sinh hay số điện thoại lọt ra là lỗi pháp lý, không phải lỗi hiển thị.</div>
+
+  <h2>4. Ảnh chụp và quyền riêng tư</h2>
+  <ul>
+    <li>Kiểm bằng <b>tài khoản thử nghiệm</b> và dữ liệu mẫu. Nếu ảnh lỡ có số điện thoại, địa chỉ, ngày sinh của người thật: bấm <b>✎ Đánh dấu</b> → công cụ <b>Che</b> → kéo đè lên.</li>
+    <li>Công cụ <b>Khoanh</b> vẽ khung đỏ quanh chỗ lỗi. <b>Hoàn tác</b> bỏ nét vừa vẽ. Bấm <b>Lưu ảnh</b> thì ảnh gốc được thay bằng ảnh đã đánh dấu.</li>
+    <li>Ảnh to hơn 2400 điểm ảnh được thu nhỏ để tệp báo cáo không quá nặng.</li>
+  </ul>
+
+  <h2>5. Trạng thái của một lỗi</h2>
+  <table id="bang-tt"></table>
+
+  <h2>6. Xuất ra</h2>
+  <table>
+    <tr><th>Nút</th><th>Ra tệp gì</th><th>Dùng để</th></tr>
+    <tr><td>⬇ Xuất báo cáo HTML</td><td>Một tệp <code>.html</code> chứa cả ảnh</td><td>Gửi đội phát triển; mở bằng trình duyệt là đọc được. Tệp đã mang sẵn thẻ <code>bao-cao:loai="kiem-thu"</code> — đặt vào <code>bao-cao/&lt;YYYY-MM-DD&gt;/</code> rồi chạy <code>node bao-cao/tao-muc-luc.mjs</code> là vào mục lục báo cáo.</td></tr>
+    <tr><td>⬇ CSV</td><td>Bảng tính, không có ảnh</td><td>Mở bằng Excel để lọc, chia việc.</td></tr>
+    <tr><td>⬇ Sao lưu (.json)</td><td>Toàn bộ dữ liệu kể cả ảnh</td><td>Chuyển máy, gộp với người kiểm khác (⬆ Nạp sao lưu).</td></tr>
+  </table>
+</div>
+</section>
+</main>
+
+<dialog id="xem-anh"><img alt=""><div class="chu-thich"><span></span><button type="button" onclick="this.closest('dialog').close()">Đóng</button></div></dialog>
+
+<dialog id="ve">
+  <div class="cong-cu">
+    <b style="margin-right:8px">Đánh dấu ảnh</b>
+    <button type="button" data-cu="khoanh" class="on">▭ Khoanh (đỏ)</button>
+    <button type="button" data-cu="che">■ Che (đen)</button>
+    <button type="button" id="ve-hoan-tac">↶ Hoàn tác</button>
+    <span style="flex:1"></span>
+    <button type="button" class="chinh" id="ve-luu">Lưu ảnh</button>
+    <button type="button" id="ve-huy">Huỷ</button>
+  </div>
+  <div class="khung"><canvas id="ve-canvas"></canvas></div>
+</dialog>
+
+<script>
+// Danh sách kịch bản lấy từ index.html cùng thư mục. Sinh lại khi kịch bản đổi:
+//   node design/09-kich-ban-nghiem-thu/tao-ds-kich-ban.mjs
+window.KICH_BAN = /*KICH_BAN_BAT_DAU*/[{"ma":"NT-LOIVAO-01","ten":"Mọi mục chính vào được bằng chuột, không gõ đường dẫn","nhom":"Ø. Lối vào — hai kịch bản bắt buộc bấm đầu tiên","caBien":true},{"ma":"NT-LOIVAO-02","ten":"Lối vào trên ĐIỆN THOẠI: thanh tab đáy và ngăn \"Thêm\"","nhom":"Ø. Lối vào — hai kịch bản bắt buộc bấm đầu tiên","caBien":true},{"ma":"NT-KHACH-01","ten":"Trang chủ công khai: Bài mới mời đăng nhập; Vinh danh và Việc họ chỉ hiện phần của người đã khuất","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-KHACH-02","ten":"Phả đồ công khai chỉ hiện người đã khuất","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-KHACH-03","ten":"Tìm kiếm công khai hoạt động không cần đăng nhập","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-KHACH-04","ten":"Danh bạ dòng họ khoá với khách","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-KHACH-05","ten":"Tra danh xưng khi chưa đăng nhập","nhom":"A. Khách chưa đăng nhập","caBien":true},{"ma":"NT-KHACH-06","ten":"Người còn sống không lọt vào kết quả tìm kiếm công khai","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-KHACH-07","ten":"Mở liên kết mời cá nhân đã hỏng","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-KHACH-08","ten":"Gõ mã mời dòng họ sai ở màn đăng ký","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-KHACH-09","ten":"Chuông thông báo không hỏi máy chủ khi chắc chắn bị từ chối","nhom":"A. Khách chưa đăng nhập","caBien":false},{"ma":"NT-MOI-01","ten":"Đăng ký tài khoản mới bằng mã mời dòng họ hợp lệ","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-02","ten":"Đăng ký bằng định danh đã có tài khoản","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":true},{"ma":"NT-MOI-03","ten":"Đặt mật khẩu lần đầu","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-04","ten":"Trang chủ báo \"đang chờ duyệt\" cho tài khoản chưa gắn phả","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-05","ten":"Phả đồ hiện hai nút nhận diện cho tài khoản chưa gắn","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-06","ten":"Chọn nhầm người đã khuất bị chặn ngay lúc chọn","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":true},{"ma":"NT-MOI-07","ten":"Gửi đơn nhận mình hợp lệ","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-08","ten":"Nhận nhầm người đã có tài khoản","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":true},{"ma":"NT-MOI-09","ten":"\"Tôi chưa có trong phả\" thiếu người thân bị chặn","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-10","ten":"Gửi đơn \"Tôi chưa có trong phả\" hợp lệ","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-11","ten":"Chưa được duyệt thì chưa viết bài được","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-12","ten":"Chưa được duyệt thì chưa gửi đính chính được","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":false},{"ma":"NT-MOI-13","ten":"Gửi đơn lại sau khi bị từ chối có giới hạn số lần","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":true},{"ma":"NT-MOI-14","ten":"Dựng ca \"hai người cùng nhận một nhân khẩu\"","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":true},{"ma":"NT-MOI-15","ten":"Tài khoản chờ duyệt không đọc được Tầng 3, kể cả của người đặt \"Cả họ xem\"","nhom":"B. Người mới đăng ký / tự nhận mình trong phả","caBien":true},{"ma":"NT-TV-01","ten":"Phả đồ đầy đủ hơn khách, thấy người còn sống trong phạm vi","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-02","ten":"\"Về chỗ tôi\" và tìm một người theo tên trên canvas","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-03","ten":"Tra danh xưng giữa hai người","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-04","ten":"Chọn mức chia sẻ \"Cả họ xem\", xuất hiện trong Danh bạ","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-05","ten":"Mức \"Riêng tư\" vẫn để Hội đồng đọc được","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-06","ten":"Sửa hồ sơ của chính mình","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-07","ten":"Không sửa trực tiếp được hồ sơ người khác — gửi đính chính","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-08","ten":"Xem lịch giỗ, lọc theo chi","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-09","ten":"Cài đặt thông báo đẩy","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-10","ten":"Viết bài: nháp tự động lưu, gửi duyệt","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-11","ten":"Đăng ảnh HEIC bị từ chối kèm cách sửa","nhom":"C. Thành viên (thanhvien)","caBien":true},{"ma":"NT-TV-12","ten":"Đăng ảnh/video quá khổ bị từ chối kèm cách sửa","nhom":"C. Thành viên (thanhvien)","caBien":true},{"ma":"NT-TV-13","ten":"Báo cáo ảnh vi phạm trên bài người khác","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-14","ten":"Đề nghị vinh danh cho chính mình","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-15","ten":"Vinh danh người còn sống: duyệt xong vẫn chỉ chính chủ thấy","nhom":"C. Thành viên (thanhvien)","caBien":true},{"ma":"NT-TV-16","ten":"Không đổi được ngày giỗ trên một sự kiện","nhom":"C. Thành viên (thanhvien)","caBien":true},{"ma":"NT-TV-17","ten":"Trung tâm thông báo","nhom":"C. Thành viên (thanhvien)","caBien":false},{"ma":"NT-TV-18","ten":"Ô lọc Chi/Ngành trên Tìm kiếm nay tải được, và bộ đếm đã qua lọc riêng tư","nhom":"C. Thành viên (thanhvien)","caBien":true},{"ma":"NT-TC-01","ten":"Vào /quan-ly, thấy đủ sáu mục","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-02","ten":"Duyệt đơn \"nhận mình\" hợp lệ","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-03","ten":"Duyệt đơn \"chưa có trong phả\" — tạo nhân khẩu mới","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-04","ten":"Từ chối đơn kèm lý do","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-05","ten":"Ranh giới phạm vi chi: hai Trưởng chi khác chi","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":true},{"ma":"NT-TC-06","ten":"Hai người cùng nhận một nhân khẩu","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":true},{"ma":"NT-TC-07","ten":"Gợi ý trùng khi duyệt đơn \"chưa có trong phả\"","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-08","ten":"Duyệt / trả lại bài viết","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-09","ten":"Không tự duyệt được bài viết của chính mình","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":true},{"ma":"NT-TC-10","ten":"Duyệt vinh danh, thấy cảnh báo chia sẻ","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-11","ten":"Xử báo cáo ảnh: gỡ vĩnh viễn hoặc bỏ qua","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-12","ten":"Phát lời mời cá nhân cho một cụ","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-13","ten":"Sự kiện phạm vi một chi không lộ sang chi khác","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":true},{"ma":"NT-TC-14","ten":"Không tạo được sự kiện cấp cả dòng họ","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-15","ten":"Nhập liệu Excel: tải mẫu rồi tải lên","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":false},{"ma":"NT-TC-16","ten":"Tải Excel hỏng: thiếu tệp / sai Content-Type trả đúng mã, không phải 500","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":true},{"ma":"NT-TC-17","ten":"Cấp lại mật khẩu cho người trong chi mình: dựng dữ liệu, cấp, chính chủ nhận thông báo, liên kết chỉ dùng một lần","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":true},{"ma":"NT-TC-18","ten":"Cấp lại mật khẩu bị chặn: khác chi · tự cấp · tài khoản đã có email","nhom":"D. Trưởng chi (truongchi — Chi Bính; truongchi.at — Chi Ất)","caBien":true},{"ma":"NT-HD-01","ten":"Phát mã mời dòng họ mới","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-HD-02","ten":"Theo dõi bộ đếm lượt dùng của mã dòng họ","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-HD-03","ten":"Thu hồi mã dòng họ","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-HD-04","ten":"Duyệt đơn thuộc bất kỳ chi nào","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-HD-05","ten":"Tạo sự kiện cấp cả dòng họ","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-HD-06","ten":"Đọc số điện thoại \"Riêng tư\" của một thành viên","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-HD-07","ten":"Vì sao không dùng admin.giapha để kiểm mục 06","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-HD-08","ten":"Cấp lại mật khẩu: vai toàn họ cũng không tự cấp được cho chính mình","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":true},{"ma":"NT-HD-09","ten":"Tranh chấp một nhân khẩu: đơn bị đóng theo nhận lý do có dấu, nói việc cần làm tiếp","nhom":"E. Hội đồng Tộc biểu (hoidong)","caBien":false},{"ma":"NT-CHUA-01","ten":"Đăng nhập và mở trang chủ","nhom":"F. Tài khoản chưa gắn phả (chuaduyet)","caBien":true},{"ma":"NT-CHUA-02","ten":"Thử gửi đề nghị đính chính","nhom":"F. Tài khoản chưa gắn phả (chuaduyet)","caBien":false},{"ma":"NT-CHUA-03","ten":"Trung tâm thông báo báo đúng lý do hộp thư trống","nhom":"F. Tài khoản chưa gắn phả (chuaduyet)","caBien":false},{"ma":"NT-ADMIN-01","ten":"Vào /quan-ly, thấy đủ như Trưởng chi/Hội đồng","nhom":"G. Admin kỹ thuật (admin.giapha)","caBien":false},{"ma":"NT-ADMIN-02","ten":"Sinh và phát nhắc giỗ thủ công (kỹ thuật, không có màn riêng)","nhom":"G. Admin kỹ thuật (admin.giapha)","caBien":false},{"ma":"NT-ADMIN-03","ten":"Chẩn đoán thông báo đẩy chưa cấu hình","nhom":"G. Admin kỹ thuật (admin.giapha)","caBien":false},{"ma":"NT-ADMIN-04","ten":"Năm lớp lỗi client còn lại trả đúng mã, không phải 500","nhom":"G. Admin kỹ thuật (admin.giapha)","caBien":true},{"ma":"NT-ADMIN-05","ten":"Giới hạn tần suất dò mã không lách được bằng X-Forwarded-For","nhom":"G. Admin kỹ thuật (admin.giapha)","caBien":true}]/*KICH_BAN_KET_THUC*/;
+</script>
+<script>
+"use strict";
+// ---------- Danh mục ----------
+const MUC_DO = [
+  {v: "1", t: "Nghiêm trọng", g: "Sập trang, mất/sai dữ liệu gia phả, lộ thông tin người còn sống, sai quyền (thấy/sửa được thứ không được phép), hoặc luồng chính không làm được và không có cách vòng."},
+  {v: "2", t: "Cao", g: "Chức năng chính chạy sai; có cách vòng nhưng người dùng thường không tự nghĩ ra."},
+  {v: "3", t: "Trung bình", g: "Chạy sai ở chức năng phụ, hoặc có cách vòng dễ thấy."},
+  {v: "4", t: "Thấp", g: "Giao diện, chính tả, căn lề, câu chữ khó hiểu — không làm sai dữ liệu."},
+];
+const TRANG_THAI = [
+  {v: "moi", t: "Mới", g: "Vừa ghi, chưa gửi đội phát triển."},
+  {v: "bao", t: "Đã báo dev", g: "Đã gửi, đang chờ sửa."},
+  {v: "sua", t: "Đã sửa — chờ kiểm lại", g: "Dev báo đã sửa; người kiểm cần làm lại các bước trên bản mới."},
+  {v: "mo-lai", t: "Mở lại", g: "Kiểm lại vẫn lỗi. Ghi bản build và kết quả vào ô Ghi chú."},
+  {v: "dong", t: "Đã đóng", g: "Kiểm lại thấy đúng."},
+  {v: "khong", t: "Không phải lỗi", g: "Hệ thống chạy đúng thiết kế, hoặc ghi trùng một lỗi khác (ghi mã lỗi kia vào Ghi chú)."},
+];
+const LOAI = ["Chức năng", "Quyền riêng tư / phân quyền", "Dữ liệu sai / mất", "Giao diện", "Chữ, chính tả, dịch", "Hiệu năng / chậm", "Điện thoại / PWA", "Khác"];
+const TAN_SUAT = ["Luôn luôn", "Thỉnh thoảng", "Chỉ gặp một lần"];
+const THIET_BI = ["Máy tính", "Điện thoại", "Máy tính bảng"];
+const TAI_KHOAN = ["", "Khách (chưa đăng nhập)", "thanhvien", "truongchi", "truongchi.at", "hoidong", "admin.giapha", "chuaduyet", "Tài khoản mới tự đăng ký", "Khác (ghi trong các bước)"];
+const KICH_BAN = window.KICH_BAN || [];
+const KB_THEO_MA = new Map(KICH_BAN.map(k => [k.ma, k]));
+
+// ---------- Tiện ích ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const boDau = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+const uuid = () => crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+const homNay = () => new Date().toISOString().slice(0, 10);
+const ngayVN = iso => iso ? new Date(iso).toLocaleDateString("vi-VN") : "";
+const tenMuc = v => (MUC_DO.find(m => m.v === v) || {}).t || "";
+const tenTT = v => (TRANG_THAI.find(m => m.v === v) || {}).t || "";
+function trinhDuyet() {
+  const u = navigator.userAgent;
+  const m = u.match(/(Edg|OPR|Chrome|Firefox|Version)\/([\d.]+)/);
+  const ten = !m ? "?" : m[1] === "Edg" ? "Edge" : m[1] === "OPR" ? "Opera" : m[1] === "Version" ? "Safari" : m[1];
+  const hdh = /Windows/.test(u) ? "Windows" : /Android/.test(u) ? "Android" : /iPhone|iPad/.test(u) ? "iOS" : /Mac/.test(u) ? "macOS" : /Linux/.test(u) ? "Linux" : "";
+  return `${ten} ${m ? m[2].split(".")[0] : ""} · ${hdh} · màn hình ${screen.width}×${screen.height}`.trim();
+}
+function viTat(ten) {
+  const t = boDau(ten).trim().split(/\s+/).filter(Boolean);
+  return t.length ? t.map(x => x[0]).join("").toUpperCase().slice(0, 4) : "KT";
+}
+
+// ---------- Lưu trữ: IndexedDB (ảnh lớn, localStorage không đủ chỗ) ----------
+let db;
+function moCsdl() {
+  return new Promise((ok, loi) => {
+    const r = indexedDB.open("ghi-loi-kiem-thu", 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore("loi", {keyPath: "id"}); r.result.createObjectStore("cau-hinh"); };
+    r.onsuccess = () => ok(r.result); r.onerror = () => loi(r.error);
+  });
+}
+const giaoDich = (kho, che, viec) => new Promise((ok, loi) => {
+  const t = db.transaction(kho, che); const k = t.objectStore(kho); const kq = viec(k);
+  t.oncomplete = () => ok(kq && kq.result); t.onerror = () => loi(t.error);
+});
+const layHet = () => giaoDich("loi", "readonly", k => k.getAll());
+const ghi = rec => giaoDich("loi", "readwrite", k => k.put(rec));
+const xoaBanGhi = id => giaoDich("loi", "readwrite", k => k.delete(id));
+const layCH = khoa => giaoDich("cau-hinh", "readonly", k => k.get(khoa));
+const ghiCH = (khoa, v) => giaoDich("cau-hinh", "readwrite", k => k.put(v, khoa));
+
+let DS = [];          // mọi lỗi
+let DANG_SUA = null;  // bản ghi đang mở trong form (bản sao)
+let BAN_DAU = "";     // để biết form có thay đổi chưa sửa
+let PHIEN = {};
+
+// ---------- Phiên kiểm ----------
+const O_PHIEN = {nguoi: "#p-nguoi", dot: "#p-dot", ban: "#p-ban", diaChi: "#p-dia-chi"};
+async function napPhien() {
+  PHIEN = (await layCH("phien")) || {};
+  for (const [k, s] of Object.entries(O_PHIEN)) {
+    $(s).value = PHIEN[k] || "";
+    $(s).addEventListener("change", async () => { PHIEN[k] = $(s).value.trim(); await ghiCH("phien", PHIEN); });
+  }
+}
+
+// ---------- Danh sách ----------
+function veDanhSach() {
+  const tim = boDau($("#l-tim").value), muc = $("#l-muc").value, tt = $("#l-tt").value, nhom = $("#l-nhom").value;
+  const hang = DS.filter(r => {
+    if (muc && r.muc !== muc) return false;
+    if (tt && r.tt !== tt) return false;
+    if (nhom && ((KB_THEO_MA.get(r.kichBan) || {}).nhom || "Ngoài kịch bản") !== nhom) return false;
+    if (tim && !boDau(`${r.ma} ${r.tieuDe} ${r.kichBan} ${(KB_THEO_MA.get(r.kichBan) || {}).ten || ""} ${r.thucTe}`).includes(tim)) return false;
+    return true;
+  }).sort((a, b) => (a.muc || "9").localeCompare(b.muc || "9") || (b.tao || "").localeCompare(a.tao || ""));
+  $("#bang").innerHTML = hang.length ? hang.map(r => `<tr class="dong" data-id="${r.id}">
+      <td class="ma">${esc(r.ma)}</td>
+      <td>${esc(r.tieuDe) || "<i>(chưa có tiêu đề)</i>"}</td>
+      <td class="an-dt ma" title="${esc((KB_THEO_MA.get(r.kichBan) || {}).ten || "")}">${esc(r.kichBan || "—")}</td>
+      <td>${r.muc ? `<span class="huy md-${r.muc}">${esc(tenMuc(r.muc))}</span>` : ""}</td>
+      <td><span class="huy tt-${r.tt}">${esc(tenTT(r.tt))}</span></td>
+      <td class="an-dt">${r.anh?.length ? "🖼 " + r.anh.length : ""}</td>
+      <td class="an-dt ma">${ngayVN(r.tao)}</td></tr>`).join("")
+    : `<tr><td colspan="7" class="rong">${DS.length ? "Không có lỗi nào khớp bộ lọc." : "Chưa ghi lỗi nào. Bấm <b>+ Ghi lỗi mới</b> khi một kịch bản không qua."}</td></tr>`;
+  const mo = DS.filter(r => !["dong", "khong"].includes(r.tt));
+  $("#dem").innerHTML = MUC_DO.map(m => `<div class="the-dem"><b>${mo.filter(r => r.muc === m.v).length}</b><span class="huy md-${m.v}">${m.t}</span></div>`).join("")
+    + `<div class="the-dem"><b>${mo.length}</b>đang mở</div><div class="the-dem"><b>${DS.filter(r => r.tt === "sua").length}</b>chờ kiểm lại</div><div class="the-dem"><b>${DS.filter(r => r.tt === "dong").length}</b>đã đóng</div>`;
+  $("#dem-tong").textContent = DS.length ? `(${DS.length})` : "";
+}
+
+// ---------- Form ----------
+const TRUONG = {
+  kichBan: "#f-kich-ban", tieuDe: "#f-tieu-de-loi", url: "#f-url", taiKhoan: "#f-tai-khoan", thietBi: "#f-thiet-bi",
+  trinhDuyet: "#f-trinh-duyet", muc: "#f-muc", loai: "#f-loai", tanSuat: "#f-tan-suat", chan: "#f-chan",
+  buoc: "#f-buoc", mongDoi: "#f-mong-doi", thucTe: "#f-thuc-te", tt: "#f-tt", nguoi: "#f-nguoi", ban: "#f-ban", ghiChu: "#f-ghi-chu",
+};
+const urlAnh = new Map(); // blob → objectURL
+const anhUrl = a => { if (!urlAnh.has(a.blob)) urlAnh.set(a.blob, URL.createObjectURL(a.blob)); return urlAnh.get(a.blob); };
+const chupForm = () => JSON.stringify({...docForm(), anh: (DANG_SUA?.anh || []).map(a => a.id + a.chuThich + a.blob.size)});
+
+function banGhiMoi() {
+  return {id: uuid(), ma: "", tao: new Date().toISOString(), tt: "moi", anh: [],
+    nguoi: PHIEN.nguoi || "", ban: PHIEN.ban || "", trinhDuyet: trinhDuyet(),
+    thietBi: /Mobi|Android|iPhone/.test(navigator.userAgent) ? "Điện thoại" : "Máy tính"};
+}
+function moForm(rec) {
+  DANG_SUA = {...rec, anh: [...(rec.anh || [])]};
+  for (const [k, s] of Object.entries(TRUONG)) { $(s).value = DANG_SUA[k] ?? ""; $(s).classList.remove("loi-o"); }
+  $("#f-tieu-de").textContent = rec.ma ? "Sửa lỗi" : "Ghi lỗi mới";
+  $("#f-ma").textContent = rec.ma ? `${rec.ma} · ghi ${ngayVN(rec.tao)}${rec.sua ? " · sửa " + ngayVN(rec.sua) : ""}` : "";
+  $("#nut-xoa").style.display = rec.ma ? "" : "none";
+  moTaKichBan(); giaiThichMuc(); veAnh();
+  BAN_DAU = chupForm();
+  doiTab("ghi");
+  setTimeout(() => (rec.ma ? $("#f-tieu-de-loi") : $("#f-kich-ban")).focus(), 30);
+}
+function docForm() {
+  const v = {}; for (const [k, s] of Object.entries(TRUONG)) v[k] = $(s).value.trim(); return v;
+}
+function moTaKichBan() {
+  const k = KB_THEO_MA.get($("#f-kich-ban").value);
+  $("#kb-mo-ta").innerHTML = k ? `${esc(k.nhom)} · <a href="index.html#${esc(k.ma)}" target="_blank">mở kịch bản ${esc(k.ma)} ↗</a>${k.caBien ? " · <b>ca biên</b>" : ""}` : "";
+}
+function giaiThichMuc() { $("#muc-giai-thich").textContent = (MUC_DO.find(m => m.v === $("#f-muc").value) || {}).g || ""; }
+
+async function luu() {
+  const v = docForm();
+  const thieu = [["tieuDe", "Tiêu đề"], ["muc", "Mức độ"], ["buoc", "Các bước tái hiện"], ["thucTe", "Kết quả thực tế"]].filter(([k]) => !v[k]);
+  for (const [k, s] of Object.entries(TRUONG)) $(s).classList.toggle("loi-o", thieu.some(([t]) => t === k));
+  if (thieu.length) { alert("Còn thiếu: " + thieu.map(x => x[1]).join(", ") + "."); $(TRUONG[thieu[0][0]]).focus(); return false; }
+  if (!DANG_SUA.anh.length && !confirm("Lỗi này chưa có ảnh chụp màn hình. Ảnh giúp dev thấy lỗi nhanh hơn nhiều.\n\nVẫn lưu?")) return false;
+  Object.assign(DANG_SUA, v);
+  if (!DANG_SUA.ma) {
+    const so = ((await layCH("so-tiep")) || 0) + 1; await ghiCH("so-tiep", so);
+    DANG_SUA.ma = `${viTat(v.nguoi || PHIEN.nguoi)}-${String(so).padStart(3, "0")}`;
+  } else DANG_SUA.sua = new Date().toISOString();
+  await ghi(DANG_SUA);
+  const i = DS.findIndex(r => r.id === DANG_SUA.id); if (i >= 0) DS[i] = DANG_SUA; else DS.push(DANG_SUA);
+  BAN_DAU = chupForm();
+  veDanhSach();
+  $("#trang-thai").textContent = `Đã lưu ${DANG_SUA.ma} lúc ${new Date().toLocaleTimeString("vi-VN")}.`;
+  return true;
+}
+const coThayDoi = () => DANG_SUA && chupForm() !== BAN_DAU;
+
+// ---------- Ảnh ----------
+const CANH_TOI_DA = 2400;
+async function thuNho(file) {
+  // Ảnh chụp màn hình cỡ thường giữ nguyên (PNG nét chữ). Ảnh quá to thì vẽ lại nhỏ hơn.
+  const bmp = await createImageBitmap(file);
+  const tiLe = Math.min(1, CANH_TOI_DA / Math.max(bmp.width, bmp.height));
+  if (tiLe === 1 && file.size < 1.5e6) { bmp.close?.(); return file; }
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width * tiLe); c.height = Math.round(bmp.height * tiLe);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); bmp.close?.();
+  return await new Promise(ok => c.toBlob(b => ok(b && b.size < file.size ? b : file), "image/webp", 0.9));
+}
+async function themAnh(files) {
+  if (!DANG_SUA) return;
+  const anh = [...files].filter(f => f.type.startsWith("image/"));
+  if (!anh.length) return;
+  for (const f of anh) DANG_SUA.anh.push({id: uuid(), blob: await thuNho(f), chuThich: "", luc: new Date().toISOString()});
+  veAnh();
+  $("#trang-thai").textContent = `Đã thêm ${anh.length} ảnh — nhớ bấm Lưu.`;
+}
+function veAnh() {
+  $("#anh-ds").innerHTML = DANG_SUA.anh.map((a, i) => `<div class="anh" data-i="${i}">
+    <img src="${anhUrl(a)}" alt="Ảnh ${i + 1}" data-xem="${i}">
+    <input placeholder="Chú thích (không bắt buộc)" value="${esc(a.chuThich)}" data-chu="${i}">
+    <div class="hang"><span class="co">${(a.blob.size / 1024).toFixed(0)} KB</span>
+      <span><button type="button" class="nho" data-ve="${i}">✎ Đánh dấu</button> <button type="button" class="nho xoa" data-xoa-anh="${i}">Xoá</button></span></div></div>`).join("");
+}
+$("#anh-ds").addEventListener("click", e => {
+  const t = e.target;
+  if (t.dataset.xem) { const a = DANG_SUA.anh[+t.dataset.xem]; const d = $("#xem-anh"); d.querySelector("img").src = anhUrl(a); d.querySelector("span").textContent = a.chuThich || ""; d.showModal(); }
+  if (t.dataset.xoaAnh) { if (confirm("Xoá ảnh này?")) { DANG_SUA.anh.splice(+t.dataset.xoaAnh, 1); veAnh(); } }
+  if (t.dataset.ve) moVe(+t.dataset.ve);
+});
+$("#anh-ds").addEventListener("input", e => { if (e.target.dataset.chu) DANG_SUA.anh[+e.target.dataset.chu].chuThich = e.target.value; });
+$("#nut-chon-anh").onclick = () => $("#tep-anh").click();
+$("#tep-anh").onchange = e => { themAnh(e.target.files); e.target.value = ""; };
+const tha = $("#tha");
+["dragenter", "dragover"].forEach(ev => tha.addEventListener(ev, e => { e.preventDefault(); tha.classList.add("dang-keo"); }));
+["dragleave", "drop"].forEach(ev => tha.addEventListener(ev, e => { e.preventDefault(); tha.classList.remove("dang-keo"); }));
+tha.addEventListener("drop", e => themAnh(e.dataTransfer.files));
+document.addEventListener("paste", e => {
+  if (!$("#ghi").classList.contains("on")) return;
+  const tep = [...(e.clipboardData?.items || [])].filter(i => i.kind === "file" && i.type.startsWith("image/")).map(i => i.getAsFile());
+  if (tep.length) { e.preventDefault(); themAnh(tep); }
+});
+
+// ---------- Đánh dấu ảnh: khoanh đỏ, che đen ----------
+let VE = null;
+async function moVe(i) {
+  const a = DANG_SUA.anh[i];
+  const bmp = await createImageBitmap(a.blob);
+  const c = $("#ve-canvas"); c.width = bmp.width; c.height = bmp.height;
+  const vungHien = Math.min(1, (innerWidth * 0.92) / bmp.width);
+  c.style.width = Math.round(bmp.width * vungHien) + "px";
+  VE = {i, bmp, net: [], cu: "khoanh", dang: null};
+  veLaiCanvas(); $("#ve").showModal();
+}
+function veLaiCanvas() {
+  const c = $("#ve-canvas"), g = c.getContext("2d");
+  g.drawImage(VE.bmp, 0, 0);
+  const day = Math.max(3, Math.round(c.width / 300));
+  for (const n of [...VE.net, VE.dang].filter(Boolean)) {
+    const x = Math.min(n.x1, n.x2), y = Math.min(n.y1, n.y2), w = Math.abs(n.x2 - n.x1), h = Math.abs(n.y2 - n.y1);
+    if (n.cu === "che") { g.fillStyle = "#000"; g.fillRect(x, y, w, h); }
+    else { g.strokeStyle = "#e01b1b"; g.lineWidth = day; g.strokeRect(x, y, w, h); }
+  }
+}
+function toaDo(e) {
+  const c = $("#ve-canvas"), r = c.getBoundingClientRect();
+  return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height];
+}
+$("#ve-canvas").addEventListener("pointerdown", e => { const [x, y] = toaDo(e); VE.dang = {cu: VE.cu, x1: x, y1: y, x2: x, y2: y}; e.target.setPointerCapture(e.pointerId); });
+$("#ve-canvas").addEventListener("pointermove", e => { if (!VE?.dang) return; [VE.dang.x2, VE.dang.y2] = toaDo(e); veLaiCanvas(); });
+$("#ve-canvas").addEventListener("pointerup", () => { if (!VE?.dang) return; const n = VE.dang; VE.dang = null; if (Math.abs(n.x2 - n.x1) > 3 && Math.abs(n.y2 - n.y1) > 3) VE.net.push(n); veLaiCanvas(); });
+document.querySelectorAll("#ve [data-cu]").forEach(b => b.onclick = () => { VE.cu = b.dataset.cu; document.querySelectorAll("#ve [data-cu]").forEach(x => x.classList.toggle("on", x === b)); });
+$("#ve-hoan-tac").onclick = () => { VE.net.pop(); veLaiCanvas(); };
+$("#ve-huy").onclick = () => { $("#ve").close(); VE.bmp.close?.(); VE = null; };
+$("#ve-luu").onclick = () => {
+  if (!VE.net.length) return $("#ve-huy").onclick();
+  // PNG để chữ trong ảnh chụp màn hình không nhoè; vùng che đen bị vẽ đè thật, không phải lớp phủ
+  $("#ve-canvas").toBlob(b => { DANG_SUA.anh[VE.i].blob = b; $("#ve").close(); VE.bmp.close?.(); VE = null; veAnh(); }, "image/png");
+};
+
+// ---------- Xuất / nhập ----------
+const blobSangData = b => new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); });
+const dataSangBlob = async d => (await fetch(d)).blob();
+function taiVe(ten, noiDung, kieu) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(noiDung instanceof Blob ? noiDung : new Blob([noiDung], {type: kieu}));
+  a.download = ten; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+const tenTep = duoi => `kiem-thu-${boDau(PHIEN.dot || "dot-kiem").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "dot-kiem"}-${homNay()}.${duoi}`;
+
+async function xuatJson() {
+  const ds = [];
+  for (const r of DS) ds.push({...r, anh: await Promise.all(r.anh.map(async a => ({...a, blob: undefined, data: await blobSangData(a.blob)})))});
+  taiVe(tenTep("json"), JSON.stringify({loai: "ghi-loi-kiem-thu", phienBan: 1, xuatLuc: new Date().toISOString(), phien: PHIEN, loi: ds}, null, 1), "application/json");
+}
+async function napJson(tep) {
+  let goi;
+  try { goi = JSON.parse(await tep.text()); } catch { return alert("Tệp không đọc được — không phải JSON."); }
+  if (goi.loai !== "ghi-loi-kiem-thu" || !Array.isArray(goi.loi)) return alert("Đây không phải tệp sao lưu của trang Ghi lỗi kiểm thử.");
+  const daCo = new Map(DS.map(r => [r.id, r]));
+  let moi = 0, capNhat = 0, boQua = 0;
+  for (const r of goi.loi) {
+    const cu = daCo.get(r.id);
+    // cùng một lỗi (cùng id) thì giữ bản sửa sau cùng
+    if (cu && (cu.sua || cu.tao) >= (r.sua || r.tao)) { boQua++; continue; }
+    const rec = {...r, anh: await Promise.all((r.anh || []).map(async a => ({id: a.id, chuThich: a.chuThich || "", luc: a.luc, blob: await dataSangBlob(a.data)})))};
+    await ghi(rec); cu ? capNhat++ : moi++;
+  }
+  DS = await layHet(); veDanhSach();
+  alert(`Nạp ${tep.name}: thêm ${moi} lỗi mới, cập nhật ${capNhat}, giữ nguyên ${boQua} (máy này đã có bản bằng hoặc mới hơn).`);
+}
+function xuatCsv() {
+  const cot = [["ma", "Mã"], ["kichBan", "Kịch bản"], ["tenKB", "Tên kịch bản"], ["tieuDe", "Tiêu đề"], ["muc", "Mức độ"], ["loai", "Loại"], ["tt", "Trạng thái"],
+    ["chan", "Chặn nghiệm thu"], ["taiKhoan", "Tài khoản"], ["url", "Màn hình"], ["thietBi", "Thiết bị"], ["trinhDuyet", "Trình duyệt"], ["tanSuat", "Tần suất"],
+    ["buoc", "Các bước"], ["mongDoi", "Mong đợi"], ["thucTe", "Thực tế"], ["ghiChu", "Ghi chú"], ["nguoi", "Người kiểm"], ["ban", "Bản build"], ["soAnh", "Số ảnh"], ["tao", "Ngày ghi"]];
+  const o = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const dong = DS.map(r => cot.map(([k]) => o(k === "muc" ? tenMuc(r.muc) : k === "tt" ? tenTT(r.tt) : k === "tenKB" ? (KB_THEO_MA.get(r.kichBan) || {}).ten : k === "soAnh" ? r.anh.length : k === "tao" ? ngayVN(r.tao) : r[k])).join(","));
+  taiVe(tenTep("csv"), "﻿" + [cot.map(c => o(c[1])).join(","), ...dong].join("\r\n"), "text/csv;charset=utf-8");
+}
+
+async function xuatBaoCao() {
+  if (!DS.length) return alert("Chưa có lỗi nào để xuất.");
+  const ds = [...DS].sort((a, b) => (a.muc || "9").localeCompare(b.muc || "9") || a.ma.localeCompare(b.ma));
+  const mo = ds.filter(r => !["dong", "khong"].includes(r.tt));
+  const dem = v => mo.filter(r => r.muc === v).length;
+  const kbLoi = [...new Set(mo.map(r => r.kichBan).filter(Boolean))];
+  const tomTat = `${PHIEN.dot || "Đợt kiểm"}: ${mo.length} lỗi đang mở (${dem("1")} nghiêm trọng, ${dem("2")} cao, ${dem("3")} trung bình, ${dem("4")} thấp) trên ${kbLoi.length} kịch bản` + (PHIEN.ban ? `, bản ${PHIEN.ban}` : "") + ".";
+  const theoNhom = new Map();
+  for (const r of mo) { const n = (KB_THEO_MA.get(r.kichBan) || {}).nhom || "Ngoài kịch bản"; theoNhom.set(n, (theoNhom.get(n) || 0) + 1); }
+  const chiTiet = [];
+  for (const r of ds) {
+    const kb = KB_THEO_MA.get(r.kichBan);
+    const anh = await Promise.all(r.anh.map(async (a, i) => `<figure><img src="${await blobSangData(a.blob)}" alt="${esc(r.ma)} ảnh ${i + 1}"><figcaption>Ảnh ${i + 1}${a.chuThich ? " — " + esc(a.chuThich) : ""}</figcaption></figure>`));
+    const dongTT = (nhan, v) => v ? `<tr><th>${nhan}</th><td>${esc(v)}</td></tr>` : "";
+    chiTiet.push(`<article id="${esc(r.ma)}">
+<h3><span class="ma">${esc(r.ma)}</span> ${esc(r.tieuDe)} <span class="huy md-${r.muc}">${esc(tenMuc(r.muc))}</span> <span class="huy tt-${r.tt}">${esc(tenTT(r.tt))}</span></h3>
+<table class="tt">${dongTT("Kịch bản", kb ? `${r.kichBan} — ${kb.ten}` : r.kichBan)}${dongTT("Loại", r.loai)}${dongTT("Chặn nghiệm thu", r.chan)}${dongTT("Tài khoản", r.taiKhoan)}${dongTT("Màn hình", r.url)}${dongTT("Thiết bị", [r.thietBi, r.trinhDuyet].filter(Boolean).join(" · "))}${dongTT("Tần suất", r.tanSuat)}${dongTT("Người kiểm", [r.nguoi, ngayVN(r.tao), r.ban && "bản " + r.ban].filter(Boolean).join(" · "))}</table>
+<div class="hai"><div><h4>Các bước tái hiện</h4><pre>${esc(r.buoc)}</pre></div><div><h4>Mong đợi</h4><pre>${esc(r.mongDoi || "—")}</pre><h4>Thực tế</h4><pre>${esc(r.thucTe)}</pre></div></div>
+${r.ghiChu ? `<h4>Ghi chú / kiểm lại</h4><pre>${esc(r.ghiChu)}</pre>` : ""}
+${anh.join("")}
+</article>`);
+  }
+  const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kết quả kiểm thử — ${esc(PHIEN.dot || "đợt kiểm")} — ${new Date().toLocaleDateString("vi-VN")}</title>
+<meta name="bao-cao:loai" content="kiem-thu">
+<meta name="bao-cao:tom-tat" content="${esc(tomTat)}">
+<style>
+body{margin:0;background:#fbf7ee;color:#2c2418;font:15px/1.5 "Segoe UI",Arial,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+h1{color:#7a2e2e;margin:0 0 4px} h2{color:#7a2e2e;border-bottom:2px solid #ddd0b8;padding-bottom:4px;margin-top:32px}
+.meta{color:#6b6152;font-size:14px}
+table{border-collapse:collapse;background:#fff} th,td{border:1px solid #ddd0b8;padding:5px 8px;text-align:left;vertical-align:top;font-size:14px} th{background:#f0ece0}
+.huy{display:inline-block;border-radius:10px;padding:1px 9px;font-size:12px;font-weight:600;white-space:nowrap;vertical-align:middle}
+.md-1{background:#7a2e2e;color:#fff}.md-2{background:#fbe7d6;color:#a5521b}.md-3{background:#fbf0d0;color:#8a6d16}.md-4{background:#f0ece0;color:#6b6152}
+.tt-moi{background:#f6e6e0;color:#7a2e2e}.tt-bao{background:#e3ecf7;color:#22507f}.tt-sua{background:#fbf0d0;color:#8a6d16}.tt-mo-lai{background:#7a2e2e;color:#fff}.tt-dong{background:#e3f0e6;color:#2f5d43}.tt-khong{background:#f0ece0;color:#6b6152}
+.ma{font-family:Consolas,monospace;color:#6b6152}
+article{background:#fff;border:1px solid #ddd0b8;border-radius:10px;padding:4px 18px 16px;margin:16px 0;page-break-inside:avoid}
+article h3{font-size:17px} table.tt th{width:150px}
+.hai{display:grid;grid-template-columns:1fr 1fr;gap:16px} h4{margin:12px 0 4px;color:#6b6152;font-size:13px;text-transform:uppercase;letter-spacing:.03em}
+pre{white-space:pre-wrap;font:inherit;margin:0;background:#fbf7ee;border-radius:6px;padding:8px 10px}
+figure{margin:14px 0 0} figure img{max-width:100%;border:1px solid #ddd0b8;border-radius:6px} figcaption{font-size:13px;color:#6b6152}
+@media (max-width:700px){.hai{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Kết quả kiểm thử — ${esc(PHIEN.dot || "đợt kiểm")}</h1>
+<div class="meta">Người kiểm: ${esc([...new Set(ds.map(r => r.nguoi).filter(Boolean))].join(", ") || PHIEN.nguoi || "—")} · Bản: ${esc(PHIEN.ban || "—")} · Hệ thống: ${esc(PHIEN.diaChi || "—")} · Xuất lúc ${new Date().toLocaleString("vi-VN")}</div>
+<p><b>${esc(tomTat)}</b></p>
+<h2>Tổng hợp</h2>
+<table><tr><th>Mức độ</th><th>Đang mở</th><th>Tổng đã ghi</th></tr>
+${MUC_DO.map(m => `<tr><td><span class="huy md-${m.v}">${m.t}</span></td><td>${dem(m.v)}</td><td>${ds.filter(r => r.muc === m.v).length}</td></tr>`).join("")}
+<tr><th>Cộng</th><th>${mo.length}</th><th>${ds.length}</th></tr></table>
+<p></p>
+<table><tr><th>Nhóm kịch bản</th><th>Lỗi đang mở</th></tr>${[...theoNhom].map(([n, s]) => `<tr><td>${esc(n)}</td><td>${s}</td></tr>`).join("") || "<tr><td colspan=2>—</td></tr>"}</table>
+<h2>Danh sách</h2>
+<table><tr><th>Mã</th><th>Tiêu đề</th><th>Kịch bản</th><th>Mức độ</th><th>Trạng thái</th></tr>
+${ds.map(r => `<tr><td class="ma"><a href="#${esc(r.ma)}">${esc(r.ma)}</a></td><td>${esc(r.tieuDe)}</td><td class="ma">${esc(r.kichBan || "—")}</td><td><span class="huy md-${r.muc}">${esc(tenMuc(r.muc))}</span></td><td><span class="huy tt-${r.tt}">${esc(tenTT(r.tt))}</span></td></tr>`).join("")}
+</table>
+<h2>Chi tiết</h2>
+${chiTiet.join("\n")}
+</main>
+</body>
+</html>
+`;
+  taiVe(tenTep("html"), html, "text/html;charset=utf-8");
+  $("#trang-thai").textContent = "Đã xuất báo cáo. Muốn đưa vào mục lục: đặt tệp vào bao-cao/<ngày>/ rồi chạy node bao-cao/tao-muc-luc.mjs.";
+}
+
+// ---------- Điều hướng & sự kiện ----------
+function doiTab(id) {
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === id));
+  document.querySelectorAll("main>section").forEach(s => s.classList.toggle("on", s.id === id));
+}
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.tab === "ghi" && !DANG_SUA) return moForm(banGhiMoi());
+  doiTab(b.dataset.tab);
+});
+const roiForm = () => !coThayDoi() || confirm("Lỗi đang ghi có thay đổi chưa lưu. Bỏ thay đổi?");
+$("#nut-moi").onclick = () => { if (roiForm()) moForm(banGhiMoi()); };
+$("#bang").addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr && roiForm()) moForm(DS.find(r => r.id === tr.dataset.id)); });
+$("#nut-luu").onclick = async () => { if (await luu()) moForm(DANG_SUA); };
+$("#nut-luu-moi").onclick = async () => {
+  if (!(await luu())) return;
+  // lỗi tiếp theo thường cùng kịch bản, cùng tài khoản, cùng thiết bị
+  const giu = {kichBan: DANG_SUA.kichBan, taiKhoan: DANG_SUA.taiKhoan, url: DANG_SUA.url, thietBi: DANG_SUA.thietBi, trinhDuyet: DANG_SUA.trinhDuyet};
+  moForm({...banGhiMoi(), ...giu});
+};
+$("#nut-huy").onclick = () => { if (roiForm()) { DANG_SUA = null; doiTab("danh-sach"); } };
+$("#nut-xoa").onclick = async () => {
+  if (!confirm(`Xoá hẳn lỗi ${DANG_SUA.ma}? Không lấy lại được.\n(Nếu chỉ là không phải lỗi, đổi Trạng thái thành "Không phải lỗi" thay vì xoá.)`)) return;
+  await xoaBanGhi(DANG_SUA.id); DS = DS.filter(r => r.id !== DANG_SUA.id); DANG_SUA = null; veDanhSach(); doiTab("danh-sach");
+};
+$("#f-kich-ban").onchange = moTaKichBan;
+$("#f-muc").onchange = giaiThichMuc;
+["#l-tim", "#l-muc", "#l-tt", "#l-nhom"].forEach(s => $(s).addEventListener("input", veDanhSach));
+$("#nut-json").onclick = xuatJson;
+$("#nut-csv").onclick = () => DS.length ? xuatCsv() : alert("Chưa có lỗi nào để xuất.");
+$("#nut-bao-cao").onclick = xuatBaoCao;
+$("#nut-nap").onclick = () => $("#tep-nap").click();
+$("#tep-nap").onchange = e => { if (e.target.files[0]) napJson(e.target.files[0]); e.target.value = ""; };
+addEventListener("beforeunload", e => { if (coThayDoi()) { e.preventDefault(); e.returnValue = ""; } });
+
+// ---------- Khởi động ----------
+function dsChon(sel, ds, rong) { $(sel).innerHTML = (rong != null ? `<option value="">${rong}</option>` : "") + ds.map(x => typeof x === "string" ? `<option>${esc(x)}</option>` : `<option value="${esc(x.v)}">${esc(x.t)}</option>`).join(""); }
+(async () => {
+  const nhom = [...new Set(KICH_BAN.map(k => k.nhom))];
+  $("#f-kich-ban").innerHTML = `<option value="">— Ngoài kịch bản / chưa chọn —</option>` + nhom.map(n => `<optgroup label="${esc(n)}">${KICH_BAN.filter(k => k.nhom === n).map(k => `<option value="${esc(k.ma)}">${esc(k.ma)} — ${esc(k.ten)}${k.caBien ? " [ca biên]" : ""}</option>`).join("")}</optgroup>`).join("");
+  dsChon("#f-muc", MUC_DO, "— chọn —"); dsChon("#f-tt", TRANG_THAI); dsChon("#f-loai", LOAI, "—"); dsChon("#f-tan-suat", TAN_SUAT, "—");
+  dsChon("#f-thiet-bi", THIET_BI); dsChon("#f-tai-khoan", TAI_KHOAN.slice(1), "—");
+  dsChon("#l-muc", MUC_DO, "Mọi mức độ"); dsChon("#l-tt", TRANG_THAI, "Mọi trạng thái"); dsChon("#l-nhom", [...nhom, "Ngoài kịch bản"].map(n => ({v: n, t: n})), "Mọi nhóm kịch bản");
+  $("#bang-muc").innerHTML = `<tr><th>Mức độ</th><th>Khi nào</th></tr>` + MUC_DO.map(m => `<tr><td><span class="huy md-${m.v}">${m.t}</span></td><td>${esc(m.g)}</td></tr>`).join("");
+  $("#bang-tt").innerHTML = `<tr><th>Trạng thái</th><th>Nghĩa là</th></tr>` + TRANG_THAI.map(m => `<tr><td><span class="huy tt-${m.v}">${m.t}</span></td><td>${esc(m.g)}</td></tr>`).join("");
+  try { db = await moCsdl(); }
+  catch (e) { document.body.insertAdjacentHTML("afterbegin", `<div class="canh" style="margin:0">Trình duyệt này không cho lưu dữ liệu (IndexedDB bị tắt, hoặc đang ở chế độ ẩn danh của một số trình duyệt). Hãy mở bằng Chrome hoặc Edge thường.</div>`); return; }
+  await napPhien();
+  DS = await layHet();
+  veDanhSach();
+  if (!KICH_BAN.length) $("#trang-thai").textContent = "Chưa nạp được danh sách kịch bản — chạy node design/09-kich-ban-nghiem-thu/tao-ds-kich-ban.mjs.";
+})();
+</script>
+</body>
+</html>
