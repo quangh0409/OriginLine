@@ -30,8 +30,19 @@ import vn.giapha.dataimport.domain.PersonRow;
 @Order(10)
 public class RowShapeRule implements ImportRule {
 
-    /** AT-02-001, AT02001, 001 — rộng rãi với cách đánh số, nghiêm với ký tự lạ. */
-    private static final Pattern DANG_MA = Pattern.compile("^[A-Z0-9]{1,12}([-_.][A-Z0-9]{1,12}){0,4}$");
+    /** Trần độ dài: cột {@code external_code} (V9, V11) là {@code VARCHAR(64)}. */
+    static final int DO_DAI_TOI_DA = 64;
+
+    /**
+     * AT-02-001, AT02001, 001 — rộng rãi với cách đánh số, nghiêm với ký tự lạ.
+     *
+     * <p>Tối đa 20 đoạn chứ không phải 5: có dòng họ đánh mã theo <b>nhánh</b>, mỗi đời thêm
+     * một đoạn (VU-01-01-04-03-04-01, vợ/chồng thêm -V1/-C1), nên 5 đoạn chặn ngay từ đời thứ
+     * tư. Trần thật là độ dài cột, giữ bằng lookahead — vượt 64 ký tự thì lỗi phải hiện ở đây
+     * dưới dạng một dòng báo lỗi, không phải là một lỗi ghi CSDL giữa lúc commit.
+     */
+    private static final Pattern DANG_MA = Pattern.compile(
+            "^(?=.{1," + DO_DAI_TOI_DA + "}$)[A-Z0-9]{1,12}([-_.][A-Z0-9]{1,12}){0,19}$");
 
     @Override
     public void apply(ValidationContext ctx) {

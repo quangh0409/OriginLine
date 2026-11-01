@@ -277,6 +277,44 @@ class BlockingRulesTest {
     }
 
     @Nested
+    @DisplayName("Hình dạng mã")
+    class HinhDangMa {
+
+        private List<IssueCode> kiem(String ma) {
+            ValidationContext ctx = ctx(List.of(row(2, ma, "Nguyễn Văn A").build()));
+            new RowShapeRule().apply(ctx);
+            return codes(ctx);
+        }
+
+        @Test
+        @DisplayName("Mã theo nhánh nhiều đoạn (đời 8 và vợ/chồng của họ) được nhận")
+        void maTheoNhanhNhieuDoan() {
+            assertThat(kiem("VU-01-01-01-04-03-04-01-01")).isEmpty();
+            assertThat(kiem("VU-01-01-01-04-03-04-01-01-C1")).isEmpty();
+            assertThat(kiem("AT-02-001")).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Quá 64 ký tự (độ dài cột) thì chặn ngay ở bước kiểm, không đợi CSDL từ chối")
+        void quaDoDaiCot() {
+            String dai = "VU" + "-01".repeat(20); // 62 ký tự nhưng 21 đoạn
+            assertThat(kiem(dai)).contains(IssueCode.IMP_BAD_CODE_FORMAT);
+            String dai65 = "VU-" + "A".repeat(12) + ("-" + "B".repeat(12)).repeat(3) + "-" + "C".repeat(10);
+            assertThat(dai65).hasSize(65);
+            assertThat(kiem(dai65)).contains(IssueCode.IMP_BAD_CODE_FORMAT);
+            assertThat(kiem(dai65.substring(0, 64))).doesNotContain(IssueCode.IMP_BAD_CODE_FORMAT);
+        }
+
+        @Test
+        @DisplayName("Ký tự lạ vẫn bị chặn")
+        void kyTuLa() {
+            assertThat(kiem("VU-01 02")).contains(IssueCode.IMP_BAD_CODE_FORMAT);
+            assertThat(kiem("vu-01")).contains(IssueCode.IMP_BAD_CODE_FORMAT);
+            assertThat(kiem("VU--01")).contains(IssueCode.IMP_BAD_CODE_FORMAT);
+        }
+    }
+
+    @Nested
     @DisplayName("Mã trùng trong tệp")
     class MaTrung {
 

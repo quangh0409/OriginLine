@@ -44,6 +44,9 @@
   .loc input,.loc select{font:inherit;padding:4px 8px;border:1px solid #cdbfa9;border-radius:6px}
   .an-cot-phu .phu{display:none}
   .so{width:52px} .ma{width:120px}
+  .ten-tc{font-size:11.5px;color:var(--brand);line-height:1.25;padding:1px 4px 0;max-width:150px;white-space:normal}
+  .ten-tc.khong-thay{color:var(--err)}
+  input.chi-doc{background:transparent;border-color:transparent;color:var(--muted);font-family:Consolas,monospace;font-size:12px}
   /* cây */
   .cay ul{list-style:none;margin:0;padding-left:22px;border-left:1px dashed #d6c9b4}
   .cay>ul{border-left:none;padding-left:0}
@@ -100,6 +103,7 @@
   <div class="loc">
     <input id="tim-cay" placeholder="Tìm tên / mã…" size="24">
     <button id="mo-het">Mở hết</button><button id="dong-het">Thu gọn</button>
+    <span class="nhac-nhanh"><button class="dl-nhanh">Chuẩn hoá treeId</button> <span></span></span>
     <span class="trang-thai">Bấm <b>+ Con</b> để thêm người đời sau, <b>+ Vợ/Chồng</b> để thêm dâu/rể. Mã, Đời, Mã cha/mẹ được điền sẵn.</span>
   </div>
   <div class="cay" id="cay-goc"></div>
@@ -112,6 +116,7 @@
     <select id="loc-van-de"><option value="">Mọi dòng</option><option value="loi">Chỉ dòng có lỗi chặn</option><option value="cb">Chỉ dòng có cảnh báo</option><option value="thap">Độ tin cậy Thấp</option></select>
     <label><input type="checkbox" id="hien-phu"> Hiện cột phụ (năm sinh, kế tự, thuỵ hiệu, Hán-Nôm, nguyên quán)</label>
     <button id="them-nguoi">+ Thêm người</button>
+    <span class="nhac-nhanh"><button class="dl-nhanh">Chuẩn hoá treeId</button> <span></span></span>
   </div>
   <div class="wrap an-cot-phu" id="bao-nk"><table id="bang-nk"></table></div>
 </section>
@@ -150,12 +155,13 @@
   <h2>3. Từng cột của trang Nhân khẩu</h2>
   <table>
     <tr><th>Cột</th><th>Bắt buộc</th><th>Cách điền</th></tr>
-    <tr><td><b>Mã</b></td><td>Có</td><td>Mỗi người một mã, không trùng, không đổi về sau. Chỉ gồm <b>chữ in hoa không dấu, số, dấu gạch ngang</b>. Quy ước của tệp này: <code>VU-D5-03</code> = họ Vũ, đời 5, người thứ 3. Vợ/chồng thêm đuôi: <code>VU-D5-03-V1</code> (vợ thứ nhất), <code>-V2</code> (vợ thứ hai), <code>-C1</code> (chồng). Mã chỉ là số hiệu để nối người với người — <b>đừng dùng mã để thể hiện thứ bậc</b>.</td></tr>
+    <tr><td><b>Mã</b></td><td>Có</td><td><b>ID cố định</b> của một người, dạng mã băm (<code>VU-7K3F9Q2M</code>). Trang tự sinh khi thêm người và <b>không cho sửa</b>: hệ thống dùng Mã để nhận ra người đã nhập ở lần tải trước, đổi Mã là hệ thống tưởng một người mới. Mã cha, Mã mẹ, Kế tự, Hôn phối đều trỏ bằng Mã này; trên trang, các ô ấy hiện treeId cho dễ đọc, và gõ treeId vào cũng được.</td></tr>
+    <tr><td><b>treeId</b></td><td>Không</td><td><b>Số hiệu để người đọc</b>: <code>VU-D6-04</code> = đời 6, người thứ 4 của đời ấy. Vợ/chồng thêm đuôi: <code>VU-D6-04-V1</code> (vợ cả), <code>-V2</code>, <code>-C1</code> (chồng). treeId <b>không chứa quan hệ</b> — ai là con ai nằm ở ô <b>Mã cha / Mã mẹ</b>.<br>Sửa treeId thì vợ/chồng đổi đuôi theo, không ai khác bị ảnh hưởng. Hệ thống bỏ qua cột này khi nhập.</td></tr>
     <tr><td><b>Họ tên</b></td><td>Có</td><td>Họ và tên đầy đủ nếu biết. Sổ cũ chỉ chép tên huý thì ghi họ + tên huý (<i>"Vũ Quý Công Húy Mẫn"</i> → <code>Vũ Mẫn</code>). Không ghi "Quý Công", "Húy" vào đây.</td></tr>
     <tr><td><b>Tên huý</b></td><td>Không</td><td>Tên kiêng. Hệ thống dùng nó để <b>cảnh báo kỵ huý</b> khi con cháu trùng tên bậc trên.</td></tr>
     <tr><td><b>Giới</b></td><td>Không</td><td><code>Nam</code> · <code>Nữ</code> · <code>Không rõ</code>. Con gái ghi đầy đủ như con trai.</td></tr>
     <tr><td><b>Đời</b></td><td>Không</td><td>Số đời trong họ, thuỷ tổ là 1. Phải bằng <b>đời cha (hoặc mẹ) + 1</b>. <b>Dâu/rể để trống</b>: chưa chốt con số ấy là đời bên chồng hay bên ngoại, nên khai vào là lỗi chặn.</td></tr>
-    <tr><td><b>Mã cha / Mã mẹ</b></td><td>Không</td><td>Mã của cha, mẹ <b>đã có trong tệp</b> (hoặc đã có trên hệ thống). Mã cha phải là nam, mã mẹ phải là nữ. Dâu/rể không có cha mẹ trong họ thì để trống. Thiếu mẹ chỉ là cảnh báo.</td></tr>
+    <tr><td><b>Mã cha / Mã mẹ</b></td><td>Không</td><td><b>Đây là chỗ sửa quan hệ.</b> Gõ treeId của cha/mẹ (ví dụ <code>VU-D5-03</code>), trang tự đổi sang Mã. Đổi Cha thì Mẹ tự điền nếu người cha ấy chỉ có một vợ; Đời tự tính lại, và nếu Đời đổi thì con cháu đổi đời và nhận treeId mới theo. Mã của cha, mẹ <b>đã có trong tệp</b> (hoặc đã có trên hệ thống). Mã cha phải là nam, mã mẹ phải là nữ. Dâu/rể không có cha mẹ trong họ thì để trống. Thiếu mẹ chỉ là cảnh báo.</td></tr>
     <tr><td><b>Quan hệ</b></td><td>Không</td><td><code>Con ruột</code> hoặc <code>Con nuôi</code>. <b>Con nuôi của người trong họ hiện đang bị chặn</b>: Hội đồng Tộc biểu chưa chốt có ghi cả cha ruột lẫn cha nuôi không. Gặp ca này thì để ở trang <i>Chờ xác minh</i>.</td></tr>
     <tr><td><b>Còn sống</b></td><td>Gần như có</td><td><code>Có</code> hoặc <code>Không</code>. <b>Đừng để trống</b>: trống mà không có ngày giỗ thì hệ thống không biết sống hay mất và từ chối dòng ấy. Còn sống thì không được có ngày mất.</td></tr>
     <tr><td><b>Ngày mất âm</b></td><td>Không</td><td>Ngày/tháng <b>âm lịch</b>, có thể kèm năm: <code>20/4</code> · <code>20/4 1975</code> · <code>15/8 nhuận</code> (tháng nhuận) · <code>15/8 nhuận 1945</code>. Đây là ngày cúng giỗ, nên quên chữ "nhuận" thì giỗ lệch cả tháng. Ngày dương thì đổi sang âm trước khi gõ.</td></tr>
@@ -212,12 +218,12 @@ const DU_LIEU_GOC = window.DU_LIEU_GOC || {nhanKhau: [], honPhoi: [], cho: []};
 
 // ---------- Định nghĩa cột: tiêu đề khớp ImportColumn / MarriageColumn của hệ thống ----------
 const COT_NK = [
-  {k:"ma", t:"Mã", w:"ma"}, {k:"hoTen", t:"Họ tên", w:170}, {k:"tenHuy", t:"Tên huý", w:80},
+  {k:"ma", t:"Mã", w:"ma", chiDoc:1}, {k:"treeId", t:"treeId", w:"ma"}, {k:"hoTen", t:"Họ tên", w:170}, {k:"tenHuy", t:"Tên huý", w:80},
   {k:"gioi", t:"Giới", ds:["","Nam","Nữ","Không rõ"], w:80}, {k:"doi", t:"Đời", so:1, w:"so"},
-  {k:"maCha", t:"Mã cha", w:"ma", goi:"nam"}, {k:"maMe", t:"Mã mẹ", w:"ma", goi:"nu"},
+  {k:"maCha", t:"Mã cha", w:"ma", goi:"nam", thamChieu:1}, {k:"maMe", t:"Mã mẹ", w:"ma", goi:"nu", thamChieu:1},
   {k:"quanHe", t:"Quan hệ", ds:["","Con ruột","Con nuôi"], w:95}, {k:"conSong", t:"Còn sống", ds:["","Có","Không"], w:75},
   {k:"ngayMatAm", t:"Ngày mất âm", w:110},
-  {k:"namSinh", t:"Năm sinh", so:1, w:"so", phu:1}, {k:"keTuChoAi", t:"Kế tự cho ai (Mã)", w:"ma", phu:1},
+  {k:"namSinh", t:"Năm sinh", so:1, w:"so", phu:1}, {k:"keTuChoAi", t:"Kế tự cho ai (Mã)", w:"ma", phu:1, thamChieu:1},
   {k:"loaiKeTu", t:"Loại kế tự", ds:["","Đích tôn","Thừa tự","Kế tự"], w:90, phu:1},
   {k:"thuyHieu", t:"Thuỵ hiệu", w:110, phu:1}, {k:"tenHanNom", t:"Tên chữ Hán", w:90, phu:1},
   {k:"nguyenQuan", t:"Nguyên quán", w:120, phu:1}, {k:"maNguyenQuan", t:"Mã nguyên quán", w:90, phu:1},
@@ -226,7 +232,7 @@ const COT_NK = [
   {k:"ghiChu", t:"Ghi chú số hoá", w:420, them:1},
 ];
 const COT_HP = [
-  {k:"maChong", t:"Mã chồng", w:"ma", goi:"nam"}, {k:"maVo", t:"Mã vợ", w:"ma", goi:"nu"}, {k:"bac", t:"Bậc", so:1, w:"so"},
+  {k:"maChong", t:"Mã chồng", w:"ma", goi:"nam", thamChieu:1}, {k:"maVo", t:"Mã vợ", w:"ma", goi:"nu", thamChieu:1}, {k:"bac", t:"Bậc", so:1, w:"so"},
   {k:"tuNam", t:"Từ năm", so:1, w:70}, {k:"denNam", t:"Đến năm", so:1, w:70},
   {k:"lyDo", t:"Lý do kết thúc", ds:["","Ly hôn","Qua đời","Huỷ hôn","Khác"], w:110},
   {k:"ghiChu", t:"Ghi chú số hoá", w:460, them:1},
@@ -234,6 +240,7 @@ const COT_HP = [
 const COT_CHO = [
   {k:"ten", t:"Tên đọc được", w:170}, {k:"danhXung", t:"Danh xưng trong sổ", w:190}, {k:"ngay", t:"Ngày ghi trong sổ", w:150},
   {k:"nguon", t:"Nguồn ảnh", w:200}, {k:"canXacMinh", t:"Cần xác minh", w:520},
+  {k:"ma", t:"Mã (đã cấp)", w:"ma", chiDoc:1}, // người từng lên phả rồi đưa về: giữ Mã để lần lên phả sau dùng lại
 ];
 
 // ---------- Trạng thái ----------
@@ -259,7 +266,7 @@ function luuNhap() {
 }
 
 // ---------- Luật kiểm: bám các luật chặn/cảnh báo của bộ nhập (dataimport) ----------
-const DANG_MA = /^[A-Z0-9]{1,12}([-_.][A-Z0-9]{1,12}){0,4}$/;
+const DANG_MA = /^(?=.{1,64}$)[A-Z0-9]{1,12}([-_.][A-Z0-9]{1,12}){0,19}$/; // khớp RowShapeRule: tới 20 đoạn, tối đa 64 ký tự
 const NGAY_AM = /^(\d{1,2})\s*[/\-.]\s*(\d{1,2})(?:\s*[/\-.]?\s*(\d{3,4}))?(?:\s*(nhuận|nhuan|n))?(?:\s*[/\-.]?\s*(\d{3,4}))?\s*$/i;
 const GIOI = v => { const s = boDau(v); return ["nam","m","trai","con trai","ong"].includes(s) ? "Nam" : ["nu","f","gai","con gai","ba"].includes(s) ? "Nữ" : ""; };
 const SONG = v => { const s = boDau(v); return ["co","con","con song","song","x","1"].includes(s) ? true : ["khong","da mat","mat","qua doi","0"].includes(s) ? false : null; };
@@ -271,22 +278,28 @@ function kiem() {
   const dem = {};
   for (const p of D.nhanKhau) { const m = (p.ma || "").trim(); if (m) { dem[m] = (dem[m] || 0) + 1; theoMa.set(m, p); } }
   const trongHP = new Set(D.honPhoi.flatMap(h => [h.maChong, h.maVo]).filter(Boolean));
+  const demT = {}; for (const p of D.nhanKhau) { const t = (p.treeId || "").trim(); if (t) demT[t] = (demT[t] || 0) + 1; }
 
   for (const p of D.nhanKhau) {
     const ma = (p.ma || "").trim();
     const nhan = ma || p.hoTen || "(dòng trống)";
     if (!ma) them("err", "nk", nhan, "ma", "Thiếu Mã.");
     else {
-      if (!DANG_MA.test(ma)) them("err", "nk", ma, "ma", `Mã "${ma}" chỉ được gồm chữ in hoa không dấu, số và dấu gạch ngang (ví dụ VU-D6-01).`);
+      if (!DANG_MA.test(ma)) them("err", "nk", ma, "ma", `Mã "${ma}" chỉ được gồm chữ in hoa không dấu, số và dấu gạch ngang, tối đa 20 đoạn và 64 ký tự (ví dụ VU-01-01-03).`);
       if (dem[ma] > 1) them("err", "nk", ma, "ma", `Mã ${ma} bị trùng ${dem[ma]} lần.`);
     }
+    const t = (p.treeId || "").trim();
+    if (t && demT[t] > 1) them("err", "nk", nhan, "treeId", `treeId ${t} bị trùng ${demT[t]} lần (hệ thống không đọc treeId, nhưng cây sẽ sai — sửa để gỡ).`);
+    if (t && !DANG_MA.test(t)) them("warn", "nk", nhan, "treeId", `treeId "${t}" chỉ nên gồm chữ in hoa không dấu, số, dấu gạch ngang.`);
+    if (t && Number(p.doi) >= 1 && !new RegExp(`-D${Number(p.doi)}-\\d+$`).test(t)) them("warn", "nk", nhan, "treeId", `treeId ${t} không khớp Đời ${p.doi} (phải dạng ${tienTo()}-D${p.doi}-NN). Bấm "Chuẩn hoá treeId".`);
     if (!(p.hoTen || "").trim()) them("err", "nk", nhan, "hoTen", "Thiếu Họ tên.");
     for (const [k, gioiCan, ten] of [["maCha","Nam","cha"],["maMe","Nữ","mẹ"]]) {
       const v = (p[k] || "").trim();
       if (!v) continue;
       if (v === ma) them("err", "nk", nhan, k, `Không thể là ${ten} của chính mình.`);
       else if (!theoMa.has(v)) them("err", "nk", nhan, k, `Mã ${ten} ${v} không có trong tệp. (Nếu người này đã có sẵn trên hệ thống thì bỏ qua lỗi này.)`);
-      else if (GIOI(theoMa.get(v).gioi) && GIOI(theoMa.get(v).gioi) !== gioiCan) them("err", "nk", nhan, k, `Mã ${ten} ${v} đang có giới "${theoMa.get(v).gioi}".`);
+      else if (dem[v] > 1) them("err", "nk", nhan, k, `Mã ${ten} ${v} đang trùng ở ${dem[v]} dòng — chưa rõ trỏ tới ai.`);
+      else if (GIOI(theoMa.get(v).gioi) && GIOI(theoMa.get(v).gioi) !== gioiCan) them("err", "nk", nhan, k, `${ten[0].toUpperCase() + ten.slice(1)} ${hienNguoi(v)} đang có giới "${theoMa.get(v).gioi}".`);
     }
     const coChaMe = (p.maCha || "").trim() || (p.maMe || "").trim();
     const doi = p.doi === "" || p.doi == null ? null : Number(p.doi);
@@ -314,7 +327,7 @@ function kiem() {
     if (!coChaMe && !trongHP.has(ma) && !(doi === 1)) them("warn", "nk", nhan, "maCha", "Người này không nối với ai (không cha mẹ, không hôn phối).");
     if (p.tinCay === "Thấp") them("warn", "nk", nhan, "tinCay", "Độ tin cậy Thấp — cần người trong họ đọc lại. " + (p.ghiChu || ""));
     if (p.namSinh && !/^\d{4}$/.test(String(p.namSinh).trim())) them("err", "nk", nhan, "namSinh", "Năm sinh phải là 4 chữ số.");
-    if ((p.keTuChoAi || "").trim() && !theoMa.has(p.keTuChoAi.trim())) them("warn", "nk", nhan, "keTuChoAi", `Không thấy người được kế tự ${p.keTuChoAi}.`);
+    if ((p.keTuChoAi || "").trim() && !theoMa.has(p.keTuChoAi.trim())) them("warn", "nk", nhan, "keTuChoAi", `Không thấy người được kế tự ${hien(p.keTuChoAi)}.`);
   }
 
   // Kỵ huý: trùng tên huý với một bậc trên (cảnh báo, như hệ thống)
@@ -326,7 +339,7 @@ function kiem() {
       const m = (hang.shift() || "").trim();
       if (!m || daQua.has(m)) continue; daQua.add(m);
       const tren = theoMa.get(m); if (!tren) continue;
-      if (boDau(tren.tenHuy) === huy) { them("warn", "nk", p.ma || p.hoTen, "tenHuy", `Kỵ huý: trùng tên huý "${tren.tenHuy}" của bậc trên ${tren.hoTen} (${m}).`); break; }
+      if (boDau(tren.tenHuy) === huy) { them("warn", "nk", p.ma || p.hoTen, "tenHuy", `Kỵ huý: trùng tên huý "${tren.tenHuy}" của bậc trên ${tren.hoTen} (${hien(m)}).`); break; }
       hang.push(tren.maCha, tren.maMe);
     }
   }
@@ -334,7 +347,7 @@ function kiem() {
   // Vòng lặp cha–con
   const mau = {};
   const duyet = (m, duong) => {
-    if (mau[m] === 2) return; if (mau[m] === 1) { them("err", "nk", m, "maCha", "Vòng lặp tổ tiên: " + [...duong, m].join(" → ")); return; }
+    if (mau[m] === 2) return; if (mau[m] === 1) { them("err", "nk", m, "maCha", "Vòng lặp tổ tiên: " + [...duong, m].map(hien).join(" → ")); return; }
     mau[m] = 1; const p = theoMa.get(m);
     if (p) for (const c of [p.maCha, p.maMe]) if (c && theoMa.has(c.trim())) duyet(c.trim(), [...duong, m]);
     mau[m] = 2;
@@ -349,14 +362,23 @@ function kiem() {
       const v = (h[k] || "").trim();
       if (!v) them("err", "hp", nhan, k, `Thiếu mã ${ten}.`);
       else if (!theoMa.has(v)) them("err", "hp", nhan, k, `Mã ${ten} ${v} không có ở trang Nhân khẩu.`);
-      else if (GIOI(theoMa.get(v).gioi) && GIOI(theoMa.get(v).gioi) !== g) them("err", "hp", nhan, k, `Mã ${ten} ${v} có giới "${theoMa.get(v).gioi}".`);
+      else if (dem[v] > 1) them("err", "hp", nhan, k, `Mã ${ten} ${v} đang trùng ở ${dem[v]} dòng Nhân khẩu — chưa rõ là ai.`);
+      else if (GIOI(theoMa.get(v).gioi) && GIOI(theoMa.get(v).gioi) !== g) them("err", "hp", nhan, k, `${ten[0].toUpperCase() + ten.slice(1)} ${hienNguoi(v)} có giới "${theoMa.get(v).gioi}".`);
     }
     if (h.bac !== "" && h.bac != null) {
       const key = (h.maChong || "") + "|" + h.bac;
-      if (bacTheoChong[key]) them("err", "hp", nhan, "bac", `Hai người vợ của ${h.maChong} cùng bậc ${h.bac}.`);
+      if (bacTheoChong[key]) them("err", "hp", nhan, "bac", `Hai người vợ của ${hienNguoi(h.maChong)} cùng bậc ${h.bac}.`);
       bacTheoChong[key] = 1;
     }
   });
+  // treeId dâu/rể dẫn xuất (X-V1, X-C1) mà không có cặp hôn phối nào với người mang treeId X
+  const banDoi = {};
+  for (const h of D.honPhoi) { const a = (h.maChong || "").trim(), b = (h.maVo || "").trim(); if (a && b) { (banDoi[a] ||= new Set()).add(b); (banDoi[b] ||= new Set()).add(a); } }
+  const theoTree = new Map(D.nhanKhau.filter(p => p.treeId).map(p => [p.treeId, p]));
+  for (const p of D.nhanKhau) {
+    const g = (p.treeId || "").match(/^(.+)-[VC]\d+$/); const goc = g && theoTree.get(g[1]); if (!goc) continue;
+    if (!banDoi[p.ma]?.has(goc.ma)) them("warn", "nk", p.ma, "treeId", `treeId ${p.treeId} như là vợ/chồng của ${goc.hoTen} (${g[1]}), nhưng không có cặp hôn phối nào giữa hai người.`);
+  }
   VD = ds;
   return ds;
 }
@@ -373,7 +395,8 @@ function oNhap(cot, giaTri, onDoi) {
     el = document.createElement("input");
     el.value = giaTri ?? "";
     if (cot.goi) el.setAttribute("list", cot.goi === "nam" ? "ds-nam" : "ds-nu");
-    if (cot.k === "ma" || cot.goi || cot.k === "keTuChoAi") el.addEventListener("input", () => { const p = el.selectionStart; el.value = el.value.toUpperCase(); el.setSelectionRange(p, p); });
+    if (cot.chiDoc) { el.readOnly = true; el.className = "chi-doc"; el.title = "Mã (ID) cố định, không sửa. Muốn đổi vị trí trên cây thì sửa treeId."; }
+    if (cot.k === "treeId" || cot.goi || cot.k === "keTuChoAi") el.addEventListener("input", () => { const p = el.selectionStart; el.value = el.value.toUpperCase(); el.setSelectionRange(p, p); });
   }
   el.addEventListener("change", () => onDoi(cot.so && el.value.trim() !== "" && !isNaN(el.value) ? Number(el.value) : el.value));
   return el;
@@ -406,11 +429,33 @@ function veBang(bang, cot, hang, trang, locHang) {
       const td = tr.insertCell(); if (c.phu) td.className = "phu";
       if (vd.some(v => v.cot === c.k && v.muc === "err")) td.classList.add("o-loi");
       if (c.k === "tinCay" && r.tinCay) td.classList.add("tin-" + r.tinCay.split(" ")[0]);
-      td.append(oNhap(c, r[c.k], val => { r[c.k] = val; sauKhiSua(trang, false); }));
+      // Ô tham chiếu lưu ID nhưng hiện treeId cho người đọc; gõ treeId hay ID đều được.
+      const o = oNhap(c, c.thamChieu ? hien(r[c.k]) : r[c.k], val => {
+        if (trang === "nk" && c.k === "treeId") return doiTreeId(r, val);
+        if (trang === "nk" && (c.k === "maCha" || c.k === "maMe")) return doiChaMe(r, c.k, val);
+        r[c.k] = c.thamChieu ? giaiThamChieu(val) : val; sauKhiSua(trang, c.thamChieu);
+      });
+      if (c.thamChieu && r[c.k]) o.title = `${hienNguoi(r[c.k])}\nMã (ID): ${r[c.k]}`;
+      td.append(o);
+      if (c.thamChieu) { // tên người đang được trỏ tới, cập nhật ngay khi gõ / chọn
+        const ten = document.createElement("div"); ten.className = "ten-tc"; td.append(ten);
+        const ve = v => { const p = timNguoi(v); ten.textContent = p ? p.hoTen : (String(v || "").trim() ? "không tìm thấy" : ""); ten.classList.toggle("khong-thay", !p && !!String(v || "").trim()); };
+        ve(r[c.k]); o.addEventListener("input", () => ve(o.value));
+      }
     }
     const tdx = tr.insertCell(); tdx.style.whiteSpace = "nowrap";
     if (trang === "cho") {
       const b = document.createElement("button"); b.className = "nho"; b.textContent = "Chuyển vào phả"; b.onclick = () => chuyenVaoPha(i); tdx.append(b);
+    }
+    if (trang === "nk" && ((r.maCha || "").trim() || (r.maMe || "").trim())) {
+      const c = document.createElement("button"); c.className = "nho"; c.textContent = "Chuẩn hoá";
+      c.title = "Tính lại Đời theo cha/mẹ và cấp treeId đúng đời cho người này (vợ/chồng đổi đuôi theo)";
+      c.onclick = () => chuanHoaMotNguoi(r); tdx.append(c);
+    }
+    if (trang === "nk") {
+      const v = document.createElement("button"); v.className = "nho"; v.textContent = "→ Chờ xác minh";
+      v.title = "Đưa người này ra khỏi phả, sang trang Chờ xác minh (giữ lại tên, ngày giỗ, nguồn, và quan hệ cũ trong ghi chú)";
+      v.onclick = () => veChoXacMinh(i); tdx.append(v);
     }
     const x = document.createElement("button"); x.className = "nho xoa"; x.textContent = "Xoá"; x.onclick = () => xoaHang(trang, i); tdx.append(x);
   });
@@ -422,7 +467,7 @@ function veNhanKhau() {
   const loiTheo = new Set(VD.filter(v => v.trang === "nk" && v.muc === "err").map(v => v.ma));
   const cbTheo = new Set(VD.filter(v => v.trang === "nk" && v.muc === "warn").map(v => v.ma));
   veBang($("#bang-nk"), COT_NK, D.nhanKhau, "nk", r => {
-    if (tim && !boDau(`${r.ma} ${r.hoTen} ${r.tenHuy}`).includes(tim)) return false;
+    if (tim && !boDau(`${r.ma} ${r.treeId} ${r.hoTen} ${r.tenHuy}`).includes(tim)) return false;
     if (doi === "trong" && r.doi !== "" && r.doi != null) return false;
     if (doi && doi !== "trong" && String(r.doi) !== doi) return false;
     if (loc === "loi" && !loiTheo.has(r.ma || r.hoTen)) return false;
@@ -439,7 +484,7 @@ function veNhanKhau() {
 function veDanhSachMa() {
   const dl = (id, gioi) => {
     let el = document.getElementById(id); if (!el) { el = document.createElement("datalist"); el.id = id; document.body.append(el); }
-    el.innerHTML = D.nhanKhau.filter(p => p.ma && GIOI(p.gioi) === gioi).map(p => `<option value="${p.ma}">${esc(p.hoTen)}${p.doi ? " — đời " + p.doi : ""}</option>`).join("");
+    el.innerHTML = D.nhanKhau.filter(p => p.ma && GIOI(p.gioi) === gioi).map(p => `<option value="${esc(p.treeId || p.ma)}">${esc(p.hoTen)}${p.doi ? " — đời " + p.doi : ""}</option>`).join("");
   };
   dl("ds-nam", "Nam"); dl("ds-nu", "Nữ");
 }
@@ -451,7 +496,7 @@ function veKiem() {
   const html = [];
   html.push(`<p><b>${loi.length} lỗi chặn</b> (phải sửa hết trước khi tải lên) · <b>${cb.length} cảnh báo</b> (xem lại, không chặn). Bấm một dòng để tới chỗ cần sửa.</p>`);
   if (!loi.length) html.push(`<div class="nhac" style="background:var(--okbg);border-color:var(--ok)">✅ Không còn lỗi chặn — tệp đủ điều kiện để tải lên hệ thống.</div>`);
-  for (const v of [...loi, ...cb]) html.push(`<div class="van-de ${v.muc}" data-trang="${v.trang}" data-ma="${esc(v.ma)}" style="cursor:pointer"><span class="muc">${v.muc === "err" ? "LỖI CHẶN" : "CẢNH BÁO"}</span><div><b>${esc(v.ma)}</b> · <code>${trangTen[v.trang]} › ${(COT_NK.concat(COT_HP).find(c => c.k === v.cot) || {}).t || v.cot}</code><br>${esc(v.noi)}</div></div>`);
+  for (const v of [...loi, ...cb]) html.push(`<div class="van-de ${v.muc}" data-trang="${v.trang}" data-ma="${esc(v.ma)}" style="cursor:pointer"><span class="muc">${v.muc === "err" ? "LỖI CHẶN" : "CẢNH BÁO"}</span><div><b>${esc(v.trang === "hp" ? v.ma.split(" × ").map(hien).join(" × ") : hienNguoi(v.ma))}</b> · <code>${trangTen[v.trang]} › ${(COT_NK.concat(COT_HP).find(c => c.k === v.cot) || {}).t || v.cot}</code><br>${esc(v.noi)}</div></div>`);
   $("#ds-van-de").innerHTML = html.join("");
 }
 
@@ -470,51 +515,265 @@ function veCay() {
   // gốc: người trong họ không có cha mẹ (thuỷ tổ), cộng người lẻ
   const goc = D.nhanKhau.filter(p => p.ma && !(p.maCha || "").trim() && !(p.maMe || "").trim() && (Number(p.doi) === 1 || !voChong[p.ma]));
   const daVe = new Set();
-  const khop = p => !tim || boDau(`${p.ma} ${p.hoTen} ${p.tenHuy}`).includes(tim);
+  const khop = p => !tim || boDau(`${p.ma} ${p.treeId} ${p.hoTen} ${p.tenHuy}`).includes(tim);
   const coKhop = (p, seen = new Set()) => { if (seen.has(p.ma)) return false; seen.add(p.ma); if (khop(p)) return true; return [...(con[p.ma] || [])].some(c => coKhop(c, seen)) || (voChong[p.ma] || []).some(v => theoMa.get(v.ma) && khop(theoMa.get(v.ma))); };
   const nut = p => {
     const vc = (voChong[p.ma] || []).map(v => theoMa.get(v.ma)).filter(Boolean);
     const gio = p.ngayMatAm ? ` · giỗ ${esc(p.ngayMatAm)}` : (SONG(p.conSong) === true ? " · còn sống" : "");
-    return `<span class="nut ${loiMa.has(p.ma) ? "loi" : ""}"><span class="doi">Đ${p.doi ?? "?"}</span><b>${esc(p.hoTen)}</b><span class="ma-nho">${esc(p.ma)}${gio}</span>`
-      + (vc.length ? `<span class="vo">⚭ ${vc.map(v => `${esc(v.hoTen)} <span class="ma-nho">(${esc(v.ma)})</span> <button class="nho" data-sua="${esc(v.ma)}" title="Sửa">✎</button>`).join(" · ")}</span>` : "")
+    return `<span class="nut ${loiMa.has(p.ma) ? "loi" : ""}"><span class="doi">Đ${p.doi ?? "?"}</span><b>${esc(p.hoTen)}</b><span class="ma-nho">${esc(p.treeId || "(chưa có treeId)")}${gio}</span>`
+      + (vc.length ? `<span class="vo">⚭ ${vc.map(v => `${esc(v.hoTen)} <span class="ma-nho">(${esc(v.treeId || "chưa có treeId")})</span> <button class="nho" data-sua="${esc(v.ma)}" title="Sửa">✎</button>`).join(" · ")}</span>` : "")
       + `<button class="nho" data-con="${esc(p.ma)}">+ Con</button><button class="nho" data-vo="${esc(p.ma)}">+ ${GIOI(p.gioi) === "Nữ" ? "Chồng" : "Vợ"}</button><button class="nho" data-sua="${esc(p.ma)}" title="Sửa ở bảng Nhân khẩu">✎</button></span>`;
   };
   const ve = p => {
-    if (daVe.has(p.ma) || !coKhop(p)) return "";
-    daVe.add(p.ma);
-    const cs = [...(con[p.ma] || [])].filter(c => !daVe.has(c.ma)).sort((a, b) => (a.ma || "").localeCompare(b.ma || ""));
+    if (daVe.has(p) || !coKhop(p)) return "";
+    daVe.add(p);
+    const cs = [...(con[p.ma] || [])].filter(c => !daVe.has(c)).sort((a, b) => soSanhMa(a.treeId, b.treeId));
     // con đã vẽ dưới cha thì không vẽ lại dưới mẹ
     const conVe = cs.map(ve).filter(Boolean).join("");
     return conVe ? `<li><details open><summary><span class="mui">▾</span>${nut(p)}</summary><ul>${conVe}</ul></details></li>` : `<li><span class="mui"></span>${nut(p)}</li>`;
   };
   // vẽ theo cha trước để con không bị kéo về nhánh mẹ là dâu
   const html = goc.sort((a, b) => (Number(a.doi) || 99) - (Number(b.doi) || 99)).map(ve).join("");
-  const le = D.nhanKhau.filter(p => p.ma && !daVe.has(p.ma) && !laDauRe(p) && khop(p));
+  const le = D.nhanKhau.filter(p => p.ma && !daVe.has(p) && !laDauRe(p) && khop(p));
   $("#cay-goc").innerHTML = `<ul>${html}</ul>` + (le.length ? `<h3 style="color:var(--err)">Chưa nối được vào cây (${le.length})</h3><ul>${le.map(p => `<li>${nut(p)}</li>`).join("")}</ul>` : "")
     + (!html ? `<p class="rong">Chưa có ai. Mở tab Nhân khẩu → Thêm người để nhập thuỷ tổ.</p>` : "");
 }
 
-// ---------- Thêm người ----------
+// ---------- Mã (ID) và treeId ----------
+// Hai cột, hai vai trò:
+//  - Mã (ID): mã băm ngẫu nhiên, sinh MỘT LẦN rồi KHÔNG BAO GIỜ đổi (VU-7K3F9Q2M). Mọi tham chiếu —
+//    Mã cha, Mã mẹ, Kế tự, Hôn phối — trỏ bằng ID. Hệ thống dùng Mã để nhận ra người đã nhập ở lần tải
+//    trước; đổi Mã là hệ thống tưởng một người mới.
+//  - treeId: số hiệu cho người đọc — VU-D<đời>-<số trong đời> (VU-D6-04); vợ/chồng thêm "-V1"/"-C1".
+//    Không chứa quan hệ: ai là con ai sửa ở ô Cha/Mẹ (xem doiChaMe). Đổi treeId không động tới tham
+//    chiếu nào. Hệ thống bỏ qua cột này (cột lạ).
 function tienTo() {
-  const m = D.nhanKhau.map(p => (p.ma || "").match(/^([A-Z0-9]+)-D\d+-\d+$/)).find(Boolean);
+  const m = D.nhanKhau.map(p => (p.treeId || "").match(/^([A-Z]+)-(?:D\d+-)?\d+/) || (p.ma || "").match(/^([A-Z]+)-/)).find(Boolean);
   return m ? m[1] : "VU";
 }
-function maMoiTheoDoi(doi) {
-  const tt = tienTo(); let max = 0;
-  for (const p of D.nhanKhau) { const m = (p.ma || "").match(new RegExp(`^${tt}-D${doi}-(\\d+)$`)); if (m) max = Math.max(max, +m[1]); }
-  return `${tt}-D${doi}-${String(max + 1).padStart(2, "0")}`;
+const so2 = k => String(k).padStart(2, "0");
+// mã trống (người chưa được cấp số) luôn xếp CUỐI — localeCompare đặt "~" trước chữ cái nên không dùng làm lính canh được
+const soSanhMa = (a, b) => !a || !b ? (!a) - (!b) : a.localeCompare(b, "en", {numeric: true});
+const thoatRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const KY_TU_ID = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // bỏ 0/O, 1/I cho khỏi đọc nhầm
+const LA_ID = /^[A-Z]+-[2-9A-HJ-NP-Z]{8}$/;
+function taoId() {
+  const co = new Set(D.nhanKhau.map(p => p.ma));
+  for (;;) {
+    const b = crypto.getRandomValues(new Uint8Array(8));
+    const id = `${tienTo()}-${[...b].map(x => KY_TU_ID[x % 32]).join("")}`;
+    if (!co.has(id) && /[A-Z]/.test(id.slice(-8))) return id;
+  }
 }
-function maMoiVoChong(ma, chuCai) {
-  let n = 1; const co = new Set(D.nhanKhau.map(p => p.ma));
-  while (co.has(`${ma}-${chuCai}${n}`)) n++;
-  return `${ma}-${chuCai}${n}`;
+const theoId = () => new Map(D.nhanKhau.filter(p => p.ma).map(p => [p.ma.trim(), p]));
+// Hiện một tham chiếu (ID) cho người đọc: treeId của người ấy, hoặc nguyên giá trị nếu không tìm thấy.
+const hien = id => { const p = D.nhanKhau.find(x => x.ma === (id || "").trim()); return p ? (p.treeId || p.ma) : (id || ""); };
+// Tìm người theo ID hoặc treeId (ô tham chiếu nhận cả hai).
+const timNguoi = v => { v = String(v ?? "").trim().toUpperCase(); if (!v) return null; return D.nhanKhau.find(p => p.ma === v) || (D.nhanKhau.filter(p => p.treeId === v).length === 1 ? D.nhanKhau.find(p => p.treeId === v) : null); };
+const hienNguoi = id => { const p = D.nhanKhau.find(x => x.ma === (id || "").trim()); return p ? `${p.treeId || p.ma} ${p.hoTen}` : (id || ""); };
+// Người gõ vào ô tham chiếu có thể gõ ID hoặc treeId: quy về ID.
+function giaiThamChieu(v) {
+  v = String(v ?? "").trim().toUpperCase();
+  if (!v || D.nhanKhau.some(p => p.ma === v)) return v;
+  const ds = D.nhanKhau.filter(p => p.treeId === v);
+  return ds.length === 1 ? ds[0].ma : v;
+}
+// Dữ liệu cũ (chỉ có cột Mã, Mã là mã theo đời/nhánh): mã cũ chuyển sang treeId, mỗi người nhận một ID mới,
+// mọi tham chiếu đổi theo. Người đã có ID (đúng dạng mã băm) thì giữ nguyên.
+function chuanHoaId() {
+  const doi = new Map();
+  for (const p of D.nhanKhau) {
+    const m = (p.ma || "").trim();
+    if (p.treeId === undefined) p.treeId = "";
+    if (!m) { p.ma = taoId(); continue; }
+    if (!LA_ID.test(m) && !p.treeId) { p.treeId = m; const id = taoId(); if (!doi.has(m)) doi.set(m, id); p.ma = id; }
+  }
+  const dm = v => doi.get((v || "").trim());
+  for (const p of D.nhanKhau) for (const k of ["maCha", "maMe", "keTuChoAi"]) { const v = dm(p[k]); if (v) p[k] = v; }
+  for (const h of D.honPhoi) for (const k of ["maChong", "maVo"]) { const v = dm(h[k]); if (v) h[k] = v; }
+  return doi.size;
+}
+
+// ---------- treeId: đời + số thứ tự trong đời ----------
+// Người trong họ: VU-D<đời>-<số>, số đánh trong cả đời (VU-D6-04 = đời 6, người thứ 4).
+// Dâu/rể: treeId người hôn phối + "-V1"/"-V2" (vợ) hoặc "-C1" (chồng).
+// treeId KHÔNG chứa quan hệ: ai là con ai nằm ở ô Cha/Mẹ (gõ treeId của cha/mẹ vào đó).
+const laDauRe = p => !(p.maCha || "").trim() && !(p.maMe || "").trim() && (p.doi === "" || p.doi == null);
+function chaMeTrongHo(p, ds) {
+  const cha = ds.get((p.maCha || "").trim()), me = ds.get((p.maMe || "").trim());
+  if (cha && !laDauRe(cha)) return cha;
+  if (me && !laDauRe(me)) return me;
+  return cha || me || null;
+}
+// treeId chuẩn. Ai đã có treeId đúng đời (VU-D<đời>-NN) và không trùng thì GIỮ số. Ai chưa có số thì được
+// CHÈN NGAY SAU người đứng trước mình trong đời ấy theo thứ tự trên cây — với người con mới, đó là anh/chị
+// cuối cùng của mình: con cụ VU-D5-03 đang có D6-01…04 thì người mới nhận D6-05. Số ấy đang có người thì
+// người ấy và những người LIỀN SAU được dồn lên 1 (dừng ở chỗ trống đầu tiên), vợ/chồng đổi đuôi theo.
+// `chiNhung` (Set người): chỉ cấp số cho những người này; người khác chưa có số thì để nguyên.
+// `lienMach`: ĐÁNH LẠI cả tệp — bỏ qua số cũ, mỗi đời đánh 01, 02, 03… liền nhau theo thứ tự trên cây (con nhà
+// trước đứng trước, anh chị em giữ thứ tự hiện tại). Dùng cho nút "Chuẩn hoá treeId" toàn bộ: lấp các chỗ trống
+// do chèn/xoá để lại.
+// Trả về {doi: Map người → treeId mới (kể cả người bị dồn), loi}.
+function treeIdChuan(chiNhung, lienMach = false) {
+  const tt = tienTo();
+  const ds = theoId();
+  const trongHo = [...ds.values()].filter(p => Number(p.doi) >= 1);
+  const con = new Map();
+  for (const p of trongHo) { const cm = chaMeTrongHo(p, ds); if (cm) { if (!con.has(cm)) con.set(cm, []); con.get(cm).push(p); } }
+  // thứ tự trên cây: duyệt từ thuỷ tổ; anh chị em theo treeId hiện tại, người chưa có treeId đứng cuối
+  const thuTu = [], daQua = new Set();
+  const duyet = p => { if (daQua.has(p)) return; daQua.add(p); thuTu.push(p); (con.get(p) || []).sort((a, b) => soSanhMa(a.treeId, b.treeId)).forEach(duyet); };
+  trongHo.filter(p => !chaMeTrongHo(p, ds)).sort((a, b) => Number(a.doi) - Number(b.doi) || soSanhMa(a.treeId, b.treeId)).forEach(duyet);
+  trongHo.sort((a, b) => soSanhMa(a.treeId, b.treeId)).forEach(duyet); // người chưa nối được vào cây
+  const so = new Map(), theoSo = {}; // người → số; đời → (số → người)
+  if (!lienMach) for (const p of thuTu) { // giữ số đúng đời, không trùng
+    const d = Number(p.doi), m = (p.treeId || "").match(new RegExp(`^${tt}-D${d}-(\\d+)$`));
+    const s = m && +m[1], bang = (theoSo[d] ||= new Map());
+    if (s && !bang.has(s)) { bang.set(s, p); so.set(p, s); }
+  }
+  for (const p of thuTu) {
+    if (so.has(p) || (chiNhung && !chiNhung.has(p))) continue;
+    const d = Number(p.doi), bang = (theoSo[d] ||= new Map());
+    // người đứng trước trong cùng đời (theo thứ tự cây) đã có số
+    let truoc = 0;
+    for (const q of thuTu) { if (q === p) break; if (Number(q.doi) === d && so.has(q)) truoc = so.get(q); }
+    const dich = s => { // dồn s, s+1… (liền nhau) lên 1, từ cuối dãy về
+      let k = s; while (bang.has(k)) k++;
+      for (let j = k - 1; j >= s; j--) { const q = bang.get(j); bang.delete(j); bang.set(j + 1, q); so.set(q, j + 1); }
+    };
+    const s = truoc + 1;
+    if (bang.has(s)) dich(s);
+    bang.set(s, p); so.set(p, s);
+  }
+  const moi = new Map([...so].map(([p, s]) => [p, `${tt}-D${Number(p.doi)}-${so2(s)}`]));
+  // dâu/rể theo người hôn phối; giữ số V/C nếu treeId cũ đã là <treeId cũ người ấy>-Vn
+  const daDung = new Set(moi.values());
+  for (const p of thuTu) {
+    const t = moi.get(p); if (!t) continue;
+    const cap = D.honPhoi.filter(h => h.maChong === p.ma || h.maVo === p.ma)
+      .map(h => ({vc: ds.get(h.maChong === p.ma ? h.maVo : h.maChong), bac: Number(h.bac) || 99}))
+      .filter(x => x.vc && laDauRe(x.vc) && !moi.has(x.vc)).sort((a, b) => a.bac - b.bac || soSanhMa(a.vc.treeId, b.vc.treeId));
+    for (const {vc} of cap) {
+      const chu = GIOI(vc.gioi) === "Nữ" ? "V" : GIOI(vc.gioi) === "Nam" ? "C" : (GIOI(p.gioi) === "Nữ" ? "C" : "V");
+      const cu = (vc.treeId || "").match(new RegExp(`^${thoatRe(p.treeId || "\u0000")}-([VC])(\\d+)$`));
+      let n = cu && cu[1] === chu ? +cu[2] : 1;
+      while (daDung.has(`${t}-${chu}${n}`)) n++;
+      moi.set(vc, `${t}-${chu}${n}`); daDung.add(`${t}-${chu}${n}`);
+    }
+  }
+  const doi = new Map([...moi].filter(([p, t]) => p.treeId !== t));
+  return {doi, loi: ""};
+}
+function danhLaiTreeId(hoiTruoc = true) {
+  const {doi} = treeIdChuan(undefined, true);
+  if (!doi.size) { $("#trang-thai").textContent = "Mọi treeId đã đúng quy ước."; return true; }
+  const vd = [...doi].slice(0, 6).map(([p, t]) => `  ${p.hoTen}: ${p.treeId || "(trống)"} → ${t}`).join("\n");
+  if (hoiTruoc && !confirm(`Chuẩn hoá treeId cho ${doi.size} người:\n${vd}${doi.size > 6 ? "\n  …" : ""}\n\nMỗi đời đánh lại 01, 02, 03… liền nhau theo thứ tự trên cây (con nhà trước đứng trước, anh chị em giữ thứ tự). Mã (ID), Cha/Mẹ, hôn phối giữ nguyên.`)) return false;
+  for (const [p, t] of doi) p.treeId = t;
+  sauKhiSua("nk", true);
+  setTimeout(() => { $("#trang-thai").textContent = `Đã chuẩn hoá treeId cho ${doi.size} người.`; }, 400);
+  return true;
+}
+function veNhacNhanh() {
+  const {doi} = treeIdChuan(undefined, true);
+  for (const el of document.querySelectorAll(".nhac-nhanh")) {
+    // Nút luôn hiện; dòng nhắc chỉ hiện khi có việc. Người chưa có Đời (vd vừa chuyển từ Chờ xác minh) chưa cấp
+    // treeId được — trừ dâu/rể đã có cặp hôn phối, họ lấy treeId theo người hôn phối.
+    const coHP = new Set(D.honPhoi.flatMap(h => [h.maChong, h.maVo]));
+    const thieuDoi = D.nhanKhau.filter(p => !p.treeId && !(Number(p.doi) >= 1) && !coHP.has(p.ma)).length;
+    const sp = el.querySelector("span");
+    sp.textContent = [doi.size ? `⚠ ${doi.size} treeId chưa liền số theo cây` : "", thieuDoi ? `⚠ ${thieuDoi} người chưa có Đời, chưa cấp treeId được — điền Đời (hoặc Mã cha/mẹ) trước` : ""].filter(Boolean).join(" · ");
+    sp.style.color = "var(--err)";
+  }
+}
+// treeId cho người mới ở đời `d`: số kế tiếp của đời ấy.
+function treeIdMoiTheoDoi(d) {
+  const tt = tienTo(); let max = 0;
+  for (const p of D.nhanKhau) { const m = (p.treeId || "").match(new RegExp(`^${tt}-D${d}-(\\d+)$`)); if (m) max = Math.max(max, +m[1]); }
+  return `${tt}-D${d}-${so2(max + 1)}`;
+}
+function treeIdVoChong(t, chuCai) {
+  let n = 1; const co = new Set(D.nhanKhau.map(p => p.treeId));
+  while (co.has(`${t}-${chuCai}${n}`)) n++;
+  return `${t}-${chuCai}${n}`;
+}
+
+// Sửa ô Cha / Mẹ — đây là chỗ sửa quan hệ "ai là con ai". Gõ treeId (VU-D5-03) hoặc Mã đều được.
+//  - Người kia (Mẹ khi sửa Cha, và ngược lại) phải là vợ/chồng của người vừa chọn: nếu người ấy có đúng một
+//    vợ/chồng thì tự điền; nhiều người thì để trống cho người nhập chọn.
+//  - Đời tự tính lại = đời cha/mẹ trong họ + 1; nếu đời đổi thì cả con cháu đổi đời theo và nhận treeId
+//    của đời mới. Đời không đổi thì treeId giữ nguyên.
+function doiChaMe(r, k, val) {
+  const ds = theoId();
+  const id = giaiThamChieu(val);
+  r[k] = id;
+  const kia = k === "maCha" ? "maMe" : "maCha", tenKia = k === "maCha" ? "Mẹ" : "Cha";
+  const bao = [];
+  const nguoi = ds.get(id);
+  if (nguoi) {
+    const vc = D.honPhoi.filter(h => h.maChong === id || h.maVo === id).map(h => h.maChong === id ? h.maVo : h.maChong);
+    if (!vc.includes(r[kia])) {
+      if (vc.length === 1) { r[kia] = vc[0]; bao.push(`${tenKia} tự điền: ${hienNguoi(vc[0])}.`); }
+      else { if (r[kia]) r[kia] = ""; if (vc.length > 1) bao.push(`${nguoi.hoTen} có ${vc.length} vợ/chồng — chọn ${tenKia} ở ô ${tenKia}.`); }
+    }
+  }
+  bao.push(...capDoiVaTreeId(r));
+  sauKhiSua("nk", true);
+  if (bao.length) setTimeout(() => { $("#trang-thai").textContent = bao.join(" "); }, 400);
+}
+// Đời = đời cha/mẹ trong họ + 1. Chưa có Đời thì điền; Đời lệch thì sửa, kéo theo cả con cháu (cùng lệch
+// bấy nhiêu đời), rồi cấp treeId đúng đời cho những người đó. Đời đã đúng thì chỉ chuẩn hoá treeId của
+// chính người này (và vợ/chồng). Trả về các câu báo cho thanh trạng thái.
+function capDoiVaTreeId(r) {
+  const ds = theoId(), bao = [];
+  const tren = chaMeTrongHo(r, ds);
+  const doiMoi = tren && Number(tren.doi) >= 1 ? Number(tren.doi) + 1 : null;
+  if (doiMoi && !(Number(r.doi) >= 1)) { // chưa có Đời (vd vừa chuyển từ Chờ xác minh): điền Đời và cấp treeId luôn
+    r.doi = doiMoi;
+    const {doi} = treeIdChuan(new Set([r]));
+    for (const [p, t] of doi) p.treeId = t;
+    bao.push(`Đời tự điền: ${doiMoi}; treeId: ${r.treeId}.`);
+  } else if (doiMoi && Number(r.doi) >= 1 && doiMoi !== Number(r.doi)) {
+    // Tính lại từ trên xuống: mỗi người = đời cha/mẹ trong họ + 1. Không cộng/trừ cả nhánh cùng một lượng —
+    // nếu chỉ riêng dòng này gõ sai Đời thì con cháu vốn đã đúng và phải giữ nguyên.
+    const cu = Number(r.doi);
+    r.doi = doiMoi;
+    const daDoi = new Set([r]), daQua = new Set(), hang = [r];
+    while (hang.length) {
+      const p = hang.shift(); if (daQua.has(p)) continue; daQua.add(p);
+      for (const c of D.nhanKhau.filter(c => (c.maCha === p.ma || c.maMe === p.ma) && chaMeTrongHo(c, ds) === p)) {
+        if (Number(c.doi) !== Number(p.doi) + 1) { c.doi = Number(p.doi) + 1; daDoi.add(c); }
+        hang.push(c);
+      }
+    }
+    const soConChau = daDoi.size - 1; // đếm trước: treeIdChuan thêm vợ/chồng vào tập này
+    const {doi} = treeIdChuan(daDoi);
+    for (const [p, t] of doi) p.treeId = t;
+    bao.push(`Đời ${cu} → ${doiMoi}` + (soConChau ? `, và ${soConChau} con cháu đổi đời theo` : "") + `; treeId: ${r.treeId}.`);
+  }
+  else if (doiMoi) {
+    const cu = r.treeId;
+    const {doi} = treeIdChuan(new Set([r]));
+    for (const [p, t] of doi) p.treeId = t;
+    if (r.treeId !== cu) bao.push(`treeId: ${cu || "(trống)"} → ${r.treeId}.`);
+  }
+  return bao;
+}
+
+// Nút "Chuẩn hoá" trên từng dòng (khi đã có Mã cha/Mã mẹ).
+function chuanHoaMotNguoi(r) {
+  const tren = chaMeTrongHo(r, theoId());
+  if (!tren || !(Number(tren.doi) >= 1)) return alert(`Chưa chuẩn hoá được ${r.hoTen || "dòng này"}: Mã cha / Mã mẹ chưa trỏ tới người trong họ có Đời.`);
+  const bao = capDoiVaTreeId(r);
+  sauKhiSua("nk", true);
+  setTimeout(() => { $("#trang-thai").textContent = `${r.hoTen}: ` + (bao.length ? bao.join(" ") : `đã đúng (Đời ${r.doi}, treeId ${r.treeId}).`); }, 400);
 }
 const NGUOI_TRONG = () => Object.fromEntries(COT_NK.map(c => [c.k, ""]));
 
 function hop(tieuDe, truong, khiOk) {
   $("#hop-tieu-de").textContent = tieuDe;
   $("#hop-than").innerHTML = truong.map(f => `<label>${f.nhan}</label>` + (f.ds
-    ? `<select name="${f.k}">${f.ds.map(v => `<option ${v === f.gt ? "selected" : ""} value="${esc(v)}">${esc(v.nhan || v) || "—"}</option>`).join("")}</select>`
+    ? `<select name="${f.k}">${f.ds.map(v => `<option ${(v.v ?? v) === f.gt ? "selected" : ""} value="${esc(v.v ?? v)}">${esc(v.nhan ?? v) || "—"}</option>`).join("")}</select>`
     : `<input name="${f.k}" value="${esc(f.gt ?? "")}" placeholder="${esc(f.goiY || "")}">`) + (f.chu ? `<div class="trang-thai">${f.chu}</div>` : "")).join("");
   const dlg = $("#hop");
   dlg.onclose = () => {
@@ -526,14 +785,13 @@ function hop(tieuDe, truong, khiOk) {
   setTimeout(() => dlg.querySelector("input,select")?.focus(), 30);
 }
 
-function themCon(maCha) {
-  const p = D.nhanKhau.find(x => x.ma === maCha); if (!p) return;
-  const theoMa = new Map(D.nhanKhau.map(x => [x.ma, x]));
-  const vc = D.honPhoi.filter(h => h.maChong === maCha || h.maVo === maCha).map(h => theoMa.get(h.maChong === maCha ? h.maVo : h.maChong)).filter(Boolean);
-  let doiCM = Number(p.doi) || Math.max(0, ...vc.map(v => Number(v.doi) || 0));
+function themCon(id) {
+  const ds = theoId();
+  const p = ds.get(id); if (!p) return;
+  const vc = D.honPhoi.filter(h => h.maChong === id || h.maVo === id).map(h => ds.get(h.maChong === id ? h.maVo : h.maChong)).filter(Boolean);
+  const doiCM = Number(p.doi) || Math.max(0, ...vc.map(v => Number(v.doi) || 0));
   const laNam = GIOI(p.gioi) !== "Nữ";
   const doi = doiCM ? doiCM + 1 : "";
-  const tt = tienTo();
   const hoMacDinh = laNam ? (p.hoTen || "").split(" ")[0] : ((vc[0]?.hoTen || "").split(" ")[0] || "");
   const truong = [
     {k:"hoTen", nhan:"Họ tên", gt: hoMacDinh ? hoMacDinh + " " : "", goiY:"Vũ Văn A"},
@@ -542,36 +800,59 @@ function themCon(maCha) {
     {k:"conSong", nhan:"Còn sống?", ds:["Có","Không"], gt:"Có"},
     {k:"ngayMatAm", nhan:"Ngày mất âm (nếu đã mất)", goiY:"20/4 hoặc 20/4 1990 hoặc 15/8 nhuận"},
   ];
-  if (vc.length) truong.push({k:"nguoiKia", nhan: laNam ? "Mẹ" : "Cha", ds: ["", ...vc.map(v => v.ma)], gt: vc.length === 1 ? vc[0].ma : "",
-    chu: vc.map(v => `${v.ma} = ${esc(v.hoTen)}`).join(" · ") + (vc.length > 1 ? " — nhiều người, chọn đúng người" : "")});
-  truong.push({k:"ma", nhan:"Mã (tự sinh, sửa được)", gt: doi ? maMoiTheoDoi(doi) : `${tt}-MOI-${D.nhanKhau.length + 1}`});
-  hop(`Thêm con của ${p.hoTen} (${p.ma})`, truong, v => {
+  if (vc.length) truong.push({k:"nguoiKia", nhan: laNam ? "Mẹ" : "Cha", gt: vc.length === 1 ? vc[0].ma : "",
+    ds: ["", ...vc.map(v => ({v: v.ma, nhan: `${v.hoTen} (${v.treeId || v.ma})`}))],
+    chu: vc.length > 1 ? "Nhiều người — chọn đúng người." : ""});
+  const trongHo = laDauRe(p) ? (vc.find(v => !laDauRe(v)) || p) : p;
+  const anhEm = D.nhanKhau.filter(x => chaMeTrongHo(x, ds) === trongHo && x.treeId).sort((a, b) => soSanhMa(a.treeId, b.treeId));
+  // Mặc định: đứng sau anh/chị cuối cùng — thử cấp số trên một bản nháp để báo trước treeId sẽ nhận
+  let duKien = "", soDon = 0;
+  if (doi) {
+    const thu = Object.assign(NGUOI_TRONG(), {ma: "__thu__", doi, [laNam ? "maCha" : "maMe"]: p.ma});
+    D.nhanKhau.push(thu);
+    try { const {doi: m} = treeIdChuan(new Set([thu])); duKien = m.get(thu) || ""; soDon = [...m.keys()].filter(x => x !== thu && Number(x.doi) >= 1).length; }
+    finally { D.nhanKhau.pop(); }
+  }
+  const cuoi = anhEm.at(-1);
+  truong.push({k:"viTri", nhan:"treeId của người con mới", gt: "SAU",
+    ds: [{v: "SAU", nhan: `${duKien} — ${cuoi ? `sau ${cuoi.hoTen} (${cuoi.treeId})` : `số mới của đời ${doi}`}${soDon ? `, dồn ${soDon} người sau lên 1` : ""}`},
+      ...anhEm.map(x => ({v: x.treeId, nhan: `${x.treeId} — chèn trước ${x.hoTen}`}))],
+    chu: anhEm.length ? `Chèn trước một anh/chị/em thì người ấy và những người liền sau trong đời ${doi} được dồn số lên 1 (03→04, 04→05…), vợ/chồng của họ đổi theo. Mã (ID), Cha/Mẹ giữ nguyên.` : ""});
+  hop(`Thêm con của ${p.hoTen} (${p.treeId || p.ma})`, truong, v => {
     if (!v.hoTen) return alert("Chưa nhập họ tên.");
+    const sau = v.viTri === "SAU";
+    let dich = sau || !v.viTri ? [] : dichTreeIdDeChen(v.viTri);
     const n = NGUOI_TRONG();
-    Object.assign(n, {ma: v.ma.toUpperCase(), hoTen: v.hoTen, tenHuy: v.tenHuy, gioi: v.gioi, doi, quanHe: "Con ruột",
+    Object.assign(n, {ma: taoId(), treeId: sau ? "" : v.viTri, hoTen: v.hoTen, tenHuy: v.tenHuy, gioi: v.gioi, doi, quanHe: "Con ruột",
       conSong: v.ngayMatAm ? "Không" : v.conSong, ngayMatAm: v.ngayMatAm, tinCay: "Cao", nguon: "Nhập bổ sung " + new Date().toLocaleDateString("vi-VN"),
       thuoc: p.thuoc || ""});
     if (laNam) { n.maCha = p.ma; n.maMe = v.nguoiKia || ""; } else { n.maMe = p.ma; n.maCha = v.nguoiKia || ""; }
     chenSau(n, p.ma);
+    if (sau && doi) {
+      const {doi: m} = treeIdChuan(new Set([n]));
+      dich = [...m].filter(([x]) => x !== n && Number(x.doi) >= 1).map(([x, t]) => `${x.treeId}→${t}`);
+      for (const [x, t] of m) x.treeId = t;
+    }
     sauKhiSua("nk", true, n.ma);
+    if (dich.length) setTimeout(() => { $("#trang-thai").textContent = `Đã chèn ${n.hoTen} vào ${n.treeId}; dồn treeId ${dich.join(", ")} (kèm vợ/chồng).`; }, 400);
   });
 }
 
-function themVoChong(ma) {
-  const p = D.nhanKhau.find(x => x.ma === ma); if (!p) return;
+function themVoChong(id) {
+  const p = D.nhanKhau.find(x => x.ma === id); if (!p) return;
   const laNam = GIOI(p.gioi) !== "Nữ";
-  const bacSan = D.honPhoi.filter(h => (laNam ? h.maChong : h.maVo) === ma).length;
-  hop(`Thêm ${laNam ? "vợ" : "chồng"} cho ${p.hoTen} (${p.ma})`, [
+  const bacSan = D.honPhoi.filter(h => (laNam ? h.maChong : h.maVo) === id).length;
+  hop(`Thêm ${laNam ? "vợ" : "chồng"} cho ${p.hoTen} (${p.treeId || p.ma})`, [
     {k:"hoTen", nhan:"Họ tên", goiY: laNam ? "Nguyễn Thị B" : "Trần Văn C"},
     {k:"tenHuy", nhan:"Tên huý (nếu có)"},
     {k:"conSong", nhan:"Còn sống?", ds:["Có","Không"], gt: SONG(p.conSong) === false ? "Không" : "Có"},
     {k:"ngayMatAm", nhan:"Ngày mất âm (nếu đã mất)", goiY:"20/4"},
     {k:"bac", nhan: laNam ? "Bậc (vợ thứ mấy)" : "Bậc (để trống nếu không rõ)", gt: laNam ? String(bacSan + 1) : ""},
-    {k:"ma", nhan:"Mã (tự sinh, sửa được)", gt: maMoiVoChong(ma, laNam ? "V" : "C"), chu:"Dâu/rể để trống Đời — đúng quy ước của hệ thống."},
+    {k:"treeId", nhan:"treeId (tự sinh, sửa được)", gt: treeIdVoChong(p.treeId || p.ma, laNam ? "V" : "C"), chu:"Dâu/rể để trống Đời — đúng quy ước của hệ thống."},
   ], v => {
     if (!v.hoTen) return alert("Chưa nhập họ tên.");
     const n = NGUOI_TRONG();
-    Object.assign(n, {ma: v.ma.toUpperCase(), hoTen: v.hoTen, tenHuy: v.tenHuy, gioi: laNam ? "Nữ" : "Nam", doi: "",
+    Object.assign(n, {ma: taoId(), treeId: v.treeId.toUpperCase(), hoTen: v.hoTen, tenHuy: v.tenHuy, gioi: laNam ? "Nữ" : "Nam", doi: "",
       conSong: v.ngayMatAm ? "Không" : v.conSong, ngayMatAm: v.ngayMatAm, tinCay: "Cao", thuoc: p.thuoc || "",
       nguon: "Nhập bổ sung " + new Date().toLocaleDateString("vi-VN")});
     chenSau(n, p.ma);
@@ -580,11 +861,74 @@ function themVoChong(ma) {
   });
 }
 
-function chenSau(n, maTruoc) {
+// Đổi treeId một người: con cháu và vợ/chồng (mọi treeId bắt đầu bằng treeId cũ + "-") đổi theo.
+// Không tham chiếu nào phải sửa — tham chiếu trỏ bằng Mã (ID), mà ID không đổi.
+// Sửa phần gốc của treeId dâu/rể (VU-..-03-V1 → VU-..-04-V1) nghĩa là đổi cả nhà: người hôn phối
+// …-03 → …-04, kéo theo cả nhánh. Trùng với treeId đã có thì vẫn đổi và tô đỏ chỗ trùng, không hỏi.
+function doiTreeId(r, giaTriMoi) {
+  const cu = (r.treeId || "").trim(), moi = String(giaTriMoi ?? "").trim().toUpperCase();
+  if (cu === moi) return;
+  // treeId cũ trống hoặc đang trùng: không biết nhánh nào là của người này, chỉ đổi đúng dòng này.
+  if (!cu || !moi || D.nhanKhau.filter(p => p.treeId === cu).length > 1) { r.treeId = moi; return sauKhiSua("nk", true); }
+  const doi = new Map(); // người → treeId mới
+  const doiGoc = (goc, gocMoi) => {
+    for (const p of D.nhanKhau) {
+      const t = p.treeId || "";
+      if (t === goc) doi.set(p, gocMoi); else if (t.startsWith(goc + "-")) doi.set(p, gocMoi + t.slice(goc.length));
+    }
+  };
+  const gCu = cu.match(/^(.+)-([VC]\d+)$/), gMoi = moi.match(/^(.+)-([VC]\d+)$/);
+  const nguoiHP = gCu && gMoi && gCu[1] !== gMoi[1]
+    ? D.nhanKhau.find(p => p.treeId === gCu[1] && D.honPhoi.some(h => (h.maChong === p.ma && h.maVo === r.ma) || (h.maVo === p.ma && h.maChong === r.ma)))
+    : null;
+  if (nguoiHP) doiGoc(gCu[1], gMoi[1]);
+  doiGoc(cu, moi); // ghi sau cùng: treeId của chính người này đúng như được gõ
+  doi.set(r, moi);
+
+  const giuNguyen = new Set(D.nhanKhau.filter(p => !doi.has(p)).map(p => p.treeId).filter(Boolean));
+  const giaTri = [...doi.values()];
+  const dung = [...new Set(giaTri.filter((t, i) => giuNguyen.has(t) || giaTri.indexOf(t) !== i))];
+  const kemTheo = [...doi].filter(([p]) => p !== r && p !== nguoiHP);
+  if (!dung.length && (kemTheo.length || nguoiHP)) {
+    const dong = [`Đổi treeId ${cu} → ${moi} sẽ kéo theo:`];
+    if (nguoiHP) dong.push(`• ${nguoiHP.hoTen} (người hôn phối): ${gCu[1]} → ${gMoi[1]}`);
+    if (kemTheo.length) dong.push(`• ${kemTheo.length} vợ/chồng: ` + kemTheo.slice(0, 5).map(([p, t]) => `${p.hoTen} ${p.treeId} → ${t}`).join(", ") + (kemTheo.length > 5 ? ", …" : ""));
+    dong.push("Mã (ID) và các tham chiếu giữ nguyên.", "", "OK = đổi tất cả · Huỷ = giữ treeId cũ");
+    if (!confirm(dong.join("\n"))) return sauKhiSua("nk", true);
+  }
+  for (const [p, t] of doi) p.treeId = t;
+  sauKhiSua("nk", true);
+  const bao = (dung.length ? `⚠ treeId ${dung.join(", ")} đang bị trùng — đã tô đỏ, sửa tiếp để gỡ. ` : "") + `Đã đổi ${cu} → ${moi}` + (doi.size > 1 ? `, kèm ${doi.size - 1} vợ/chồng.` : ".");
+  setTimeout(() => { $("#trang-thai").textContent = bao; }, 400); // sau dòng "đã tự lưu nháp"
+}
+
+// Chèn vào giữa anh chị em: treeId `t` (VU-01-04-03, hoặc kiểu cũ VU-D6-03) đang có người thì dồn người
+// đó và những người LIỀN SAU lên 1 (03→04, 04→05…), dừng ở chỗ trống đầu tiên; cả nhánh của họ đổi theo.
+// Trả về danh sách "cũ→mới" của những người anh chị em bị dồn (rỗng nếu không phải dồn).
+function dichTreeIdDeChen(t) {
+  const g = t.match(/^(.+-)(\d+)$/);
+  const co = new Set(D.nhanKhau.map(p => p.treeId).filter(Boolean));
+  if (!g || !co.has(t)) return [];
+  const rong = g[2].length, so = k => g[1] + String(k).padStart(rong, "0");
+  const day = []; for (let k = Number(g[2]); co.has(so(k)); k++) day.push(k);
+  const doi = new Map();
+  for (const k of day) {
+    const cu = so(k), moi = so(k + 1);
+    for (const p of D.nhanKhau) {
+      const x = p.treeId || "";
+      if (x === cu) doi.set(p, moi); else if (x.startsWith(cu + "-")) doi.set(p, moi + x.slice(cu.length));
+    }
+  }
+  for (const [p, x] of doi) p.treeId = x;
+  return day.map(k => `${so(k)}→${so(k + 1)}`);
+}
+
+function chenSau(n, idTruoc) {
   // chèn sau người liên quan và mọi dòng đã chèn trước đó cho họ, để bảng giữ thứ tự theo nhà
-  let i = D.nhanKhau.findIndex(x => x.ma === maTruoc);
+  let i = D.nhanKhau.findIndex(x => x.ma === idTruoc);
   if (i < 0) { D.nhanKhau.push(n); return; }
-  while (i + 1 < D.nhanKhau.length && ((D.nhanKhau[i + 1].ma || "").startsWith(maTruoc + "-") || D.nhanKhau[i + 1].maCha === maTruoc || D.nhanKhau[i + 1].maMe === maTruoc)) i++;
+  const t = D.nhanKhau[i].treeId;
+  while (i + 1 < D.nhanKhau.length && ((t && (D.nhanKhau[i + 1].treeId || "").startsWith(t + "-")) || D.nhanKhau[i + 1].maCha === idTruoc || D.nhanKhau[i + 1].maMe === idTruoc)) i++;
   D.nhanKhau.splice(i + 1, 0, n);
 }
 
@@ -592,7 +936,7 @@ function xoaHang(trang, i) {
   if (trang === "nk") {
     const p = D.nhanKhau[i];
     const ref = D.nhanKhau.filter(x => x.maCha === p.ma || x.maMe === p.ma).length + D.honPhoi.filter(h => h.maChong === p.ma || h.maVo === p.ma).length;
-    if (!confirm(`Xoá ${p.hoTen || "(dòng trống)"} (${p.ma || "chưa có mã"})?` + (ref ? `\n\n${ref} chỗ khác đang trỏ tới mã này (con, hôn phối) — sẽ thành lỗi chặn cho tới khi sửa. Các cặp hôn phối của người này cũng bị xoá.` : ""))) return;
+    if (!confirm(`Xoá ${p.hoTen || "(dòng trống)"} (${p.treeId || p.ma || "chưa có mã"})?` + (ref ? `\n\n${ref} chỗ khác đang trỏ tới người này (con, hôn phối) — sẽ thành lỗi chặn cho tới khi sửa. Các cặp hôn phối của người này cũng bị xoá.` : ""))) return;
     D.nhanKhau.splice(i, 1);
     D.honPhoi = D.honPhoi.filter(h => h.maChong !== p.ma && h.maVo !== p.ma);
   } else if (trang === "hp") { if (!confirm("Xoá cặp hôn phối này?")) return; D.honPhoi.splice(i, 1); }
@@ -600,16 +944,42 @@ function xoaHang(trang, i) {
   sauKhiSua(trang, true);
 }
 
+// Ngược với chuyenVaoPha: người đã lên phả nhưng quan hệ hoá ra chưa chắc thì đưa về Chờ xác minh thay vì xoá.
+// Quan hệ cũ (cha, mẹ, vợ/chồng, treeId, Đời) được ghi vào cột "Cần xác minh" để không mất dấu.
+function veChoXacMinh(i) {
+  const p = D.nhanKhau[i];
+  const con = D.nhanKhau.filter(x => x.maCha === p.ma || x.maMe === p.ma);
+  const cap = D.honPhoi.filter(h => h.maChong === p.ma || h.maVo === p.ma);
+  const hpTen = cap.map(h => hienNguoi(h.maChong === p.ma ? h.maVo : h.maChong));
+  if (!confirm(`Đưa ${p.hoTen || "(dòng trống)"} (${p.treeId || p.ma}) về trang Chờ xác minh?`
+    + (cap.length ? `\n\n${cap.length} cặp hôn phối của người này sẽ bị bỏ (${hpTen.join(", ")}).` : "")
+    + (con.length ? `\n${con.length} người con đang trỏ tới người này (${con.map(x => x.hoTen).join(", ")}) — ô Mã cha/mẹ của họ sẽ thành lỗi cho tới khi sửa.` : ""))) return;
+  const cu = [
+    p.treeId && `treeId cũ ${p.treeId}`, p.doi && `đời ${p.doi}`,
+    p.maCha && `cha ${hienNguoi(p.maCha)}`, p.maMe && `mẹ ${hienNguoi(p.maMe)}`,
+    hpTen.length && `vợ/chồng ${hpTen.join(", ")}`,
+    p.gioi && `giới ${p.gioi}`, p.tenHuy && `huý ${p.tenHuy}`, p.conSong && `còn sống: ${p.conSong}`,
+  ].filter(Boolean).join("; ");
+  D.cho.push({ma: p.ma, ten: p.hoTen || "", danhXung: p.danhXung || "", ngay: p.ngayMatAm || "", nguon: p.nguon || "",
+    canXacMinh: [`Đưa về từ phả ${new Date().toLocaleDateString("vi-VN")} (Mã ${p.ma}) — ${cu}.`, p.ghiChu].filter(Boolean).join(" ")});
+  D.nhanKhau.splice(i, 1);
+  D.honPhoi = D.honPhoi.filter(h => h.maChong !== p.ma && h.maVo !== p.ma);
+  sauKhiSua("nk", true);
+  setTimeout(() => { $("#trang-thai").textContent = `Đã đưa ${p.hoTen} về Chờ xác minh.` + (con.length ? ` ${con.length} người con cần sửa Mã cha/mẹ.` : ""); }, 400);
+}
+
 function chuyenVaoPha(i) {
   const w = D.cho[i];
   const n = NGUOI_TRONG();
   Object.assign(n, {hoTen: w.ten.replace(/\s*\(\?\)\s*/g, ""), danhXung: w.danhXung, nguon: w.nguon, ghiChu: w.canXacMinh,
-    conSong: "Không", tinCay: "Trung bình", ma: `${tienTo()}-MOI-${D.nhanKhau.length + 1}`,
+    conSong: "Không", tinCay: "Trung bình", treeId: "",
+    // Mã đã cấp từ lần lên phả trước thì dùng lại — hệ thống nhận người qua Mã, cấp Mã mới là sinh người thứ hai
+    ma: w.ma && LA_ID.test(w.ma) && !D.nhanKhau.some(x => x.ma === w.ma) ? w.ma : taoId(),
     ngayMatAm: (w.ngay.match(/^\s*(\d{1,2}\/\d{1,2}(?:\s+\d{4})?)/) || [])[1] || ""});
   D.nhanKhau.push(n); D.cho.splice(i, 1);
   sauKhiSua("cho", true);
   doiTab("nhan-khau");
-  alert(`Đã chuyển "${n.hoTen}" vào cuối bảng Nhân khẩu với mã tạm ${n.ma}.\nĐiền Mã cha / Mã mẹ, Đời, Giới, rồi đổi mã cho đúng quy ước (ví dụ ${tienTo()}-D7-01).`);
+  alert(`Đã chuyển "${n.hoTen}" vào cuối bảng Nhân khẩu (Mã ${n.ma}).\nĐiền Mã cha / Mã mẹ (gõ treeId, ví dụ VU-D6-03): Đời và treeId sẽ tự điền. Sau đó chọn Giới. (Nút "Chuẩn hoá treeId" nằm trên thanh công cụ tab Nhân khẩu và tab Cây.)`);
 }
 
 // ---------- Vòng cập nhật ----------
@@ -630,7 +1000,7 @@ function sauKhiSua(trang, veLai, maSang) {
   }
   veBang($("#bang-hp"), COT_HP, D.honPhoi, "hp");
   veBang($("#bang-cho"), COT_CHO, D.cho, "cho");
-  veCay();
+  veCay(); veNhacNhanh();
   if (maSang) setTimeout(() => {
     const el = document.querySelector(`[data-sua="${CSS.escape(maSang)}"]`);
     if (el) { el.closest(".nut").scrollIntoView({block: "center"}); el.closest("li").classList.add("sang"); }
@@ -692,6 +1062,7 @@ function taoExcel() {
     [`Kiểm tra lúc lưu: ${VD.filter(v => v.muc === "err").length} lỗi chặn, ${VD.filter(v => v.muc === "warn").length} cảnh báo.`],
     [""],
     ["Hệ thống chỉ đọc hai trang \"Nhân khẩu\" và \"Hôn phối\", ghép cột theo TÊN tiêu đề — đừng đổi tên trang hay tên cột."],
+    ["Mã là ID cố định của mỗi người (đừng sửa); Mã cha, Mã mẹ, Hôn phối trỏ bằng Mã. Cột treeId là số hiệu đời + thứ tự (VU-D6-04), hệ thống bỏ qua."],
     ["Các cột Danh xưng trong sổ, Thuộc, Nguồn ảnh, Độ tin cậy, Ghi chú số hoá là cột đối chiếu, hệ thống bỏ qua."],
     ["Trang \"Chờ xác minh\" không được nhập. Chuyển người vào phả bằng trang chỉnh sửa khi đã rõ quan hệ."],
     ["Cột Ngày mất âm là VĂN BẢN dạng 20/4 · 20/4 1975 · 15/8 nhuận — đừng để Excel đổi sang ngày dương."],
@@ -734,12 +1105,13 @@ $("#tep").onchange = async e => {
   try {
     const moi = docExcel(new Uint8Array(await f.arrayBuffer()), f.name);
     if (!confirm(`Mở ${f.name}: ${moi.nhanKhau.length} người, ${moi.honPhoi.length} cặp hôn phối, ${moi.cho.length} chờ xác minh.\nNháp hiện tại sẽ bị thay. Tiếp tục?`)) return;
-    D = moi; sauKhiSua("nk", true);
+    D = moi; chuanHoaId(); sauKhiSua("nk", true);
   } catch (err) { alert("Không đọc được tệp: " + err.message); }
   e.target.value = "";
 };
 $("#nut-luu").onclick = luuExcel;
-$("#nut-goc").onclick = () => { if (confirm("Bỏ MỌI chỉnh sửa và nạp lại dữ liệu đi kèm trang này?")) { D = sach(DU_LIEU_GOC); sauKhiSua("nk", true); } };
+document.querySelectorAll(".dl-nhanh").forEach(b => b.onclick = () => danhLaiTreeId());
+$("#nut-goc").onclick = () => { if (confirm("Bỏ MỌI chỉnh sửa và nạp lại dữ liệu đi kèm trang này?")) { D = sach(DU_LIEU_GOC); chuanHoaId(); sauKhiSua("nk", true); } };
 $("#tim-nk").oninput = veNhanKhau; $("#loc-doi").onchange = veNhanKhau; $("#loc-van-de").onchange = veNhanKhau;
 $("#hien-phu").onchange = e => $("#bao-nk").classList.toggle("an-cot-phu", !e.target.checked);
 $("#tim-cay").oninput = veCay;
@@ -761,6 +1133,7 @@ window.addEventListener("beforeunload", () => { if (D) localStorage.setItem(KHOA
 const nhap = napNhap();
 D = nhap || sach(DU_LIEU_GOC);
 if (!D.tenTep) D.tenTep = "gia-pha-ho-vu-so-hoa.xlsx";
+chuanHoaId();
 sauKhiSua("nk", true);
 if (nhap) $("#trang-thai").textContent = `Đã mở lại nháp sửa lúc ${new Date(nhap.suaLuc || Date.now()).toLocaleString("vi-VN")}. (↺ để quay về dữ liệu gốc)`;
 else $("#trang-thai").textContent = `Dữ liệu gốc: ${D.nhanKhau.length} người · ${D.honPhoi.length} cặp · ${D.cho.length} chờ xác minh`;
