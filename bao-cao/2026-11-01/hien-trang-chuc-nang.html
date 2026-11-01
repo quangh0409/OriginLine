@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="bao-cao:loai" content="hien-trang">
+<meta name="bao-cao:tom-tat" content="Đối chiếu 23 FR + 8 NFR của BA v2 với code: 12 FR đã có, 4 một phần, 7 chưa có; mọi MUST có lõi, hở FR-1.3a (màn chỉnh luật) và FR-2.2 (Zalo/SMS).">
+<title>Báo cáo hiện trạng chức năng — Gia Phả Dòng Họ</title>
+<style>
+  :root{
+    --bg:#fbf7f0; --card:#fff; --ink:#2b2118; --muted:#6b5d4f; --line:#e6dccd;
+    --brand:#8a2b1d; --ok:#2f6b3a; --ok-bg:#e7f2e8; --part:#8a5a00; --part-bg:#fbf0d9;
+    --no:#9b2c2c; --no-bg:#f8e3e1; --info-bg:#efe8dc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,-apple-system,sans-serif}
+  main{max-width:1080px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 4px;color:var(--brand)}
+  h2{font-size:19px;margin:36px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line);color:var(--brand)}
+  h3{font-size:16px;margin:20px 0 8px}
+  .meta{color:var(--muted);font-size:13px}
+  .note{background:var(--info-bg);border-left:4px solid var(--brand);padding:10px 14px;border-radius:4px;margin:16px 0;font-size:14px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px}
+  .tile .n{font-size:28px;font-weight:700}
+  .tile .l{color:var(--muted);font-size:13px}
+  .tile.ok .n{color:var(--ok)} .tile.part .n{color:var(--part)} .tile.no .n{color:var(--no)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:14px}
+  th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px solid var(--line)}
+  th{background:#f3ece1;font-weight:600;font-size:13px}
+  tr:last-child td{border-bottom:none}
+  td.code{white-space:nowrap;font-weight:600}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap}
+  .ok-b{background:var(--ok-bg);color:var(--ok)} .part-b{background:var(--part-bg);color:var(--part)} .no-b{background:var(--no-bg);color:var(--no)}
+  .pri{font-size:11px;color:var(--muted);font-weight:600}
+  code{background:#f3ece1;padding:1px 5px;border-radius:3px;font-size:12.5px}
+  ul{margin:6px 0;padding-left:20px} li{margin:3px 0}
+  .gap{color:var(--no)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:760px){.cols{grid-template-columns:1fr} td.code{white-space:normal}}
+</style>
+</head>
+<body>
+<main>
+
+<h1>Báo cáo hiện trạng chức năng</h1>
+<div class="meta">Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ · đối chiếu code ở commit <code>fc05505</code> (nhánh <code>main</code>) với BA v2.0 · lập ngày 01/11/2026 · <a href="hien-trang-chuc-nang.xlsx" download>tải bản Excel</a></div>
+
+<div class="note">
+  <b>Cách đọc:</b> mỗi yêu cầu FR/NFR trong BA v2.0 được đối chiếu với code thật: endpoint backend, màn hình frontend, migration và module.
+  <span class="badge ok-b">Đã có</span> = chạy được từ đầu đến cuối (API + giao diện).
+  <span class="badge part-b">Một phần</span> = có lõi nhưng thiếu một mảng được nêu trong yêu cầu.
+  <span class="badge no-b">Chưa có</span> = chưa có code. Ba module <code>heritage</code>/<code>fund</code>/<code>reporting</code> chỉ có <code>package-info.java</code>.
+  <br><b>Lưu ý:</b> số liệu test lấy từ lần chạy gần nhất ghi trong <code>CLAUDE.md</code>. Báo cáo này <u>không chạy lại test</u>, vì máy dev hiện chưa có JDK 21.
+</div>
+
+<div class="tiles">
+  <div class="tile ok"><div class="n">12</div><div class="l">FR đã có (trên 23)</div></div>
+  <div class="tile part"><div class="n">4</div><div class="l">FR làm một phần</div></div>
+  <div class="tile no"><div class="n">7</div><div class="l">FR chưa có (đều là SHOULD/COULD, phần lớn thuộc giai đoạn 3)</div></div>
+  <div class="tile ok"><div class="n">4 / 8</div><div class="l">NFR đạt; 4 NFR còn lại đạt một phần</div></div>
+</div>
+
+<p><b>Tóm tắt:</b> tất cả 11 yêu cầu <b>MUST</b> đều đã có lõi chạy được. Hai MUST còn hở: <b>FR-1.3a</b> chưa có màn hình cho Hội đồng tự sửa luật danh xưng, và <b>FR-2.2</b> chưa gửi được qua Zalo/SMS. Phần chưa có tập trung ở <b>giai đoạn 3</b> (di sản, mộ phần, từ đường, quỹ họ, báo cáo dân số), đúng như lộ trình đã định. Ngoài BA, hệ thống đã làm thêm cả luồng <b>đưa dòng họ vào dùng thật</b>: khởi tạo dòng họ, nhập Excel hàng loạt, mã mời/đăng ký, nhận diện bản thân và cấp lại mật khẩu.</p>
+
+<h2>1. Yêu cầu chức năng (FR)</h2>
+
+<h3>Nhóm 1 — Cây gia phả &amp; danh xưng</h3>
+<table>
+<tr><th style="width:84px">Mã</th><th style="width:30%">Yêu cầu</th><th style="width:96px">Trạng thái</th><th>Bằng chứng trong code / còn thiếu</th></tr>
+<tr><td class="code">FR-1.1<br><span class="pri">MUST</span></td><td>Cây phân cấp chi/ngành/cành/nhánh; con ruột, con nuôi, dâu, rể</td><td><span class="badge ok-b">Đã có</span></td><td>Nhánh bằng <code>ltree</code>; <code>RelType</code> phân biệt ruột/nuôi; hôn phối sinh dâu/rể. API <code>/api/v1/persons</code>, <code>/tree</code>, GraphQL <code>branches</code>.</td></tr>
+<tr><td class="code">FR-1.2<br><span class="pri">MUST</span></td><td>Đa thê/đa phu, tái hôn, con riêng, tuyệt tự, kế tự, đích tôn/thừa tự</td><td><span class="badge ok-b">Đã có</span></td><td><code>spouse_order</code>, <code>HeirKind</code>, <code>LineageStatus</code> trong domain <code>genealogy</code>; cạnh AGE ghi cùng giao dịch với bảng <code>relationship</code>.</td></tr>
+<tr><td class="code">FR-1.3<br><span class="pri">MUST</span></td><td>LCA giữa 2 người + suy danh xưng</td><td><span class="badge ok-b">Đã có</span></td><td>LCA bằng Cypher trong <code>AgeTreeGraphAdapter</code>; <code>ResolveKinshipTitleService</code>; màn <code>/kinship</code>.</td></tr>
+<tr><td class="code">FR-1.3a<br><span class="pri">MUST</span></td><td>Bộ luật danh xưng cấu hình được theo họ/vùng, Hội đồng chỉnh được</td><td><span class="badge part-b">Một phần</span></td><td>Luật lưu dạng dữ liệu, kế thừa <code>DEFAULT → REGION → CLAN → BRANCH</code>; API <code>GET/PUT /api/v1/kinship-rules</code>. <span class="gap">Còn thiếu: <b>màn hình chỉnh luật</b> cho Hội đồng. Client <code>kinshipApi.replaceRuleSet</code> đã có nhưng chưa trang nào gọi tới.</span></td></tr>
+<tr><td class="code">FR-1.4<br><span class="pri">MUST</span></td><td>Cây phân cấp / tỏa tròn / ma trận; zoom, kéo, thu gọn, lazy-load</td><td><span class="badge ok-b">Đã có</span></td><td><code>TreeViewMode = hierarchical | radial | matrix | list</code>; React Flow, mở nhánh lazy; cache Redis cho phép chiếu cây.</td></tr>
+<tr><td class="code">FR-1.5<br><span class="pri">MUST</span></td><td>Xóa mềm; lịch sử phiên bản</td><td><span class="badge ok-b">Đã có</span></td><td>Xóa mềm cho người; <code>AuditInterceptor</code> ghi trước/sau; API <code>/api/v1/audit-logs</code>; ETag + <code>If-Match</code> khóa lạc quan. <span class="gap">Chưa có màn xem lịch sử sửa đổi trên giao diện.</span></td></tr>
+<tr><td class="code">FR-1.6<br><span class="pri">SHOULD</span></td><td>Cảnh báo kỵ húy; quy tắc chữ đệm theo đời</td><td><span class="badge part-b">Một phần</span></td><td>Cảnh báo kỵ húy + xác nhận ghi đè (<code>taboo-conflict-dialog</code>), quét cả khi nhập Excel. <span class="gap">Chưa có quy tắc chữ đệm theo đời.</span></td></tr>
+<tr><td class="code">FR-1.7<br><span class="pri">SHOULD</span></td><td>Import/Export GEDCOM; nhập từ ảnh scan</td><td><span class="badge part-b">Một phần</span></td><td>Nhập <b>Excel</b> đủ vòng: tải mẫu theo chi → kiểm 15 luật chặn + 11 cảnh báo → xử lý trùng → ghi → hoàn tác. <span class="gap">GEDCOM mới chỉ giữ chỗ trong <code>SourceKind</code>; chưa có xuất GEDCOM; chưa nhập từ ảnh scan (thuộc lớp AI, để sau).</span></td></tr>
+<tr><td class="code">FR-1.8<br><span class="pri">MUST</span></td><td>Ghi nhận con gái &amp; bên ngoại ngang con trai</td><td><span class="badge ok-b">Đã có</span></td><td>Mặc định của mô hình; không có nhánh code nào phân biệt theo giới khi ghi phả.</td></tr>
+<tr><td class="code">FR-1.9<br><span class="pri">COULD</span></td><td>Liên kết thông gia sang họ khác</td><td><span class="badge no-b">Chưa có</span></td><td>Bảng <code>clan_profile</code> (V23) được thiết kế làm hàng đầu tiên của bảng <code>clan</code> đa dòng họ; bản thiết kế ở <code>design/10-nhieu-dong-ho</code>.</td></tr>
+</table>
+
+<h3>Nhóm 2 — Lịch âm, giỗ chạp &amp; thông báo</h3>
+<table>
+<tr><th style="width:84px">Mã</th><th style="width:30%">Yêu cầu</th><th style="width:96px">Trạng thái</th><th>Bằng chứng trong code / còn thiếu</th></tr>
+<tr><td class="code">FR-2.1<br><span class="pri">MUST</span></td><td>Quy đổi Âm–Dương (Hồ Ngọc Đức, GMT+7, nhuận, tiết khí)</td><td><span class="badge ok-b">Đã có</span></td><td><code>LunarConverter</code>, <code>SolarTerms</code>, <code>Can</code>/<code>Chi</code>; có bộ fixture kiểm thử theo §9 kế hoạch.</td></tr>
+<tr><td class="code">FR-2.2<br><span class="pri">MUST</span></td><td>Nhắc trước 7/3/1 ngày, đúng chi/nhánh, qua Zalo/SMS/Web Push</td><td><span class="badge part-b">Một phần</span></td><td>Bộ lập lịch 01:30, chọn người nhận theo chi; gửi được qua <b>hộp thư trong app</b> và <b>Web Push</b>. <span class="gap">Zalo, SMS, Email mới chỉ có trong enum <code>Channel</code>, chưa có adapter. Zalo OA đang chờ có pháp nhân để đăng ký.</span></td></tr>
+<tr><td class="code">FR-2.3<br><span class="pri">SHOULD</span></td><td>Phân loại lễ</td><td><span class="badge ok-b">Đã có</span></td><td>14 loại: giỗ tổ/họ/thường, tiểu tường, đại tường, chạp mả, tảo mộ, mừng thọ, tế lễ, họp họ, cưới hỏi, khánh thành… Màn <code>/events</code> có tạo/sửa.</td></tr>
+<tr><td class="code">FR-2.4<br><span class="pri">SHOULD</span></td><td>Bản tin dòng họ &amp; bảng vàng</td><td><span class="badge ok-b">Đã có</span></td><td>Bài viết có luồng gửi duyệt/duyệt/rút (<code>/bai-viet</code>, <code>/quan-ly/bai-viet</code>); vinh danh có đề xuất + duyệt (<code>/vinh-danh</code>); ảnh qua MinIO, có báo cáo/gỡ ảnh.</td></tr>
+<tr><td class="code">FR-2.5<br><span class="pri">MUST</span></td><td>Gửi bất đồng bộ, retry + DLQ</td><td><span class="badge ok-b">Đã có</span></td><td>Topology RabbitMQ có DLQ, retry, consumer idempotent; API admin <code>/reminders/generate</code>, <code>/dispatch</code> để chạy tay.</td></tr>
+</table>
+
+<h3>Nhóm 3 — Di sản, mộ phần, từ đường</h3>
+<table>
+<tr><th style="width:84px">Mã</th><th style="width:30%">Yêu cầu</th><th style="width:96px">Trạng thái</th><th>Ghi chú</th></tr>
+<tr><td class="code">FR-3.1<br><span class="pri">SHOULD</span></td><td>Thư viện di sản (văn bia, hương ước, câu đối…)</td><td><span class="badge no-b">Chưa có</span></td><td rowspan="3">Thuộc giai đoạn 3 theo lộ trình. Module <code>heritage</code> mới có khung package. Hạ tầng dùng lại được: module <code>media</code> (vé tải lên MinIO, URL xem có hạn, báo cáo/gỡ).</td></tr>
+<tr><td class="code">FR-3.2<br><span class="pri">SHOULD</span></td><td>Mộ phần: GPS, sơ đồ, cải táng, lịch tảo mộ</td><td><span class="badge no-b">Chưa có</span></td></tr>
+<tr><td class="code">FR-3.3<br><span class="pri">SHOULD</span></td><td>Từ đường: hồ sơ, bài vị, lịch tế</td><td><span class="badge no-b">Chưa có</span></td></tr>
+<tr><td class="code">FR-3.4<br><span class="pri">COULD</span></td><td>Văn khấn; sao hạn, Tam Tai, Kim Lâu, Hoang Ốc</td><td><span class="badge no-b">Chưa có</span></td><td>Đã có nền tảng can/chi trong <code>calendar</code>. Còn thiếu bảng tra và mẫu văn khấn.</td></tr>
+</table>
+
+<h3>Nhóm 4 — Quản trị, quỹ, báo cáo, tìm kiếm</h3>
+<table>
+<tr><th style="width:84px">Mã</th><th style="width:30%">Yêu cầu</th><th style="width:96px">Trạng thái</th><th>Bằng chứng trong code / còn thiếu</th></tr>
+<tr><td class="code">FR-4.1<br><span class="pri">MUST</span></td><td>RBAC theo chi; luồng duyệt cập nhật &amp; đính chính</td><td><span class="badge ok-b">Đã có</span></td><td>Phạm vi kiểm bằng <code>ltree</code>; yêu cầu đính chính (<code>/correction-requests</code>), nhận diện bản thân (<code>/nhan-dien</code>), duyệt đơn gia nhập. <span class="gap">Gán Trưởng chi mới có API <code>/branch-assignments</code>, chưa có màn hình.</span></td></tr>
+<tr><td class="code">FR-4.2<br><span class="pri">SHOULD</span></td><td>Quỹ họ &amp; sổ vàng công đức</td><td><span class="badge no-b">Chưa có</span></td><td>Giai đoạn 3; module <code>fund</code> mới có khung.</td></tr>
+<tr><td class="code">FR-4.3<br><span class="pri">SHOULD</span></td><td>Báo cáo dân số học, bản đồ phân bố</td><td><span class="badge no-b">Chưa có</span></td><td>Module <code>reporting</code> mới có khung. Bị chặn thêm bởi <b>danh mục 34 tỉnh</b> chưa có văn bản chính thức: sai mã tỉnh thì báo cáo sai mà không ai hay.</td></tr>
+<tr><td class="code">FR-4.4<br><span class="pri">SHOULD</span></td><td>Tìm kiếm có dấu/không dấu</td><td><span class="badge ok-b">Đã có</span></td><td>Postgres FTS + <code>unaccent</code>; <code>/search</code>, danh bạ <code>/danh-ba</code>; tìm kiếm công khai cho khách có giới hạn tần suất.</td></tr>
+</table>
+
+<h2>2. Yêu cầu phi chức năng (NFR)</h2>
+<table>
+<tr><th style="width:84px">Mã</th><th style="width:22%">Yêu cầu</th><th style="width:96px">Trạng thái</th><th>Hiện trạng</th></tr>
+<tr><td class="code">NFR-1</td><td>Hiệu năng</td><td><span class="badge ok-b">Đạt</span></td><td>Từ lúc điều hướng đến thẻ người đầu tiên: 807 ms trên desktop, 750 ms trên Pixel 5 (ngân sách 2000 ms). <span class="gap">Chưa có load test cho cây hàng vạn node (giai đoạn 4).</span></td></tr>
+<tr><td class="code">NFR-2</td><td>Bảo mật</td><td><span class="badge part-b">Một phần</span></td><td>Keycloak OIDC + JWT, RBAC theo chi, giới hạn tần suất API công khai, <code>no-store</code> + <code>Vary</code> cho hồ sơ. <span class="gap">Chưa mã hóa dữ liệu nhạy cảm ở tầng lưu trữ; chưa rà OWASP chính thức (giai đoạn 4).</span></td></tr>
+<tr><td class="code">NFR-3</td><td>Quyền riêng tư (NĐ 13/2023)</td><td><span class="badge ok-b">Đạt</span></td><td>Riêng tư theo 6 nhóm trường × 3 phạm vi, mặc định đóng; khách không thấy người còn sống; xóa theo luật bằng ẩn danh hóa. <span class="gap">Còn chờ Hội đồng quyết 2 điểm: có được đọc số điện thoại <code>PRIVATE</code> không, và tên Hán-Nôm của người còn sống có hiện không.</span></td></tr>
+<tr><td class="code">NFR-4</td><td>Toàn vẹn</td><td><span class="badge part-b">Một phần</span></td><td>ACID, audit, xóa mềm, cạnh AGE và bảng quan hệ ghi chung một giao dịch. <span class="gap">Chưa có script sao lưu/phục hồi định kỳ.</span></td></tr>
+<tr><td class="code">NFR-5</td><td>Khả dụng</td><td><span class="badge part-b">Một phần</span></td><td>Hàng đợi chịu được đợt cao điểm giỗ chạp. <span class="gap">Chưa có phương án triển khai/HA cho mục tiêu uptime 99,5%.</span></td></tr>
+<tr><td class="code">NFR-6</td><td>Đa nền tảng / UX</td><td><span class="badge ok-b">Đạt</span></td><td>PWA (manifest + service worker), song ngữ <code>vi</code>/<code>en</code>, bảng màu ấm, E2E chạy cả desktop lẫn Pixel 5.</td></tr>
+<tr><td class="code">NFR-7</td><td>Quan sát</td><td><span class="badge part-b">Một phần</span></td><td>Mới có Spring Actuator (health). <span class="gap">Chưa có OpenTelemetry, Prometheus, Grafana, Loki.</span></td></tr>
+<tr><td class="code">NFR-8</td><td>Khả bảo trì</td><td><span class="badge ok-b">Đạt</span></td><td>Modular monolith có <code>ModularityTests</code> chặn vòng phụ thuộc; backend 2865 test, frontend 2007 vitest + 134 E2E; CI có 4 cổng (backend, FE static, <code>next build</code>, E2E 9 job).</td></tr>
+</table>
+
+<h2>3. Đã làm thêm ngoài BA v2</h2>
+<p>Những phần này không có mã FR riêng. Không có chúng thì một dòng họ thật không đưa được dữ liệu vào hệ thống:</p>
+<ul>
+  <li><b>Khởi tạo dòng họ</b> (<code>/quan-tri</code>): hồ sơ dòng họ, kiểm mức sẵn sàng, tạo tài khoản Hội đồng, căn bộ luật danh xưng theo vùng.</li>
+  <li><b>Nhập liệu Excel hàng loạt</b> (<code>/nhap-lieu</code>): mẫu sinh theo từng chi, bảng lỗi xuất ra <code>.xlsx</code>, theo dõi tiến độ, hoàn tác cả lô.</li>
+  <li><b>Gia nhập</b>: lời mời cá nhân, mã mời toàn họ có bộ đếm lượt dùng, tự đăng ký ở <code>/dang-ky</code>, duyệt đơn (<code>/quan-ly/don-gia-nhap</code>).</li>
+  <li><b>Nhận diện bản thân</b>: liên kết tài khoản với một người trên cây hoặc đề nghị thêm người mới.</li>
+  <li><b>Cấp lại mật khẩu</b> do quản lý chi phát (<code>/quan-ly/cap-lai-mat-khau</code>).</li>
+  <li><b>Kiểm duyệt ảnh</b>: người dùng báo cáo ảnh, quản trị gỡ hoặc bỏ qua (<code>/quan-ly/bao-cao-anh</code>).</li>
+  <li><b>Cổng công khai cho khách</b>: cây, hồ sơ người đã khuất, tìm kiếm, sự kiện và vinh danh.</li>
+</ul>
+
+<h2>4. Việc còn thiếu — đề xuất thứ tự</h2>
+<div class="cols">
+<div>
+<h3>Lấp chỗ hở trong MUST / giai đoạn 1–2</h3>
+<ol>
+  <li><b>Màn chỉnh luật danh xưng</b> cho Hội đồng (FR-1.3a). API đã có, chỉ thiếu giao diện.</li>
+  <li><b>Adapter Zalo ZNS + SMS</b> (FR-2.2). Đây là MVP gốc ("nhắc giỗ qua Zalo"); làm được khi đã có pháp nhân đăng ký OA.</li>
+  <li><b>Màn gán Trưởng chi</b> và <b>màn xem lịch sử sửa đổi</b> (FR-4.1, FR-1.5).</li>
+  <li><b>GEDCOM nhập/xuất</b> (FR-1.7). Khung <code>SourceKind.GEDCOM</code> và pipeline staging đã sẵn.</li>
+  <li><b>Quy tắc chữ đệm theo đời</b> (FR-1.6).</li>
+</ol>
+</div>
+<div>
+<h3>Giai đoạn 3 &amp; 4</h3>
+<ol>
+  <li>Thư viện di sản, mộ phần (GPS), từ đường (FR-3.1–3.3).</li>
+  <li>Quỹ họ &amp; sổ công đức (FR-4.2).</li>
+  <li>Báo cáo dân số học (FR-4.3), sau khi có danh mục 34 tỉnh chính thức.</li>
+  <li>Văn khấn, sao hạn (FR-3.4).</li>
+  <li>Quan sát (OTel/Prometheus/Grafana/Loki), sao lưu/phục hồi, load test, rà OWASP &amp; PDPD (NFR-2/4/5/7).</li>
+</ol>
+</div>
+</div>
+
+<h2>5. Đang bị chặn — không phải việc code</h2>
+<table>
+<tr><th style="width:32%">Việc</th><th>Chặn cái gì</th></tr>
+<tr><td>Pháp nhân để đăng ký <b>Zalo Official Account</b></td><td>Kênh nhắc giỗ chính của MVP (FR-2.2).</td></tr>
+<tr><td>Văn bản chính thức <b>danh mục 34 tỉnh</b></td><td>Mã nơi ở khi nhập liệu và báo cáo dân số (FR-4.3).</td></tr>
+<tr><td>Hội đồng quyết: <b>quyền xóa của dâu/rể sau ly hôn</b></td><td><b>Phải chốt trước khi nhập dữ liệu một dòng họ thật.</b> Đổi luật sau khi đã có 1.500 người trong cây thì không còn là việc sửa code đơn thuần.</td></tr>
+<tr><td>Hội đồng quyết: màu huy hiệu Dâu/Rể, độ tương phản màu <code>accent</code></td><td>4 test frontend đang cố ý đỏ chờ quyết định này.</td></tr>
+<tr><td>Hội đồng quyết: Hội đồng có được đọc số điện thoại <code>PRIVATE</code> không; tên Hán-Nôm của người còn sống có hiện không</td><td>Chốt hoàn chỉnh NFR-3.</td></tr>
+</table>
+
+</main>
+</body>
+</html>

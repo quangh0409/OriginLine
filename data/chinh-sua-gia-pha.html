@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chỉnh sửa gia phả — nhập liệu theo mẫu</title>
+<script src="lib/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#fbf7f0;--card:#fff;--ink:#2b2118;--muted:#6b5d4f;--line:#e6dccd;--brand:#8a2b1d;
+    --ok:#2f6b3a;--okbg:#e7f2e8;--warn:#8a5a00;--warnbg:#fbf0d9;--err:#9b2c2c;--errbg:#f8e3e1;--head:#f3ece1}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px 0}
+  h1{font-size:19px;margin:0 0 6px;color:var(--brand)}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+  button,.btn{font:inherit;border:1px solid #cdbfa9;background:#fff;border-radius:6px;padding:5px 11px;cursor:pointer;color:var(--ink)}
+  button:hover{border-color:var(--brand)}
+  button.chinh{background:var(--brand);color:#fff;border-color:var(--brand)}
+  button.nho{padding:1px 7px;font-size:12px}
+  button.xoa{color:var(--err)}
+  .trang-thai{font-size:12.5px;color:var(--muted)}
+  nav{display:flex;gap:2px;flex-wrap:wrap}
+  nav button{border-radius:6px 6px 0 0;border-bottom:none;background:var(--head)}
+  nav button.on{background:var(--card);color:var(--brand);font-weight:600;border-color:var(--line)}
+  .dem{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;font-size:11px;font-weight:700;margin-left:4px}
+  .dem.err{background:var(--errbg);color:var(--err)} .dem.warn{background:var(--warnbg);color:var(--warn)}
+  main{padding:12px 16px 60px}
+  section{display:none} section.on{display:block}
+  .wrap{overflow:auto;max-height:calc(100vh - 190px);border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  table{border-collapse:collapse;font-size:13px;width:max-content;min-width:100%}
+  th{position:sticky;top:0;z-index:2;background:var(--head);text-align:left;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap;font-weight:600}
+  th.phu{background:#ececec;color:#555}
+  td{border-bottom:1px solid #f0e9de;padding:2px 3px;vertical-align:top}
+  td input,td select{font:inherit;font-size:13px;border:1px solid transparent;background:transparent;padding:3px 4px;width:100%;border-radius:4px}
+  td input:focus,td select:focus{border-color:var(--brand);background:#fff;outline:none}
+  td input:hover,td select:hover{border-color:#e0d6c6}
+  tr.co-loi td:first-child{box-shadow:inset 4px 0 var(--err)}
+  tr.co-canh-bao td:first-child{box-shadow:inset 4px 0 #d9a300}
+  tr.sang{animation:sang 1.6s}
+  @keyframes sang{from{background:#fff3b0}to{background:transparent}}
+  td.o-loi input,td.o-loi select{background:var(--errbg)}
+  td.tin-Cao select{background:var(--okbg)} td.tin-Trung select{background:var(--warnbg)} td.tin-Thấp select{background:var(--errbg)}
+  .loc{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+  .loc input,.loc select{font:inherit;padding:4px 8px;border:1px solid #cdbfa9;border-radius:6px}
+  .an-cot-phu .phu{display:none}
+  .so{width:52px} .ma{width:120px}
+  /* cây */
+  .cay ul{list-style:none;margin:0;padding-left:22px;border-left:1px dashed #d6c9b4}
+  .cay>ul{border-left:none;padding-left:0}
+  .cay li{margin:3px 0}
+  .nut{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .nut b{color:var(--brand)} .nut .ma-nho{font-size:11.5px;color:var(--muted)}
+  .nut .vo{font-size:12.5px;color:var(--muted)}
+  .nut.loi{border-color:var(--err)}
+  .doi{font-size:11px;font-weight:700;background:var(--head);border-radius:4px;padding:0 5px}
+  .cay details>summary{cursor:pointer;list-style:none} .cay details>summary::-webkit-details-marker{display:none}
+  .mui{display:inline-block;width:14px;color:var(--muted)}
+  /* kiểm tra */
+  .van-de{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0;display:flex;gap:10px;align-items:flex-start}
+  .van-de .muc{font-size:11px;font-weight:700;padding:1px 7px;border-radius:9px;white-space:nowrap}
+  .van-de.err .muc{background:var(--errbg);color:var(--err)} .van-de.warn .muc{background:var(--warnbg);color:var(--warn)}
+  .van-de code{font-size:11.5px;color:var(--muted)}
+  .huong-dan{max-width:920px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 26px 20px}
+  .huong-dan h2{color:var(--brand);font-size:18px;border-bottom:2px solid var(--line);padding-bottom:4px;margin-top:26px}
+  .huong-dan h3{font-size:15px;margin:18px 0 6px}
+  .huong-dan table{width:100%;font-size:13px} .huong-dan td,.huong-dan th{padding:6px 8px;border:1px solid var(--line);vertical-align:top;position:static}
+  .huong-dan code{background:var(--head);padding:1px 5px;border-radius:3px}
+  .nhac{background:var(--warnbg);border-left:4px solid #d9a300;padding:8px 12px;border-radius:4px;margin:10px 0}
+  .canh{background:var(--errbg);border-left:4px solid var(--err);padding:8px 12px;border-radius:4px;margin:10px 0}
+  dialog{border:1px solid var(--line);border-radius:10px;padding:18px 22px;max-width:520px}
+  dialog h3{margin-top:0;color:var(--brand)}
+  dialog label{display:block;margin:8px 0 3px;font-size:13px;color:var(--muted)}
+  dialog input,dialog select{font:inherit;width:100%;padding:5px 8px;border:1px solid #cdbfa9;border-radius:6px}
+  .hang{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  .rong{color:var(--muted);padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>Chỉnh sửa gia phả — nhập liệu theo mẫu của hệ thống</h1>
+  <div class="bar">
+    <button id="nut-mo">📂 Mở tệp Excel…</button>
+    <input type="file" id="tep" accept=".xlsx" hidden>
+    <button id="nut-luu" class="chinh">💾 Lưu ra Excel</button>
+    <button id="nut-goc" title="Bỏ mọi chỉnh sửa, nạp lại dữ liệu đi kèm trang này">↺ Nạp lại dữ liệu gốc</button>
+    <span class="trang-thai" id="trang-thai"></span>
+  </div>
+  <nav id="tabs">
+    <button data-tab="cay" class="on">🌳 Cây — nhập đời tiếp theo</button>
+    <button data-tab="nhan-khau">Nhân khẩu <span id="dem-nk" class="dem"></span></button>
+    <button data-tab="hon-phoi">Hôn phối <span id="dem-hp" class="dem"></span></button>
+    <button data-tab="cho">Chờ xác minh <span id="dem-cho" class="dem"></span></button>
+    <button data-tab="kiem">Kiểm tra <span id="dem-loi" class="dem err"></span><span id="dem-cb" class="dem warn"></span></button>
+    <button data-tab="huong-dan">📖 Hướng dẫn nhập liệu</button>
+  </nav>
+</header>
+
+<main>
+<section id="cay" class="on">
+  <div class="loc">
+    <input id="tim-cay" placeholder="Tìm tên / mã…" size="24">
+    <button id="mo-het">Mở hết</button><button id="dong-het">Thu gọn</button>
+    <span class="trang-thai">Bấm <b>+ Con</b> để thêm người đời sau, <b>+ Vợ/Chồng</b> để thêm dâu/rể. Mã, Đời, Mã cha/mẹ được điền sẵn.</span>
+  </div>
+  <div class="cay" id="cay-goc"></div>
+</section>
+
+<section id="nhan-khau">
+  <div class="loc">
+    <input id="tim-nk" placeholder="Tìm tên / mã…" size="24">
+    <select id="loc-doi"><option value="">Mọi đời</option></select>
+    <select id="loc-van-de"><option value="">Mọi dòng</option><option value="loi">Chỉ dòng có lỗi chặn</option><option value="cb">Chỉ dòng có cảnh báo</option><option value="thap">Độ tin cậy Thấp</option></select>
+    <label><input type="checkbox" id="hien-phu"> Hiện cột phụ (năm sinh, kế tự, thuỵ hiệu, Hán-Nôm, nguyên quán)</label>
+    <button id="them-nguoi">+ Thêm người</button>
+  </div>
+  <div class="wrap an-cot-phu" id="bao-nk"><table id="bang-nk"></table></div>
+</section>
+
+<section id="hon-phoi">
+  <div class="loc"><button id="them-hp">+ Thêm cặp hôn phối</button></div>
+  <div class="wrap"><table id="bang-hp"></table></div>
+</section>
+
+<section id="cho">
+  <div class="loc"><span class="trang-thai">Những người có trong sổ nhưng chưa đủ căn cứ để đặt lên cây. Bộ nhập <b>không đọc</b> trang này. Khi đã rõ quan hệ, bấm <b>Chuyển vào phả</b>.</span><button id="them-cho">+ Thêm</button></div>
+  <div class="wrap"><table id="bang-cho"></table></div>
+</section>
+
+<section id="kiem"><div id="ds-van-de"></div></section>
+
+<section id="huong-dan">
+<div class="huong-dan">
+  <h2>1. Trang này làm gì</h2>
+  <p>Trang này mở dữ liệu gia phả đã số hoá, cho phép <b>sửa</b>, <b>nhập thêm các đời sau</b>, rồi <b>lưu ra tệp Excel đúng mẫu</b> để tải lên hệ thống ở màn <b>Nhập liệu → Tải lên</b> (<code>/nhap-lieu/tai-len</code>).</p>
+  <ul>
+    <li>Không cần mạng, không cần đăng nhập. Mọi dữ liệu nằm trên máy này.</li>
+    <li>Trình duyệt <b>tự lưu nháp</b> sau mỗi lần sửa. Đóng trang rồi mở lại vẫn còn. Nháp chỉ nằm trong trình duyệt này: muốn chuyển sang máy khác thì <b>Lưu ra Excel</b>.</li>
+    <li>Tab <b>Kiểm tra</b> chạy cùng các luật như hệ thống. <b>Lỗi chặn</b> (đỏ) phải sửa hết, vì hệ thống sẽ từ chối cả lô. <b>Cảnh báo</b> (vàng) chỉ để xem lại, không chặn.</li>
+  </ul>
+
+  <h2>2. Nhập một đời mới — cách nhanh nhất</h2>
+  <ol>
+    <li>Mở tab <b>🌳 Cây</b>, tìm người cha (hoặc mẹ).</li>
+    <li>Bấm <b>+ Con</b>, gõ họ tên và tên huý, chọn giới, chọn còn sống hay đã mất, gõ ngày giỗ nếu đã mất. Trang tự điền <b>Mã</b>, <b>Đời</b> (= đời cha + 1), <b>Mã cha</b>, <b>Mã mẹ</b> (nếu cha chỉ có một vợ) và <b>Quan hệ = Con ruột</b>.</li>
+    <li>Người con lấy vợ/chồng: bấm <b>+ Vợ/Chồng</b> trên ô của người con. Trang tạo một dòng dâu/rể (để trống Đời) và một cặp ở trang Hôn phối.</li>
+    <li>Lặp lại cho đời sau. Xong thì bấm <b>💾 Lưu ra Excel</b>.</li>
+  </ol>
+  <div class="nhac">Nhập <b>theo từng nhà, từ trên xuống</b>: xong cha mẹ mới nhập con. Hệ thống ghi phả theo thứ tự đời, và con trỏ tới một Mã cha chưa có là lỗi chặn.</div>
+
+  <h2>3. Từng cột của trang Nhân khẩu</h2>
+  <table>
+    <tr><th>Cột</th><th>Bắt buộc</th><th>Cách điền</th></tr>
+    <tr><td><b>Mã</b></td><td>Có</td><td>Mỗi người một mã, không trùng, không đổi về sau. Chỉ gồm <b>chữ in hoa không dấu, số, dấu gạch ngang</b>. Quy ước của tệp này: <code>VU-D5-03</code> = họ Vũ, đời 5, người thứ 3. Vợ/chồng thêm đuôi: <code>VU-D5-03-V1</code> (vợ thứ nhất), <code>-V2</code> (vợ thứ hai), <code>-C1</code> (chồng). Mã chỉ là số hiệu để nối người với người — <b>đừng dùng mã để thể hiện thứ bậc</b>.</td></tr>
+    <tr><td><b>Họ tên</b></td><td>Có</td><td>Họ và tên đầy đủ nếu biết. Sổ cũ chỉ chép tên huý thì ghi họ + tên huý (<i>"Vũ Quý Công Húy Mẫn"</i> → <code>Vũ Mẫn</code>). Không ghi "Quý Công", "Húy" vào đây.</td></tr>
+    <tr><td><b>Tên huý</b></td><td>Không</td><td>Tên kiêng. Hệ thống dùng nó để <b>cảnh báo kỵ huý</b> khi con cháu trùng tên bậc trên.</td></tr>
+    <tr><td><b>Giới</b></td><td>Không</td><td><code>Nam</code> · <code>Nữ</code> · <code>Không rõ</code>. Con gái ghi đầy đủ như con trai.</td></tr>
+    <tr><td><b>Đời</b></td><td>Không</td><td>Số đời trong họ, thuỷ tổ là 1. Phải bằng <b>đời cha (hoặc mẹ) + 1</b>. <b>Dâu/rể để trống</b>: chưa chốt con số ấy là đời bên chồng hay bên ngoại, nên khai vào là lỗi chặn.</td></tr>
+    <tr><td><b>Mã cha / Mã mẹ</b></td><td>Không</td><td>Mã của cha, mẹ <b>đã có trong tệp</b> (hoặc đã có trên hệ thống). Mã cha phải là nam, mã mẹ phải là nữ. Dâu/rể không có cha mẹ trong họ thì để trống. Thiếu mẹ chỉ là cảnh báo.</td></tr>
+    <tr><td><b>Quan hệ</b></td><td>Không</td><td><code>Con ruột</code> hoặc <code>Con nuôi</code>. <b>Con nuôi của người trong họ hiện đang bị chặn</b>: Hội đồng Tộc biểu chưa chốt có ghi cả cha ruột lẫn cha nuôi không. Gặp ca này thì để ở trang <i>Chờ xác minh</i>.</td></tr>
+    <tr><td><b>Còn sống</b></td><td>Gần như có</td><td><code>Có</code> hoặc <code>Không</code>. <b>Đừng để trống</b>: trống mà không có ngày giỗ thì hệ thống không biết sống hay mất và từ chối dòng ấy. Còn sống thì không được có ngày mất.</td></tr>
+    <tr><td><b>Ngày mất âm</b></td><td>Không</td><td>Ngày/tháng <b>âm lịch</b>, có thể kèm năm: <code>20/4</code> · <code>20/4 1975</code> · <code>15/8 nhuận</code> (tháng nhuận) · <code>15/8 nhuận 1945</code>. Đây là ngày cúng giỗ, nên quên chữ "nhuận" thì giỗ lệch cả tháng. Ngày dương thì đổi sang âm trước khi gõ.</td></tr>
+    <tr><td colspan="3"><b>Cột phụ</b> (bật bằng ô "Hiện cột phụ"): <b>Năm sinh</b> (4 chữ số) · <b>Kế tự cho ai (Mã)</b> + <b>Loại kế tự</b> (<code>Đích tôn</code>/<code>Thừa tự</code>/<code>Kế tự</code>) · <b>Thuỵ hiệu</b> · <b>Tên chữ Hán</b> · <b>Nguyên quán</b> + <b>Mã nguyên quán</b>. Cố ý <b>không có cột nơi ở hiện tại</b>: với người còn sống đó là dữ liệu riêng tư, chỉ chính họ tự khai trên hệ thống.</td></tr>
+    <tr><td colspan="3"><b>Cột đối chiếu</b> (nền xám — Danh xưng trong sổ, Thuộc, Nguồn ảnh, Độ tin cậy, Ghi chú số hoá): để người nhập ghi lại căn cứ. Hệ thống <b>bỏ qua</b> các cột này khi đọc tệp.</td></tr>
+  </table>
+
+  <h2>4. Trang Hôn phối</h2>
+  <table>
+    <tr><th>Cột</th><th>Cách điền</th></tr>
+    <tr><td><b>Mã chồng / Mã vợ</b></td><td>Mã của hai người, cả hai phải có ở trang Nhân khẩu.</td></tr>
+    <tr><td><b>Bậc</b></td><td>Thứ tự vợ của người chồng: vợ cả <code>1</code>, vợ hai <code>2</code>… Hai vợ của cùng một người chồng không được cùng bậc.</td></tr>
+    <tr><td><b>Từ năm / Đến năm / Lý do kết thúc</b></td><td>Chỉ điền khi biết. Lý do: <code>Ly hôn</code> · <code>Qua đời</code> · <code>Huỷ hôn</code> · <code>Khác</code>.</td></tr>
+  </table>
+  <div class="canh"><b>Trước khi nhập dữ liệu thật lên hệ thống:</b> Hội đồng Tộc biểu phải chốt <b>quyền xoá thông tin của dâu/rể sau ly hôn</b>. Khi cả họ đã nằm trên hệ thống, đổi quy tắc này không còn là việc sửa phần mềm đơn thuần.</div>
+
+  <h2>5. Người còn sống — quyền riêng tư</h2>
+  <ul>
+    <li>Người còn sống mặc định bị ẩn với khách; thành viên chỉ thấy tên, đời và quan hệ.</li>
+    <li><b>Chỉ nhập những gì cần cho phả</b>: họ tên, giới, đời, cha mẹ, còn sống. Không nhập số điện thoại, địa chỉ, ngày sinh đầy đủ. Những thông tin đó người ấy tự khai trên hệ thống sau khi nhận lời mời.</li>
+    <li>Trẻ vị thành niên: chỉ nhập họ tên và quan hệ.</li>
+  </ul>
+
+  <h2>6. Gặp chỗ không chắc</h2>
+  <ul>
+    <li>Đọc không chắc tên: vẫn ghi tên đọc được, chọn <b>Độ tin cậy = Thấp</b> và ghi lý do ở <i>Ghi chú số hoá</i>.</li>
+    <li>Không biết người này là con ai: <b>đừng đoán</b>, đưa vào trang <b>Chờ xác minh</b>. Một quan hệ sai trên phả còn tệ hơn một chỗ trống.</li>
+    <li>Hai nguồn ghi khác nhau (ví dụ ngày giỗ): chọn một bên, ghi bên còn lại vào <i>Ghi chú số hoá</i>.</li>
+  </ul>
+
+  <h2>7. Lưu và tải lên hệ thống</h2>
+  <ol>
+    <li>Tab <b>Kiểm tra</b> phải hết <b>lỗi chặn</b>.</li>
+    <li>Bấm <b>💾 Lưu ra Excel</b>. Trên Chrome/Edge, trang hỏi chỗ lưu: chọn đè lên tệp cũ hoặc lưu tệp mới. Trình duyệt khác sẽ tải tệp về thư mục Tải xuống.</li>
+    <li>Trên hệ thống: <b>Nhập liệu → Tải lên</b>, chọn chi, chọn tệp. Hệ thống kiểm lại một lượt, cho xem trùng lặp, rồi mới ghi. Ghi xong vẫn <b>hoàn tác được cả lô</b>.</li>
+  </ol>
+  <div class="nhac">Đừng mở tệp đã lưu bằng Excel rồi để Excel tự đổi cột <i>Ngày mất âm</i> thành ngày dương (ví dụ <code>20/4</code> → <code>20-Apr</code>). Nếu đã lỡ, hệ thống sẽ báo lỗi chặn ở các ô đó. Sửa trên trang này an toàn hơn.</div>
+</div>
+</section>
+</main>
+
+<dialog id="hop">
+  <form method="dialog" id="hop-form">
+    <h3 id="hop-tieu-de"></h3>
+    <div id="hop-than"></div>
+    <div class="hang"><button value="huy">Huỷ</button><button value="ok" class="chinh">Thêm</button></div>
+  </form>
+</dialog>
+
+<script>
+window.DU_LIEU_GOC = {"nhanKhau": [{"ma": "VU-D1-01", "hoTen": "Vũ Phạm Nho", "tenHuy": "Nho", "gioi": "Nam", "doi": 1, "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "6/4", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Thuỷ Tổ Khảo", "thuoc": "Toàn họ", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #5", "tinCay": "Cao", "ghiChu": "Sơ đồ ghi \"Vũ Phạm\", sổ chân linh ghi \"Phạm Vũ Quý Công Húy Nho\" — cần họ xác nhận thứ tự họ kép."}, {"ma": "VU-D1-01-V1", "hoTen": "Trương Thị Hiên", "tenHuy": "Hiên", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "1/11", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Thuỷ Tổ Tỷ", "thuoc": "Toàn họ", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #6", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D2-01", "hoTen": "Vũ Văn", "tenHuy": "Văn", "gioi": "Nam", "doi": 2, "maCha": "VU-D1-01", "maMe": "VU-D1-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "25/3", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Tổ Khảo", "thuoc": "Toàn họ", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #7", "tinCay": "Cao", "ghiChu": "Họ tên ghi theo họ + tên huý vì sổ chỉ chép tên huý (\"Vũ Quý Công Húy Văn\")."}, {"ma": "VU-D2-01-V1", "hoTen": "Phạm Thị Loan", "tenHuy": "Loan", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "6/12", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Tổ Tỷ", "thuoc": "Toàn họ", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #8", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D3-01", "hoTen": "Vũ Trì", "tenHuy": "Trì", "gioi": "Nam", "doi": 3, "maCha": "VU-D2-01", "maMe": "VU-D2-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "1/4", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao Tằng Tổ Khảo (trực hệ)", "thuoc": "Cành 1", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #9", "tinCay": "Cao", "ghiChu": "Tổ cành 1."}, {"ma": "VU-D3-01-V1", "hoTen": "Vũ Thị Yến", "tenHuy": "Yến", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "8/3", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao Tằng Tổ Tỷ (trực hệ)", "thuoc": "Cành 1", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #10", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D3-02", "hoTen": "Vũ Hiếu", "tenHuy": "Hiếu", "gioi": "Nam", "doi": 3, "maCha": "VU-D2-01", "maMe": "VU-D2-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao Tằng Tổ Khảo (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #1", "tinCay": "Cao", "ghiChu": "Tổ cành 2. Sổ in nhầm \"Quý Công Quý Hiếu\"; sơ đồ ghi \"Húy Hiếu\"."}, {"ma": "VU-D3-02-V1", "hoTen": "Bùi Thị Tuệ", "tenHuy": "Tuệ", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao Tằng Tổ Tỷ (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #2", "tinCay": "Cao", "ghiChu": "Vợ thứ nhất theo thứ tự ghi trong sơ đồ và sổ."}, {"ma": "VU-D3-02-V2", "hoTen": "Phạm Thị Vịnh", "tenHuy": "Vịnh", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao Tằng Tổ Tỷ (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #3", "tinCay": "Cao", "ghiChu": "Vợ thứ hai theo thứ tự ghi."}, {"ma": "VU-D3-03", "hoTen": "Vũ Thị Tý", "tenHuy": "Tý", "gioi": "Nữ", "doi": 3, "maCha": "VU-D2-01", "maMe": "VU-D2-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Trung bình", "ghiChu": "Chỉ có trên sơ đồ."}, {"ma": "VU-D3-03-C1", "hoTen": "Trần Hưng", "tenHuy": "Hưng", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Trung bình", "ghiChu": "Chồng bà Tý (rể)."}, {"ma": "VU-D3-04", "hoTen": "Vũ Vương", "tenHuy": "Vương", "gioi": "Nam", "doi": 3, "maCha": "VU-D2-01", "maMe": "VU-D2-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "3/9", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Mãnh Tổ", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #1", "tinCay": "Cao", "ghiChu": "Mãnh tổ — mất khi còn nhỏ, không có hậu duệ."}, {"ma": "VU-D3-05", "hoTen": "Vũ Chuột", "tenHuy": "Chuột", "gioi": "Nam", "doi": 3, "maCha": "VU-D2-01", "maMe": "VU-D2-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Mãnh Tổ", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #2", "tinCay": "Cao", "ghiChu": "Mãnh tổ. Sổ không ghi ngày giỗ riêng."}, {"ma": "VU-D3-06", "hoTen": "Vũ Sẹo", "tenHuy": "Sẹo", "gioi": "Nam", "doi": 3, "maCha": "VU-D2-01", "maMe": "VU-D2-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "7/7", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Mãnh Tổ", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #3", "tinCay": "Trung bình", "ghiChu": "Mãnh tổ. Ngày (7/7) in cạnh tên Sẹo — có thể là ngày giỗ chung của cả ba mãnh tổ, cần hỏi lại."}, {"ma": "VU-D3-07", "hoTen": "Vũ Thị Vung", "tenHuy": "Vung", "gioi": "Nữ", "doi": 3, "maCha": "VU-D2-01", "maMe": "VU-D2-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "6/1", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Cao cao Tổ Cô", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #4", "tinCay": "Cao", "ghiChu": "Cô tổ — mất khi chưa xuất giá."}, {"ma": "VU-D4-01", "hoTen": "Vũ Thị Thinh", "tenHuy": "Thinh", "gioi": "Nữ", "doi": 4, "maCha": "VU-D3-01", "maMe": "VU-D3-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "Cành 1", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Đọc từ sơ đồ, chữ mờ."}, {"ma": "VU-D4-01-C1", "hoTen": "Trương Gánh", "tenHuy": "Gánh", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Rể. Chữ mờ."}, {"ma": "VU-D4-02", "hoTen": "Vũ Thị Chư", "tenHuy": "Chư", "gioi": "Nữ", "doi": 4, "maCha": "VU-D3-01", "maMe": "VU-D3-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "Cành 1", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Chữ mờ: có thể là Chư / Chứ."}, {"ma": "VU-D4-02-C1", "hoTen": "Trương Tôn", "tenHuy": "Tôn", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Trung bình", "ghiChu": "Rể."}, {"ma": "VU-D4-03", "hoTen": "Vũ Thị Sự", "tenHuy": "Sự", "gioi": "Nữ", "doi": 4, "maCha": "VU-D3-01", "maMe": "VU-D3-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "Cành 1", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Trung bình", "ghiChu": ""}, {"ma": "VU-D4-03-C1", "hoTen": "Nguyễn Dương", "tenHuy": "Dương", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Rể. Chữ mờ: Dương / Đương."}, {"ma": "VU-D4-04", "hoTen": "Vũ Kính", "tenHuy": "Kính", "gioi": "Nam", "doi": 4, "maCha": "VU-D3-01", "maMe": "VU-D3-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "20/5", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tằng Tổ Khảo (trực hệ)", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #11", "tinCay": "Cao", "ghiChu": "Tự Phúc Nguyên. Tổ chi 1. Sơ đồ ghi ngày mờ — lấy 20/5 theo sổ."}, {"ma": "VU-D4-04-V1", "hoTen": "Phạm Thị Vén", "tenHuy": "Vén", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "25/9", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tằng Tổ Tỷ (trực hệ)", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #12", "tinCay": "Cao", "ghiChu": "Pháp danh Diệu Ninh."}, {"ma": "VU-D4-05", "hoTen": "Vũ Thiềng", "tenHuy": "Thiềng", "gioi": "Nam", "doi": 4, "maCha": "VU-D3-01", "maMe": "VU-D3-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tằng Tổ Khảo (cành 1 chi 2)", "thuoc": "Cành 1 · Chi 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 5 — Chân linh cành 1 chi 2 #1", "tinCay": "Cao", "ghiChu": "Tổ chi 2."}, {"ma": "VU-D4-05-V1", "hoTen": "Trần Thị Thi", "tenHuy": "Thi", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tằng Tổ Tỷ (cành 1 chi 2)", "thuoc": "Cành 1 · Chi 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 5 — Chân linh cành 1 chi 2 #2", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D4-06", "hoTen": "Vũ Thị Toại", "tenHuy": "Toại", "gioi": "Nữ", "doi": 4, "maCha": "VU-D3-01", "maMe": "VU-D3-01-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "Cành 1", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Chữ mờ: Toại / Toai."}, {"ma": "VU-D4-06-C1", "hoTen": "Trần Tiến", "tenHuy": "Tiến", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Trung bình", "ghiChu": "Rể."}, {"ma": "VU-D4-07", "hoTen": "Vũ Hy", "tenHuy": "Hy", "gioi": "Nam", "doi": 4, "maCha": "VU-D3-02", "maMe": "", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tằng Tổ Khảo (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #4", "tinCay": "Cao", "ghiChu": "Không rõ là con bà Tuệ hay bà Vịnh nên để trống Mã mẹ."}, {"ma": "VU-D4-07-V1", "hoTen": "Đỗ Thị Sẻ", "tenHuy": "Sẻ", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tằng Tổ Tỷ (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #5", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-01", "hoTen": "Vũ Thị Kính", "tenHuy": "Kính", "gioi": "Nữ", "doi": 5, "maCha": "VU-D4-04", "maMe": "VU-D4-04-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "ĐỌC CHƯA CHẮC: trùng tên huý của cha (cụ Kính) — gần như chắc là đọc sai. Hệ thống sẽ cảnh báo kỵ huý ở dòng này; cần đối chiếu bản gốc."}, {"ma": "VU-D5-01-C1", "hoTen": "Cao Thịnh", "tenHuy": "Thịnh", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Rể. Chữ mờ."}, {"ma": "VU-D5-02", "hoTen": "Vũ Thị Bát", "tenHuy": "Bát", "gioi": "Nữ", "doi": 5, "maCha": "VU-D4-04", "maMe": "VU-D4-04-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Chữ mờ: Bát / Bảy. Sơ đồ ghi hai người chồng."}, {"ma": "VU-D5-02-C1", "hoTen": "Phạm Viên", "tenHuy": "Viên", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Chồng thứ nhất theo thứ tự ghi trên sơ đồ."}, {"ma": "VU-D5-02-C2", "hoTen": "Nguyễn Vịnh", "tenHuy": "Vịnh", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Chồng thứ hai theo thứ tự ghi trên sơ đồ."}, {"ma": "VU-D5-03", "hoTen": "Vũ Mẫn", "tenHuy": "Mẫn", "gioi": "Nam", "doi": 5, "maCha": "VU-D4-04", "maMe": "VU-D4-04-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "20/4", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Khảo (trực hệ)", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #13", "tinCay": "Cao", "ghiChu": "Tự Phúc Nhuận. Năm mất viết tay \"(19?5)\" đọc không chắc (1975 hoặc 1915) nên chưa ghi năm."}, {"ma": "VU-D5-03-V1", "hoTen": "Trương Thị Hỷ", "tenHuy": "Hỷ", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "14/12", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Tỷ (trực hệ)", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #14", "tinCay": "Trung bình", "ghiChu": "Chữ số ngày bị viết đè (in 14). Năm viết tay \"(1963)\" hoặc \"(1969)\" — chưa ghi năm."}, {"ma": "VU-D5-04", "hoTen": "Vũ Xưởng", "tenHuy": "Xưởng", "gioi": "Nam", "doi": 5, "maCha": "VU-D4-04", "maMe": "VU-D4-04-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "23/10", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Khảo (cành 1 chi 1 nhánh 2)", "thuoc": "Cành 1 · Chi 1 · Nhánh 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 4 — Chân linh cành 1 chi 1 nhánh 2 #1", "tinCay": "Cao", "ghiChu": "Tổ nhánh 2."}, {"ma": "VU-D5-04-V1", "hoTen": "Trương Thị Nhiễm", "tenHuy": "Nhiễm", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "18/5", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Tỷ (cành 1 chi 1 nhánh 2)", "thuoc": "Cành 1 · Chi 1 · Nhánh 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 4 — Chân linh cành 1 chi 1 nhánh 2 #2", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-05", "hoTen": "Vũ Thị Tơ", "tenHuy": "Tơ", "gioi": "Nữ", "doi": 5, "maCha": "VU-D4-04", "maMe": "VU-D4-04-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Chữ mờ."}, {"ma": "VU-D5-05-C1", "hoTen": "Nguyễn Đôn", "tenHuy": "Đôn", "gioi": "Nam", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "", "thuoc": "", "nguon": "Ảnh 1 — sơ đồ đóng khung", "tinCay": "Thấp", "ghiChu": "Rể. Chữ mờ."}, {"ma": "VU-D5-06", "hoTen": "Vũ Thị Ri", "tenHuy": "Ri", "gioi": "Nữ", "doi": 5, "maCha": "VU-D4-04", "maMe": "VU-D4-04-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "15/3", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Cô (trực hệ)", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 2 — Chân linh trực hệ (1–15) #15", "tinCay": "Cao", "ghiChu": "Cô tổ."}, {"ma": "VU-D5-07", "hoTen": "Vũ Tuân", "tenHuy": "Tuân", "gioi": "Nam", "doi": 5, "maCha": "VU-D4-05", "maMe": "VU-D4-05-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Khảo (cành 1 chi 2)", "thuoc": "Cành 1 · Chi 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 5 — Chân linh cành 1 chi 2 #3", "tinCay": "Cao", "ghiChu": "Sơ đồ đọc gần như \"Tuấn\", sổ in \"Tuân\" — lấy theo sổ."}, {"ma": "VU-D5-07-V1", "hoTen": "Trương Thị Lụ", "tenHuy": "Lụ", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Tỷ (cành 1 chi 2)", "thuoc": "Cành 1 · Chi 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 5 — Chân linh cành 1 chi 2 #4", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-08", "hoTen": "Vũ Huấn", "tenHuy": "Huấn", "gioi": "Nam", "doi": 5, "maCha": "VU-D4-05", "maMe": "VU-D4-05-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Khảo (cành 1 chi 2)", "thuoc": "Cành 1 · Chi 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 5 — Chân linh cành 1 chi 2 #5", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-08-V1", "hoTen": "Phạm Thị Vân", "tenHuy": "Vân", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Tỷ (cành 1 chi 2)", "thuoc": "Cành 1 · Chi 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 5 — Chân linh cành 1 chi 2 #6", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-09", "hoTen": "Vũ Ngữ", "tenHuy": "Ngữ", "gioi": "Nam", "doi": 5, "maCha": "VU-D4-05", "maMe": "VU-D4-05-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Khảo (cành 1 chi 2)", "thuoc": "Cành 1 · Chi 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 5 — Chân linh cành 1 chi 2 #7", "tinCay": "Cao", "ghiChu": "Sơ đồ còn một ô trống cạnh ô này — có thể là một người con nữa chưa ghi tên."}, {"ma": "VU-D5-10", "hoTen": "Vũ Úc", "tenHuy": "Úc", "gioi": "Nam", "doi": 5, "maCha": "VU-D4-07", "maMe": "VU-D4-07-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Khảo (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #6", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-10-V1", "hoTen": "Nguyễn Thị Trầm", "tenHuy": "Trầm", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Tỷ (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #7", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-11", "hoTen": "Vũ Trân", "tenHuy": "Trân", "gioi": "Nam", "doi": 5, "maCha": "VU-D4-07", "maMe": "VU-D4-07-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Khảo (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #8", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D5-11-V1", "hoTen": "Đỗ Thị My", "tenHuy": "My", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Tổ Tỷ (cành 2)", "thuoc": "Cành 2", "nguon": "Ảnh 1 — sơ đồ đóng khung; Ảnh 6 — Chân linh cành 2 #9", "tinCay": "Cao", "ghiChu": ""}, {"ma": "VU-D6-01", "hoTen": "Vũ Thuyết", "tenHuy": "Thuyết", "gioi": "Nam", "doi": 6, "maCha": "VU-D5-03", "maMe": "VU-D5-03-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "6/10 1972", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Hiển Khảo (trực hệ)", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #19", "tinCay": "Trung bình", "ghiChu": "Là con cụ Mẫn — suy từ chuỗi danh xưng của sổ (Tổ khảo Mẫn → Hiển khảo Thuyết), sơ đồ không vẽ tới đời này. MÂU THUẪN NGÀY: sổ in (6/10), bên cạnh viết tay \"Âm 29.8.1972\" (29 viết đè lên 30). Đang ghi theo bản in — cần gia đình chốt."}, {"ma": "VU-D6-01-V1", "hoTen": "Nguyễn Thị The", "tenHuy": "The", "gioi": "Nữ", "doi": "", "maCha": "", "maMe": "", "quanHe": "", "conSong": "Không", "ngayMatAm": "3/12 2011", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Hiển Tỷ (trực hệ)", "thuoc": "Cành 1 · Chi 1", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #20", "tinCay": "Cao", "ghiChu": "Năm 2011 viết tay."}, {"ma": "VU-D6-02", "hoTen": "Vũ Cải", "tenHuy": "Cải", "gioi": "Nam", "doi": 6, "maCha": "VU-D5-04", "maMe": "VU-D5-04-V1", "quanHe": "Con ruột", "conSong": "Không", "ngayMatAm": "7/3 2019", "namSinh": "", "keTuChoAi": "", "loaiKeTu": "", "thuyHieu": "", "tenHanNom": "", "nguyenQuan": "", "maNguyenQuan": "", "danhXung": "Hiển Khảo (cành 1 chi 1 nhánh 2)", "thuoc": "Cành 1 · Chi 1 · Nhánh 2", "nguon": "Ảnh 4 — Chân linh cành 1 chi 1 nhánh 2 #3", "tinCay": "Trung bình", "ghiChu": "Là con cụ Xưởng — suy từ chuỗi danh xưng. Ngày viết tay, bản gạch \"7.3.2009\", bản sửa \"7.3.2019\" — đang ghi bản sửa. Sổ không nói rõ là âm lịch."}], "honPhoi": [{"maChong": "VU-D1-01", "maVo": "VU-D1-01-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D2-01", "maVo": "VU-D2-01-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D3-01", "maVo": "VU-D3-01-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D3-02", "maVo": "VU-D3-02-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": "Bậc theo thứ tự ghi trong sơ đồ/sổ, chưa xác nhận ai là vợ cả."}, {"maChong": "VU-D3-02", "maVo": "VU-D3-02-V2", "bac": 2, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": "Như trên."}, {"maChong": "VU-D3-03-C1", "maVo": "VU-D3-03", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D4-01-C1", "maVo": "VU-D4-01", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D4-02-C1", "maVo": "VU-D4-02", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D4-03-C1", "maVo": "VU-D4-03", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D4-04", "maVo": "VU-D4-04-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D4-05", "maVo": "VU-D4-05-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D4-06-C1", "maVo": "VU-D4-06", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D4-07", "maVo": "VU-D4-07-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-01-C1", "maVo": "VU-D5-01", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-02-C1", "maVo": "VU-D5-02", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": "Bà Bát có hai chồng; không rõ tái giá hay lý do kết thúc cuộc hôn nhân trước."}, {"maChong": "VU-D5-02-C2", "maVo": "VU-D5-02", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": "Như trên."}, {"maChong": "VU-D5-03", "maVo": "VU-D5-03-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-04", "maVo": "VU-D5-04-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-05-C1", "maVo": "VU-D5-05", "bac": "", "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-07", "maVo": "VU-D5-07-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-08", "maVo": "VU-D5-08-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-10", "maVo": "VU-D5-10-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D5-11", "maVo": "VU-D5-11-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}, {"maChong": "VU-D6-01", "maVo": "VU-D6-01-V1", "bac": 1, "tuNam": "", "denNam": "", "lyDo": "", "ghiChu": ""}], "cho": [{"ten": "Vũ Thị Sơ", "danhXung": "Tỷ Muội (trực hệ)", "ngay": "", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #16", "canXacMinh": "Chị/em gái của người lập sổ → nhiều khả năng là con cụ Thuyết (VU-D6-01), đời 7. Cần xác nhận."}, {"ten": "Vũ Thị Đề", "danhXung": "Tỷ Muội (trực hệ)", "ngay": "", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #17", "canXacMinh": "Như trên."}, {"ten": "Vũ Thị Đỏ", "danhXung": "Tỷ Muội (trực hệ)", "ngay": "", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #18", "canXacMinh": "Như trên."}, {"ten": "Nguyễn Cần", "danhXung": "Hiển Khảo (trực hệ)", "ngay": "14/1 1954", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #21", "canXacMinh": "Cùng là \"Hiển khảo\" nhưng họ Nguyễn — không rõ quan hệ (bố dượng? chồng của bà Hạ?)."}, {"ten": "Vũ Thị Hạ", "danhXung": "Hiển Tỷ (trực hệ)", "ngay": "28/12 2003", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #22", "canXacMinh": "Họ Vũ mà xưng \"Hiển tỷ\" — có thể là con gái cụ Mẫn lấy ông Nguyễn Cần. Cần hỏi gia đình."}, {"ten": "Vũ Thị Thông", "danhXung": "Hiển Tỷ (trực hệ)", "ngay": "7/10 2015", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #23", "canXacMinh": "Như trên."}, {"ten": "Vũ Thị Lụa", "danhXung": "Cháu (trực hệ)", "ngay": "15/10", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #24", "canXacMinh": "Không rõ là con của ai."}, {"ten": "Nguyễn Nghị", "danhXung": "Cung vọng Nhạc Phụ", "ngay": "10/12", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25) #25", "canXacMinh": "Bố vợ người lập sổ — người họ khác. Chỉ nhập khi biết vợ người lập sổ là ai."}, {"ten": "Bùi Thị Hải (?)", "danhXung": "Nhạc Mẫu (viết tay)", "ngay": "17 tháng giêng (năm mờ)", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25), viết tay", "canXacMinh": "Mẹ vợ người lập sổ. Chữ \"Thuý Hải\" đọc chưa chắc."}, {"ten": "Vũ Hữu Giảng (?)", "danhXung": "Hiển Khảo (viết tay)", "ngay": "24/5 (2020)", "nguon": "Ảnh 3 — Chân linh trực hệ (16–25), viết tay", "canXacMinh": "Có thể là người lập sổ, mất năm 2020 và được con cháu ghi thêm; kèm \"(Phúc Thọ?)\". Đọc chưa chắc."}, {"ten": "Đỗ Thị Lý", "danhXung": "Cháu (cành 1 chi 1 nhánh 2)", "ngay": "14/2 2011", "nguon": "Ảnh 4 — Chân linh cành 1 chi 1 nhánh 2 #4", "canXacMinh": "Họ Đỗ — có thể là con của một người con gái trong nhánh. Không rõ cha mẹ."}, {"ten": "Vũ Thế Hiền (?)", "danhXung": "(viết tay, mục 5)", "ngay": "16/4/2020", "nguon": "Ảnh 4 — Chân linh cành 1 chi 1 nhánh 2, viết tay", "canXacMinh": "Kèm \"(Phúc Thanh)\". Đọc chữ đệm chưa chắc; quan hệ chưa rõ."}, {"ten": "Vũ Công Rường (?)", "danhXung": "Hiển Khảo (cành 2, viết tay)", "ngay": "", "nguon": "Ảnh 6 — Chân linh cành 2 #10, viết tay", "canXacMinh": "Là con cụ Úc hay cụ Trân? Sổ không ghi."}]};
+
+const DU_LIEU_GOC = window.DU_LIEU_GOC || {nhanKhau: [], honPhoi: [], cho: []};
+
+// ---------- Định nghĩa cột: tiêu đề khớp ImportColumn / MarriageColumn của hệ thống ----------
+const COT_NK = [
+  {k:"ma", t:"Mã", w:"ma"}, {k:"hoTen", t:"Họ tên", w:170}, {k:"tenHuy", t:"Tên huý", w:80},
+  {k:"gioi", t:"Giới", ds:["","Nam","Nữ","Không rõ"], w:80}, {k:"doi", t:"Đời", so:1, w:"so"},
+  {k:"maCha", t:"Mã cha", w:"ma", goi:"nam"}, {k:"maMe", t:"Mã mẹ", w:"ma", goi:"nu"},
+  {k:"quanHe", t:"Quan hệ", ds:["","Con ruột","Con nuôi"], w:95}, {k:"conSong", t:"Còn sống", ds:["","Có","Không"], w:75},
+  {k:"ngayMatAm", t:"Ngày mất âm", w:110},
+  {k:"namSinh", t:"Năm sinh", so:1, w:"so", phu:1}, {k:"keTuChoAi", t:"Kế tự cho ai (Mã)", w:"ma", phu:1},
+  {k:"loaiKeTu", t:"Loại kế tự", ds:["","Đích tôn","Thừa tự","Kế tự"], w:90, phu:1},
+  {k:"thuyHieu", t:"Thuỵ hiệu", w:110, phu:1}, {k:"tenHanNom", t:"Tên chữ Hán", w:90, phu:1},
+  {k:"nguyenQuan", t:"Nguyên quán", w:120, phu:1}, {k:"maNguyenQuan", t:"Mã nguyên quán", w:90, phu:1},
+  {k:"danhXung", t:"Danh xưng trong sổ", w:170, them:1}, {k:"thuoc", t:"Thuộc (theo sổ)", w:150, them:1},
+  {k:"nguon", t:"Nguồn ảnh", w:200, them:1}, {k:"tinCay", t:"Độ tin cậy", ds:["","Cao","Trung bình","Thấp"], w:105, them:1},
+  {k:"ghiChu", t:"Ghi chú số hoá", w:420, them:1},
+];
+const COT_HP = [
+  {k:"maChong", t:"Mã chồng", w:"ma", goi:"nam"}, {k:"maVo", t:"Mã vợ", w:"ma", goi:"nu"}, {k:"bac", t:"Bậc", so:1, w:"so"},
+  {k:"tuNam", t:"Từ năm", so:1, w:70}, {k:"denNam", t:"Đến năm", so:1, w:70},
+  {k:"lyDo", t:"Lý do kết thúc", ds:["","Ly hôn","Qua đời","Huỷ hôn","Khác"], w:110},
+  {k:"ghiChu", t:"Ghi chú số hoá", w:460, them:1},
+];
+const COT_CHO = [
+  {k:"ten", t:"Tên đọc được", w:170}, {k:"danhXung", t:"Danh xưng trong sổ", w:190}, {k:"ngay", t:"Ngày ghi trong sổ", w:150},
+  {k:"nguon", t:"Nguồn ảnh", w:200}, {k:"canXacMinh", t:"Cần xác minh", w:520},
+];
+
+// ---------- Trạng thái ----------
+const KHOA_NHAP = "gia-pha-chinh-sua-nhap-v1";
+let D = null;           // {nhanKhau, honPhoi, cho, tenTep}
+let VD = [];            // vấn đề sau lần kiểm gần nhất
+const $ = s => document.querySelector(s);
+const boDau = s => (s ?? "").toString().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const sach = o => JSON.parse(JSON.stringify(o));
+
+function napNhap() {
+  try { const s = localStorage.getItem(KHOA_NHAP); if (s) return JSON.parse(s); } catch (e) {}
+  return null;
+}
+let henLuu = null;
+function luuNhap() {
+  clearTimeout(henLuu);
+  henLuu = setTimeout(() => {
+    D.suaLuc = new Date().toISOString();
+    localStorage.setItem(KHOA_NHAP, JSON.stringify(D));
+    $("#trang-thai").textContent = `Đã tự lưu nháp lúc ${new Date().toLocaleTimeString("vi-VN")} · ${D.nhanKhau.length} người · ${D.honPhoi.length} cặp`;
+  }, 300);
+}
+
+// ---------- Luật kiểm: bám các luật chặn/cảnh báo của bộ nhập (dataimport) ----------
+const DANG_MA = /^[A-Z0-9]{1,12}([-_.][A-Z0-9]{1,12}){0,4}$/;
+const NGAY_AM = /^(\d{1,2})\s*[/\-.]\s*(\d{1,2})(?:\s*[/\-.]?\s*(\d{3,4}))?(?:\s*(nhuận|nhuan|n))?(?:\s*[/\-.]?\s*(\d{3,4}))?\s*$/i;
+const GIOI = v => { const s = boDau(v); return ["nam","m","trai","con trai","ong"].includes(s) ? "Nam" : ["nu","f","gai","con gai","ba"].includes(s) ? "Nữ" : ""; };
+const SONG = v => { const s = boDau(v); return ["co","con","con song","song","x","1"].includes(s) ? true : ["khong","da mat","mat","qua doi","0"].includes(s) ? false : null; };
+
+function kiem() {
+  const ds = [];
+  const them = (muc, trang, ma, cot, noi) => ds.push({muc, trang, ma, cot, noi});
+  const theoMa = new Map();
+  const dem = {};
+  for (const p of D.nhanKhau) { const m = (p.ma || "").trim(); if (m) { dem[m] = (dem[m] || 0) + 1; theoMa.set(m, p); } }
+  const trongHP = new Set(D.honPhoi.flatMap(h => [h.maChong, h.maVo]).filter(Boolean));
+
+  for (const p of D.nhanKhau) {
+    const ma = (p.ma || "").trim();
+    const nhan = ma || p.hoTen || "(dòng trống)";
+    if (!ma) them("err", "nk", nhan, "ma", "Thiếu Mã.");
+    else {
+      if (!DANG_MA.test(ma)) them("err", "nk", ma, "ma", `Mã "${ma}" chỉ được gồm chữ in hoa không dấu, số và dấu gạch ngang (ví dụ VU-D6-01).`);
+      if (dem[ma] > 1) them("err", "nk", ma, "ma", `Mã ${ma} bị trùng ${dem[ma]} lần.`);
+    }
+    if (!(p.hoTen || "").trim()) them("err", "nk", nhan, "hoTen", "Thiếu Họ tên.");
+    for (const [k, gioiCan, ten] of [["maCha","Nam","cha"],["maMe","Nữ","mẹ"]]) {
+      const v = (p[k] || "").trim();
+      if (!v) continue;
+      if (v === ma) them("err", "nk", nhan, k, `Không thể là ${ten} của chính mình.`);
+      else if (!theoMa.has(v)) them("err", "nk", nhan, k, `Mã ${ten} ${v} không có trong tệp. (Nếu người này đã có sẵn trên hệ thống thì bỏ qua lỗi này.)`);
+      else if (GIOI(theoMa.get(v).gioi) && GIOI(theoMa.get(v).gioi) !== gioiCan) them("err", "nk", nhan, k, `Mã ${ten} ${v} đang có giới "${theoMa.get(v).gioi}".`);
+    }
+    const coChaMe = (p.maCha || "").trim() || (p.maMe || "").trim();
+    const doi = p.doi === "" || p.doi == null ? null : Number(p.doi);
+    if (doi != null && (!Number.isInteger(doi) || doi < 1)) them("err", "nk", nhan, "doi", "Đời phải là số nguyên từ 1.");
+    if (coChaMe && doi != null) {
+      const doiCM = [p.maCha, p.maMe].map(x => theoMa.get((x || "").trim())).filter(Boolean).map(x => Number(x.doi)).filter(x => x > 0);
+      if (doiCM.length && doi !== Math.max(...doiCM) + 1) them("err", "nk", nhan, "doi", `Đời ${doi} nhưng cha/mẹ ở đời ${Math.max(...doiCM)} — phải là ${Math.max(...doiCM) + 1}.`);
+    }
+    if (!coChaMe && doi != null && doi > 1 && trongHP.has(ma)) them("err", "nk", nhan, "doi", "Dâu/rể không khai Đời (quy ước hiện hành, chờ Hội đồng chốt). Xoá ô Đời.");
+    if (coChaMe && boDau(p.quanHe).includes("nuoi")) them("err", "nk", nhan, "quanHe", "Con nuôi của người trong họ đang bị chặn (Hội đồng chưa chốt ghi cha ruột hay cha nuôi). Chuyển dòng này sang Chờ xác minh.");
+    const song = SONG(p.conSong);
+    const ngay = (p.ngayMatAm || "").toString().trim();
+    if (ngay) {
+      const m = ngay.match(NGAY_AM);
+      if (/^\d{4,6}([.,]\d+)?$/.test(ngay)) them("err", "nk", nhan, "ngayMatAm", `"${ngay}" là số sê-ri ngày của Excel, không phải ngày âm. Gõ lại dạng 20/4.`);
+      else if (!m) them("err", "nk", nhan, "ngayMatAm", `Không đọc được ngày âm "${ngay}". Dạng đúng: 20/4 · 20/4 1975 · 15/8 nhuận.`);
+      else if (+m[1] < 1 || +m[1] > 30 || +m[2] < 1 || +m[2] > 12) them("err", "nk", nhan, "ngayMatAm", `Ngày âm "${ngay}" không tồn tại (ngày 1–30, tháng 1–12).`);
+      if (song === true) them("err", "nk", nhan, "conSong", "Ghi còn sống nhưng có ngày mất.");
+    } else {
+      if (song === null) them("err", "nk", nhan, "conSong", "Bỏ trống cả Còn sống lẫn Ngày mất âm — hệ thống không đoán sống/mất. Chọn Có hoặc Không.");
+      if (song === false) them("warn", "nk", nhan, "ngayMatAm", "Đã mất nhưng chưa có ngày giỗ — sẽ không có nhắc giỗ.");
+    }
+    if (!GIOI(p.gioi)) them("warn", "nk", nhan, "gioi", "Chưa rõ giới.");
+    if ((p.maCha || "").trim() && !(p.maMe || "").trim()) them("warn", "nk", nhan, "maMe", "Chưa có Mã mẹ.");
+    if (!coChaMe && !trongHP.has(ma) && !(doi === 1)) them("warn", "nk", nhan, "maCha", "Người này không nối với ai (không cha mẹ, không hôn phối).");
+    if (p.tinCay === "Thấp") them("warn", "nk", nhan, "tinCay", "Độ tin cậy Thấp — cần người trong họ đọc lại. " + (p.ghiChu || ""));
+    if (p.namSinh && !/^\d{4}$/.test(String(p.namSinh).trim())) them("err", "nk", nhan, "namSinh", "Năm sinh phải là 4 chữ số.");
+    if ((p.keTuChoAi || "").trim() && !theoMa.has(p.keTuChoAi.trim())) them("warn", "nk", nhan, "keTuChoAi", `Không thấy người được kế tự ${p.keTuChoAi}.`);
+  }
+
+  // Kỵ huý: trùng tên huý với một bậc trên (cảnh báo, như hệ thống)
+  for (const p of D.nhanKhau) {
+    const huy = boDau(p.tenHuy);
+    if (!huy) continue;
+    const daQua = new Set(); const hang = [p.maCha, p.maMe];
+    while (hang.length) {
+      const m = (hang.shift() || "").trim();
+      if (!m || daQua.has(m)) continue; daQua.add(m);
+      const tren = theoMa.get(m); if (!tren) continue;
+      if (boDau(tren.tenHuy) === huy) { them("warn", "nk", p.ma || p.hoTen, "tenHuy", `Kỵ huý: trùng tên huý "${tren.tenHuy}" của bậc trên ${tren.hoTen} (${m}).`); break; }
+      hang.push(tren.maCha, tren.maMe);
+    }
+  }
+
+  // Vòng lặp cha–con
+  const mau = {};
+  const duyet = (m, duong) => {
+    if (mau[m] === 2) return; if (mau[m] === 1) { them("err", "nk", m, "maCha", "Vòng lặp tổ tiên: " + [...duong, m].join(" → ")); return; }
+    mau[m] = 1; const p = theoMa.get(m);
+    if (p) for (const c of [p.maCha, p.maMe]) if (c && theoMa.has(c.trim())) duyet(c.trim(), [...duong, m]);
+    mau[m] = 2;
+  };
+  for (const m of theoMa.keys()) duyet(m, []);
+
+  // Hôn phối
+  const bacTheoChong = {};
+  D.honPhoi.forEach((h, i) => {
+    const nhan = `${h.maChong || "?"} × ${h.maVo || "?"}`;
+    for (const [k, g, ten] of [["maChong","Nam","chồng"],["maVo","Nữ","vợ"]]) {
+      const v = (h[k] || "").trim();
+      if (!v) them("err", "hp", nhan, k, `Thiếu mã ${ten}.`);
+      else if (!theoMa.has(v)) them("err", "hp", nhan, k, `Mã ${ten} ${v} không có ở trang Nhân khẩu.`);
+      else if (GIOI(theoMa.get(v).gioi) && GIOI(theoMa.get(v).gioi) !== g) them("err", "hp", nhan, k, `Mã ${ten} ${v} có giới "${theoMa.get(v).gioi}".`);
+    }
+    if (h.bac !== "" && h.bac != null) {
+      const key = (h.maChong || "") + "|" + h.bac;
+      if (bacTheoChong[key]) them("err", "hp", nhan, "bac", `Hai người vợ của ${h.maChong} cùng bậc ${h.bac}.`);
+      bacTheoChong[key] = 1;
+    }
+  });
+  VD = ds;
+  return ds;
+}
+
+// ---------- Vẽ bảng ----------
+function oNhap(cot, giaTri, onDoi) {
+  let el;
+  if (cot.ds) {
+    el = document.createElement("select");
+    const ds = cot.ds.includes(giaTri ?? "") ? cot.ds : [...cot.ds, giaTri];
+    for (const v of ds) { const o = document.createElement("option"); o.value = v; o.textContent = v || "—"; el.append(o); }
+    el.value = giaTri ?? "";
+  } else {
+    el = document.createElement("input");
+    el.value = giaTri ?? "";
+    if (cot.goi) el.setAttribute("list", cot.goi === "nam" ? "ds-nam" : "ds-nu");
+    if (cot.k === "ma" || cot.goi || cot.k === "keTuChoAi") el.addEventListener("input", () => { const p = el.selectionStart; el.value = el.value.toUpperCase(); el.setSelectionRange(p, p); });
+  }
+  el.addEventListener("change", () => onDoi(cot.so && el.value.trim() !== "" && !isNaN(el.value) ? Number(el.value) : el.value));
+  return el;
+}
+
+function rong(w) { return w === "ma" ? 128 : w === "so" ? 56 : w; }
+
+function veBang(bang, cot, hang, trang, locHang) {
+  bang.innerHTML = "";
+  const thead = bang.createTHead().insertRow();
+  const th0 = document.createElement("th"); th0.textContent = "#"; thead.append(th0);
+  for (const c of cot) {
+    const th = document.createElement("th"); th.textContent = c.t; th.style.minWidth = rong(c.w) + "px";
+    if (c.phu) th.className = "phu"; if (c.them) th.style.background = "#ececec";
+    thead.append(th);
+  }
+  thead.append(document.createElement("th"));
+  const tb = bang.createTBody();
+  const vdTheo = {};
+  for (const v of VD.filter(v => v.trang === trang)) (vdTheo[v.ma] ||= []).push(v);
+  hang.forEach((r, i) => {
+    if (locHang && !locHang(r)) return;
+    const tr = tb.insertRow(); tr.dataset.i = i;
+    const khoa = trang === "hp" ? `${r.maChong || "?"} × ${r.maVo || "?"}` : (r.ma || r.hoTen || r.ten);
+    const vd = vdTheo[khoa] || [];
+    if (vd.some(v => v.muc === "err")) tr.className = "co-loi"; else if (vd.length) tr.className = "co-canh-bao";
+    tr.title = vd.map(v => (v.muc === "err" ? "⛔ " : "⚠ ") + v.noi).join("\n");
+    const td0 = tr.insertCell(); td0.textContent = i + 1; td0.style.color = "#998";
+    for (const c of cot) {
+      const td = tr.insertCell(); if (c.phu) td.className = "phu";
+      if (vd.some(v => v.cot === c.k && v.muc === "err")) td.classList.add("o-loi");
+      if (c.k === "tinCay" && r.tinCay) td.classList.add("tin-" + r.tinCay.split(" ")[0]);
+      td.append(oNhap(c, r[c.k], val => { r[c.k] = val; sauKhiSua(trang, false); }));
+    }
+    const tdx = tr.insertCell(); tdx.style.whiteSpace = "nowrap";
+    if (trang === "cho") {
+      const b = document.createElement("button"); b.className = "nho"; b.textContent = "Chuyển vào phả"; b.onclick = () => chuyenVaoPha(i); tdx.append(b);
+    }
+    const x = document.createElement("button"); x.className = "nho xoa"; x.textContent = "Xoá"; x.onclick = () => xoaHang(trang, i); tdx.append(x);
+  });
+  if (!tb.rows.length) { const tr = tb.insertRow(); const td = tr.insertCell(); td.colSpan = cot.length + 2; td.className = "rong"; td.textContent = "Không có dòng nào."; }
+}
+
+function veNhanKhau() {
+  const tim = boDau($("#tim-nk").value), doi = $("#loc-doi").value, loc = $("#loc-van-de").value;
+  const loiTheo = new Set(VD.filter(v => v.trang === "nk" && v.muc === "err").map(v => v.ma));
+  const cbTheo = new Set(VD.filter(v => v.trang === "nk" && v.muc === "warn").map(v => v.ma));
+  veBang($("#bang-nk"), COT_NK, D.nhanKhau, "nk", r => {
+    if (tim && !boDau(`${r.ma} ${r.hoTen} ${r.tenHuy}`).includes(tim)) return false;
+    if (doi === "trong" && r.doi !== "" && r.doi != null) return false;
+    if (doi && doi !== "trong" && String(r.doi) !== doi) return false;
+    if (loc === "loi" && !loiTheo.has(r.ma || r.hoTen)) return false;
+    if (loc === "cb" && !cbTheo.has(r.ma || r.hoTen)) return false;
+    if (loc === "thap" && r.tinCay !== "Thấp") return false;
+    return true;
+  });
+  const cacDoi = [...new Set(D.nhanKhau.map(p => p.doi).filter(x => x !== "" && x != null))].sort((a, b) => a - b);
+  const sel = $("#loc-doi"), cu = sel.value;
+  sel.innerHTML = `<option value="">Mọi đời</option>` + cacDoi.map(d => `<option value="${d}">Đời ${d}</option>`).join("") + `<option value="trong">Dâu/rể (không khai đời)</option>`;
+  sel.value = cu;
+}
+
+function veDanhSachMa() {
+  const dl = (id, gioi) => {
+    let el = document.getElementById(id); if (!el) { el = document.createElement("datalist"); el.id = id; document.body.append(el); }
+    el.innerHTML = D.nhanKhau.filter(p => p.ma && GIOI(p.gioi) === gioi).map(p => `<option value="${p.ma}">${esc(p.hoTen)}${p.doi ? " — đời " + p.doi : ""}</option>`).join("");
+  };
+  dl("ds-nam", "Nam"); dl("ds-nu", "Nữ");
+}
+
+function veKiem() {
+  const loi = VD.filter(v => v.muc === "err"), cb = VD.filter(v => v.muc === "warn");
+  $("#dem-loi").textContent = loi.length || ""; $("#dem-cb").textContent = cb.length || "";
+  const trangTen = {nk: "Nhân khẩu", hp: "Hôn phối"};
+  const html = [];
+  html.push(`<p><b>${loi.length} lỗi chặn</b> (phải sửa hết trước khi tải lên) · <b>${cb.length} cảnh báo</b> (xem lại, không chặn). Bấm một dòng để tới chỗ cần sửa.</p>`);
+  if (!loi.length) html.push(`<div class="nhac" style="background:var(--okbg);border-color:var(--ok)">✅ Không còn lỗi chặn — tệp đủ điều kiện để tải lên hệ thống.</div>`);
+  for (const v of [...loi, ...cb]) html.push(`<div class="van-de ${v.muc}" data-trang="${v.trang}" data-ma="${esc(v.ma)}" style="cursor:pointer"><span class="muc">${v.muc === "err" ? "LỖI CHẶN" : "CẢNH BÁO"}</span><div><b>${esc(v.ma)}</b> · <code>${trangTen[v.trang]} › ${(COT_NK.concat(COT_HP).find(c => c.k === v.cot) || {}).t || v.cot}</code><br>${esc(v.noi)}</div></div>`);
+  $("#ds-van-de").innerHTML = html.join("");
+}
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---------- Cây ----------
+function veCay() {
+  const theoMa = new Map(D.nhanKhau.filter(p => p.ma).map(p => [p.ma.trim(), p]));
+  const con = {};
+  for (const p of D.nhanKhau) for (const k of ["maCha", "maMe"]) { const m = (p[k] || "").trim(); if (m && theoMa.has(m)) (con[m] ||= new Set()).add(p); }
+  const voChong = {};
+  for (const h of D.honPhoi) { if (h.maChong && h.maVo) { (voChong[h.maChong] ||= []).push({ma: h.maVo, bac: h.bac}); (voChong[h.maVo] ||= []).push({ma: h.maChong, bac: h.bac}); } }
+  const loiMa = new Set(VD.filter(v => v.muc === "err").map(v => v.ma));
+  const tim = boDau($("#tim-cay").value);
+  const laDauRe = p => !(p.maCha || "").trim() && !(p.maMe || "").trim() && Number(p.doi) !== 1;
+  // gốc: người trong họ không có cha mẹ (thuỷ tổ), cộng người lẻ
+  const goc = D.nhanKhau.filter(p => p.ma && !(p.maCha || "").trim() && !(p.maMe || "").trim() && (Number(p.doi) === 1 || !voChong[p.ma]));
+  const daVe = new Set();
+  const khop = p => !tim || boDau(`${p.ma} ${p.hoTen} ${p.tenHuy}`).includes(tim);
+  const coKhop = (p, seen = new Set()) => { if (seen.has(p.ma)) return false; seen.add(p.ma); if (khop(p)) return true; return [...(con[p.ma] || [])].some(c => coKhop(c, seen)) || (voChong[p.ma] || []).some(v => theoMa.get(v.ma) && khop(theoMa.get(v.ma))); };
+  const nut = p => {
+    const vc = (voChong[p.ma] || []).map(v => theoMa.get(v.ma)).filter(Boolean);
+    const gio = p.ngayMatAm ? ` · giỗ ${esc(p.ngayMatAm)}` : (SONG(p.conSong) === true ? " · còn sống" : "");
+    return `<span class="nut ${loiMa.has(p.ma) ? "loi" : ""}"><span class="doi">Đ${p.doi ?? "?"}</span><b>${esc(p.hoTen)}</b><span class="ma-nho">${esc(p.ma)}${gio}</span>`
+      + (vc.length ? `<span class="vo">⚭ ${vc.map(v => `${esc(v.hoTen)} <span class="ma-nho">(${esc(v.ma)})</span> <button class="nho" data-sua="${esc(v.ma)}" title="Sửa">✎</button>`).join(" · ")}</span>` : "")
+      + `<button class="nho" data-con="${esc(p.ma)}">+ Con</button><button class="nho" data-vo="${esc(p.ma)}">+ ${GIOI(p.gioi) === "Nữ" ? "Chồng" : "Vợ"}</button><button class="nho" data-sua="${esc(p.ma)}" title="Sửa ở bảng Nhân khẩu">✎</button></span>`;
+  };
+  const ve = p => {
+    if (daVe.has(p.ma) || !coKhop(p)) return "";
+    daVe.add(p.ma);
+    const cs = [...(con[p.ma] || [])].filter(c => !daVe.has(c.ma)).sort((a, b) => (a.ma || "").localeCompare(b.ma || ""));
+    // con đã vẽ dưới cha thì không vẽ lại dưới mẹ
+    const conVe = cs.map(ve).filter(Boolean).join("");
+    return conVe ? `<li><details open><summary><span class="mui">▾</span>${nut(p)}</summary><ul>${conVe}</ul></details></li>` : `<li><span class="mui"></span>${nut(p)}</li>`;
+  };
+  // vẽ theo cha trước để con không bị kéo về nhánh mẹ là dâu
+  const html = goc.sort((a, b) => (Number(a.doi) || 99) - (Number(b.doi) || 99)).map(ve).join("");
+  const le = D.nhanKhau.filter(p => p.ma && !daVe.has(p.ma) && !laDauRe(p) && khop(p));
+  $("#cay-goc").innerHTML = `<ul>${html}</ul>` + (le.length ? `<h3 style="color:var(--err)">Chưa nối được vào cây (${le.length})</h3><ul>${le.map(p => `<li>${nut(p)}</li>`).join("")}</ul>` : "")
+    + (!html ? `<p class="rong">Chưa có ai. Mở tab Nhân khẩu → Thêm người để nhập thuỷ tổ.</p>` : "");
+}
+
+// ---------- Thêm người ----------
+function tienTo() {
+  const m = D.nhanKhau.map(p => (p.ma || "").match(/^([A-Z0-9]+)-D\d+-\d+$/)).find(Boolean);
+  return m ? m[1] : "VU";
+}
+function maMoiTheoDoi(doi) {
+  const tt = tienTo(); let max = 0;
+  for (const p of D.nhanKhau) { const m = (p.ma || "").match(new RegExp(`^${tt}-D${doi}-(\\d+)$`)); if (m) max = Math.max(max, +m[1]); }
+  return `${tt}-D${doi}-${String(max + 1).padStart(2, "0")}`;
+}
+function maMoiVoChong(ma, chuCai) {
+  let n = 1; const co = new Set(D.nhanKhau.map(p => p.ma));
+  while (co.has(`${ma}-${chuCai}${n}`)) n++;
+  return `${ma}-${chuCai}${n}`;
+}
+const NGUOI_TRONG = () => Object.fromEntries(COT_NK.map(c => [c.k, ""]));
+
+function hop(tieuDe, truong, khiOk) {
+  $("#hop-tieu-de").textContent = tieuDe;
+  $("#hop-than").innerHTML = truong.map(f => `<label>${f.nhan}</label>` + (f.ds
+    ? `<select name="${f.k}">${f.ds.map(v => `<option ${v === f.gt ? "selected" : ""} value="${esc(v)}">${esc(v.nhan || v) || "—"}</option>`).join("")}</select>`
+    : `<input name="${f.k}" value="${esc(f.gt ?? "")}" placeholder="${esc(f.goiY || "")}">`) + (f.chu ? `<div class="trang-thai">${f.chu}</div>` : "")).join("");
+  const dlg = $("#hop");
+  dlg.onclose = () => {
+    if (dlg.returnValue !== "ok") return;
+    const v = {}; for (const el of dlg.querySelectorAll("[name]")) v[el.name] = el.value.trim();
+    khiOk(v);
+  };
+  dlg.showModal();
+  setTimeout(() => dlg.querySelector("input,select")?.focus(), 30);
+}
+
+function themCon(maCha) {
+  const p = D.nhanKhau.find(x => x.ma === maCha); if (!p) return;
+  const theoMa = new Map(D.nhanKhau.map(x => [x.ma, x]));
+  const vc = D.honPhoi.filter(h => h.maChong === maCha || h.maVo === maCha).map(h => theoMa.get(h.maChong === maCha ? h.maVo : h.maChong)).filter(Boolean);
+  let doiCM = Number(p.doi) || Math.max(0, ...vc.map(v => Number(v.doi) || 0));
+  const laNam = GIOI(p.gioi) !== "Nữ";
+  const doi = doiCM ? doiCM + 1 : "";
+  const tt = tienTo();
+  const hoMacDinh = laNam ? (p.hoTen || "").split(" ")[0] : ((vc[0]?.hoTen || "").split(" ")[0] || "");
+  const truong = [
+    {k:"hoTen", nhan:"Họ tên", gt: hoMacDinh ? hoMacDinh + " " : "", goiY:"Vũ Văn A"},
+    {k:"tenHuy", nhan:"Tên huý (nếu có)"},
+    {k:"gioi", nhan:"Giới", ds:["Nam","Nữ","Không rõ"], gt:"Nam"},
+    {k:"conSong", nhan:"Còn sống?", ds:["Có","Không"], gt:"Có"},
+    {k:"ngayMatAm", nhan:"Ngày mất âm (nếu đã mất)", goiY:"20/4 hoặc 20/4 1990 hoặc 15/8 nhuận"},
+  ];
+  if (vc.length) truong.push({k:"nguoiKia", nhan: laNam ? "Mẹ" : "Cha", ds: ["", ...vc.map(v => v.ma)], gt: vc.length === 1 ? vc[0].ma : "",
+    chu: vc.map(v => `${v.ma} = ${esc(v.hoTen)}`).join(" · ") + (vc.length > 1 ? " — nhiều người, chọn đúng người" : "")});
+  truong.push({k:"ma", nhan:"Mã (tự sinh, sửa được)", gt: doi ? maMoiTheoDoi(doi) : `${tt}-MOI-${D.nhanKhau.length + 1}`});
+  hop(`Thêm con của ${p.hoTen} (${p.ma})`, truong, v => {
+    if (!v.hoTen) return alert("Chưa nhập họ tên.");
+    const n = NGUOI_TRONG();
+    Object.assign(n, {ma: v.ma.toUpperCase(), hoTen: v.hoTen, tenHuy: v.tenHuy, gioi: v.gioi, doi, quanHe: "Con ruột",
+      conSong: v.ngayMatAm ? "Không" : v.conSong, ngayMatAm: v.ngayMatAm, tinCay: "Cao", nguon: "Nhập bổ sung " + new Date().toLocaleDateString("vi-VN"),
+      thuoc: p.thuoc || ""});
+    if (laNam) { n.maCha = p.ma; n.maMe = v.nguoiKia || ""; } else { n.maMe = p.ma; n.maCha = v.nguoiKia || ""; }
+    chenSau(n, p.ma);
+    sauKhiSua("nk", true, n.ma);
+  });
+}
+
+function themVoChong(ma) {
+  const p = D.nhanKhau.find(x => x.ma === ma); if (!p) return;
+  const laNam = GIOI(p.gioi) !== "Nữ";
+  const bacSan = D.honPhoi.filter(h => (laNam ? h.maChong : h.maVo) === ma).length;
+  hop(`Thêm ${laNam ? "vợ" : "chồng"} cho ${p.hoTen} (${p.ma})`, [
+    {k:"hoTen", nhan:"Họ tên", goiY: laNam ? "Nguyễn Thị B" : "Trần Văn C"},
+    {k:"tenHuy", nhan:"Tên huý (nếu có)"},
+    {k:"conSong", nhan:"Còn sống?", ds:["Có","Không"], gt: SONG(p.conSong) === false ? "Không" : "Có"},
+    {k:"ngayMatAm", nhan:"Ngày mất âm (nếu đã mất)", goiY:"20/4"},
+    {k:"bac", nhan: laNam ? "Bậc (vợ thứ mấy)" : "Bậc (để trống nếu không rõ)", gt: laNam ? String(bacSan + 1) : ""},
+    {k:"ma", nhan:"Mã (tự sinh, sửa được)", gt: maMoiVoChong(ma, laNam ? "V" : "C"), chu:"Dâu/rể để trống Đời — đúng quy ước của hệ thống."},
+  ], v => {
+    if (!v.hoTen) return alert("Chưa nhập họ tên.");
+    const n = NGUOI_TRONG();
+    Object.assign(n, {ma: v.ma.toUpperCase(), hoTen: v.hoTen, tenHuy: v.tenHuy, gioi: laNam ? "Nữ" : "Nam", doi: "",
+      conSong: v.ngayMatAm ? "Không" : v.conSong, ngayMatAm: v.ngayMatAm, tinCay: "Cao", thuoc: p.thuoc || "",
+      nguon: "Nhập bổ sung " + new Date().toLocaleDateString("vi-VN")});
+    chenSau(n, p.ma);
+    D.honPhoi.push({maChong: laNam ? p.ma : n.ma, maVo: laNam ? n.ma : p.ma, bac: v.bac === "" ? "" : Number(v.bac), tuNam: "", denNam: "", lyDo: "", ghiChu: ""});
+    sauKhiSua("nk", true, n.ma);
+  });
+}
+
+function chenSau(n, maTruoc) {
+  // chèn sau người liên quan và mọi dòng đã chèn trước đó cho họ, để bảng giữ thứ tự theo nhà
+  let i = D.nhanKhau.findIndex(x => x.ma === maTruoc);
+  if (i < 0) { D.nhanKhau.push(n); return; }
+  while (i + 1 < D.nhanKhau.length && ((D.nhanKhau[i + 1].ma || "").startsWith(maTruoc + "-") || D.nhanKhau[i + 1].maCha === maTruoc || D.nhanKhau[i + 1].maMe === maTruoc)) i++;
+  D.nhanKhau.splice(i + 1, 0, n);
+}
+
+function xoaHang(trang, i) {
+  if (trang === "nk") {
+    const p = D.nhanKhau[i];
+    const ref = D.nhanKhau.filter(x => x.maCha === p.ma || x.maMe === p.ma).length + D.honPhoi.filter(h => h.maChong === p.ma || h.maVo === p.ma).length;
+    if (!confirm(`Xoá ${p.hoTen || "(dòng trống)"} (${p.ma || "chưa có mã"})?` + (ref ? `\n\n${ref} chỗ khác đang trỏ tới mã này (con, hôn phối) — sẽ thành lỗi chặn cho tới khi sửa. Các cặp hôn phối của người này cũng bị xoá.` : ""))) return;
+    D.nhanKhau.splice(i, 1);
+    D.honPhoi = D.honPhoi.filter(h => h.maChong !== p.ma && h.maVo !== p.ma);
+  } else if (trang === "hp") { if (!confirm("Xoá cặp hôn phối này?")) return; D.honPhoi.splice(i, 1); }
+  else { if (!confirm("Xoá dòng này?")) return; D.cho.splice(i, 1); }
+  sauKhiSua(trang, true);
+}
+
+function chuyenVaoPha(i) {
+  const w = D.cho[i];
+  const n = NGUOI_TRONG();
+  Object.assign(n, {hoTen: w.ten.replace(/\s*\(\?\)\s*/g, ""), danhXung: w.danhXung, nguon: w.nguon, ghiChu: w.canXacMinh,
+    conSong: "Không", tinCay: "Trung bình", ma: `${tienTo()}-MOI-${D.nhanKhau.length + 1}`,
+    ngayMatAm: (w.ngay.match(/^\s*(\d{1,2}\/\d{1,2}(?:\s+\d{4})?)/) || [])[1] || ""});
+  D.nhanKhau.push(n); D.cho.splice(i, 1);
+  sauKhiSua("cho", true);
+  doiTab("nhan-khau");
+  alert(`Đã chuyển "${n.hoTen}" vào cuối bảng Nhân khẩu với mã tạm ${n.ma}.\nĐiền Mã cha / Mã mẹ, Đời, Giới, rồi đổi mã cho đúng quy ước (ví dụ ${tienTo()}-D7-01).`);
+}
+
+// ---------- Vòng cập nhật ----------
+function sauKhiSua(trang, veLai, maSang) {
+  kiem(); luuNhap(); veDanhSachMa();
+  $("#dem-nk").textContent = D.nhanKhau.length; $("#dem-hp").textContent = D.honPhoi.length; $("#dem-cho").textContent = D.cho.length || "";
+  veKiem();
+  if (veLai || trang !== "nk") { veNhanKhau(); }
+  else { // chỉ cập nhật tô màu, giữ con trỏ đang gõ
+    const loiTheo = {}; for (const v of VD.filter(v => v.trang === "nk")) (loiTheo[v.ma] ||= []).push(v);
+    for (const tr of $("#bang-nk").tBodies[0].rows) {
+      const r = D.nhanKhau[tr.dataset.i]; if (!r) continue;
+      const vd = loiTheo[r.ma || r.hoTen] || [];
+      tr.className = vd.some(v => v.muc === "err") ? "co-loi" : vd.length ? "co-canh-bao" : "";
+      tr.title = vd.map(v => (v.muc === "err" ? "⛔ " : "⚠ ") + v.noi).join("\n");
+      [...tr.cells].slice(1, COT_NK.length + 1).forEach((td, j) => td.classList.toggle("o-loi", vd.some(v => v.cot === COT_NK[j].k && v.muc === "err")));
+    }
+  }
+  veBang($("#bang-hp"), COT_HP, D.honPhoi, "hp");
+  veBang($("#bang-cho"), COT_CHO, D.cho, "cho");
+  veCay();
+  if (maSang) setTimeout(() => {
+    const el = document.querySelector(`[data-sua="${CSS.escape(maSang)}"]`);
+    if (el) { el.closest(".nut").scrollIntoView({block: "center"}); el.closest("li").classList.add("sang"); }
+  }, 30);
+}
+
+function doiTab(id) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === id));
+  document.querySelectorAll("main>section").forEach(s => s.classList.toggle("on", s.id === id));
+}
+
+function denDong(ma) {
+  doiTab("nhan-khau");
+  $("#tim-nk").value = ""; $("#loc-doi").value = ""; $("#loc-van-de").value = ""; veNhanKhau();
+  const i = D.nhanKhau.findIndex(p => p.ma === ma || p.hoTen === ma);
+  const tr = $(`#bang-nk tr[data-i="${i}"]`);
+  if (tr) { tr.scrollIntoView({block: "center"}); tr.classList.remove("sang"); void tr.offsetWidth; tr.classList.add("sang"); tr.querySelector("input")?.focus(); }
+}
+
+// ---------- Đọc / ghi Excel ----------
+function docExcel(buf, tenTep) {
+  const wb = XLSX.read(buf, {type: "array", cellDates: false, raw: false});
+  const timTrang = khoa => wb.SheetNames.find(n => boDau(n).includes(khoa));
+  const docTrang = (ten, cot) => {
+    if (!ten) return [];
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[ten], {header: 1, raw: false, defval: ""});
+    const iTieuDe = aoa.findIndex(r => r.some(o => cot.some(c => boDau(c.t) === boDau(o))));
+    if (iTieuDe < 0) return [];
+    const map = aoa[iTieuDe].map(o => (cot.find(c => boDau(c.t) === boDau(o)) || {}).k);
+    return aoa.slice(iTieuDe + 1).filter(r => r.some(o => String(o).trim() !== "")).map(r => {
+      const o = Object.fromEntries(cot.map(c => [c.k, ""]));
+      map.forEach((k, j) => { if (k) o[k] = cot.find(c => c.k === k).so && r[j] !== "" && !isNaN(r[j]) ? Number(r[j]) : String(r[j]).trim(); });
+      return o;
+    });
+  };
+  const nk = timTrang("nhan khau");
+  if (!nk) throw new Error("Không thấy trang \"Nhân khẩu\" trong tệp.");
+  return {nhanKhau: docTrang(nk, COT_NK), honPhoi: docTrang(timTrang("hon phoi"), COT_HP), cho: docTrang(timTrang("cho xac minh"), COT_CHO), tenTep};
+}
+
+function taoExcel() {
+  const wb = XLSX.utils.book_new();
+  const trang = (ten, cot, hang, rongCot) => {
+    const aoa = [cot.map(c => c.t), ...hang.map(r => cot.map(c => r[c.k] ?? ""))];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    // Ngày mất âm & mã luôn là văn bản — để Excel không đổi "20/4" thành ngày dương
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    cot.forEach((c, j) => {
+      if (c.so) return;
+      for (let i = 1; i <= range.e.r; i++) { const a = XLSX.utils.encode_cell({r: i, c: j}); if (ws[a]) { ws[a].t = "s"; ws[a].v = String(ws[a].v); ws[a].z = "@"; } }
+    });
+    ws["!cols"] = cot.map(c => ({wch: rongCot(c)}));
+    ws["!autofilter"] = {ref: ws["!ref"]};
+    XLSX.utils.book_append_sheet(wb, ws, ten);
+  };
+  const doc = [
+    ["Gia phả — tệp nhập liệu theo mẫu của hệ thống"],
+    [`Lưu từ trang chỉnh sửa lúc ${new Date().toLocaleString("vi-VN")} · ${D.nhanKhau.length} người · ${D.honPhoi.length} cặp hôn phối · ${D.cho.length} chờ xác minh`],
+    [`Kiểm tra lúc lưu: ${VD.filter(v => v.muc === "err").length} lỗi chặn, ${VD.filter(v => v.muc === "warn").length} cảnh báo.`],
+    [""],
+    ["Hệ thống chỉ đọc hai trang \"Nhân khẩu\" và \"Hôn phối\", ghép cột theo TÊN tiêu đề — đừng đổi tên trang hay tên cột."],
+    ["Các cột Danh xưng trong sổ, Thuộc, Nguồn ảnh, Độ tin cậy, Ghi chú số hoá là cột đối chiếu, hệ thống bỏ qua."],
+    ["Trang \"Chờ xác minh\" không được nhập. Chuyển người vào phả bằng trang chỉnh sửa khi đã rõ quan hệ."],
+    ["Cột Ngày mất âm là VĂN BẢN dạng 20/4 · 20/4 1975 · 15/8 nhuận — đừng để Excel đổi sang ngày dương."],
+  ];
+  const ws0 = XLSX.utils.aoa_to_sheet(doc); ws0["!cols"] = [{wch: 120}];
+  XLSX.utils.book_append_sheet(wb, ws0, "Đọc trước");
+  const w = c => c.w === "ma" ? 15 : c.w === "so" ? 7 : Math.max(8, Math.round(c.w / 7));
+  trang("Nhân khẩu", COT_NK, D.nhanKhau, w);
+  trang("Hôn phối", COT_HP, D.honPhoi, w);
+  trang("Chờ xác minh", COT_CHO, D.cho, w);
+  return XLSX.write(wb, {bookType: "xlsx", type: "array"});
+}
+
+async function luuExcel() {
+  kiem();
+  const loi = VD.filter(v => v.muc === "err").length;
+  if (loi && !confirm(`Còn ${loi} lỗi chặn — hệ thống sẽ từ chối tệp cho tới khi sửa hết.\nVẫn lưu (để làm tiếp sau)?`)) return;
+  const buf = taoExcel();
+  const ten = D.tenTep || "gia-pha-ho-vu-so-hoa.xlsx";
+  if (window.showSaveFilePicker) {
+    try {
+      const h = await showSaveFilePicker({suggestedName: ten, types: [{description: "Excel", accept: {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"]}}]});
+      const s = await h.createWritable(); await s.write(buf); await s.close();
+      D.tenTep = h.name; luuNhap();
+      $("#trang-thai").textContent = `Đã lưu ${h.name} lúc ${new Date().toLocaleTimeString("vi-VN")}`;
+      return;
+    } catch (e) { if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([buf], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  a.download = ten; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  $("#trang-thai").textContent = `Đã tải ${ten} về thư mục Tải xuống.`;
+}
+
+// ---------- Gắn sự kiện ----------
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) doiTab(b.dataset.tab); });
+$("#nut-mo").onclick = () => $("#tep").click();
+$("#tep").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const moi = docExcel(new Uint8Array(await f.arrayBuffer()), f.name);
+    if (!confirm(`Mở ${f.name}: ${moi.nhanKhau.length} người, ${moi.honPhoi.length} cặp hôn phối, ${moi.cho.length} chờ xác minh.\nNháp hiện tại sẽ bị thay. Tiếp tục?`)) return;
+    D = moi; sauKhiSua("nk", true);
+  } catch (err) { alert("Không đọc được tệp: " + err.message); }
+  e.target.value = "";
+};
+$("#nut-luu").onclick = luuExcel;
+$("#nut-goc").onclick = () => { if (confirm("Bỏ MỌI chỉnh sửa và nạp lại dữ liệu đi kèm trang này?")) { D = sach(DU_LIEU_GOC); sauKhiSua("nk", true); } };
+$("#tim-nk").oninput = veNhanKhau; $("#loc-doi").onchange = veNhanKhau; $("#loc-van-de").onchange = veNhanKhau;
+$("#hien-phu").onchange = e => $("#bao-nk").classList.toggle("an-cot-phu", !e.target.checked);
+$("#tim-cay").oninput = veCay;
+$("#mo-het").onclick = () => document.querySelectorAll(".cay details").forEach(d => d.open = true);
+$("#dong-het").onclick = () => document.querySelectorAll(".cay details").forEach(d => d.open = false);
+$("#cay-goc").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  e.preventDefault();
+  if (b.dataset.con) themCon(b.dataset.con); else if (b.dataset.vo) themVoChong(b.dataset.vo); else if (b.dataset.sua) denDong(b.dataset.sua);
+});
+$("#cay-goc").addEventListener("toggle", e => { const s = e.target.querySelector?.(":scope>summary .mui"); if (s) s.textContent = e.target.open ? "▾" : "▸"; }, true);
+$("#ds-van-de").addEventListener("click", e => { const d = e.target.closest(".van-de"); if (!d) return; if (d.dataset.trang === "nk") denDong(d.dataset.ma); else doiTab("hon-phoi"); });
+$("#them-nguoi").onclick = () => { const n = NGUOI_TRONG(); n.tinCay = "Cao"; D.nhanKhau.push(n); sauKhiSua("nk", true); const tb = $("#bang-nk").tBodies[0]; tb.rows[tb.rows.length - 1]?.scrollIntoView(); tb.rows[tb.rows.length - 1]?.querySelector("input")?.focus(); };
+$("#them-hp").onclick = () => { D.honPhoi.push(Object.fromEntries(COT_HP.map(c => [c.k, ""]))); sauKhiSua("hp", true); };
+$("#them-cho").onclick = () => { D.cho.push(Object.fromEntries(COT_CHO.map(c => [c.k, ""]))); sauKhiSua("cho", true); };
+window.addEventListener("beforeunload", () => { if (D) localStorage.setItem(KHOA_NHAP, JSON.stringify(D)); });
+
+// ---------- Khởi động ----------
+const nhap = napNhap();
+D = nhap || sach(DU_LIEU_GOC);
+if (!D.tenTep) D.tenTep = "gia-pha-ho-vu-so-hoa.xlsx";
+sauKhiSua("nk", true);
+if (nhap) $("#trang-thai").textContent = `Đã mở lại nháp sửa lúc ${new Date(nhap.suaLuc || Date.now()).toLocaleString("vi-VN")}. (↺ để quay về dữ liệu gốc)`;
+else $("#trang-thai").textContent = `Dữ liệu gốc: ${D.nhanKhau.length} người · ${D.honPhoi.length} cặp · ${D.cho.length} chờ xác minh`;
+</script>
+</body>
+</html>
