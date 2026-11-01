@@ -16,18 +16,22 @@ const IMAGE_MEDIA: PostMediaItem[] = [
   {
     id: "m1",
     kind: "IMAGE",
+    contentType: "image/png",
+    sizeBytes: 1024,
+    durationMs: null,
     url: "data:image/png;base64,AAAA",
     alt: "Ảnh một",
-    order: 0,
-    createdAt: "2026-01-01T00:00:00.000Z",
+    position: 0,
   },
   {
     id: "m2",
     kind: "IMAGE",
+    contentType: "image/png",
+    sizeBytes: 1024,
+    durationMs: null,
     url: "data:image/png;base64,BBBB",
     alt: "Ảnh hai",
-    order: 1,
-    createdAt: "2026-01-01T00:00:00.000Z",
+    position: 1,
   },
 ];
 
@@ -35,10 +39,12 @@ const VIDEO_MEDIA: PostMediaItem[] = [
   {
     id: "v1",
     kind: "VIDEO",
+    contentType: "video/mp4",
+    sizeBytes: 2048,
+    durationMs: 5000,
     url: "data:video/mp4;base64,AAAA",
     alt: null,
-    order: 0,
-    createdAt: "2026-01-01T00:00:00.000Z",
+    position: 0,
   },
 ];
 

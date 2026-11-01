@@ -108,8 +108,8 @@ public final class EventTypeApiMapper {
             case "HOP_HO" -> new WriteType(EventType.HOP_HO, null);
             case "CUOI_HOI" -> new WriteType(EventType.CUOI_HOI, null);
             case "KHAC" -> new WriteType(EventType.KHAC, null);
-            default -> throw new IllegalArgumentException("Loai su kien khong hop le: " + apiType
-                    + ". Mot trong: GIO_TO, GIO_HO, GIO_CHI, GIO_THUONG, TIEU_TUONG, DAI_TUONG,"
+            default -> throw new IllegalArgumentException("Loại sự kiện không hợp lệ: " + apiType
+                    + ". Một trong: GIO_TO, GIO_HO, GIO_CHI, GIO_THUONG, TIEU_TUONG, DAI_TUONG,"
                     + " CHAP_MA, MUNG_THO, SINH_NHAT, KHANH_THANH, HOP_HO, CUOI_HOI, KHAC");
         };
     }

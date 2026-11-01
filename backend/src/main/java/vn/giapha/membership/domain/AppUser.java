@@ -103,7 +103,7 @@ public final class AppUser {
         Objects.requireNonNull(target, "personId khong duoc null khi ghep tai khoan vao cay");
         if (personId != null && !personId.equals(target)) {
             throw new IllegalStateException(
-                    "Tai khoan da duoc ghep voi nhan khau " + personId + ", khong tu doi sang " + target);
+                    "Tài khoản đã được ghép với nhân khẩu " + personId + ", không tự đổi sang " + target);
         }
         this.personId = target;
         if (this.status == AppUserStatus.PENDING) {

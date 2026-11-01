@@ -5,7 +5,6 @@ import { useFormatter, useTranslations } from "next-intl";
 import { Alert, Button, Empty, Input, Skeleton } from "antd";
 import { CheckOutlined, WarningOutlined } from "@ant-design/icons";
 import { useMe } from "@/hooks/use-me";
-import { Link } from "@/i18n/navigation";
 import { colorVars } from "@/styles/tokens";
 import { ApiError } from "@/lib/api/http";
 import type { MediaReportDto } from "@/lib/api/media";
@@ -81,7 +80,7 @@ function ReportCard({ report }: { report: MediaReportDto }) {
         className="flex aspect-square w-full shrink-0 items-center justify-center overflow-hidden rounded-md sm:w-40"
         style={{ backgroundColor: colorVars.bgPage }}
       >
-        {report.mediaKind === "IMAGE" ? (
+        {!report.mediaUrl ? null : report.mediaKind === "IMAGE" ? (
           // eslint-disable-next-line @next/next/no-img-element -- URL đã ký, xem trước để duyệt
           <img src={report.mediaUrl} alt="" className="h-full w-full object-cover" />
         ) : (
@@ -90,10 +89,9 @@ function ReportCard({ report }: { report: MediaReportDto }) {
       </div>
 
       <div className="min-w-0 flex-1 space-y-2">
+        {/* Không có tiêu đề/đường dẫn bài ở đây: `MediaReportDto` không mang chúng (xem kiểu ở
+            `lib/api/media.ts`). Bản trước hiện `report.postTitle` — luôn rỗng trên máy chủ thật. */}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Link href={`/bai-viet/${report.postId}`} className="font-serif text-[16px] font-semibold text-primary">
-            {report.postTitle}
-          </Link>
           <span className="text-than text-text-muted">
             {t("reportedAt", { date: format.dateTime(new Date(report.createdAt), { dateStyle: "medium", timeStyle: "short" }) })}
           </span>
@@ -101,7 +99,6 @@ function ReportCard({ report }: { report: MediaReportDto }) {
 
         <p className="m-0 text-than" style={{ color: colorVars.textMain }}>
           <strong>{t(`reasons.${report.reason}`)}</strong>
-          {report.reporterDisplayName ? t("byReporter", { name: report.reporterDisplayName }) : ""}
         </p>
         {report.note && (
           <p className="m-0 max-w-prose text-dan leading-relaxed text-text-main">{report.note}</p>
@@ -165,8 +162,11 @@ function ReportCard({ report }: { report: MediaReportDto }) {
 
 function describeMediaReportError(error: unknown, t: ReturnType<typeof useTranslations>): string {
   if (error instanceof ApiError) {
+    if (error.code === "SELF_REVIEW_FORBIDDEN") return t("errors.selfReview");
     if (error.code === "FORBIDDEN" || error.code === "BRANCH_SCOPE_VIOLATION") return t("errors.forbidden");
-    if (error.code === "NOT_FOUND") return t("errors.alreadyHandled");
+    // Máy chủ thật trả `409 REPORT_CLOSED` khi đơn đã được người khác xử lý; giữ nhánh 404 cho đơn
+    // không còn thấy được.
+    if (error.code === "REPORT_CLOSED" || error.code === "NOT_FOUND") return t("errors.alreadyHandled");
   }
   return t("errors.actionFailed");
 }

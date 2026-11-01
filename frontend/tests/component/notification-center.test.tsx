@@ -237,12 +237,16 @@ describe("hộp thư đầy đủ", () => {
     expect(title).toBeTruthy();
   });
 
-  it("khách vãng lai có hộp thư rỗng — chưa đăng nhập thì không sở hữu hộp thư nào", async () => {
+  // Bản trước ghim "khách có hộp thư rỗng" — sự thật của MOCK (trả 200 rỗng cho khách), không
+  // của máy chủ: máy thật trả 401 UNAUTHENTICATED, và khách trên máy thật thấy dải đỏ "Không tải
+  // được". Mock nay trả 401 như thật; màn hình phải nói đây là luật, không phải sự cố.
+  it("khách vãng lai: nói cần đăng nhập — KHÔNG báo lỗi tải, KHÔNG giả vờ hộp thư rỗng", async () => {
     renderWithProviders(<NotificationCenter />, { role: "guest" });
 
     expect(
-      await screen.findByText("Chưa có thông báo nào", undefined, { timeout: 15_000 })
+      await screen.findByText("Cần đăng nhập để xem thông báo", undefined, { timeout: 15_000 })
     ).toBeInTheDocument();
+    expect(screen.queryByText("Chưa có thông báo nào")).not.toBeInTheDocument();
     expect(screen.queryByText(/chưa đọc/)).not.toBeInTheDocument();
   });
 

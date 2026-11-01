@@ -381,6 +381,6 @@ public class GenealogyBulkWriter {
 
     private Person load(UUID id) {
         return persons.byId(PersonId.of(id)).orElseThrow(() -> new NotFoundException(
-                GenealogyProblemCodes.NOT_FOUND, "Khong tim thay nhan khau voi dinh danh " + id));
+                GenealogyProblemCodes.NOT_FOUND, "Không tìm thấy nhân khẩu với định danh " + id));
     }
 }

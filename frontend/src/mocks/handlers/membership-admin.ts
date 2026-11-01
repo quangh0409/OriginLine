@@ -1,7 +1,8 @@
 import { http, HttpResponse } from "msw";
 import { API_BASE_URL } from "@/lib/api/http";
 import { resolveMockRole, type MockRole } from "./role";
-import { identityOf, pathIsWithin } from "../identity";
+import { canWriteInBranch, identityOf, pathIsWithin } from "../identity";
+import { resolvePersonMock } from "../person-detail";
 import type {
   ClaimReviewView,
   ClanInviteListDto,
@@ -365,6 +366,16 @@ export function findClanInviteMock(id: string): ClanInviteView | undefined {
 }
 
 /**
+ * Đếm mã mời dòng họ ĐANG DÙNG ĐƯỢC (`usability === "USABLE"`) — dùng bởi
+ * `GET /admin/clan-profile/readiness` (`src/mocks/handlers/clan.ts`, bước 4
+ * "Phát mã mời" của `/quan-tri`) để khỏi có hai kho dữ liệu cùng trả lời một
+ * câu hỏi và có cơ hội lệch nhau.
+ */
+export function activeClanInviteCountMock(): number {
+  return clanInvites.filter((c) => c.usability === "USABLE").length;
+}
+
+/**
  * Cắt hàng đợi theo phạm vi `ltree` của người gọi — **ở máy chủ**.
  *
  * Ngữ nghĩa `@>`: `root.chi_nhat` bao `root.chi_nhat.nganh_truong` nhưng **không**
@@ -580,19 +591,47 @@ export const membershipAdminHandlers = [
     if (!personId) {
       return problem(400, "VALIDATION_FAILED", "Thiếu nhân khẩu được mời", instance);
     }
+    // Ba phép kiểm LÚC PHÁT, đúng bảng trong contract `issueInvitation` và đúng
+    // thứ backend thật trả (đo 24/09 bằng truongchi): ngoài chi → 403
+    // BRANCH_SCOPE_VIOLATION; người đã khuất → 422 VALIDATION_FAILED; đã có tài
+    // khoản → 422 PERSON_ALREADY_LINKED. Bản mock trước chỉ có phép thứ ba — "dễ
+    // hơn thật" — nên màn phát mã chưa bao giờ phải dịch hai mã đầu, và trên hệ
+    // thật nó in "Chưa nối được với máy chủ" cho một người ở chi khác.
+    const target = resolvePersonMock(personId);
+    if (!target) {
+      return problem(404, "NOT_FOUND", "Không tìm thấy nhân khẩu", instance);
+    }
+    if (!canWriteInBranch(identityOf(role), target.primaryBranch?.path)) {
+      return problem(403, "BRANCH_SCOPE_VIOLATION", "Ngoài phạm vi được giao", instance);
+    }
+    if (target.isAlive === false) {
+      return problem(422, "VALIDATION_FAILED", "Không thể mời một người đã khuất", instance);
+    }
     // Phát hiện "nhân khẩu đã có tài khoản" lúc PHÁT, không lúc nhận: Trưởng chi
     // phải biết ngay khi bấm, chứ không sau khi đã in phiếu và gửi tin nhắn.
     if (invitations.some((i) => i.personId === personId && i.status === "ACCEPTED")) {
       return problem(422, "PERSON_ALREADY_LINKED", "Nhân khẩu đã có tài khoản", instance);
     }
 
+    // Phát lại TỰ THU HỒI mã cũ còn dùng được của cùng người (contract: hai mã
+    // cùng mở một hồ sơ thì "thu hồi" mất nghĩa).
+    const nowIso = new Date().toISOString();
+    invitations = invitations.map((i) =>
+      i.personId === personId && i.usability === "USABLE"
+        ? { ...i, status: "REVOKED", usability: "REVOKED", revokedAt: nowIso }
+        : i
+    );
+
     const ttlDays = typeof body.ttlDays === "number" ? body.ttlDays : 7;
     invitationSeq += 1;
     const invitation: InvitationDto = {
       id: `inv-moi-${invitationSeq}`,
       personId,
-      invitee: { displayName: `Nhân khẩu ${personId}`, branchName: CHI_NHAT.name },
-      branchId: "b-chi1",
+      invitee: {
+        displayName: target.displayName ?? `Nhân khẩu ${personId}`,
+        branchName: target.primaryBranch?.name ?? CHI_NHAT.name,
+      },
+      branchId: target.primaryBranch?.id ?? "b-chi1",
       invitedBy: identityOf(role).appUserId ?? "u-branch-head",
       status: "PENDING",
       usability: "USABLE",

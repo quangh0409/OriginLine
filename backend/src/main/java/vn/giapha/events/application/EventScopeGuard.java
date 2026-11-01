@@ -69,7 +69,7 @@ public class EventScopeGuard {
      */
     public void requireWriteAccess(MemberScopeView caller, boolean clanWide, UUID branchId) {
         if (clanWide) {
-            branchScope.requireClanWide(caller, "tao va sua su kien cap dong ho");
+            branchScope.requireClanWide(caller, "tạo và sửa sự kiện cấp dòng họ");
             return;
         }
         branchScope.requireWriteAccess(caller, pathOf(branchId));

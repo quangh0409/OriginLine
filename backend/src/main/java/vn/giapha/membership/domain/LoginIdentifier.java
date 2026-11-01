@@ -76,20 +76,20 @@ public final class LoginIdentifier {
     public static LoginIdentifier of(String raw) {
         if (raw == null || raw.isBlank()) {
             throw new IllegalArgumentException(
-                    "Phai cho biet dia chi thu dien tu hoac so dien thoai de lap tai khoan");
+                    "Phải cho biết địa chỉ thư điện tử hoặc số điện thoại để lập tài khoản");
         }
         String trimmed = raw.trim();
         if (trimmed.indexOf('@') >= 0) {
             String email = trimmed.toLowerCase(Locale.ROOT);
             if (!LOOSE_EMAIL.matcher(email).matches()) {
-                throw new IllegalArgumentException("Dia chi thu dien tu khong hop le");
+                throw new IllegalArgumentException("Địa chỉ thư điện tử không hợp lệ");
             }
             return new LoginIdentifier(Kind.EMAIL, email);
         }
         String phone = normalizeVietnamesePhone(trimmed);
         if (phone == null) {
             throw new IllegalArgumentException(
-                    "Khong doc duoc dia chi thu dien tu hay so dien thoai tu gia tri da nhap");
+                    "Không đọc được địa chỉ thư điện tử hay số điện thoại từ giá trị đã nhập");
         }
         return new LoginIdentifier(Kind.PHONE, phone);
     }

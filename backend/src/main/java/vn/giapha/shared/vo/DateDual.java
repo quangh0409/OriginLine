@@ -18,7 +18,7 @@ public record DateDual(LocalDate solar, LunarDate lunar, boolean approximate) im
 
     public DateDual {
         if (solar == null && lunar == null) {
-            throw new IllegalArgumentException("DateDual phai co it nhat mot trong hai lich (duong hoac am)");
+            throw new IllegalArgumentException("DateDual phải có ít nhất một trong hai lịch (dương hoặc âm)");
         }
     }
 

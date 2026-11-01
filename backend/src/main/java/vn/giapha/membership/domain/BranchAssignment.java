@@ -50,7 +50,7 @@ public final class BranchAssignment {
         this.grantedBy = grantedBy;
         this.note = note;
         if (validFrom != null && validTo != null && validTo.isBefore(validFrom)) {
-            throw new IllegalArgumentException("valid_to phai khong som hon valid_from");
+            throw new IllegalArgumentException("valid_to phải không sớm hơn valid_from");
         }
     }
 

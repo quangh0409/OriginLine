@@ -93,7 +93,7 @@ public class AddPersonService {
     public PersonView add(AddPersonCommand cmd) {
         if (cmd.names().isEmpty()) {
             throw new DomainException(GenealogyProblemCodes.VALIDATION_FAILED,
-                    "Nhan khau phai co it nhat mot lop ten");
+                    "Nhân khẩu phải có ít nhất một lớp tên");
         }
         CallerContext caller = privacy.caller();
         Placement placement = resolvePlacement(cmd);
@@ -236,7 +236,7 @@ public class AddPersonService {
 
     private Person load(UUID id) {
         return persons.byId(PersonId.of(id)).orElseThrow(() -> new NotFoundException(
-                GenealogyProblemCodes.NOT_FOUND, "Khong tim thay nhan khau voi dinh danh " + id));
+                GenealogyProblemCodes.NOT_FOUND, "Không tìm thấy nhân khẩu với định danh " + id));
     }
 
     private String joinNotes(String... parts) {

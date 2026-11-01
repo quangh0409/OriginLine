@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notificationsApi, type ListNotificationsParams } from "@/lib/api";
 import { queryKeys } from "@/lib/query/keys";
+import { ApiError } from "@/lib/api/http";
+import { MOCKING_ENABLED, getDevRole } from "@/lib/api/dev-role";
+import { useAuth } from "@/lib/auth/auth-context";
 import type { NotificationPage } from "@/types/api";
 
 /**
@@ -24,12 +27,39 @@ import type { NotificationPage } from "@/types/api";
  * never derive the badge by counting `items`, which is one page of a possibly
  * filtered list.
  */
+/**
+ * Ai đang hỏi hộp thư: `"loading"` khi phiên chưa ngã ngũ, `"guest"` khi chưa đăng nhập.
+ *
+ * <h2>Vì sao hộp thư phải hỏi câu này TRƯỚC khi gọi mạng (đo 24/09 trên hệ thật)</h2>
+ * Chuông ở thanh đầu trang và huy hiệu ở thanh tab đáy dựng cho MỌI người, kể cả khách. Trước đây
+ * chúng gọi `GET /notifications?size=5` bất kể ai đang xem: mỗi trang khách mở là một `401` đỏ
+ * trong bảng điều khiển trình duyệt và trong nhật ký máy chủ — rồi lặp lại mỗi 60 giây
+ * (`refetchInterval`) và mỗi lần quay lại tab, suốt thời gian khách còn mở trang. Hộp thư là của
+ * riêng người đăng nhập (không có tham số `userId`), nên với khách câu trả lời đã biết trước.
+ *
+ * Cùng một quy tắc ba nhánh với `useTreeAudience`: dưới MSW thì vai giả lập quyết định.
+ */
+export type InboxAccess = "loading" | "guest" | "member";
+
+export function useInboxAccess(): InboxAccess {
+  const { status } = useAuth();
+  if (MOCKING_ENABLED) return getDevRole() === "guest" ? "guest" : "member";
+  if (status === "loading") return "loading";
+  return status === "authenticated" ? "member" : "guest";
+}
+
 export function useNotifications(params: ListNotificationsParams = {}) {
+  const access = useInboxAccess();
   return useQuery({
     queryKey: [...queryKeys.notifications(), params],
     queryFn: () => notificationsApi.list(params),
-    refetchInterval: 60_000,
-    refetchOnWindowFocus: true,
+    enabled: access === "member",
+    // Máy chủ đã TỪ CHỐI dứt khoát (4xx: chưa ghép nhân khẩu — `ACCOUNT_NOT_LINKED` — hay phiên
+    // hết hạn) thì thôi hỏi lại mỗi phút: câu trả lời sẽ y hệt. Đo 24/09: một tài khoản chưa ghép
+    // phả để mở trang sinh ra một `403` mỗi 60 giây trong nhật ký máy chủ, không dừng. Lỗi 5xx
+    // vẫn hỏi lại như cũ — đó mới là trục trặc tạm thời mà "mở app là thấy đủ" cần vượt qua.
+    refetchInterval: (query) => inboxRefetchInterval(query.state.error),
+    refetchOnWindowFocus: (query) => !isFinalRefusal(query.state.error),
     refetchOnMount: true,
   });
 }
@@ -77,4 +107,13 @@ export function useMarkNotificationRead() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
     },
   });
+}
+/** Lỗi mà hỏi lại cũng không đổi được câu trả lời: 4xx từ máy chủ. */
+export function isFinalRefusal(error: unknown): boolean {
+  return error instanceof ApiError && error.status >= 400 && error.status < 500;
+}
+
+/** Nhịp hỏi lại hộp thư: 60 giây, trừ khi máy chủ đã từ chối dứt khoát (xem `isFinalRefusal`). */
+export function inboxRefetchInterval(error: unknown): number | false {
+  return isFinalRefusal(error) ? false : 60_000;
 }

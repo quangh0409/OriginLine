@@ -183,16 +183,16 @@ final class KinshipApiMapper {
     private static KinshipRule toDomain(KinshipRuleDto dto, int index) {
         if (dto.relationCode() == null || dto.relationCode().isBlank()) {
             throw new DomainException("VALIDATION_FAILED",
-                    "rules[" + index + "].relationCode khong duoc bo trong");
+                    "rules[" + index + "].relationCode không được bỏ trống");
         }
         if (dto.title() == null || dto.title().isBlank()) {
             throw new DomainException("VALIDATION_FAILED",
-                    "rules[" + index + "].title khong duoc bo trong");
+                    "rules[" + index + "].title không được bỏ trống");
         }
         int priority = dto.priority() == null ? 100 : dto.priority();
         if (priority < 0) {
             throw new DomainException("VALIDATION_FAILED",
-                    "rules[" + index + "].priority phai >= 0");
+                    "rules[" + index + "].priority phải >= 0");
         }
         return new KinshipRule(
                 dto.id() == null ? UUID.randomUUID() : dto.id(),

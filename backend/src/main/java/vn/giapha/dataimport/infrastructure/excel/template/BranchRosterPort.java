@@ -88,6 +88,18 @@ public interface BranchRosterPort {
      *                trùng tên
      * @param soNguoi số người đã có mã trong chi; 0 nghĩa là chi nhập lần đầu
      */
-    record Chi(UUID id, String ten, String path, long soNguoi) {
+    /**
+     * @param soNguoi số người trong chi MANG MÃ nhập liệu ({@code person_external_ref}) — tức số
+     *        người mà tệp mẫu điền sẵn được
+     * @param soNguoiChuaCoMa số người CÒN LẠI của cây chi (chưa xoá mềm) KHÔNG mang mã: nhập tay,
+     *        được duyệt qua đơn "Tôi chưa có trong phả", hoặc dữ liệu nạp trước khi có luồng Excel.
+     *        Họ không vào tệp được (không có mã để tra lại), nhưng họ CÓ THẬT trong phả — trang
+     *        Hướng dẫn phải nói ra, nếu không nó tuyên bố "chưa có ai" với một chi có hàng trăm người.
+     */
+    record Chi(UUID id, String ten, String path, long soNguoi, long soNguoiChuaCoMa) {
+        /** Chi chỉ có người mang mã (hoặc chưa có ai) — giữ cho các chỗ dựng cũ. */
+        public Chi(UUID id, String ten, String path, long soNguoi) {
+            this(id, ten, path, soNguoi, 0);
+        }
     }
 }

@@ -52,7 +52,39 @@ export function buildParentMap(edges: Iterable<TreeEdge>): Map<string, string[]>
 }
 
 /**
+ * Bản đồ **người → các vợ/chồng**, vô hướng, dựng từ cạnh `SPOUSE`.
+ *
+ * Chỉ dùng cho một bước duy nhất của phép đi ngược: bước đầu tiên, khi chính người được nhắm tới
+ * là **dâu/rể** — không có cạnh huyết thống nào dẫn về dòng họ, họ vào cây qua người phối ngẫu.
+ */
+export function buildSpouseMap(edges: Iterable<TreeEdge>): Map<string, string[]> {
+  const spouses = new Map<string, string[]>();
+  const add = (from: string, to: string) => {
+    const list = spouses.get(from);
+    if (list) list.push(to);
+    else spouses.set(from, [to]);
+  };
+  for (const edge of edges) {
+    if (edge.relType !== "SPOUSE") continue;
+    add(edge.source, edge.target);
+    add(edge.target, edge.source);
+  }
+  return spouses;
+}
+
+/**
  * Đường ngắn nhất `[gốc, …, người ấy]`, hoặc `null` nếu **không nối được** trong dữ liệu đã tải.
+ *
+ * <h2>Dâu/rể: đi qua người phối ngẫu (đảo một quyết định cũ, 24/09)</h2>
+ * Bản trước trả `null` cho dâu/rể, với lý do "cô ấy không có cạnh huyết thống nào về thuỷ tổ, nên
+ * `<TreeCanvas>` đổi gốc sang chính cô là đúng". Lý do ấy đúng về đồ thị nhưng sai về người dùng:
+ * đổi gốc sang một người dâu thì phả đồ còn đúng **hai ô** (cô và chồng), mất hết tổ tiên nhà
+ * chồng — tức "Về chỗ tôi" đưa người dùng ra khỏi dòng họ thay vì đưa họ về chỗ của mình trong
+ * đó. Đo được trên hệ thật: tài khoản `thanhvien` (một người dâu đời 7) bấm "Về chỗ tôi" thì
+ * canvas còn "2 nhân khẩu đang hiển thị". Nay khi người được nhắm tới **không có cha/mẹ nào**
+ * trong dữ liệu đã tải, bước đầu tiên được phép đi sang vợ/chồng; đường trả về là
+ * `[gốc, …, chồng, người dâu]`. Chỉ bước đầu tiên — đi ngang qua hôn phối ở giữa chuỗi sẽ dựng
+ * ra một "dòng dõi" giả đi qua nhà thông gia.
  *
  * `null` là một câu trả lời bình thường chứ không phải lỗi: người ấy có thể thuộc một chi khác,
  * hoặc chuỗi tổ tiên của họ dài hơn độ sâu mà máy chủ vừa trả về. Người gọi xử lý bằng cách **đổi
@@ -68,7 +100,8 @@ export function pathFromRootTo(
   if (!nodesById.has(rootId) || !nodesById.has(targetId)) return null;
   if (rootId === targetId) return [rootId];
 
-  const parents = buildParentMap(edges);
+  const edgeList = [...edges];
+  const parents = buildParentMap(edgeList);
 
   /** `cameFrom[x]` = người con mà ta vừa đi lên TỪ đó, để dựng lại đường sau khi chạm gốc. */
   const cameFrom = new Map<string, string>();
@@ -86,7 +119,13 @@ export function pathFromRootTo(
       }
       return path;
     }
-    for (const parentId of parents.get(current) ?? []) {
+    const ownParents = (parents.get(current) ?? []).filter((id) => nodesById.has(id));
+    // Dâu/rể: không có cha/mẹ trong phả ⇒ vào cây qua người phối ngẫu. Xem khối chú thích trên.
+    const nextHops =
+      current === targetId && ownParents.length === 0
+        ? (buildSpouseMap(edgeList).get(current) ?? [])
+        : ownParents;
+    for (const parentId of nextHops) {
       if (seen.has(parentId) || !nodesById.has(parentId)) continue;
       seen.add(parentId);
       cameFrom.set(parentId, current);
@@ -111,4 +150,22 @@ export function expansionForFocus(
 ): ReadonlySet<string> {
   const path = pathFromRootTo(nodesById, edges, rootId, focusId);
   return path === null ? new Set<string>() : new Set(path);
+}
+
+/**
+ * Những người phối ngẫu phải hỏi thêm **chuỗi tổ tiên** để một người dâu/rể nối được về gốc.
+ *
+ * Lượt `ANCESTORS` từ chính người dâu chỉ trả về cô và chồng (đã đo: 2 node, 1 cạnh `SPOUSE`) —
+ * máy chủ đi ngược theo cạnh cha/mẹ, và cô không có cạnh ấy trong phả. Chuỗi cần cho đường đi là
+ * chuỗi tổ tiên của **chồng**, nên phải hỏi thêm một lượt từ chồng. Rỗng khi người ấy có cha/mẹ
+ * trong projection (người trong họ — lượt đầu đã đủ) hoặc chưa có dữ liệu.
+ */
+export function inLawBridgeIds(
+  edges: Iterable<TreeEdge> | undefined,
+  focusId: string | null
+): string[] {
+  if (!edges || !focusId) return [];
+  const list = [...edges];
+  if (list.some((e) => isDescentEdge(e) && e.target === focusId)) return [];
+  return [...new Set(buildSpouseMap(list).get(focusId) ?? [])];
 }

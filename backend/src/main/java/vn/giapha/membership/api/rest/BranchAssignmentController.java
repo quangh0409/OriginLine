@@ -51,7 +51,7 @@ public class BranchAssignmentController {
         RoleCode role = RoleCode.parse(body.role());
         if (role == null) {
             throw new DomainException(MembershipProblemCodes.INVALID_ROLE_ASSIGNMENT,
-                    "Vai tro khong hop le: " + body.role());
+                    "Vai trò không hợp lệ: " + body.role());
         }
         BranchAssignment saved = roles.grant(new GrantRoleCommand(body.appUserId(), role,
                 body.branchId(), body.validFrom(), body.validTo(), body.note()));

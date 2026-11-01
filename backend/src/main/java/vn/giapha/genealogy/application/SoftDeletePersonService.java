@@ -63,7 +63,7 @@ public class SoftDeletePersonService {
     public void softDelete(UUID personId, String reason) {
         CallerContext caller = privacy.caller();
         Person person = persons.byId(PersonId.of(personId)).orElseThrow(() -> new NotFoundException(
-                GenealogyProblemCodes.NOT_FOUND, "Khong tim thay nhan khau voi dinh danh " + personId));
+                GenealogyProblemCodes.NOT_FOUND, "Không tìm thấy nhân khẩu với định danh " + personId));
         BranchDirectory dir = BranchDirectory.load(branches, Arrays.asList(person.primaryBranchId()));
         guard.requireWriteAccess(caller, dir.pathOf(person.primaryBranchId()));
 
@@ -72,7 +72,7 @@ public class SoftDeletePersonService {
             person.softDelete(reason);
         } catch (IllegalStateException ex) {
             throw new GenealogyConflictException(GenealogyProblemCodes.PERSON_ALREADY_DELETED,
-                    "Nhan khau da o trang thai xoa mem", ex);
+                    "Nhân khẩu đã ở trạng thái xoá mềm", ex);
         }
         persons.save(person);
         graph.syncPersonNode(person.rawId(), person.gender() == null ? null : person.gender().name(),

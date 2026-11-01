@@ -55,9 +55,9 @@ public class RestorePersonService {
     @Transactional
     public PersonView restore(UUID personId, String reason) {
         CallerContext caller = privacy.caller();
-        guard.requireClanWide(caller, "khoi phuc ban ghi da xoa mem");
+        guard.requireClanWide(caller, "khôi phục bản ghi đã xoá mềm");
         Person person = persons.byId(PersonId.of(personId)).orElseThrow(() -> new NotFoundException(
-                GenealogyProblemCodes.NOT_FOUND, "Khong tim thay nhan khau voi dinh danh " + personId));
+                GenealogyProblemCodes.NOT_FOUND, "Không tìm thấy nhân khẩu với định danh " + personId));
 
         Map<String, Object> before = person.auditSnapshot();
         person.restore();

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildParentMap, expansionForFocus, pathFromRootTo } from "@/lib/tree/focus-path";
+import {
+  buildParentMap,
+  expansionForFocus,
+  inLawBridgeIds,
+  pathFromRootTo,
+} from "@/lib/tree/focus-path";
 import { computeVisibleSubgraph } from "@/lib/tree/visible-subgraph";
 import { edge, node, threeGenerationFamily, toMaps } from "../../setup/tree-fixtures";
 import type { TreeEdge, TreeNode } from "@/types/api";
@@ -44,11 +49,33 @@ describe("pathFromRootTo", () => {
     expect(pathFromRootTo(nodesById, edges, "root", "root")).toEqual(["root"]);
   });
 
-  it("trả null khi người ấy không nối được về gốc — người dâu là ca thường gặp nhất", () => {
+  it("người dâu nối về gốc QUA CHỒNG — không đổi gốc sang cô (đo trên hệ thật 24/09)", () => {
     const { nodesById, edges } = threeGenerationFamily();
-    // Con dâu không có cạnh huyết thống nào dẫn về thuỷ tổ: cô vào cây qua CHỒNG.
-    // `null` ở đây là câu trả lời ĐÚNG, và là lý do <TreeCanvas> phải có nhánh đổi gốc.
-    expect(pathFromRootTo(nodesById, edges, "root", "sonAWife")).toBeNull();
+    // Bản cũ trả `null` ở đây và <TreeCanvas> đổi gốc sang chính người dâu: phả đồ còn đúng hai
+    // ô (cô và chồng). Tài khoản demo `thanhvien` là một người dâu đời 7, nên "Về chỗ tôi" đưa
+    // mọi người thử nghiệm ra KHỎI dòng họ. Nay bước đầu được đi sang chồng.
+    expect(pathFromRootTo(nodesById, edges, "root", "sonAWife")).toEqual([
+      "root",
+      "sonA",
+      "sonAWife",
+    ]);
+  });
+
+  it("chỉ bước ĐẦU được đi ngang qua hôn phối — người trong họ vẫn đi theo cha/mẹ", () => {
+    const { nodesById, edges } = threeGenerationFamily();
+    // grandA1 có cha trong projection ⇒ không được rẽ sang vợ/chồng dù có.
+    expect(pathFromRootTo(nodesById, edges, "root", "grandA1")).toEqual([
+      "root",
+      "sonA",
+      "grandA1",
+    ]);
+  });
+
+  it("vẫn trả null khi người dâu có chồng nhưng chồng không nối được về gốc", () => {
+    const nodes: TreeNode[] = [node("root", 0), node("x", 5), node("xWife", 5)];
+    const edges: TreeEdge[] = [edge("e-x-w", "x", "xWife", "SPOUSE")];
+    const { nodesById } = toMaps(nodes, edges);
+    expect(pathFromRootTo(nodesById, edges, "root", "xWife")).toBeNull();
   });
 
   it("trả null cho id không có trong projection, không ném lỗi", () => {
@@ -120,7 +147,15 @@ describe("expansionForFocus", () => {
 
   it("trả tập rỗng thay vì ném lỗi khi không nối được", () => {
     const { nodesById, edges } = threeGenerationFamily();
-    expect(expansionForFocus(nodesById, edges, "root", "sonAWife").size).toBe(0);
+    expect(expansionForFocus(nodesById, edges, "root", "khong-co-ai").size).toBe(0);
+  });
+
+  it("người dâu: mở đường xuống CHỒNG, và cô hiện ra cạnh chồng", () => {
+    const { nodesById, edgesById, edges } = threeGenerationFamily();
+    const expanded = expansionForFocus(nodesById, edges, "root", "sonAWife");
+    expect([...expanded].sort()).toEqual(["root", "sonA", "sonAWife"]);
+    const visible = computeVisibleSubgraph(nodesById, edgesById, "root", expanded);
+    expect(visible.nodes.map((n) => n.id)).toContain("sonAWife");
   });
 
   /**
@@ -146,5 +181,23 @@ describe("expansionForFocus", () => {
     // KHÔNG có: con cháu của các nhánh khác. `sonB` và `adopted` hiện ra (con trực tiếp của gốc)
     // nhưng cây con của họ thì không — và đó mới là chỗ một dòng họ 1.500 người phình ra.
     expect(visible.nodes.every((n) => n.depth <= 2)).toBe(true);
+  });
+});
+
+describe("inLawBridgeIds — lượt hỏi thêm tổ tiên của người phối ngẫu", () => {
+  it("người dâu (không có cạnh cha/mẹ) ⇒ hỏi chuỗi tổ tiên của chồng", () => {
+    // Đúng hình dạng máy chủ thật trả cho ANCESTORS từ `thanhvien`: 2 node, 1 cạnh SPOUSE.
+    const edges: TreeEdge[] = [edge("e", "husband", "wife", "SPOUSE")];
+    expect(inLawBridgeIds(edges, "wife")).toEqual(["husband"]);
+  });
+
+  it("người trong họ ⇒ không tốn thêm lượt gọi nào", () => {
+    const { edges } = threeGenerationFamily();
+    expect(inLawBridgeIds(edges, "sonA")).toEqual([]);
+  });
+
+  it("chưa có dữ liệu hoặc chưa có người được nhắm ⇒ rỗng", () => {
+    expect(inLawBridgeIds(undefined, "wife")).toEqual([]);
+    expect(inLawBridgeIds([], null)).toEqual([]);
   });
 });

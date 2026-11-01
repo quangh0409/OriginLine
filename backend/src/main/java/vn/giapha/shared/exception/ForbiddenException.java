@@ -18,6 +18,6 @@ public class ForbiddenException extends DomainException {
     public static ForbiddenException outOfBranchScope(String branchPath) {
         return new ForbiddenException(
                 "BRANCH_SCOPE_VIOLATION",
-                "Tai khoan khong co quyen tren pham vi chi/nganh '" + branchPath + "'");
+                "Tài khoản không có quyền trên phạm vi chi/ngành '" + branchPath + "'");
     }
 }

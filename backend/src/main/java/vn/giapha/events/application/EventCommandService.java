@@ -131,7 +131,7 @@ public class EventCommandService {
             // 409 chu khong 404: nguoi goi da biet id nay ton tai (ho vua doc no truoc khi sua), va
             // "da bi xoa" la thong tin ho can de hieu vi sao thao tac khong di qua.
             throw new EventConflictException(EventProblemCodes.EVENT_DELETED,
-                    "Su kien da bi xoa mem, khong sua duoc nua");
+                    "Sự kiện đã bị xoá mềm, không sửa được nữa");
         }
         requireMatchingVersion(current, command.expectedVersion());
 
@@ -241,8 +241,8 @@ public class EventCommandService {
     private static void requireMatchingVersion(Event current, long expectedVersion) {
         if (current.version() != expectedVersion) {
             throw new EventConflictException(EventProblemCodes.OPTIMISTIC_LOCK_CONFLICT,
-                    "Su kien da duoc nguoi khac cap nhat (phien ban " + current.version()
-                            + ", ban gui " + expectedVersion + "). Hay tai lai va thu lai.");
+                    "Sự kiện đã được người khác cập nhật (phiên bản " + current.version()
+                            + ", bản gửi " + expectedVersion + "). Hãy tải lại và thử lại.");
         }
     }
 
@@ -259,8 +259,8 @@ public class EventCommandService {
         boolean hasSolar = command.has(UpdateEventCommand.F_SOLAR_DATE) && command.solarDate() != null;
         if (hasLunar && hasSolar) {
             throw new IllegalArgumentException(
-                    "Chi gui mot trong hai: lunarDate (mac dinh cho viec ho) hoac solarDate."
-                            + " Luu ca hai se tao ra hai ngay khong bao gio dong bo lai duoc.");
+                    "Chỉ gửi một trong hai: lunarDate (mặc định cho việc họ) hoặc solarDate."
+                            + " Lưu cả hai sẽ tạo ra hai ngày không bao giờ đồng bộ lại được.");
         }
         if (hasLunar) {
             builder.lunarBased(true).lunarDate(command.lunarDate()).solarDate(null);
@@ -301,16 +301,16 @@ public class EventCommandService {
      */
     private void validate(Event event) {
         if (event.title() == null || event.title().isBlank()) {
-            throw new IllegalArgumentException("Tieu de su kien khong duoc de trong");
+            throw new IllegalArgumentException("Tiêu đề sự kiện không được để trống");
         }
         if (event.title().length() > 200) {
-            throw new IllegalArgumentException("Tieu de su kien toi da 200 ky tu");
+            throw new IllegalArgumentException("Tiêu đề sự kiện tối đa 200 ký tự");
         }
         if (event.type() == EventType.GIO) {
             requireGioShape(event);
         }
         if (event.location() != null && event.location().length() > 255) {
-            throw new IllegalArgumentException("Dia diem toi da 255 ky tu");
+            throw new IllegalArgumentException("Địa điểm tối đa 255 ký tự");
         }
         if (event.personId() != null) {
             EventSubject subject = subjects.findPerson(event.personId())
@@ -343,19 +343,19 @@ public class EventCommandService {
     private static void requireGioShape(Event event) {
         if (event.personId() == null) {
             throw new IllegalArgumentException(
-                    "Gio ca nhan bat buoc gan mot nhan khau (ck_event_gio_has_person)");
+                    "Giỗ cá nhân bắt buộc gắn một nhân khẩu (ck_event_gio_has_person)");
         }
         if (!event.isLunarBased()) {
             throw new EventConflictException(EventProblemCodes.GIO_DATE_FROM_PERSON,
-                    "Ngay gio lay theo ngay mat am trong ho so nhan khau, nen khong ghi duoc theo"
-                            + " duong lich. Mot ngay duong co dinh se troi khoi ngay gio that"
-                            + " khoang 11 ngay moi nam. Muon doi ngay gio thi sua ngay mat tren"
-                            + " ho so.");
+                    "Ngày giỗ lấy theo ngày mất âm trong hồ sơ nhân khẩu, nên không ghi được theo"
+                            + " dương lịch. Một ngày dương cố định sẽ trôi khỏi ngày giỗ thật"
+                            + " khoảng 11 ngày mỗi năm. Muốn đổi ngày giỗ thì sửa ngày mất trên"
+                            + " hồ sơ.");
         }
         if (!event.isRecurring()) {
             throw new IllegalArgumentException(
-                    "Gio lap hang nam theo ngay mat am; mot cai gio 'mot lan' se roi vao nam mat"
-                            + " (qua khu) va khong bao gio sinh loi nhac"
+                    "Giỗ lặp hằng năm theo ngày mất âm; một cái giỗ 'một lần' sẽ rơi vào năm mất"
+                            + " (quá khứ) và không bao giờ sinh lời nhắc"
                             + " (ck_event_gio_lunar_recurring)");
         }
     }
@@ -388,9 +388,9 @@ public class EventCommandService {
             return;
         }
         throw new EventConflictException(EventProblemCodes.GIO_DATE_FROM_PERSON,
-                "Ngay gio lay theo ngay mat trong ho so nhan khau (" + fromPerson + ")."
-                        + " Muon doi ngay gio thi sua ngay mat tren ho so, dung sua o day —"
-                        + " sua o day se khong co tac dung nao.");
+                "Ngày giỗ lấy theo ngày mất trong hồ sơ nhân khẩu (" + fromPerson + ")."
+                        + " Muốn đổi ngày giỗ thì sửa ngày mất trên hồ sơ, đừng sửa ở đây —"
+                        + " sửa ở đây sẽ không có tác dụng nào.");
     }
 
     // ---------------------------------------------------------------------------------------

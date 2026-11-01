@@ -59,10 +59,10 @@ public class PushSubscriptionService {
     public String vapidPublicKey() {
         return vapidKeys.publicKeyBase64Url().orElseThrow(() -> new DomainException(
                 CODE_WEBPUSH_NOT_CONFIGURED,
-                "May chu chua cau hinh khoa VAPID nen chua bat duoc Web Push."
-                        + " Quan tri vien xem GET /api/v1/admin/notifications/webpush"
-                        + " de biet dang thieu gi va cac buoc sua."
-                        + " Thong bao in-app van hoat dong binh thuong."));
+                "Máy chủ chưa cấu hình khoá VAPID nên chưa bật được Web Push."
+                        + " Quản trị viên xem GET /api/v1/admin/notifications/webpush"
+                        + " để biết đang thiếu gì và các bước sửa."
+                        + " Thông báo in-app vẫn hoạt động bình thường."));
     }
 
     /**

@@ -3,13 +3,13 @@
 import { useId, useState } from "react";
 import { Alert, Button, Empty, Input, InputNumber, Skeleton } from "antd";
 import { SendOutlined } from "@ant-design/icons";
-import { useTranslations } from "next-intl";
-import { PersonPicker } from "@/components/person/person-picker";
+import { useFormatter, useTranslations } from "next-intl";
 import { colorVars } from "@/styles/tokens";
-import { invitationFailureOf } from "@/lib/api/invitation";
+import { invitationFailureOf, invitationIssueFailureOf } from "@/lib/api/invitation";
 import type { PersonSummaryDto } from "@/types/api";
 import { InvitationRow } from "./invitation-row";
 import { OneTimeCode } from "./one-time-code";
+import { ScopedPersonPicker } from "./scoped-person-picker";
 import { useInvitations, useIssueInvitation } from "./queries";
 
 /** Mặc định của backend là 7 ngày; biểu mẫu nói ra con số ấy thay vì để trống. */
@@ -63,6 +63,17 @@ export function PersonalInvitePanel() {
   };
 
   const vuaPhat = issue.data;
+  const format = useFormatter();
+
+  // Lời mời CÒN DÙNG ĐƯỢC của đúng người vừa chọn. Phát thêm một lời mời cho
+  // người ấy thì máy chủ tự thu hồi mã cũ (contract `issueInvitation`: hai mã
+  // cùng mở một hồ sơ thì "thu hồi" mất nghĩa). Việc ấy đúng — nhưng trước bản
+  // này nó xảy ra IM LẶNG: đo trên hệ thật 24/09, chọn lại cụ vừa được mời không
+  // hiện một chữ nào, và mã đã đọc qua điện thoại cho cụ sáng nay chết ngay
+  // khi Trưởng chi bấm "Phát lời mời" lần hai. Phải nói ra TRƯỚC khi bấm.
+  const loiMoiDangMo = personId
+    ? invitations.data?.find((i) => i.personId === personId && i.usability === "USABLE")
+    : undefined;
 
   return (
     <section aria-labelledby="loi-moi-ca-nhan-tieu-de">
@@ -110,13 +121,13 @@ export function PersonalInvitePanel() {
               className="!mb-3"
               type="error"
               showIcon
-              message={t(`personal.errors.${invitationFailureOf(issue.error)}`)}
+              message={t(`personal.issueErrors.${invitationIssueFailureOf(issue.error)}`)}
             />
           )}
 
           <div className="flex flex-col gap-3">
             <div>
-              <PersonPicker
+              <ScopedPersonPicker
                 id="chon-nhan-khau-moi"
                 label={t("personal.personLabel")}
                 placeholder={t("personal.personPlaceholder")}
@@ -135,6 +146,17 @@ export function PersonalInvitePanel() {
                 </p>
               )}
               <p className="m-0 mt-1 text-than text-text-muted">{t("personal.scopeHint")}</p>
+              {loiMoiDangMo && (
+                <Alert
+                  className="!mt-2"
+                  type="warning"
+                  showIcon
+                  data-testid="loi-moi-dang-mo"
+                  message={t("personal.reissueWarning", {
+                    at: format.dateTime(new Date(loiMoiDangMo.expiresAt), { dateStyle: "medium" }),
+                  })}
+                />
+              )}
             </div>
 
             <label className="block" htmlFor={ttlId}>

@@ -274,6 +274,50 @@ describe("lời mời cá nhân", () => {
   );
 
   it(
+    "chọn lại người vừa được mời thì cảnh báo TRƯỚC khi phát: phát mới là giết mã cũ",
+    async () => {
+      // Đo trên hệ thật 24/09: phát lại cho cùng một cụ thì máy chủ tự thu hồi
+      // mã cũ — đúng — nhưng màn hình im lặng, nên mã đã đọc qua điện thoại cho
+      // cụ sáng nay chết mà Trưởng chi không hề biết.
+      const { user } = renderWithProviders(<InviteScreen />, { role: "branch-head" });
+      await screen.findByText(/Chọn đúng một cụ trong chi mình/, {}, { timeout: 15_000 });
+
+      const chon = async (title?: string) => {
+        const box = screen.getAllByRole("combobox")[0] as HTMLElement;
+        await user.click(box);
+        await user.type(box, "Nguyen");
+        const option = await waitFor(
+          () => {
+            const nodes = Array.from(
+              document.querySelectorAll(".ant-select-item-option")
+            ) as HTMLElement[];
+            const n = title ? nodes.find((x) => x.getAttribute("title") === title) : nodes[0];
+            if (!n) throw new Error("chưa có kết quả tìm kiếm");
+            return n;
+          },
+          { timeout: 15_000 }
+        );
+        const t = option.getAttribute("title") ?? "";
+        await user.click(option);
+        return t;
+      };
+
+      const ten = await chon();
+      expect(screen.queryByTestId("loi-moi-dang-mo")).toBeNull();
+      await user.click(screen.getByRole("button", { name: /Phát lời mời/ }));
+      await screen.findByTestId("ma-mot-lan", {}, { timeout: 15_000 });
+      await user.click(screen.getByRole("button", { name: /Tôi đã chép xong/ }));
+
+      await chon(ten);
+      expect(
+        await screen.findByTestId("loi-moi-dang-mo", {}, { timeout: 15_000 })
+      ).toHaveTextContent(/làm mã cũ mất tác dụng/);
+    },
+    // Hai lượt tra + một lượt phát trên antd/jsdom: đo 45s ở máy dev, nên gấp đôi.
+    SLOW * 2
+  );
+
+  it(
     "không gửi gì khi chưa chọn người, và nói rõ thiếu gì",
     async () => {
       const captured = captureRequests();

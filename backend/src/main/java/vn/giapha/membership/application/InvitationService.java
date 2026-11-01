@@ -155,38 +155,38 @@ public class InvitationService {
     public IssuedInvitation issue(IssueInvitationCommand command) {
         if (command == null || command.personId() == null) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Phai chi dinh nhan khau duoc moi");
+                    "Phải chỉ định nhân khẩu được mời");
         }
         MemberScope caller = scopes.currentMemberScope();
         guard.requireProvisionedAccount(caller);
 
         Invitee invitee = invitees.byId(command.personId())
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay nhan khau " + command.personId()));
+                        "Không tìm thấy nhân khẩu " + command.personId()));
 
         // PHEP KIEM PHAM VI CHI. Doc javadoc cua lop truoc khi doi dong nay.
         guard.requireWriteAccess(caller, invitee.branchPath());
 
         if (invitee.deleted()) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Nhan khau nay da bi xoa khoi pha, khong moi duoc");
+                    "Nhân khẩu này đã bị xoá khỏi phả, không mời được");
         }
         if (!invitee.alive()) {
             // Khong phai mot phep kiem hinh thuc: ho so nguoi da khuat la du lieu cong khai, va
             // khong ai can mot tai khoan de "la" mot nguoi da khuat.
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Khong the moi mot nguoi da khuat");
+                    "Không thể mời một người đã khuất");
         }
 
         // MOT NHAN KHAU CHI GAN MOT TAI KHOAN — tu choi o day, khong de toi luc nhan.
         if (appUsers.byPersonId(command.personId()).isPresent()) {
             throw new DomainException(MembershipProblemCodes.PERSON_ALREADY_LINKED,
-                    "Nhan khau nay da co tai khoan, khong can moi lai");
+                    "Nhân khẩu này đã có tài khoản, không cần mời lại");
         }
 
         Instant now = Instant.now();
         invitations.openForPerson(command.personId()).ifPresent(previous -> {
-            previous.revoke("Phat lai loi moi moi", now);
+            previous.revoke("Phát lại lời mời mới", now);
             invitations.save(previous);
             audit.record(ENTITY, previous.id().toString(), AuditAction.UPDATE,
                     null, Map.of("status", previous.status().name()), List.of("status"),
@@ -234,7 +234,7 @@ public class InvitationService {
         Invitation invitation = resolveUsable(rawCode, clientId);
         Invitee invitee = invitees.byId(invitation.personId())
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay loi moi khop ma nay"));
+                        "Không tìm thấy lời mời khớp mã này"));
         throttle.recordSuccess(clientId, false);
         return new InvitationPreview(invitee.clanName(), inviterOf(invitation),
                 new InvitationPreview.Invitee(invitee.displayName(), invitee.generation(),
@@ -290,7 +290,7 @@ public class InvitationService {
     public AcceptedInvitation accept(AcceptInvitationCommand command) {
         if (command == null || command.code() == null) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Phai nhap ma moi");
+                    "Phải nhập mã mời");
         }
         String clientId = command.clientId();
         throttle.guard(clientId);
@@ -373,9 +373,9 @@ public class InvitationService {
                     + " co chu, ma nguoi goi khong trinh token", invitation.id(), login.kind(),
                     account.subject());
             throw new DomainException(MembershipProblemCodes.IDENTITY_ALREADY_REGISTERED,
-                    "Dia chi nay co the da duoc dung de dang nhap truoc day, ke ca bang Google."
-                            + " Hay dang nhap truoc roi nhap lai ma moi. Neu ban khong dang nhap"
-                            + " duoc, hay dua ma moi nay cho Truong chi de duoc ho tro.");
+                    "Địa chỉ này có thể đã được dùng để đăng nhập trước đây, kể cả bằng Google."
+                            + " Hãy đăng nhập trước rồi nhập lại mã mời. Nếu bạn không đăng nhập"
+                            + " được, hãy đưa mã mời này cho Trưởng chi để được hỗ trợ.");
         }
 
         // (3) Duc lien ket — chi cho tai khoan VUA DUOC LAP o buoc tren.
@@ -406,7 +406,7 @@ public class InvitationService {
     public void decline(String rawCode, String clientId) {
         throttle.guard(clientId);
         Invitation invitation = resolveUsable(rawCode, clientId);
-        invitation.revoke("Nguoi nhan bam: Khong phai toi", Instant.now());
+        invitation.revoke("Người nhận bấm: Không phải tôi", Instant.now());
         invitations.save(invitation);
         audit.record(ENTITY, invitation.id().toString(), AuditAction.UPDATE, null,
                 Map.of("status", invitation.status().name()), List.of("status"),
@@ -426,7 +426,7 @@ public class InvitationService {
         guard.requireProvisionedAccount(caller);
         Invitation invitation = invitations.byId(invitationId)
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay loi moi " + invitationId));
+                        "Không tìm thấy lời mời " + invitationId));
         guard.requireWriteAccess(caller, branchPathOf(invitation));
 
         try {
@@ -500,7 +500,7 @@ public class InvitationService {
         int days = command.ttlDays() == null ? defaultTtlDays : command.ttlDays();
         if (days < 1 || days > MAX_TTL_DAYS) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Han loi moi phai tu 1 den " + MAX_TTL_DAYS + " ngay");
+                    "Hạn lời mời phải từ 1 đến " + MAX_TTL_DAYS + " ngày");
         }
         return Duration.ofDays(days);
     }
@@ -521,7 +521,7 @@ public class InvitationService {
      */
     private static NotFoundException khongKhopLoiMoiNao() {
         return new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                "Khong tim thay loi moi khop ma nay");
+                "Không tìm thấy lời mời khớp mã này");
     }
 
     /** Khối chi/ngành cho màn nhận lời mời; {@code null} với nhân khẩu chưa gắn chi. */

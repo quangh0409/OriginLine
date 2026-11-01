@@ -48,10 +48,10 @@ public class InvitationNotUsableException extends DomainException {
 
     private static String messageOf(InvitationUsability usability) {
         return switch (usability) {
-            case EXPIRED -> "Ma moi da het han";
-            case ALREADY_USED -> "Ma moi da duoc su dung";
-            case REVOKED -> "Ma moi da bi thu hoi";
-            case USABLE -> "Ma moi khong dung duoc";
+            case EXPIRED -> "Mã mời đã hết hạn";
+            case ALREADY_USED -> "Mã mời đã được sử dụng";
+            case REVOKED -> "Mã mời đã bị thu hồi";
+            case USABLE -> "Mã mời không dùng được";
         };
     }
 }

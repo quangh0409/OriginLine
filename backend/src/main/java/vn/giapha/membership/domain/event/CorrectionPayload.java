@@ -157,31 +157,31 @@ public final class CorrectionPayload {
 
         List<String> fields = fieldKeys(body);
         if (fields.isEmpty()) {
-            problems.add("De nghi UPDATE_PERSON phai neu it nhat mot truong can sua; cac truong "
-                    + "dinh chinh duoc: " + joined(UPDATE_PERSON_FIELDS));
+            problems.add("Đề nghị UPDATE_PERSON phải nêu ít nhất một trường cần sửa; các trường "
+                    + "đính chính được: " + joined(UPDATE_PERSON_FIELDS));
         }
         for (String field : fields) {
             if (!UPDATE_PERSON_FIELDS.contains(field)) {
-                problems.add("Truong '" + field + "' khong nam trong danh muc dinh chinh duoc ("
+                problems.add("Trường '" + field + "' không nằm trong danh mục đính chính được ("
                         + joined(UPDATE_PERSON_FIELDS)
-                        + "). Nhung viec ngoai danh muc gui bang loai OTHER.");
+                        + "). Những việc ngoài danh mục gửi bằng loại OTHER.");
                 continue;
             }
             checkValue(field, body.get(field), problems);
         }
         for (String key : body.keySet()) {
             if (key != null && key.startsWith("_") && !BASE_VERSION_KEY.equals(key)) {
-                problems.add("Khoa dieu khien '" + key + "' khong duoc cong nhan");
+                problems.add("Khoá điều khiển '" + key + "' không được công nhận");
             }
         }
 
         boolean hasBaseVersionKey = body.containsKey(BASE_VERSION_KEY);
         if (hasBaseVersionKey && baseVersion(body) == null) {
-            problems.add(BASE_VERSION_KEY + " phai la so nguyen khong am (lay tu ETag cua lan GET "
-                    + "ho so gan nhat)");
+            problems.add(BASE_VERSION_KEY + " phải là số nguyên không âm (lấy từ ETag của lần GET "
+                    + "hồ sơ gần nhất)");
         } else if (!hasBaseVersionKey && requiresBaseVersion) {
-            problems.add("Thieu " + BASE_VERSION_KEY + ": khong co moc phien ban thi luc duyet se "
-                    + "ghi de mu len thay doi cua nguoi khac");
+            problems.add("Thiếu " + BASE_VERSION_KEY + ": không có mốc phiên bản thì lúc duyệt sẽ "
+                    + "ghi đè mù lên thay đổi của người khác");
         }
         return problems;
     }
@@ -204,16 +204,16 @@ public final class CorrectionPayload {
         }
         if ("gender".equals(field)) {
             if (!(value instanceof String text) || !ALLOWED_GENDERS.contains(text)) {
-                problems.add("gender phai la mot trong " + joined(ALLOWED_GENDERS)
-                        + ", nhan duoc: " + value);
+                problems.add("gender phải là một trong " + joined(ALLOWED_GENDERS)
+                        + ", nhận được: " + value);
             }
             return;
         }
         if (!(value instanceof String text)) {
-            problems.add("Truong '" + field + "' phai la chuoi, nhan duoc: "
+            problems.add("Trường '" + field + "' phải là chuỗi, nhận được: "
                     + value.getClass().getSimpleName());
         } else if (text.length() > MAX_TEXT_LENGTH) {
-            problems.add("Truong '" + field + "' vuot qua " + MAX_TEXT_LENGTH + " ky tu");
+            problems.add("Trường '" + field + "' vượt quá " + MAX_TEXT_LENGTH + " ký tự");
         }
     }
 
@@ -225,25 +225,25 @@ public final class CorrectionPayload {
      */
     private static void checkDate(String field, Object value, List<String> problems) {
         if (!(value instanceof Map<?, ?> map)) {
-            problems.add("Truong '" + field + "' phai la doi tuong DateDual "
-                    + "{solar, lunar:{year,month,day,leap}, precision}, nhan duoc: "
+            problems.add("Trường '" + field + "' phải là đối tượng DateDual "
+                    + "{solar, lunar:{year,month,day,leap}, precision}, nhận được: "
                     + value.getClass().getSimpleName());
             return;
         }
         for (Object key : map.keySet()) {
             if (!DATE_KEYS.contains(String.valueOf(key))) {
-                problems.add("Truong '" + field + "' co khoa la '" + key + "'");
+                problems.add("Trường '" + field + "' có khoá lạ '" + key + "'");
             }
         }
         Object solar = map.get("solar");
         if (solar != null) {
             if (!(solar instanceof String text)) {
-                problems.add(field + ".solar phai la chuoi ngay ISO yyyy-MM-dd");
+                problems.add(field + ".solar phải là chuỗi ngày ISO yyyy-MM-dd");
             } else {
                 try {
                     LocalDate.parse(text);
                 } catch (DateTimeParseException ex) {
-                    problems.add(field + ".solar khong phai ngay ISO yyyy-MM-dd: " + text);
+                    problems.add(field + ".solar không phải ngày ISO yyyy-MM-dd: " + text);
                 }
             }
         }
@@ -253,11 +253,11 @@ public final class CorrectionPayload {
         }
         Object precision = map.get("precision");
         if (precision != null && !ALLOWED_PRECISIONS.contains(String.valueOf(precision))) {
-            problems.add(field + ".precision phai la mot trong " + joined(ALLOWED_PRECISIONS));
+            problems.add(field + ".precision phải là một trong " + joined(ALLOWED_PRECISIONS));
         }
         if (solar == null && lunar == null) {
-            problems.add("Truong '" + field + "' phai co it nhat mot trong hai lich (solar hoac "
-                    + "lunar); muon xoa ngay thi gui gia tri null cho ca truong.");
+            problems.add("Trường '" + field + "' phải có ít nhất một trong hai lịch (solar hoặc "
+                    + "lunar); muốn xoá ngày thì gửi giá trị null cho cả trường.");
         }
     }
 
@@ -268,30 +268,30 @@ public final class CorrectionPayload {
      */
     private static void checkLunar(String field, Object lunar, List<String> problems) {
         if (!(lunar instanceof Map<?, ?> map)) {
-            problems.add(field + ".lunar phai la doi tuong {year, month, day, leap}");
+            problems.add(field + ".lunar phải là đối tượng {year, month, day, leap}");
             return;
         }
         for (Object key : map.keySet()) {
             if (!LUNAR_KEYS.contains(String.valueOf(key))) {
-                problems.add(field + ".lunar co khoa la '" + key + "'");
+                problems.add(field + ".lunar có khoá lạ '" + key + "'");
             }
         }
         Integer month = intOrNull(map.get("month"));
         Integer day = intOrNull(map.get("day"));
         Integer year = intOrNull(map.get("year"));
         if (year == null) {
-            problems.add(field + ".lunar.year phai la so nguyen");
+            problems.add(field + ".lunar.year phải là số nguyên");
         }
         if (month == null || month < 1 || month > 12) {
-            problems.add(field + ".lunar.month phai trong khoang 1-12, nhan duoc: "
+            problems.add(field + ".lunar.month phải trong khoảng 1-12, nhận được: "
                     + map.get("month"));
         }
         if (day == null || day < 1 || day > 30) {
-            problems.add(field + ".lunar.day phai trong khoang 1-30, nhan duoc: " + map.get("day"));
+            problems.add(field + ".lunar.day phải trong khoảng 1-30, nhận được: " + map.get("day"));
         }
         Object leap = map.get("leap");
         if (leap != null && !(leap instanceof Boolean)) {
-            problems.add(field + ".lunar.leap phai la true/false");
+            problems.add(field + ".lunar.leap phải là true/false");
         }
     }
 

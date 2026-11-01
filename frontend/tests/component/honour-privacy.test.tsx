@@ -19,8 +19,9 @@ const { HonoursListScreen } = await import("@/components/honours/honours-list-sc
  *
  * `honour-4` (mồi ở `src/mocks/handlers/honours.ts`) là bản ghi của `p-103`
  * (còn sống) với `nameOpenToClan: false` — chính chủ chưa mở nhóm trường thứ
- * sáu cho cả họ, nên `personDisplayName` VẮNG MẶT với một thành viên thường.
- * Luật là "vắng mặt ⇒ không vẽ gì thay vào chỗ đó", không phải một dấu ẩn.
+ * sáu cho cả họ, nên với một thành viên thường CẢ BẢN GHI vắng mặt (khớp máy
+ * chủ thật). Luật là "vắng mặt ⇒ không vẽ gì thay vào chỗ đó", không phải một
+ * dấu ẩn.
  */
 describe("vinh danh — trường vắng mặt không làm vỡ màn hình", () => {
   it("HonourCard tự đứng vững khi personDisplayName/issuer/description đều vắng mặt", () => {
@@ -44,14 +45,17 @@ describe("vinh danh — trường vắng mặt không làm vỡ màn hình", () 
     expect(screen.queryByText(/Nơi cấp/)).not.toBeInTheDocument();
   });
 
-  it("danh sách vinh danh: bản ghi thiếu tên vẫn hiện, không đặt chỗ trống gợi ý dữ liệu bị ẩn", async () => {
+  it("danh sách vinh danh: vinh danh ĐÃ DUYỆT của người còn sống chưa mở chia sẻ KHÔNG hiện với thành viên thường, và không để lại chỗ trống", async () => {
     const { container } = renderWithProviders(<HonoursListScreen />, { role: "member" });
 
+    // Chờ danh sách thật sự tải xong (một vinh danh công khai khác đã hiện).
     await waitFor(() => {
-      expect(screen.getByText("Bằng khen Hội Chữ thập đỏ")).toBeInTheDocument();
+      expect(screen.getByText("Giải Nhất Toán học cấp Thành phố")).toBeInTheDocument();
     });
-    // p-103 = Nguyễn Văn Cẩn, nhưng nhóm trường thứ sáu của honour-4 đang đóng
-    // với cả họ — thành viên thường không thấy tên đi kèm bản ghi ấy.
+    // Khớp máy chủ thật (`HonourService.disclosable`): honour-4 của p-103 (còn sống, nhóm trường
+    // thứ sáu đóng) vắng mặt HẲN — không phải hiện với tên rỗng như bản mock trước. Nghiệm thu
+    // NT-TV-15 chấp nhận cả hai cách, nhưng mock phải nói đúng cách máy chủ thật làm.
+    expect(screen.queryByText("Bằng khen Hội Chữ thập đỏ")).not.toBeInTheDocument();
     expect(screen.queryByText("Nguyễn Văn Cẩn")).not.toBeInTheDocument();
     expectNoHiddenFieldPlaceholders(container);
   });

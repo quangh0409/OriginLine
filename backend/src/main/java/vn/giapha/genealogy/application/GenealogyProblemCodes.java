@@ -35,6 +35,16 @@ public final class GenealogyProblemCodes {
     public static final String PRECONDITION_REQUIRED = "PRECONDITION_REQUIRED";
     public static final String DEPTH_LIMIT_EXCEEDED = "DEPTH_LIMIT_EXCEEDED";
 
+    /**
+     * Đổi nhãn gốc {@code ltree} khi phả đã có nhân khẩu — HTTP 409.
+     *
+     * <p><b>Cùng một mã</b> với mã của context {@code clan}: {@code clan} chặn trước (luật nằm ở
+     * domain của nó), còn {@link ClanRootService} chặn lần hai để một bên gọi tương lai không đổi
+     * được nhãn gốc bằng cách đi vòng. Hai mã khác nhau cho cùng một luật là bắt giao diện viết
+     * hai nhánh cho cùng một câu trả lời.</p>
+     */
+    public static final String CLAN_ROOT_LOCKED = "CLAN_ROOT_LOCKED";
+
     private GenealogyProblemCodes() {
     }
 }

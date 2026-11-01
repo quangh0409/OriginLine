@@ -113,11 +113,16 @@ public class PrivacyTierService {
         }
         boolean self = caller.isSelf(person.rawId());
         boolean inScope = caller.managesBranch(personBranch) || caller.sharesBranchWith(personBranch);
+        // Một tài khoản đăng ký bằng mã dòng họ nhưng chưa được duyệt KHÔNG được hưởng mức "Cả họ
+        // xem" (xem PersonVisibility). Định nghĩa "đã vào phả" nằm ở CallerContext — dùng chung với
+        // accessOf() bên dưới và với danh bạ (DirectoryAudience đã xoá personId nhưng giữ chi).
+        boolean daVaoPha = caller.isLinkedToTree();
         return Optional.of(new PersonVisibility(
                 !person.isAlive(),
                 self,
                 caller.role().isClanWide(),
                 inScope,
+                daVaoPha,
                 isMinor(person),
                 person.privacyConsent()));
     }
@@ -241,7 +246,7 @@ public class PrivacyTierService {
         boolean branchHead = caller.role() == CallerRole.BRANCH_HEAD
                 && caller.managesBranch(personBranch);
         boolean canEdit = clanWide || branchHead || vis.self();
-        boolean daVaoPha = caller.role() != CallerRole.GUEST && caller.personId() != null;
+        boolean daVaoPha = caller.isLinkedToTree();
         return new PersonAccessView(vis.tier(), canEdit,
                 clanWide || branchHead, daVaoPha && !canEdit, vis.self(), caller.role());
     }

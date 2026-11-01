@@ -343,9 +343,16 @@ class ImportCommitIT extends AbstractIntegrationTest {
     // 6. Ba ca Hội đồng chưa chốt: dừng có kiểm soát, chưa một dòng nào vào phả
     // =====================================================================================
 
+    /**
+     * Ba ca Hội đồng chưa chốt phải lộ ra ở <b>bước kiểm</b>, đúng dòng, đúng ô.
+     *
+     * <p>Trước 24/09 (NT-TC-15) ca này đi qua bộ kiểm sạch sẽ và chỉ dừng khi bấm ghi: màn đối soát
+     * báo "Không còn lỗi phải sửa", lô nhận {@code 202} rồi {@code FAILED}. Nay lượt soát trước
+     * khi ghi chạy ở cuối bước kiểm, nên nút ghi không bao giờ mở cho một lô bước ghi sẽ từ chối.</p>
+     */
     @Test
-    @DisplayName("Lô chạm ca chưa chốt (không rõ sống/mất, con nuôi trong họ, đời dâu) → dừng sạch")
-    void baCaChuaChotThiDungSach() {
+    @DisplayName("Ca chưa chốt (không rõ sống/mất, con nuôi trong họ, đời dâu) → chặn ngay ở bước kiểm")
+    void baCaChuaChotBiChanOBuocKiem() {
         byte[] tep = ImportWorkbooks.builder()
                 .nhanKhau("AT-01-001", "Nguyễn Văn Cẩn", "", "Nam", "1", "", "", "", "Không",
                         "1890", "15/8/1950")
@@ -362,24 +369,79 @@ class ImportCommitIT extends AbstractIntegrationTest {
                         "1920", "7/7/1995")
                 .honPhoi("AT-02-001", "AT-02-101", "1")
                 .build();
-        ImportBatch batch = chuanBi(tep, "chi-at-chua-chot.xlsx");
+        ImportBatch batch = stage.stage(chiAt, null, "chi-at-chua-chot.xlsx", tep, false);
+
+        ValidateImportBatchService.KetQua kiem = validate.validate(batch.id());
+
+        assertThat(kiem.status()).isEqualTo(vn.giapha.dataimport.domain.BatchStatus.FAILED);
+        // Dung dong (qua ma) va dung O — giao dien to o tu `field`.
+        assertThat(kiem.issues()).filteredOn(i -> i.chan())
+                .extracting(i -> i.code().name() + "|" + i.context().get("externalCode") + "|"
+                        + i.field())
+                .contains(IssueCode.IMP_UNDECIDED_LIFE_STATUS.name() + "|AT-02-002|Còn sống",
+                        IssueCode.IMP_UNDECIDED_ADOPTION.name() + "|AT-03-005|Quan hệ",
+                        IssueCode.IMP_UNDECIDED_INLAW_DOI.name() + "|AT-02-101|Đời");
+        // Da luu vao import_issue va vao con so cua lo — thu man doi soat va canApprove doc.
+        assertThat(jdbc.queryForList("""
+                SELECT code FROM import_issue WHERE batch_id = ? AND severity = 'BLOCKING'
+                """, String.class, batch.id()))
+                .contains(IssueCode.IMP_UNDECIDED_LIFE_STATUS.name(),
+                        IssueCode.IMP_UNDECIDED_ADOPTION.name(),
+                        IssueCode.IMP_UNDECIDED_INLAW_DOI.name());
+        assertThat(jdbc.queryForObject("SELECT blocking_count FROM import_batch WHERE id = ?",
+                Integer.class, batch.id())).isEqualTo(kiem.loiChan());
+
+        // Nut ghi khong mo: lo FAILED khong qua duoc cong.
+        assertThatThrownBy(() -> commit.commit(batch.id(), null))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(countRows("person")).isZero();
+        assertThat(graphNodeCount()).isZero();
+    }
+
+    /**
+     * Bước ghi <b>vẫn</b> giữ lượt soát làm lưới thứ hai: dữ liệu có thể đổi giữa hai bước.
+     *
+     * <p>Mô phỏng bằng cách sửa thẳng khu vực chờ sau khi lô đã kiểm sạch — đúng loại thay đổi mà
+     * không lối HTTP nào tạo ra được, nên cũng không lối HTTP nào có thể là nơi duy nhất canh nó.</p>
+     */
+    @Test
+    @DisplayName("Dữ liệu đổi sau khi kiểm sạch → bước ghi vẫn dừng, giữ cảnh báo cũ, đếm đúng lỗi chặn")
+    void buocGhiVanLaLuoiThuHai() {
+        byte[] tep = ImportWorkbooks.builder()
+                .nhanKhau("AT-01-001", "Nguyễn Văn Cẩn", "", "Nam", "1", "", "", "", "Không",
+                        "1890", "15/8/1950")
+                .nhanKhau("AT-02-001", "Nguyễn Văn Hai", "", "Nam", "2", "AT-01-001", "", "",
+                        "Không", "1915", "3/9/1990")
+                // Dau DE TRONG o Doi — dung quy uoc, nen buoc kiem sach.
+                .nhanKhau("AT-02-101", "Trần Thị Dâu", "", "Nữ", "", "", "", "", "Không",
+                        "1920", "7/7/1995")
+                .honPhoi("AT-02-001", "AT-02-101", "1")
+                .build();
+        ImportBatch batch = chuanBi(tep, "chi-at-luoi-hai.xlsx");
+        int canhBaoTruoc = jdbc.queryForObject(
+                "SELECT count(*) FROM import_issue WHERE batch_id = ? AND severity = 'WARNING'",
+                Integer.class, batch.id());
+
+        // Giua hai buoc, dong dau bi khai Doi.
+        jdbc.update("UPDATE import_person_row SET generation = 2 WHERE batch_id = ?"
+                + " AND external_code = 'AT-02-101'", batch.id());
 
         assertThatThrownBy(() -> commit.commit(batch.id(), null))
                 .isInstanceOf(ImportCommitBlockedException.class)
                 .satisfies(ex -> assertThat(((ImportCommitBlockedException) ex).issues())
                         .extracting(i -> i.code().name())
-                        .contains(IssueCode.IMP_UNDECIDED_LIFE_STATUS.name(),
-                                IssueCode.IMP_UNDECIDED_ADOPTION.name(),
-                                IssueCode.IMP_UNDECIDED_INLAW_DOI.name()));
+                        .containsExactly(IssueCode.IMP_UNDECIDED_INLAW_DOI.name()));
 
         assertThat(countRows("person")).isZero();
-        assertThat(graphNodeCount()).isZero();
         assertThat(trangThai(batch.id())).isEqualTo("FAILED");
-        // Danh sach van de phai SONG SOT de nguoi nhap doc — no nam ngoai transaction ghi.
-        assertThat(jdbc.queryForList("""
-                SELECT code FROM import_issue WHERE batch_id = ? AND severity = 'BLOCKING'
-                """, String.class, batch.id()))
-                .contains(IssueCode.IMP_UNDECIDED_LIFE_STATUS.name());
+        // Loi chan duoc GHEP vao danh sach, khong thay ca danh sach: canh bao da tick van con, va
+        // blocking_count noi dung so loi chan — neu khong man doi soat hien mot lo FAILED ma
+        // "khong con loi phai sua".
+        assertThat(jdbc.queryForObject(
+                "SELECT count(*) FROM import_issue WHERE batch_id = ? AND severity = 'WARNING'",
+                Integer.class, batch.id())).isEqualTo(canhBaoTruoc);
+        assertThat(jdbc.queryForObject("SELECT blocking_count FROM import_batch WHERE id = ?",
+                Integer.class, batch.id())).isEqualTo(1);
     }
 
     @Test

@@ -132,13 +132,13 @@ public class RuleAdminService {
     /** Cấp áp dụng phải đi kèm đúng thứ định danh nó, nếu không "bộ nào áp cho ai" sẽ mơ hồ. */
     private void validateScope(RuleSetRepository.RuleSetCommand command) {
         if (command.scope() == null) {
-            throw new DomainException("VALIDATION_FAILED", "Thieu 'scope' cua bo luat");
+            throw new DomainException("VALIDATION_FAILED", "Thiếu 'scope' của bộ luật");
         }
         if (command.scope() == RuleScope.REGION && command.region() == null) {
-            throw new DomainException("VALIDATION_FAILED", "scope = REGION thi bat buoc co 'region'");
+            throw new DomainException("VALIDATION_FAILED", "scope = REGION thì bắt buộc có 'region'");
         }
         if (command.scope() == RuleScope.BRANCH && command.branchId() == null) {
-            throw new DomainException("VALIDATION_FAILED", "scope = BRANCH thi bat buoc co 'branchId'");
+            throw new DomainException("VALIDATION_FAILED", "scope = BRANCH thì bắt buộc có 'branchId'");
         }
     }
 
@@ -178,8 +178,8 @@ public class RuleAdminService {
 
     private ForbiddenException immutable() {
         return new ForbiddenException("SYSTEM_RULE_SET_IMMUTABLE",
-                "Bo luat DEFAULT do he thong so huu, khong sua duoc. "
-                        + "Hay tao bo ghi de o cap CLAN hoac BRANCH.");
+                "Bộ luật DEFAULT do hệ thống sở hữu, không sửa được. "
+                        + "Hãy tạo bộ ghi đè ở cấp CLAN hoặc BRANCH.");
     }
 
     /**

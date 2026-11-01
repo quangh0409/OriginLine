@@ -168,6 +168,21 @@ public class RuleSetJpaRepository implements RuleSetRepository {
         return hydrate(saved);
     }
 
+    @Override
+    @Transactional
+    public KinshipRuleSet reparent(UUID ruleSetId, UUID parentRuleSetId, Region region) {
+        KinshipRuleSetEntity entity = ruleSets.findById(ruleSetId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Không tìm thấy bộ luật danh xưng " + ruleSetId));
+        entity.setParentId(parentRuleSetId);
+        entity.setRegion(name(region));
+        // Hai cot tren chinh dong rule set -> Hibernate tu tang @Version; khong can ep nhu replace().
+        KinshipRuleSetEntity saved = ruleSets.saveAndFlush(entity);
+        log.info("Doi cha ke thua bo luat {} -> {} (vung {})", saved.getCode(), parentRuleSetId,
+                region);
+        return hydrate(saved);
+    }
+
     // ------------------------------------------------------------------ chọn bộ luật
 
     private Optional<KinshipRuleSetEntity> pickByBranch(RuleScope scope, List<BranchRow> lineage) {
@@ -234,7 +249,7 @@ public class RuleSetJpaRepository implements RuleSetRepository {
         int hops = 0;
         while (current != null) {
             if (++hops > MAX_INHERITANCE_DEPTH) {
-                throw new IllegalStateException("Chuoi ke thua kinship_rule_set qua sau hoac co chu trinh tai "
+                throw new IllegalStateException("Chuỗi kế thừa kinship_rule_set quá sâu hoặc có chu trình tại "
                         + current.getCode());
             }
             reversed.add(current);
@@ -284,11 +299,11 @@ public class RuleSetJpaRepository implements RuleSetRepository {
     private KinshipRuleSetEntity loadForUpdate(RuleSetCommand command) {
         KinshipRuleSetEntity entity = ruleSets.findById(command.id())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Khong tim thay bo luat danh xung " + command.id()));
+                        "Không tìm thấy bộ luật danh xưng " + command.id()));
         if (command.expectedVersion() != null && command.expectedVersion() != entity.getVersion()) {
-            throw new IllegalStateException("Bo luat " + entity.getCode() + " da bi nguoi khac sua"
-                    + " (phien ban mong doi " + command.expectedVersion()
-                    + ", hien tai " + entity.getVersion() + ")");
+            throw new IllegalStateException("Bộ luật " + entity.getCode() + " đã bị người khác sửa"
+                    + " (phiên bản mong đợi " + command.expectedVersion()
+                    + ", hiện tại " + entity.getVersion() + ")");
         }
         // Xem javadoc của replace(): thay đổi chỉ nằm ở bảng luật con nên phải ép tăng version.
         entityManager.lock(entity, LockModeType.OPTIMISTIC_FORCE_INCREMENT);

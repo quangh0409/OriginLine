@@ -44,4 +44,8 @@ export const queryKeys = {
    * "list my subscriptions" endpoint. See src/lib/push/subscription-store.ts. */
   pushSubscription: () => ["push-subscription"] as const,
   pushPublicKey: () => ["push-public-key"] as const,
+  /** Hồ sơ dòng họ, bản CÔNG KHAI — Khách gọi được, dùng để dựng tên thương hiệu
+   * ở header/trang chủ (`useClanProfile`). Tách khỏi khoá `clan-setup.*` bên
+   * dưới vì đây là dữ liệu MỌI người đọc, còn `clan-setup` là màn hình quản trị. */
+  clanProfilePublic: () => ["clan-profile", "public"] as const,
 };

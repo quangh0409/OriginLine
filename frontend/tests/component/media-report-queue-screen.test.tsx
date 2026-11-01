@@ -40,9 +40,11 @@ describe("MediaReportQueueScreen — /quan-ly/bao-cao-anh", () => {
     const { user } = renderWithProviders(<MediaReportQueueScreen />, { role: "branch-head" });
 
     await waitFor(() => {
-      expect(screen.getByText("Đã hoàn thành trùng tu nhà thờ họ")).toBeInTheDocument();
+      expect(screen.getByText("Không phù hợp với bài viết")).toBeInTheDocument();
     });
-    expect(screen.getByText("Không phù hợp với bài viết")).toBeInTheDocument();
+    // `MediaReportDto` thật KHÔNG mang tiêu đề/khoá bài — bản trước của màn này dựng một đường
+    // dẫn từ `report.postId`, thành `/bai-viet/undefined` nhãn rỗng trên máy chủ thật.
+    expect(document.querySelector('a[href*="undefined"]')).toBeNull();
 
     // Bấm "Gỡ vĩnh viễn" lần một CHƯA gọi API — chỉ mở khối cảnh báo.
     const takedownButton = screen.getByRole("button", { name: "Gỡ vĩnh viễn" });
@@ -56,7 +58,7 @@ describe("MediaReportQueueScreen — /quan-ly/bao-cao-anh", () => {
     await user.click(screen.getByRole("button", { name: "Xác nhận gỡ, không thể hoàn tác" }));
 
     await waitFor(() => {
-      expect(screen.queryByText("Đã hoàn thành trùng tu nhà thờ họ")).not.toBeInTheDocument();
+      expect(screen.getByText("Không còn báo cáo nào đang chờ.")).toBeInTheDocument();
     });
   });
 

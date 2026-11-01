@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Alert, Button, Empty, Select, Skeleton } from "antd";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { useBranches } from "@/hooks/use-branches";
+import { branchQualifiedName, useBranches } from "@/hooks/use-branches";
 import { useEvents } from "@/hooks/use-events";
 import { useMe } from "@/hooks/use-me";
 import { colorVars } from "@/styles/tokens";
@@ -124,7 +124,12 @@ export function EventsScreen() {
             placeholder={t("anyBranch")}
             value={branchId}
             onChange={(next) => setBranchId(next ?? undefined)}
-            options={(branches ?? []).map((branch) => ({ value: branch.id, label: branch.name }))}
+            // Nhãn đầy đủ theo dòng ("Chi Bính › Ngành Út"): bốn chi đều có "Ngành Út", nên tên trần
+            // vừa không lọc được theo chi cha, vừa không cho biết đã chọn ngành của chi nào.
+            options={(branches ?? []).map((branch) => ({
+              value: branch.id,
+              label: branchQualifiedName(branch, branches ?? []),
+            }))}
           />
           <span className="mt-1 block text-than text-text-muted">{t("branchFilterHint")}</span>
         </label>

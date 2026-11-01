@@ -459,15 +459,16 @@ class InvitationAccountProvisioningTest {
             clan.identityProvider.seed(EMAIL_BA_LAN, false);
             String code = truongChiPhatMa(baLan);
 
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
             assertThatThrownBy(() -> invitations.accept(
                     AcceptInvitationCommand.byEmail(code, EMAIL_BA_LAN, null, IP_KHACH)))
                     .isInstanceOf(DomainException.class)
                     // Goi nguyen nhan hay gap...
                     .hasMessageContaining("Google")
                     // ...va noi loi di tiep, khong bo nguoi dung giua duong.
-                    .hasMessageContaining("dang nhap")
+                    .hasMessageContaining("đăng nhập")
                     // ...nhung KHONG xac nhan dut khoat rang dia chi nay da co tai khoan.
-                    .hasMessageContaining("co the");
+                    .hasMessageContaining("có thể");
         }
 
         @Test

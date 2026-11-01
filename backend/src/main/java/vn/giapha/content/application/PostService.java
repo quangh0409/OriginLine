@@ -152,7 +152,7 @@ public class PostService {
     public PostView update(UpdatePostCommand command) {
         MemberScopeView caller = access.requireProvisioned();
         Post post = load(command.postId());
-        requireAuthor(caller, post, "sua bai viet");
+        requireAuthor(caller, post, "sửa bài viết");
         requireVersion(post, command.expectedVersion());
 
         try {
@@ -174,12 +174,15 @@ public class PostService {
     public PostView submit(UUID postId) {
         MemberScopeView caller = access.requireProvisioned();
         Post post = load(postId);
-        requireAuthor(caller, post, "gui duyet bai viet");
+        requireAuthor(caller, post, "gửi duyệt bài viết");
 
         try {
             post.submit();
         } catch (IllegalStateException ex) {
             throw new ContentConflictException(ContentProblemCodes.CONTENT_CLOSED, ex.getMessage(), ex);
+        } catch (IllegalArgumentException ex) {
+            // Nháp thân rỗng — luật "phải có thân" nay nằm ở cửa gửi duyệt, xem đầu lớp Post.
+            throw new DomainException(ContentProblemCodes.VALIDATION_FAILED, ex.getMessage(), ex);
         }
         Post saved = posts.save(post);
 
@@ -329,7 +332,7 @@ public class PostService {
     private void requireAuthor(MemberScopeView caller, Post post, String what) {
         if (!post.isAuthor(caller.appUserId())) {
             throw new ForbiddenException(ContentProblemCodes.FORBIDDEN,
-                    "Chi tac gia moi duoc " + what);
+                    "Chỉ tác giả mới được " + what);
         }
     }
 
@@ -436,12 +439,12 @@ public class PostService {
     private void requireVersion(Post post, Long expectedVersion) {
         if (expectedVersion == null) {
             throw new ContentPreconditionException(
-                    "Thieu phien ban ky vong; hay lay ETag tu lan doc gan nhat truoc khi sua");
+                    "Thiếu phiên bản kỳ vọng; hãy lấy ETag từ lần đọc gần nhất trước khi sửa");
         }
         if (post.version() != expectedVersion) {
             throw new ContentConflictException(ContentProblemCodes.OPTIMISTIC_LOCK_CONFLICT,
-                    "Bai viet da bi nguoi khac sua (phien ban " + post.version()
-                            + ", ban gui " + expectedVersion + "); hay tai lai roi thu lai");
+                    "Bài viết đã bị người khác sửa (phiên bản " + post.version()
+                            + ", bản gửi " + expectedVersion + "); hãy tải lại rồi thử lại");
         }
     }
 
@@ -454,7 +457,11 @@ public class PostService {
      */
     private DomainException selfReviewOrClosed(IllegalStateException ex) {
         String message = ex.getMessage() == null ? "" : ex.getMessage();
-        if (message.contains("tu duyet")) {
+        // Khop CHU trong thong diep cua domain ("Khong duoc tu duyet ..."), nen doi cau chu ben
+        // Honour/Post thi phai doi ca o day. Tu 26/09/2026 thong diep co dau (no di thang ra
+        // `detail`); ban khong dau "tu duyet" van duoc nhan de mot thong diep cu con sot o dau do
+        // khong am tham roi sang nhanh 409 — hai ma loi dan nguoi dung toi hai viec khac nhau.
+        if (message.contains("tự duyệt") || message.contains("tu duyet")) {
             return new ForbiddenException(ContentProblemCodes.SELF_REVIEW_FORBIDDEN, message);
         }
         return new ContentConflictException(ContentProblemCodes.CONTENT_CLOSED, message, ex);

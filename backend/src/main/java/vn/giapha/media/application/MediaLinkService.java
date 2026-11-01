@@ -183,10 +183,10 @@ public class MediaLinkService {
         // video se xoa mat anh chan dung dang co, roi moi bao loi.
         MediaAsset asset = assets.findById(mediaId)
                 .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                        "Khong tim thay tep " + mediaId + "."));
+                        "Không tìm thấy tệp " + mediaId + "."));
         if (asset.kind() != vn.giapha.media.domain.MediaKind.IMAGE) {
             throw new DomainException(MediaProblemCodes.VALIDATION_FAILED,
-                    "Anh chan dung phai la mot tam anh, khong phai video.");
+                    "Ảnh chân dung phải là một tấm ảnh, không phải video.");
         }
         List<MediaAssetView> result = replaceLinks(
                 MediaOwnerType.PERSON_AVATAR, personId, List.of(mediaId));
@@ -221,27 +221,27 @@ public class MediaLinkService {
                 mediaIds == null ? List.of() : mediaIds));
         if (wanted.size() > MediaLimits.MAX_MEDIA_PER_POST) {
             throw new DomainException(MediaProblemCodes.MEDIA_TOO_MANY,
-                    "Mot bai gan toi da " + MediaLimits.MAX_MEDIA_PER_POST + " tep. Bai viet la"
-                            + " mot bai viet, khong phai mot an-bum.");
+                    "Một bài gắn tối đa " + MediaLimits.MAX_MEDIA_PER_POST + " tệp. Bài viết là"
+                            + " một bài viết, không phải một an-bum.");
         }
 
         List<MediaAsset> resolved = new ArrayList<>(wanted.size());
         for (UUID mediaId : wanted) {
             MediaAsset asset = assets.findById(mediaId)
                     .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                            "Khong tim thay tep " + mediaId + "."));
+                            "Không tìm thấy tệp " + mediaId + "."));
             // BAT BIEN: chi tep DA XAC NHAN moi gan duoc. Mot hang PENDING la bang chung ai do da
             // XIN mot cho de tai len, khong phai bang chung tep ton tai — gan no vao bai la cach
             // mot bai viet tro vao hu khong.
             if (!asset.isServable()) {
                 throw new MediaConflictException(MediaProblemCodes.MEDIA_NOT_UPLOADED,
-                        "Tep " + mediaId + " chua duoc xac nhan (hoac da bi go), nen chua gan vao"
-                                + " duoc. Hay goi buoc xac nhan sau khi tai len xong.");
+                        "Tệp " + mediaId + " chưa được xác nhận (hoặc đã bị gỡ), nên chưa gắn vào"
+                                + " được. Hãy gọi bước xác nhận sau khi tải lên xong.");
             }
             // Chan loi "doan khoa cua mot tep nguoi khac vua tai len roi gan vao bai cua minh".
             if (!asset.isUploadedBy(caller.appUserId())) {
                 throw new ForbiddenException(MediaProblemCodes.MEDIA_NOT_OWNED,
-                        "Tep " + mediaId + " khong phai do ban tai len.");
+                        "Tệp " + mediaId + " không phải do bạn tải lên.");
             }
             resolved.add(asset);
         }

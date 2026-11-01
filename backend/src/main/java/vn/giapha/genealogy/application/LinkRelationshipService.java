@@ -114,11 +114,11 @@ public class LinkRelationshipService {
     private void validate(LinkRelationshipCommand cmd) {
         if (cmd.fromPersonId() == null || cmd.toPersonId() == null || cmd.relType() == null) {
             throw new DomainException(GenealogyProblemCodes.INVALID_RELATIONSHIP,
-                    "Canh quan he phai co du hai dau va loai quan he");
+                    "Cạnh quan hệ phải có đủ hai đầu và loại quan hệ");
         }
         if (cmd.fromPersonId().equals(cmd.toPersonId())) {
             throw new DomainException(GenealogyProblemCodes.INVALID_RELATIONSHIP,
-                    "Mot nguoi khong the co quan he voi chinh minh");
+                    "Một người không thể có quan hệ với chính mình");
         }
         if (!persons.exists(PersonId.of(cmd.fromPersonId()))) {
             throw notFound(cmd.fromPersonId());
@@ -129,13 +129,13 @@ public class LinkRelationshipService {
         if (cmd.relType().isParentEdge()) {
             if (relationships.existsParentEdge(cmd.fromPersonId(), cmd.toPersonId())) {
                 throw new DomainException(GenealogyProblemCodes.INVALID_RELATIONSHIP,
-                        "Canh cha/me - con giua hai nguoi nay da ton tai");
+                        "Cạnh cha/mẹ - con giữa hai người này đã tồn tại");
             }
             // Con lại là tổ tiên của cha thì cây có chu trình: đi xuống mãi cũng quay về chính
             // mình, và mọi phép duyệt (LCA, danh xưng, phả đồ) sẽ chạy vô tận.
             if (graph.isAncestorOf(cmd.toPersonId(), cmd.fromPersonId())) {
                 throw new GenealogyConflictException(GenealogyProblemCodes.RELATIONSHIP_CYCLE,
-                        "Quan he cha/me - con nay tao ra chu trinh trong pha he");
+                        "Quan hệ cha/mẹ - con này tạo ra chu trình trong phả hệ");
             }
         }
     }
@@ -200,7 +200,7 @@ public class LinkRelationshipService {
 
     private NotFoundException notFound(UUID id) {
         return new NotFoundException(GenealogyProblemCodes.NOT_FOUND,
-                "Khong tim thay nhan khau voi dinh danh " + id);
+                "Không tìm thấy nhân khẩu với định danh " + id);
     }
 
     /** Ảnh chụp cạnh cho nhật ký - không có trường nào thuộc Tầng 3 nên chép được nguyên vẹn. */

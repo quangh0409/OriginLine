@@ -7,6 +7,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 /**
  * Bản chiếu bảng {@code honour} (V17).
@@ -64,9 +66,16 @@ public class HonourJpaEntity {
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted;
 
+    // @Generated: CSDL đặt hai cột này (DEFAULT now() + trigger chạm updated_at), nên Hibernate
+    // phải ĐỌC LẠI chúng sau INSERT/UPDATE. Thiếu nó thì thực thể vừa lưu mang created_at/updated_at
+    // = null (bài mới) hoặc giá trị CŨ (bài vừa sửa) — và vì PostDto là NON_NULL, phản hồi
+    // `POST /posts` rơi mất `updatedAt`: màn soạn không bao giờ hiện nổi dòng "Đã lưu nháp lúc …"
+    // sau lượt lưu đầu (đo bằng trình duyệt thật 24/09/2026).
+    @Generated(event = EventType.INSERT)
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 

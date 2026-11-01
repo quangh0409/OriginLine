@@ -139,9 +139,10 @@ class BranchScopeGuardTest {
         @Test
         @DisplayName("Thành viên không duyệt được — chặn ở bước xét vai, trước cả bước xét nhánh")
         void thanhVienKhongDuyet() {
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
             assertThatThrownBy(() -> guard.requireReviewAccess(thanhVien(UUID.randomUUID()), CHI_GIAP))
                     .isInstanceOf(ForbiddenException.class)
-                    .hasMessageContaining("duyet yeu cau dinh chinh");
+                    .hasMessageContaining("duyệt yêu cầu đính chính");
         }
     }
 
@@ -161,7 +162,7 @@ class BranchScopeGuardTest {
                     .doesNotThrowAnyException();
             assertThatThrownBy(() -> guard.requireSystemAdmin(hoiDong, "khoá tài khoản"))
                     .isInstanceOf(ForbiddenException.class)
-                    .hasMessageContaining("Quan tri he thong");
+                    .hasMessageContaining("Quản trị hệ thống");
         }
 
         @Test

@@ -44,6 +44,14 @@ export function SetPasswordDone({ onGoToLogin }: SetPasswordDoneProps) {
         <CheckCircleOutlined aria-hidden style={{ color: colorVars.successText }} />
         {t("doneTitle")}
       </h1>
+      {/* `doneBody` và ba gạch đầu dòng cố ý TRUNG TÍNH về việc "đã gắn vào phả chưa".
+          Bản trước viết "Hồ sơ trong phả đã nối sẵn … không phải chờ ai duyệt" và hứa xem được
+          "người đang sống trong chi mình" — đúng cho lời mời CÁ NHÂN (mã trỏ vào một nhân khẩu),
+          nhưng màn này phục vụ ba luồng qua cùng một token: lời mời cá nhân, đăng ký bằng mã
+          DÒNG HỌ (tài khoản CHƯA gắn ai, phải tự nhận rồi chờ duyệt) và cấp lại mật khẩu. Bấm
+          thật 24/09 ở luồng mã dòng họ: màn này nói "không phải chờ ai duyệt", rồi trang chủ ngay
+          sau đó nói "đang chờ duyệt". Màn không biết mình đang ở luồng nào (token là HMAC mờ,
+          `set-password` trả 204 không thân), nên chỉ được nói điều đúng cho cả ba. */}
       <p className="m-0 mt-3 max-w-prose text-dan leading-relaxed text-text-main">
         {t("doneBody")}
       </p>

@@ -70,7 +70,7 @@ public enum ContentStatus {
             return valueOf(raw.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(
-                    "Trang thai khong hop le: " + raw + "; chi nhan DRAFT, PENDING, PUBLISHED,"
+                    "Trạng thái không hợp lệ: " + raw + "; chỉ nhận DRAFT, PENDING, PUBLISHED,"
                             + " WITHDRAWN", ex);
         }
     }

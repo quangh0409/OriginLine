@@ -76,7 +76,7 @@ public class MeController {
         MemberScopeView scope = scopes.currentScope();
         if (scope.personId() == null) {
             throw new NotFoundException(MembershipProblemCodes.ACCOUNT_NOT_PROVISIONED,
-                    "Tai khoan chua duoc ghep voi mot nhan khau trong pha");
+                    "Tài khoản chưa được ghép với một nhân khẩu trong phả");
         }
         return MePersonDto.from(scope);
     }

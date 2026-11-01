@@ -2,6 +2,22 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { meApi, type MeView } from "@/lib/api/change-requests";
+import { probeSignedIn } from "@/lib/auth/use-signed-in";
+
+/**
+ * Câu trả lời của hook cho người CHƯA đăng nhập — dựng ở client, không tới từ
+ * máy chủ (máy chủ trả `401` cho khách). Đúng hình dạng mà các màn đã quen đọc:
+ * `appUserId: null` = "chưa có tài khoản".
+ */
+export const GUEST_ME: MeView = Object.freeze({
+  appUserId: null,
+  personId: null,
+  role: "GUEST",
+  clanWide: false,
+  managedBranches: [],
+  homeBranch: null,
+  linkedToTree: false,
+}) as MeView;
 
 /** Khoá React Query cho hồ sơ phiên làm việc. */
 export const meQueryKey = ["me"] as const;
@@ -20,14 +36,25 @@ export const meQueryKey = ["me"] as const;
  * DevTools; sửa xong vẫn không ghi được gì, vì phép kiểm thật nằm ở
  * `ChangeRequestService` → `BranchScopeGuard` → so `ltree`.
  *
- * Endpoint này cũng là chỗ backend khởi tạo dòng `app_user` lần đầu, nên nó trả
- * `200` cả với Khách — `appUserId: null` là câu trả lời hợp lệ, không phải lỗi.
- * Vì thế hook không `retry` và không coi trạng thái chưa có tài khoản là lỗi.
+ * <h2>Khách KHÔNG gọi endpoint này — và câu cũ ở đây đã sai</h2>
+ * Chú thích trước viết rằng `/me` "trả `200` cả với Khách, `appUserId: null`".
+ * Không đúng với máy chủ thật: `/api/v1/me` rơi vào `anyRequest().authenticated()`
+ * của `SecurityConfig`, nên khách nhận `401 UNAUTHENTICATED` (đo ngày 24/09,
+ * `SecurityProblemSupport: 401 /api/v1/me`). Câu sai ấy sống được vì bộ giả lập
+ * MSW trả `200` cho khách — mock "dễ hơn thật", và nay đã sửa theo thật.
+ *
+ * Vì vậy hook tự trả lời cho khách bằng {@link GUEST_ME} mà KHÔNG gọi mạng:
+ * phiên là thứ trình duyệt đã biết (`probeSignedIn`). Giữ nguyên hình dạng
+ * `appUserId: null` mà mọi nơi dùng hook vẫn đọc — đổi sang một truy vấn bị tắt
+ * (`enabled: false`) thì `isPending` treo mãi ở `true`, và sáu màn đang vẽ
+ * khung xương khi `isPending` sẽ quay vô tận trước mặt khách.
+ *
+ * Hook không `retry`: `401`/`403` ở đây là câu trả lời cuối của máy chủ.
  */
 export function useMe() {
   return useQuery<MeView>({
     queryKey: meQueryKey,
-    queryFn: () => meApi.get(),
+    queryFn: async () => ((await probeSignedIn()) ? meApi.get() : GUEST_ME),
     // Phạm vi chi/ngành đổi rất hiếm (Hội đồng phân công lại), nhưng cũng
     // không được cache vĩnh viễn: đổi vai trong bộ giả lập phải thấy ngay.
     staleTime: 60_000,

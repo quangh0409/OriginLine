@@ -33,12 +33,12 @@ public class TabooNameConflictException extends DomainException {
 
     private static String buildMessage(List<TabooConflict> conflicts) {
         if (conflicts == null || conflicts.isEmpty()) {
-            return "Ten moi trung ten huy cua bac tren";
+            return "Tên mới trùng tên huý của bậc trên";
         }
         TabooConflict first = conflicts.get(0);
         String generation = first.ancestorGeneration() == null
-                ? "chua ro doi" : "doi thu " + first.ancestorGeneration();
-        return "Ten huy \"" + first.tabooName() + "\" trung voi bac tren (" + generation
-                + "). Xac nhan de van ghi.";
+                ? "chưa rõ đời" : "đời thứ " + first.ancestorGeneration();
+        return "Tên huý \"" + first.tabooName() + "\" trùng với bậc trên (" + generation
+                + "). Xác nhận để vẫn ghi.";
     }
 }

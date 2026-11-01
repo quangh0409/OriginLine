@@ -68,8 +68,8 @@ public class WebPushTestSendService {
                 me,
                 Channel.WEBPUSH,
                 NotificationCategory.SYSTEM,
-                "Thu thong bao day",
-                "Tin thu do quan tri vien gui. Neu ban thay tin nay, kenh Web Push dang hoat dong.",
+                "Thử thông báo đẩy",
+                "Tin thử do quản trị viên gửi. Nếu bạn thấy tin này, kênh Web Push đang hoạt động.",
                 "/settings",
                 null,
                 null));

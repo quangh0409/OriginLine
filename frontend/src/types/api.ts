@@ -916,6 +916,38 @@ export type ProblemCode =
    * phép chặn này.
    */
   | "IDENTITY_ALREADY_REGISTERED"
+  // --- cấp lại mật khẩu (contracts/openapi.yaml, nhóm `password-resets`) ----
+  /**
+   * Đúng vai (`BRANCH_HEAD`/`COUNCIL`/`ADMIN`) nhưng nhân khẩu đích thuộc chi
+   * khác, ngoài phạm vi `ltree` được giao. `403`.
+   *
+   * Dùng lại `BRANCH_SCOPE_VIOLATION` đã có ở trên (đính chính cũng dùng mã
+   * này) — cùng một khái niệm phạm vi chi, không cần một mã riêng cho mỗi
+   * luồng ghi.
+   */
+  /**
+   * Đang tự cấp liên kết đặt mật khẩu cho CHÍNH MÌNH. `403`.
+   *
+   * Luật riêng của luồng này, cộng thêm chứ không thay `BRANCH_SCOPE_VIOLATION`:
+   * "quên mật khẩu của chính mình" đi đường khác (tự bấm "Quên mật khẩu" ở màn
+   * đăng nhập, hoặc nhờ người KHÁC trong quyền — Trưởng chi của chi mình,
+   * Hội đồng). Nếu tự cấp được thì một phiên bị chiếm sẽ tự gia hạn thành
+   * quyền kiểm soát vĩnh viễn tài khoản.
+   */
+  | "SELF_PASSWORD_RESET_FORBIDDEN"
+  /**
+   * Không cấp lại được cho nhân khẩu này — MỘT mã cho BỐN lý do: nhân khẩu
+   * chưa có tài khoản (hãy phát lời mời) · tài khoản không còn `ACTIVE` ·
+   * tài khoản không còn trong realm · tài khoản **có địa chỉ thư** nên tự lấy
+   * lại được bằng "Quên mật khẩu". `422`.
+   *
+   * `detail` phân biệt bốn lý do — khác luồng mời, ở đây `detail` **dành cho
+   * người cấp** (một người đã đăng nhập và đã qua phép kiểm phạm vi), không
+   * phải một bí mật cần giấu. Xem `src/lib/api/password-reset.ts`
+   * (`passwordResetFailureOf`) cho cách giao diện tách riêng ca "có địa chỉ
+   * thư" khỏi ba ca còn lại.
+   */
+  | "PASSWORD_RESET_NOT_ALLOWED"
   // --- mã mời DÒNG HỌ (contracts/openapi.yaml, nhóm `clan-invites`) ---------
   /**
    * Mã mời dòng họ đã dùng hết trần lượt Hội đồng đặt. `409`, **không** `410`:
@@ -1058,6 +1090,25 @@ export type ProblemCode =
   | "REPORT_CLOSED"
   /** Người này đã có một đơn đang mở cho đúng tệp ấy. `409`. */
   | "REPORT_DUPLICATE"
+  // --- khởi tạo dòng họ (contracts/openapi.yaml, nhóm `clan-profile`) --------
+  /**
+   * `GET /admin/clan-profile` mà chưa ai chạy `PUT` lần nào. `404`.
+   *
+   * Đây là trạng thái BÌNH THƯỜNG của một cổng vừa dựng xong, không phải dữ
+   * liệu hỏng — màn "Khởi tạo dòng họ" (`/quan-tri`) phải đọc mã này thành
+   * "hiện form trống, bước 1", không phải một dải lỗi đỏ.
+   */
+  | "CLAN_NOT_INITIALIZED"
+  /**
+   * Sửa `rootBranchPath` sau khi dòng họ đã có nhân khẩu (`persons.count > 0`
+   * ở `GET .../readiness`). `409`.
+   *
+   * Đổi gốc `ltree` khi cây đã có người là đổi khoá phạm vi của MỌI Trưởng
+   * chi cùng lúc — không phải một phép sửa tên suông. Máy chủ khoá trường này
+   * lại vĩnh viễn kể từ nhân khẩu đầu tiên; giao diện phải khoá luôn ô nhập và
+   * NÓI RA vì sao, không để người dùng gõ xong rồi mới nhận `409`.
+   */
+  | "CLAN_ROOT_LOCKED"
   | "RATE_LIMITED"
   | "INTERNAL_ERROR";
 

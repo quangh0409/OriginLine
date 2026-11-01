@@ -6,10 +6,12 @@ import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import vn.giapha.membership.application.ClanNameProvider;
 import vn.giapha.membership.domain.ClanOffice;
 import vn.giapha.membership.domain.Invitee;
 import vn.giapha.membership.domain.port.InviteeLookupPort;
@@ -56,6 +58,7 @@ public class InviteeLookupJdbcAdapter implements InviteeLookupPort {
                    (SELECT root.name FROM branch root
                      WHERE root.path = subltree(b.path, 0, 1)
                        AND root.is_deleted = FALSE) AS clan_name,
+                   subltree(b.path, 0, 1)::text AS root_label,
                    COALESCE(
                        (SELECT pn.full_name FROM person_name pn
                          WHERE pn.person_id = p.id AND pn.is_primary
@@ -105,8 +108,12 @@ public class InviteeLookupJdbcAdapter implements InviteeLookupPort {
 
     private final NamedParameterJdbcTemplate jdbc;
 
-    public InviteeLookupJdbcAdapter(NamedParameterJdbcTemplate jdbc) {
+    private final ObjectProvider<ClanNameProvider> clanNames;
+
+    public InviteeLookupJdbcAdapter(NamedParameterJdbcTemplate jdbc,
+                                    ObjectProvider<ClanNameProvider> clanNames) {
         this.jdbc = jdbc;
+        this.clanNames = clanNames;
     }
 
     @Override
@@ -129,9 +136,22 @@ public class InviteeLookupJdbcAdapter implements InviteeLookupPort {
                 (String) row.get("branch_name"),
                 toBranchPath((String) row.get("branch_path")),
                 (String) row.get("branch_region"),
-                (String) row.get("clan_name"),
+                clanNameOf((String) row.get("root_label"), (String) row.get("clan_name")),
                 Boolean.TRUE.equals(row.get("is_alive")),
                 Boolean.TRUE.equals(row.get("is_deleted"))));
+    }
+
+    /**
+     * Tên dòng họ trong hồ sơ (V23) thắng tên chi gốc; chưa khởi tạo hồ sơ thì lùi về tên chi gốc.
+     * Xem {@link ClanNameProvider}.
+     */
+    private String clanNameOf(String rootLabel, String rootBranchName) {
+        if (rootLabel == null) {
+            return rootBranchName;
+        }
+        ClanNameProvider provider = clanNames.getIfAvailable();
+        return provider == null ? rootBranchName
+                : provider.clanNameOfRoot(rootLabel).orElse(rootBranchName);
     }
 
     @Override

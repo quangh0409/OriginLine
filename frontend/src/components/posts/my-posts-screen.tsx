@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { colorVars } from "@/styles/tokens";
 import type { PostDto } from "@/lib/api/posts";
 import { useMyPosts } from "./use-my-posts";
+import { usePost } from "./queries";
 import { PostCard } from "./post-card";
 
 /**
@@ -16,10 +17,23 @@ import { PostCard } from "./post-card";
  * bài rồi mất quyền (hiếm, nhưng khả dĩ) vẫn cần đọc lại thứ mình đã viết;
  * gác cứng ở đây sẽ khoá luôn lối vào nháp cũ của họ.
  */
-export function MyPostsScreen() {
+export interface MyPostsScreenProps {
+  /**
+   * `?daGui={id}` — bài vừa được gửi duyệt từ màn soạn. Màn soạn dẫn sang đây sau khi
+   * `POST /posts/{id}/submit` thành công để người viết THẤY bài đã chuyển sang "Đã gửi đi", kèm
+   * một lời xác nhận nói rõ ai xem tiếp — thay vì ở yên trên một form không đổi gì (lỗi đo bằng
+   * trình duyệt thật 24/09/2026).
+   */
+  justSubmittedId?: string;
+}
+
+export function MyPostsScreen({ justSubmittedId }: MyPostsScreenProps = {}) {
   const t = useTranslations("posts.mine");
   const me = useMe();
   const { isPending, isError, drafts, others, page, setPage, hasNext, totalPages } = useMyPosts();
+  // Tiêu đề lấy từ cache mà `useSubmitPost` vừa ghi — không có thì vẫn xác nhận, chỉ bớt tên bài.
+  const justSubmitted = usePost(justSubmittedId);
+  const submittedTitle = justSubmitted.data?.post.title;
 
   if (me.isPending) return <Skeleton active paragraph={{ rows: 6 }} />;
 
@@ -49,6 +63,20 @@ export function MyPostsScreen() {
           <span>{t("writeAction")}</span>
         </Link>
       </header>
+
+      {justSubmittedId && (
+        <Alert
+          type="success"
+          showIcon
+          data-testid="post-submitted-notice"
+          message={<span className="text-than font-semibold">{t("submittedTitle")}</span>}
+          description={
+            <span className="text-than">
+              {submittedTitle ? t("submittedBody", { title: submittedTitle }) : t("submittedBodyNoTitle")}
+            </span>
+          }
+        />
+      )}
 
       {isPending && <Skeleton active paragraph={{ rows: 6 }} />}
       {isError && <Alert type="error" showIcon message={t("loadFailed")} />}

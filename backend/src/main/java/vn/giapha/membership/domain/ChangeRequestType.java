@@ -32,13 +32,13 @@ public enum ChangeRequestType {
 
     public static ChangeRequestType of(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("Loai yeu cau dinh chinh khong duoc rong");
+            throw new IllegalArgumentException("Loại yêu cầu đính chính không được rỗng");
         }
         try {
             return valueOf(raw.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(
-                    "Loai yeu cau dinh chinh khong hop le: " + raw, ex);
+                    "Loại yêu cầu đính chính không hợp lệ: " + raw, ex);
         }
     }
 }

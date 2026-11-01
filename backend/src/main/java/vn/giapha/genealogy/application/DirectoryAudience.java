@@ -46,7 +46,9 @@ final class DirectoryAudience {
      * {@code 401}.</p>
      */
     static CallerContext of(CallerContext caller) {
+        // personId bị xoá có chủ ý (xem javadoc lớp), nhưng "đã vào phả" phải giữ nguyên: đó là
+        // điều kiện của mức "Cả họ xem", và xoá nó theo là biến cả danh bạ thành rỗng.
         return new CallerContext(CallerRole.MEMBER, null, caller.managedBranches(),
-                caller.homeBranch());
+                caller.homeBranch(), caller.isLinkedToTree());
     }
 }

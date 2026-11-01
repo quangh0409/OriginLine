@@ -5,7 +5,7 @@ import { useQueries } from "@tanstack/react-query";
 import { treeApi, type TreeAudience } from "@/lib/api";
 import { ApiError } from "@/lib/api/http";
 import { queryKeys } from "@/lib/query/keys";
-import { pathFromRootTo } from "@/lib/tree/focus-path";
+import { inLawBridgeIds, pathFromRootTo } from "@/lib/tree/focus-path";
 import { mergeProjections } from "@/lib/tree/merge-projections";
 import { computeVisibleSubgraph } from "@/lib/tree/visible-subgraph";
 import { useTreeAudience } from "./use-tree-audience";
@@ -205,40 +205,68 @@ export function useTreeCanvas({
     return list;
   }, [fetchedIds, requestedRootId, initialDepth, expandDepth, direction, focusId, fetchFocus]);
 
-  const results = useQueries({
-    queries: plans.map(({ id: branchRootId, depth, direction: planDirection }) => {
-      return {
-        queryKey: queryKeys.treeBranch(
-          branchRootId ?? SERVER_DEFAULT_ROOT_KEY,
+  /** Một lượt trong kế hoạch ⇒ tuỳ chọn React Query. Dùng chung cho kế hoạch chính và cầu nối. */
+  const toQuery = ({ id: branchRootId, depth, direction: planDirection }: BranchPlan) => {
+    return {
+      queryKey: queryKeys.treeBranch(
+        branchRootId ?? SERVER_DEFAULT_ROOT_KEY,
+        depth,
+        planDirection,
+        maxNodesPerFetch,
+        audience ?? "pending"
+      ),
+      queryFn: () =>
+        treeApi.getTreeFor(audience ?? "public", {
+          rootId: branchRootId,
           depth,
-          planDirection,
-          maxNodesPerFetch,
-          audience ?? "pending"
-        ),
-        queryFn: () =>
-          treeApi.getTreeFor(audience ?? "public", {
-            rootId: branchRootId,
-            depth,
-            direction: planDirection,
-            includeSpouses,
-            // Bản công khai không nhận `maxNodes` và tự bỏ qua (xem treeApi).
-            maxNodes: maxNodesPerFetch,
-          }),
-        // Phiên chưa ngã ngũ thì KHÔNG hỏi: xem `useTreeAudience`. Hỏi sớm là
-        // tự chuốc một lượt gọi công khai thừa cho mọi thành viên.
-        enabled: audience !== null,
-        staleTime: 60_000,
-        retry: (failureCount: number, error: unknown) => {
-          // 400/401/403/404 đều là câu trả lời CUỐI CÙNG của máy chủ, không
-          // phải sự cố tạm thời: gốc sai định dạng, chưa đăng nhập, ngoài phạm
-          // vi, hoặc không được biết là có tồn tại. Thử lại chỉ làm người dùng
-          // chờ lâu hơn để nhận đúng câu trả lời ấy.
-          if (error instanceof ApiError && error.status < 500) return false;
-          return failureCount < 2;
-        },
-      };
-    }),
-  });
+          direction: planDirection,
+          includeSpouses,
+          // Bản công khai không nhận `maxNodes` và tự bỏ qua (xem treeApi).
+          maxNodes: maxNodesPerFetch,
+        }),
+      // Phiên chưa ngã ngũ thì KHÔNG hỏi: xem `useTreeAudience`. Hỏi sớm là
+      // tự chuốc một lượt gọi công khai thừa cho mọi thành viên.
+      enabled: audience !== null,
+      staleTime: 60_000,
+      retry: (failureCount: number, error: unknown) => {
+        // 400/401/403/404 đều là câu trả lời CUỐI CÙNG của máy chủ, không
+        // phải sự cố tạm thời: gốc sai định dạng, chưa đăng nhập, ngoài phạm
+        // vi, hoặc không được biết là có tồn tại. Thử lại chỉ làm người dùng
+        // chờ lâu hơn để nhận đúng câu trả lời ấy.
+        if (error instanceof ApiError && error.status < 500) return false;
+        return failureCount < 2;
+      },
+    };
+  };
+
+  const results = useQueries({ queries: plans.map(toQuery) });
+
+  /**
+   * **Cầu nối cho dâu/rể**: chuỗi tổ tiên của người phối ngẫu, hỏi SAU lượt tổ tiên của người ấy.
+   *
+   * Lượt `ANCESTORS` từ một người dâu chỉ về cô và chồng — cô không có cạnh cha/mẹ trong phả — nên
+   * không bao giờ chạm được gốc, và `<TreeCanvas>` từng phải đổi gốc sang chính cô: phả đồ còn đúng
+   * hai ô. Phải là lượt gọi THỨ HAI (không gộp vào `plans`) vì id người chồng chỉ biết được từ
+   * phản hồi của lượt thứ nhất. Người trong họ thì danh sách này rỗng — không tốn thêm lượt nào.
+   */
+  const focusAncestorsIndex = plans.findIndex((p) => p.forFocus && p.direction === "ANCESTORS");
+  const focusAncestorsEdges =
+    focusAncestorsIndex >= 0 ? results[focusAncestorsIndex]?.data?.edges : undefined;
+  const bridgeIds = useMemo(
+    () => inLawBridgeIds(focusAncestorsEdges, focusId).filter((id) => !fetchedIds.includes(id)),
+    [focusAncestorsEdges, focusId, fetchedIds]
+  );
+  const bridgePlans = useMemo<BranchPlan[]>(
+    () =>
+      bridgeIds.map((id) => ({
+        id,
+        depth: FOCUS_ANCESTOR_DEPTH,
+        direction: "ANCESTORS" as const,
+        forFocus: true,
+      })),
+    [bridgeIds]
+  );
+  const bridgeResults = useQueries({ queries: bridgePlans.map(toQuery) });
 
   const rootQuery = results[0];
 
@@ -264,9 +292,9 @@ export function useTreeCanvas({
   }, [results, plans, effectiveRootId]);
 
   const merged = useMemo(
-    () => mergeProjections(results.map((r) => r.data)),
+    () => mergeProjections([...results, ...bridgeResults].map((r) => r.data)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [results]
+    [results, bridgeResults]
   );
 
   /**
@@ -431,7 +459,13 @@ export function useTreeCanvas({
    * canvas rơi lại về trạng thái đang tải. `isFetched` chỉ bật sau khi một lượt gọi đã **xong**,
    * nên một lượt vừa được thêm vào kế hoạch luôn kéo kết luận này về `false`.
    */
-  const allQueriesSettled = results.length > 0 && results.every((r) => r.isFetched);
+  //
+  // Cầu nối dâu/rể cũng phải xong: kết luận "không nối được" trước khi chuỗi tổ tiên của người
+  // chồng về là đổi gốc oan — cùng lớp lỗi vừa kể, khác lượt gọi.
+  const allQueriesSettled =
+    results.length > 0 &&
+    results.every((r) => r.isFetched) &&
+    bridgeResults.every((r) => r.isFetched);
   /** Người ấy có mặt trong dữ liệu đã tải hay không — hai ca hỏng khác hẳn nhau. */
   const focusLoaded = focusId !== null && merged.nodesById.has(focusId);
   const focusSettled =

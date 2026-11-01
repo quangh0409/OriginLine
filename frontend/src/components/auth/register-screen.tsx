@@ -144,6 +144,9 @@ export function RegisterScreen({ initialCode, onLeaveForPasswordSetup }: Registe
         loginIdIsPhone={
           lanGuiCuoi !== null && loginIdentifierKind(lanGuiCuoi.loginId) === "PHONE"
         }
+        loginIdIsEmail={
+          lanGuiCuoi !== null && loginIdentifierKind(lanGuiCuoi.loginId) === "EMAIL"
+        }
         onLeaveForPasswordSetup={onLeaveForPasswordSetup}
       />
     );

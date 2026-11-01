@@ -551,7 +551,13 @@ class PublicPortalIT extends AbstractIntegrationTest {
                 .getResponse().getStatus()).isEqualTo(401);
         assertThat(goi(get("/api/v1/persons/search").param("q", "Nguyen"))
                 .getResponse().getStatus()).isEqualTo(401);
-        assertThat(goi(get("/api/v1/events")).getResponse().getStatus()).isEqualTo(401);
+        // 26/09/2026: `/api/v1/events` KHÔNG còn trong danh sách này. Bản đầu ghim nó 401 vì
+        // "mọi thứ ngoài /public đều dành cho thành viên"; chủ dự án đã quyết cho khách đọc giỗ
+        // và vinh danh của người đã khuất (hợp đồng vốn đã khai `security: [bearerAuth, {}]`
+        // cho /events). Phần "khách chỉ thấy người đã khuất, không thấy chữ tự do về người
+        // sống" do GuestEventsHonoursIT canh. Bài viết thì vẫn đóng — mỗi bài mang tên tác giả
+        // còn sống — nên /posts thế chỗ /events ở đây.
+        assertThat(goi(get("/api/v1/posts")).getResponse().getStatus()).isEqualTo(401);
         assertThat(goi(get("/api/v1/notifications")).getResponse().getStatus()).isEqualTo(401);
     }
 

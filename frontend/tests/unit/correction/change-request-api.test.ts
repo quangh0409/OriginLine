@@ -36,12 +36,12 @@ beforeEach(() => {
 });
 
 describe("GET /api/v1/me", () => {
-  it("trả 200 kèm appUserId null cho Khách — chưa có tài khoản là câu trả lời, không phải lỗi", async () => {
+  // Bản trước ghim "Khách nhận 200 kèm appUserId null" — một sự thật của MOCK, không của máy
+  // chủ: `/api/v1/me` đòi token, máy thật trả 401 (đo 24/09). Giao diện không gọi `/me` cho
+  // khách nữa (xem `useMe` + tests/component/use-me-guest.test.tsx); mock phải đỏ như máy thật.
+  it("trả 401 UNAUTHENTICATED cho Khách — y như máy chủ thật", async () => {
     setDevRole("guest");
-    const me = await meApi.get();
-    expect(me.appUserId).toBeNull();
-    expect(me.role).toBe("GUEST");
-    expect(me.managedBranches).toEqual([]);
+    await expectApiError(meApi.get(), "UNAUTHENTICATED", 401);
   });
 
   it("Trưởng chi nhận PHẠM VI chứ không chỉ vai — giao diện cần cả hai", async () => {

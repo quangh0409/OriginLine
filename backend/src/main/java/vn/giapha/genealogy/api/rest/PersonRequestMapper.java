@@ -180,7 +180,7 @@ public final class PersonRequestMapper {
         for (String field : cleared) {
             if (present.contains(field)) {
                 throw new DomainException(GenealogyProblemCodes.VALIDATION_FAILED,
-                        "Truong '" + field + "' vua co gia tri trong body vua nam trong clearFields");
+                        "Trường '" + field + "' vừa có giá trị trong body vừa nằm trong clearFields");
             }
         }
     }

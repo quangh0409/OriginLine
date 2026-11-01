@@ -365,7 +365,8 @@ class WebPushAdapterTest {
             // Day chinh la ly do phai xoa: moi mua gio, moi thiet bi chet ton them mot luot HTTP.
             assertThat(mayChuDay.daNhan()).hasSize(1);
             assertThat(lanHai.outcome()).isEqualTo(DeliveryOutcome.SKIPPED);
-            assertThat(lanHai.detail()).contains("chua dang ky thiet bi nao");
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
+            assertThat(lanHai.detail()).contains("chưa đăng ký thiết bị nào");
         }
 
         @Test

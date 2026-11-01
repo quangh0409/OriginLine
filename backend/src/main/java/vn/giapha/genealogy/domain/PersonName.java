@@ -26,7 +26,7 @@ public record PersonName(UUID id, NameType type, String fullName, String hanNom,
         Objects.requireNonNull(fullName, "PersonName.fullName khong duoc null");
         fullName = fullName.trim();
         if (fullName.isEmpty()) {
-            throw new IllegalArgumentException("PersonName.fullName khong duoc rong");
+            throw new IllegalArgumentException("PersonName.fullName không được rỗng");
         }
         if (hanNom != null && hanNom.isBlank()) {
             hanNom = null;

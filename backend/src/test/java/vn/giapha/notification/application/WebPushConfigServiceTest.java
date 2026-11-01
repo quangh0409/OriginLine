@@ -30,7 +30,8 @@ class WebPushConfigServiceTest {
         assertThat(view.ready()).isTrue();
         assertThat(view.publicKey()).isEqualTo(KHOA_CONG_KHAI);
         assertThat(view.remediation()).isEmpty();
-        assertThat(view.summary()).contains("san sang");
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
+        assertThat(view.summary()).contains("sẵn sàng");
     }
 
     @Test
@@ -47,7 +48,7 @@ class WebPushConfigServiceTest {
                 .contains("GIAPHA_WEBPUSH_PRIVATE_KEY")
                 // Không nhắc khởi động lại thì người vận hành đặt biến, gọi lại, thấy vẫn đỏ, và
                 // kết luận nhầm rằng khoá sai.
-                .contains("Khoi dong lai");
+                .contains("Khởi động lại");
     }
 
     @Test
@@ -59,7 +60,7 @@ class WebPushConfigServiceTest {
         assertThat(view.ready()).isFalse();
         assertThat(view.publicKeySet()).isTrue();
         assertThat(view.privateKeySet()).isFalse();
-        assertThat(view.summary()).contains("thieu khoa rieng");
+        assertThat(view.summary()).contains("thiếu khoá riêng");
     }
 
     @Test
@@ -69,7 +70,7 @@ class WebPushConfigServiceTest {
                 false, true, true, null, "mailto:admin@giapha.vn", 86_400)).status();
 
         assertThat(view.ready()).isFalse();
-        assertThat(view.summary()).contains("TAT bang tay");
+        assertThat(view.summary()).contains("TẮT bằng tay");
         assertThat(String.join(" ", view.remediation())).contains("giapha.webpush.enabled");
     }
 

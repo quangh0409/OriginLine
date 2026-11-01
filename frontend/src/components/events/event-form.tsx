@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Alert, App, Button, Input, InputNumber, Radio, Select, Switch } from "antd";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { branchDepth, useBranches } from "@/hooks/use-branches";
+import { branchDepth, branchQualifiedName, useBranches } from "@/hooks/use-branches";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/use-event-submit";
 import { useMe } from "@/hooks/use-me";
 import { zodResolver } from "@/lib/form/zod-resolver";
@@ -491,9 +491,13 @@ export function EventForm(props: EventFormProps) {
                       optionFilterProp="label"
                       value={field.value || undefined}
                       onChange={field.onChange}
+                      // `label` (dùng để lọc và để hiện giá trị đã chọn) là tên đầy đủ theo dòng —
+                      // bốn chi đều có "Ngành Út". Trong danh sách xổ xuống thì thụt lề đã nói
+                      // chi cha, nên chỉ vẽ tên trần (`name`) cho gọn.
                       options={allowedBranches.map((b) => ({
                         value: b.id,
-                        label: b.name,
+                        label: branchQualifiedName(b, branches ?? []),
+                        name: b.name,
                         depth: branchDepth(b),
                       }))}
                       optionRender={(option) => (
@@ -502,7 +506,7 @@ export function EventForm(props: EventFormProps) {
                             paddingLeft: `${(option.data as { depth: number }).depth * 12}px`,
                           }}
                         >
-                          {option.label}
+                          {(option.data as { name: string }).name}
                         </span>
                       )}
                     />

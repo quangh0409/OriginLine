@@ -11,6 +11,15 @@ export interface OneTimeCodeProps {
   code: string;
   /** Câu nói mã này dành cho ai — "Mã của ông Nguyễn Văn Bốn", hoặc nhãn mã họ. */
   caption?: string;
+  /**
+   * Thay câu cuối (`code.reissueHint`) khi nó không đúng cho nơi gọi.
+   *
+   * Câu mặc định nói về BỘ ĐẾM LƯỢT DÙNG — đúng cho mã mời/mã dòng họ, nhưng
+   * SAI cho một liên kết đặt mật khẩu: cấp lại ở đó THU HỒI liên kết cũ ngay,
+   * không giữ nguyên gì cả. Nơi nào có ngữ nghĩa "cấp lại" khác thì truyền câu
+   * riêng qua đây thay vì để lại một câu nói sai sự thật.
+   */
+  hint?: string;
 }
 
 /**
@@ -31,7 +40,7 @@ export interface OneTimeCodeProps {
  * jsdom. Nút vẫn hiện và vẫn bấm được; hỏng thì nói thẳng "xin chép tay" thay
  * vì im lặng — im lặng ở đây nghĩa là Trưởng chi dán một chuỗi rỗng vào Zalo.
  */
-export function OneTimeCode({ code, caption }: OneTimeCodeProps) {
+export function OneTimeCode({ code, caption, hint }: OneTimeCodeProps) {
   const t = useTranslations("membership");
   const { message } = App.useApp();
   const [copied, setCopied] = useState(false);
@@ -76,7 +85,7 @@ export function OneTimeCode({ code, caption }: OneTimeCodeProps) {
         </Button>
       </div>
 
-      <p className="m-0 mt-2 text-than text-text-muted">{t("code.reissueHint")}</p>
+      <p className="m-0 mt-2 text-than text-text-muted">{hint ?? t("code.reissueHint")}</p>
     </div>
   );
 }

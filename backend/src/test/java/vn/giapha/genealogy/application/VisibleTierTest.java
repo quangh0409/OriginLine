@@ -48,7 +48,7 @@ class VisibleTierTest {
     @DisplayName("Ca từng thủng: Khách xem hồ sơ người đã khuất KHÔNG được đọc khối liên hệ")
     void khachKhongDocDuocLienHeCuaNguoiDaKhuat() {
         // deceased = true, khong phai chinh chu, khong clan-wide, khong cung chi — dung Khach.
-        PersonVisibility khach = new PersonVisibility(true, false, false, false, false,
+        PersonVisibility khach = new PersonVisibility(true, false, false, false, false, false,
                 PrivacyConsent.allPrivate());
 
         assertThat(khach.tier()).isEqualTo(VisibleTier.PUBLIC);
@@ -63,12 +63,50 @@ class VisibleTierTest {
     @Test
     @DisplayName("Người đã khuất không bị mô hình đồng thuận áp lên, trừ khối liên hệ")
     void dongThuanKhongApLenNguoiDaKhuat() {
-        PersonVisibility vis = new PersonVisibility(true, false, false, false, false,
+        PersonVisibility vis = new PersonVisibility(true, false, false, false, false, false,
                 PrivacyConsent.allPrivate().with(PrivacyFieldGroup.CONTACT, ShareScope.CLAN));
 
         assertThat(vis.allows(PrivacyFieldGroup.OCCUPATION)).isTrue();
         assertThat(vis.allows(PrivacyFieldGroup.CONTACT))
                 .as("mot lua chon tu luc con song khong mo lai duoc khoi lien he sau khi mat")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("Lỗ hổng NT-MOI-07: tài khoản CHƯA VÀO PHẢ không được hưởng mức \"Cả họ xem\"")
+    void chuaVaoPhaKhongDocDuocMucCaHo() {
+        // Người còn sống, đặt cả năm nhóm ở CLAN — tức rộng nhất mà chủ thể có thể chọn.
+        PrivacyConsent moCaHo = PrivacyConsent.allPrivate();
+        for (PrivacyFieldGroup g : PrivacyFieldGroup.values()) {
+            moCaHo = moCaHo.with(g, ShareScope.CLAN);
+        }
+        // Đã đăng nhập (qua existsFor), không phải chính chủ, không clan-wide, không cùng chi,
+        // và linkedToTree = false: đúng hình dạng của một tài khoản vừa đăng ký bằng mã dòng họ.
+        PersonVisibility choDuyet = new PersonVisibility(false, false, false, false, false, false, moCaHo);
+
+        for (PrivacyFieldGroup g : PrivacyFieldGroup.values()) {
+            assertThat(choDuyet.allows(g))
+                    .as("mã mời dòng họ phát rộng; 'cầm được mã' chưa phải 'là người trong họ' — nhóm " + g)
+                    .isFalse();
+        }
+        assertThat(choDuyet.tier())
+                .as("màn chờ duyệt hứa: chỉ tên, đời, quan hệ lõi")
+                .isEqualTo(VisibleTier.T1);
+
+        // Đối chứng: cùng hồ sơ ấy, một thành viên đã vào phả (khác chi) đọc được đủ.
+        PersonVisibility thanhVien = new PersonVisibility(false, false, false, false, true, false, moCaHo);
+        assertThat(thanhVien.allows(PrivacyFieldGroup.CONTACT)).isTrue();
+        assertThat(thanhVien.tier()).isEqualTo(VisibleTier.T3);
+    }
+
+    @Test
+    @DisplayName("Mức BRANCH cũng đòi đã vào phả, không chỉ đòi cùng chi")
+    void mucChiCungDoiDaVaoPha() {
+        PrivacyConsent moChi = PrivacyConsent.allPrivate().with(PrivacyFieldGroup.CONTACT, ShareScope.BRANCH);
+        // inBranchScope = true nhưng linkedToTree = false: hình dạng không nên xảy ra ngoài đời
+        // (chưa gắn nhân khẩu thì không có chi để "cùng"), nhưng nếu một lối vào nào đó dựng ra
+        // được nó thì luật vẫn phải đóng.
+        PersonVisibility laLung = new PersonVisibility(false, false, false, true, false, false, moChi);
+        assertThat(laLung.allows(PrivacyFieldGroup.CONTACT)).isFalse();
     }
 }

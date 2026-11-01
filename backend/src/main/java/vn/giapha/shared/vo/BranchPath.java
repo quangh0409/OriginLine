@@ -28,7 +28,7 @@ public record BranchPath(String value) implements ValueObject {
         Objects.requireNonNull(value, "BranchPath khong duoc null");
         if (!VALID_PATH.matcher(value).matches()) {
             throw new IllegalArgumentException(
-                    "BranchPath khong hop le voi ltree (chi nhan [A-Za-z0-9_] ngan cach boi dau cham): " + value);
+                    "BranchPath không hợp lệ với ltree (chỉ nhận [A-Za-z0-9_] ngăn cách bởi dấu chấm): " + value);
         }
     }
 
@@ -48,7 +48,7 @@ public record BranchPath(String value) implements ValueObject {
         normalized = NON_LABEL_CHARS.matcher(normalized.toLowerCase(Locale.ROOT)).replaceAll("_");
         normalized = normalized.replaceAll("^_+|_+$", "");
         if (normalized.isEmpty()) {
-            throw new IllegalArgumentException("Khong sinh duoc nhan ltree tu ten: " + vietnameseName);
+            throw new IllegalArgumentException("Không sinh được nhãn ltree từ tên: " + vietnameseName);
         }
         return normalized;
     }

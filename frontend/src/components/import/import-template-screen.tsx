@@ -148,8 +148,14 @@ export function ImportTemplateScreen() {
         </dl>
       </section>
 
+      {/* `info`, không phải `warning`: bản trước bảo "Xoá các dòng ví dụ trên trang
+          Nhân khẩu trước khi nộp" — nhưng bộ sinh mẫu (ImportTemplateGenerator) để
+          dòng mẫu ở trang "Ví dụ" RIÊNG mà bộ đọc không bao giờ đọc, và trang Nhân
+          khẩu giao xuống rỗng (hoặc chỉ có người thật đã mang mã). Đối chiếu với tệp
+          tải về thật 24/09. Một cảnh báo màu hổ phách bảo người dùng xoá dòng trên
+          trang Nhân khẩu là đẩy họ xoá chính những người đã có của chi mình. */}
       <Alert
-        type="warning"
+        type="info"
         showIcon
         message={<span className="text-dan font-semibold">{t("example.title")}</span>}
         description={<span className="text-than">{t("example.body")}</span>}

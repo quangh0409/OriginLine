@@ -57,10 +57,10 @@ public record LunarDeathDate(Integer year, int month, int day, boolean leap) {
 
     public LunarDeathDate {
         if (month < 1 || month > 12) {
-            throw new IllegalArgumentException("Thang am phai trong 1-12, nhan duoc: " + month);
+            throw new IllegalArgumentException("Tháng âm phải trong 1-12, nhận được: " + month);
         }
         if (day < 1 || day > 30) {
-            throw new IllegalArgumentException("Ngay am phai trong 1-30, nhan duoc: " + day);
+            throw new IllegalArgumentException("Ngày âm phải trong 1-30, nhận được: " + day);
         }
     }
 

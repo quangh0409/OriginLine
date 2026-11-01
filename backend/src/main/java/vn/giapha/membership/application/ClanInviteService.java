@@ -159,12 +159,12 @@ public class ClanInviteService {
         MemberScope caller = scopes.currentMemberScope();
         guard.requireProvisionedAccount(caller);
         // PHAT MA DONG HO LA VIEC CUA HOI DONG. Xem javadoc lop truoc khi noi dong nay.
-        guard.requireClanWide(caller, "phat ma moi cho ca dong ho");
+        guard.requireClanWide(caller, "phát mã mời cho cả dòng họ");
 
         Integer maxUses = command == null ? null : command.maxUses();
         if (maxUses != null && maxUses < 1) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Tran luot dung phai tu 1 tro len; de trong neu khong muon dat tran");
+                    "Trần lượt dùng phải từ 1 trở lên; để trống nếu không muốn đặt trần");
         }
 
         Instant now = Instant.now();
@@ -198,7 +198,7 @@ public class ClanInviteService {
     public ClanInviteList list(int page, int size) {
         MemberScope caller = scopes.currentMemberScope();
         guard.requireProvisionedAccount(caller);
-        guard.requireClanWide(caller, "xem danh sach ma moi dong ho");
+        guard.requireClanWide(caller, "xem danh sách mã mời dòng họ");
         int limit = Math.min(Math.max(size, 1), 200);
         Instant now = Instant.now();
         List<ClanInviteView> views = codes.all(limit, Math.max(page, 0) * limit).stream()
@@ -219,7 +219,7 @@ public class ClanInviteService {
     public List<ClanInviteRedemption> redemptionsOf(UUID codeId, int page, int size) {
         MemberScope caller = scopes.currentMemberScope();
         guard.requireProvisionedAccount(caller);
-        guard.requireClanWide(caller, "xem nhat ky dung ma moi dong ho");
+        guard.requireClanWide(caller, "xem nhật ký dùng mã mời dòng họ");
         int limit = Math.min(Math.max(size, 1), 200);
         return redemptions.byCode(codeId, limit, Math.max(page, 0) * limit);
     }
@@ -238,11 +238,11 @@ public class ClanInviteService {
     public ClanInviteView revoke(UUID codeId, String reason) {
         MemberScope caller = scopes.currentMemberScope();
         guard.requireProvisionedAccount(caller);
-        guard.requireClanWide(caller, "thu hoi ma moi dong ho");
+        guard.requireClanWide(caller, "thu hồi mã mời dòng họ");
 
         ClanInviteCode code = codes.byId(codeId)
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay ma moi dong ho " + codeId));
+                        "Không tìm thấy mã mời dòng họ " + codeId));
         Instant now = Instant.now();
         code.revoke(reason, now);
         ClanInviteCode saved = codes.save(code);
@@ -354,7 +354,7 @@ public class ClanInviteService {
      */
     public ClanRegistration register(RegisterWithClanInviteCommand command) {
         if (command == null || command.code() == null) {
-            throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED, "Phai nhap ma moi");
+            throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED, "Phải nhập mã mời");
         }
         String clientId = command.clientId();
         throttle.guard(clientId);
@@ -386,9 +386,9 @@ public class ClanInviteService {
                     + " Keycloak {} da co chu, ma nguoi goi khong trinh token", code.id(),
                     login.kind(), account.subject());
             throw new DomainException(MembershipProblemCodes.IDENTITY_ALREADY_REGISTERED,
-                    "Dinh danh nay da co tai khoan trong he thong. Hay dang nhap roi nhap lai ma"
-                            + " dong ho; neu ban khong dang nhap duoc, hay bao Truong chi hoac Hoi"
-                            + " dong Toc bieu.");
+                    "Định danh này đã có tài khoản trong hệ thống. Hãy đăng nhập rồi nhập lại mã"
+                            + " dòng họ; nếu bạn không đăng nhập được, hãy báo Trưởng chi hoặc Hội"
+                            + " đồng Tộc biểu.");
         }
 
         // (3) Duc lien ket — chi cho tai khoan VUA DUOC LAP o buoc tren.
@@ -490,13 +490,13 @@ public class ClanInviteService {
         int days = command == null || command.ttlDays() == null ? defaultTtlDays : command.ttlDays();
         if (days < 1 || days > MAX_TTL_DAYS) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Han ma moi dong ho phai tu 1 den " + MAX_TTL_DAYS + " ngay");
+                    "Hạn mã mời dòng họ phải từ 1 đến " + MAX_TTL_DAYS + " ngày");
         }
         return Duration.ofDays(days);
     }
 
     private static NotFoundException khongKhopMaNao() {
         return new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                "Khong tim thay ma moi khop ma nay");
+                "Không tìm thấy mã mời khớp mã này");
     }
 }

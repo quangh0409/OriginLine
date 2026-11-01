@@ -68,14 +68,14 @@ public class DuplicatePersonSuspectedException extends GenealogyConflictExceptio
      */
     private static String buildMessage(List<DuplicateMatch> matches) {
         if (matches == null || matches.isEmpty()) {
-            return "Nghi trung voi mot nhan khau da co trong gia pha";
+            return "Nghi trùng với một nhân khẩu đã có trong gia phả";
         }
         DuplicateMatch manhNhat = matches.get(0);
         String tinHieu = manhNhat.hint() == null || manhNhat.hint().isBlank()
-                ? "" : ", khop o: " + manhNhat.hint();
-        return "Nghi trung voi " + matches.size() + " ho so da co trong gia pha - diem cao nhat "
-                + manhNhat.score() + tinHieu + ". Vi ly do rieng tu, than loi khong neu danh tinh:"
-                + " mo tung ho so theo personId de xem phan minh duoc phep xem."
-                + " Xac nhan neu day la nguoi khac.";
+                ? "" : ", khớp ở: " + manhNhat.hint();
+        return "Nghi trùng với " + matches.size() + " hồ sơ đã có trong gia phả - điểm cao nhất "
+                + manhNhat.score() + tinHieu + ". Vì lý do riêng tư, thân lỗi không nêu danh tính:"
+                + " mở từng hồ sơ theo personId để xem phần mình được phép xem."
+                + " Xác nhận nếu đây là người khác.";
     }
 }

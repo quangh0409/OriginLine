@@ -42,8 +42,8 @@ public enum HonourKind {
         try {
             return valueOf(raw.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Loai vinh danh khong nam trong ck_honour_kind: "
-                    + raw + "; chi nhan DO_DAT, CHUC_TUOC, THANH_TICH, KHEN_THUONG", ex);
+            throw new IllegalArgumentException("Loại vinh danh không nằm trong ck_honour_kind: "
+                    + raw + "; chỉ nhận DO_DAT, CHUC_TUOC, THANH_TICH, KHEN_THUONG", ex);
         }
     }
 }

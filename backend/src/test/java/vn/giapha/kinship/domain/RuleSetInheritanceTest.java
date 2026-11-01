@@ -183,9 +183,10 @@ class RuleSetInheritanceTest {
         }
         KinshipRuleSet quaSau = current;
 
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(quaSau::chain)
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Chuoi ke thua");
+                .hasMessageContaining("Chuỗi kế thừa");
     }
 
     @Test

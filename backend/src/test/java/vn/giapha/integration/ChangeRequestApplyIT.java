@@ -250,9 +250,10 @@ class ChangeRequestApplyIT extends AbstractIntegrationTest {
         authenticateAs("sub-admin", "ADMIN");
         softDeletePerson.softDelete(cuOng, "Trùng với một bản ghi khác, chờ Hội đồng đối chiếu");
 
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> truongChiDuyet(yeuCau.id()))
                 .isInstanceOf(GenealogyConflictException.class)
-                .hasMessageContaining("xoa mem");
+                .hasMessageContaining("xoá mềm");
 
         assertThat(trangThai(yeuCau.id()))
                 .as("trang thai APPROVED phai rollback theo lenh ghi hong")

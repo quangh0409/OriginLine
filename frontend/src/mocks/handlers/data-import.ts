@@ -867,17 +867,24 @@ export const dataImportHandlers = [
       );
     }
 
-    const updated = mutateImportMockDb((db) => {
+    // Thân 202 là lô ĐỌC TRƯỚC khi luồng nền lật trạng thái — đúng như backend
+    // thật (`ImportBatchController.commit`: `executor.execute(...)` rồi đọc lại
+    // lô ngay, nên gần như luôn còn `VALIDATED`). Bản mock trước trả sẵn
+    // `COMMITTING` — "dễ hơn thật" — và màn đối soát được viết dựa vào điều đó:
+    // trên hệ thật nó không bao giờ theo dõi tiến độ và đứng im sau khi bấm ghi
+    // (bấm thật 24/09).
+    const truocKhiLat = batchDto(storedBatch(batchId)!);
+    mutateImportMockDb((db) => {
       const target = db.batches.find((b) => b.id === batchId)!;
       target.status = "COMMITTING";
       target.committedBy = identity.appUserId ?? undefined;
       target.version += 1;
       db.committingSince[batchId] = Date.now();
-      return batchDto(target);
+      return null;
     });
     // 202: việc ghi chạy nền, luồng web không chờ. Trạng thái cuối CHỈ đến từ
     // `/commit-progress`.
-    return HttpResponse.json(updated, {
+    return HttpResponse.json(truocKhiLat, {
       status: 202,
       headers: { Location: `/api/v1/import/batches/${batchId}/commit-progress` },
     });

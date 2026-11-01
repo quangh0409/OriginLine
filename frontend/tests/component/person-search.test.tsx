@@ -236,6 +236,20 @@ describe("Khách chỉ gọi lối công khai — không bao giờ chạm endpoi
     spy.mockRestore();
   });
 
+  it("phiên khách: KHÔNG hỏi danh sách chi qua GraphQL — ô lọc ấy bị ẩn với khách", async () => {
+    // Đo trên hệ thật 24/09: mỗi lượt khách mở /search bắn ba `POST /api/v1/graphql`
+    // (resolver `branches` đòi token → 401, cộng hai lần tự thử lại) cho một ô không ai thấy.
+    const spy = vi.spyOn(globalThis, "fetch");
+    renderSearch("q=thuy to", "guest");
+
+    await waitForResults();
+
+    const urls = spy.mock.calls.map((call) => String(call[0]));
+    expect(urls.some((url) => url.includes("/api/v1/graphql"))).toBe(false);
+    expect(document.getElementById("search-filter-branch")).toBeNull();
+    spy.mockRestore();
+  });
+
   it("phiên thành viên: gọi lối thành viên, không phải lối công khai", async () => {
     const spy = vi.spyOn(globalThis, "fetch");
     renderSearch("q=thuy to", "member");
@@ -271,7 +285,7 @@ describe("Khách chỉ gọi lối công khai — không bao giờ chạm endpoi
     // "Đời thứ" qua `getByLabelText` sẽ trượt dù mắt người đọc thấy đúng.
     renderSearch("", "guest");
 
-    expect(screen.queryByText("Chi / Ngành")).not.toBeInTheDocument();
+    expect(document.getElementById("search-filter-branch")).toBeNull();
     expect(screen.queryByText("Quê quán")).not.toBeInTheDocument();
     // Đời thứ vẫn còn — đây là tham số duy nhất bề mặt công khai có nhận.
     expect(screen.getByText("Đời thứ")).toBeInTheDocument();

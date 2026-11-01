@@ -172,7 +172,7 @@ public class MembershipExceptionHandler {
                 ex.getMessage());
         ProblemDetail problem = ApiProblems.of(HttpStatus.SERVICE_UNAVAILABLE,
                 ProblemTypes.BUSINESS_RULE, "Chưa lập được tài khoản",
-                "Chua lap duoc tai khoan dang nhap luc nay. Ma moi CHUA bi dung, hay thu lai sau.",
+                "Chưa lập được tài khoản đăng nhập lúc này. Mã mời CHƯA bị dùng, hãy thử lại sau.",
                 MembershipProblemCodes.IDENTITY_PROVIDER_UNAVAILABLE, request);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problem);
     }

@@ -14,7 +14,7 @@ import {
 import { colorVars } from "@/styles/tokens";
 import type { MediaPolicy } from "@/lib/api/media";
 import type { PostMediaItem } from "@/lib/api/posts";
-import { useMediaPolicy, useRemoveMedia, useReorderMedia, useUpdateMediaAlt } from "../queries";
+import { useMediaPolicy, useRemoveMedia, useReorderMedia } from "../queries";
 import { useMediaUploadQueue, type PendingMediaItem } from "./use-media-upload-queue";
 
 export interface MediaPickerProps {
@@ -60,10 +60,9 @@ export function MediaPicker({ postId, media, editable }: MediaPickerProps) {
   const queue = useMediaUploadQueue(postId, attachedCount, policy);
   const reorder = useReorderMedia(postId ?? "");
   const removeMedia = useRemoveMedia(postId ?? "");
-  const updateAlt = useUpdateMediaAlt(postId ?? "");
 
   const totalCount = attachedCount + queue.items.filter((it) => it.status !== "rejected").length;
-  const atCap = Boolean(policy) && totalCount >= (policy?.maxAttachmentsPerPost ?? Infinity);
+  const atCap = Boolean(policy) && totalCount >= (policy?.maxMediaPerPost ?? Infinity);
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -119,7 +118,7 @@ export function MediaPicker({ postId, media, editable }: MediaPickerProps) {
             id={inputId}
             type="file"
             multiple
-            accept={policy ? [...policy.image.mimeTypes, ...policy.video.mimeTypes].join(",") : undefined}
+            accept={policy ? [...policy.imageContentTypes, ...policy.videoContentTypes].join(",") : undefined}
             disabled={queue.disabled || atCap}
             aria-labelledby={`${inputId}-label`}
             className="sr-only"
@@ -149,10 +148,10 @@ export function MediaPicker({ postId, media, editable }: MediaPickerProps) {
           {policy && (
             <p className="m-0 mt-1 text-than" style={{ color: colorVars.textMuted }}>
               {t("limits", {
-                imageMb: Math.round(policy.image.maxBytes / (1024 * 1024)),
-                videoMb: Math.round(policy.video.maxBytes / (1024 * 1024)),
-                videoSeconds: policy.video.maxDurationSeconds,
-                max: policy.maxAttachmentsPerPost,
+                imageMb: Math.round(policy.maxImageBytes / (1024 * 1024)),
+                videoMb: Math.round(policy.maxVideoBytes / (1024 * 1024)),
+                videoSeconds: policy.maxVideoDurationSeconds,
+                max: policy.maxMediaPerPost,
               })}
             </p>
           )}
@@ -187,7 +186,7 @@ export function MediaPicker({ postId, media, editable }: MediaPickerProps) {
             className="mt-2"
             type="warning"
             showIcon
-            message={<span className="text-than">{t("atCap", { max: policy.maxAttachmentsPerPost })}</span>}
+            message={<span className="text-than">{t("atCap", { max: policy.maxMediaPerPost })}</span>}
           />
         )}
       </div>
@@ -204,7 +203,6 @@ export function MediaPicker({ postId, media, editable }: MediaPickerProps) {
               onMoveRight={() => moveBy(item.id, 1)}
               onRemove={() => removeMedia.mutate(item.id)}
               removing={removeMedia.isPending && removeMedia.variables === item.id}
-              onAltChange={(alt) => updateAlt.mutate({ mediaId: item.id, alt })}
             />
           ))}
           {queue.items.map((item) => (
@@ -261,6 +259,14 @@ function CardShell({
   );
 }
 
+/**
+ * Một tệp ĐÃ gắn vào bài. KHÔNG có ô sửa `alt` ở đây (khác bản trước) —
+ * `AttachMediaRequest` (`PUT /posts/{id}/media`) chỉ nhận `mediaIds`, không
+ * trường nào mang `alt`; hợp đồng thật chỉ cho đặt `alt` đúng một lần, ở bước
+ * xác nhận (`POST /media/{id}/confirm`, xem `PendingMediaCard`). Sửa một chữ
+ * thay ảnh gõ nhầm sau khi đã gắn nghĩa là gỡ tệp rồi tải lại — không có lối
+ * tắt nào ở tầng API, nên giao diện không giả vờ có.
+ */
 function AttachedMediaCard({
   item,
   isFirst,
@@ -269,7 +275,6 @@ function AttachedMediaCard({
   onMoveRight,
   onRemove,
   removing,
-  onAltChange,
 }: {
   item: PostMediaItem;
   isFirst: boolean;
@@ -278,23 +283,14 @@ function AttachedMediaCard({
   onMoveRight: () => void;
   onRemove: () => void;
   removing: boolean;
-  onAltChange: (alt: string) => void;
 }) {
   const t = useTranslations("posts.media");
-  const [alt, setAltLocal] = useState(item.alt ?? "");
-  const altId = useId();
 
   return (
     <CardShell kind={item.kind}>
       {item.kind === "IMAGE" ? (
         // eslint-disable-next-line @next/next/no-img-element -- xem trước tệp cục bộ/đã ký, không phải ảnh tối ưu hoá qua Next Image
-        <img
-          src={item.url}
-          alt={item.alt ?? ""}
-          width={item.width ?? undefined}
-          height={item.height ?? undefined}
-          className="h-full w-full object-cover"
-        />
+        <img src={item.url} alt={item.alt ?? ""} className="h-full w-full object-cover" />
       ) : (
         <video
           src={item.url}
@@ -330,23 +326,6 @@ function AttachedMediaCard({
           tone="danger"
         />
       </div>
-      {item.kind === "IMAGE" && (
-        <div className="border-t px-2 py-2" style={{ borderColor: colorVars.border }}>
-          <label htmlFor={altId} className="mb-1 block text-than font-medium" style={{ color: colorVars.textMain }}>
-            {t("altLabel")}
-          </label>
-          <Input
-            id={altId}
-            size="small"
-            value={alt}
-            placeholder={t("altPlaceholder")}
-            onChange={(e) => setAltLocal(e.target.value)}
-            onBlur={() => {
-              if (alt.trim() && alt !== item.alt) onAltChange(alt.trim());
-            }}
-          />
-        </div>
-      )}
     </CardShell>
   );
 }
@@ -443,6 +422,7 @@ function PendingMediaCard({
             size="small"
             value={item.alt}
             placeholder={t("altPlaceholder")}
+            maxLength={policy?.maxAltLength}
             onChange={(e) => onAltChange(e.target.value)}
             onPressEnter={onConfirmAlt}
           />
@@ -473,13 +453,15 @@ function rejectReasonText(
   if (item.rejectReason === "NAMED_FORMAT" && item.namedFormatKey) {
     return t(`rejected.named.${item.namedFormatKey}`);
   }
+  if (item.rejectReason === "SERVER") return item.errorMessage ?? t("rejected.unknown");
   if (item.rejectReason === "TYPE") return t("rejected.type");
-  if (item.rejectReason === "COUNT") return t("rejected.count", { max: policy?.maxAttachmentsPerPost ?? 0 });
+  if (item.rejectReason === "COUNT") return t("rejected.count", { max: policy?.maxMediaPerPost ?? 0 });
   if (item.rejectReason === "DURATION" && policy) {
-    return t("rejected.duration", { maxSeconds: policy.video.maxDurationSeconds });
+    return t("rejected.duration", { maxSeconds: policy.maxVideoDurationSeconds });
   }
   if (item.rejectReason === "SIZE" && item.kind && policy) {
-    const maxMb = Math.round(policy[item.kind === "IMAGE" ? "image" : "video"].maxBytes / (1024 * 1024));
+    const maxBytes = item.kind === "IMAGE" ? policy.maxImageBytes : policy.maxVideoBytes;
+    const maxMb = Math.round(maxBytes / (1024 * 1024));
     return t("rejected.size", { maxMb, actual: formatBytes(item.file.size) });
   }
   return t("rejected.unknown");

@@ -34,6 +34,8 @@ export function HonoursListScreen() {
   const [kind, setKind] = useState<HonourKind | undefined>();
   const [branchId, setBranchId] = useState<string | undefined>();
   const [formOpen, setFormOpen] = useState(false);
+  /** Tiêu đề đề nghị vừa gửi — để nói ra "đã gửi, đang chờ duyệt" thay vì chỉ đóng hộp thoại. */
+  const [justSubmitted, setJustSubmitted] = useState<string | null>(null);
 
   const pendingQuery = useHonoursList({ kind, branchId, status: "PENDING", size: 50 });
   const publishedQuery = useHonoursList({ kind, branchId, status: "PUBLISHED", size: 50 });
@@ -88,6 +90,17 @@ export function HonoursListScreen() {
         )}
       </div>
 
+      {justSubmitted && (
+        <Alert
+          type="success"
+          showIcon
+          closable
+          onClose={() => setJustSubmitted(null)}
+          message={<span className="text-than font-semibold">{t("submitted.title")}</span>}
+          description={<span className="text-than">{t("submitted.body", { title: justSubmitted })}</span>}
+        />
+      )}
+
       {isPending && <Skeleton active paragraph={{ rows: 6 }} />}
       {isError && <Alert type="error" showIcon message={t("errors.loadFailed")} />}
 
@@ -123,7 +136,7 @@ export function HonoursListScreen() {
         </section>
       )}
 
-      <HonourFormModal open={formOpen} onClose={() => setFormOpen(false)} />
+      <HonourFormModal open={formOpen} onClose={() => setFormOpen(false)} onSubmitted={setJustSubmitted} />
     </div>
   );
 }

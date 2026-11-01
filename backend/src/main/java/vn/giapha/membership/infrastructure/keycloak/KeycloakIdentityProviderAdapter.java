@@ -163,16 +163,16 @@ public class KeycloakIdentityProviderAdapter implements IdentityProviderPort {
         requireConfigured();
         String subject = codec.verify(token, clock.instant())
                 .orElseThrow(() -> new SetPasswordNotAllowedException(
-                        "Lien ket dat mat khau khong hop le hoac da het han"));
+                        "Liên kết đặt mật khẩu không hợp lệ hoặc đã hết hạn"));
         if (api.findUserById(subject).isEmpty()) {
             throw new SetPasswordNotAllowedException(
-                    "Lien ket dat mat khau khong hop le hoac da het han");
+                    "Liên kết đặt mật khẩu không hợp lệ hoặc đã hết hạn");
         }
         // DAY LA PHEP KIEM "MOT LAN". Nguon chan ly la trang thai that o Keycloak, khong phai mot
         // co trong CSDL cua he thong nay — xem javadoc SetPasswordTokenCodec.
         if (api.hasPasswordCredential(subject)) {
             throw new SetPasswordNotAllowedException(
-                    "Tai khoan nay da co mat khau; hay dang nhap nhu binh thuong");
+                    "Tài khoản này đã có mật khẩu; hãy đăng nhập như bình thường");
         }
         api.setPassword(subject, rawPassword);
         api.clearUpdatePasswordAction(subject);

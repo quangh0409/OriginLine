@@ -26,7 +26,20 @@ const KINDS: HonourKind[] = ["DO_DAT", "CHUC_TUOC", "THANH_TICH", "KHEN_THUONG"]
  * đăng nhập từ trước (nút mở nó chỉ hiện khi `me.appUserId` có giá trị), nên
  * không có ca khách ở đây.
  */
-export function HonourFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function HonourFormModal({
+  open,
+  onClose,
+  onSubmitted,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /**
+   * Gọi sau khi `POST /honours` thành công, TRƯỚC khi đóng hộp thoại — để màn cha nói ra một lời
+   * xác nhận. Hộp thoại tự đóng khi gửi xong; không có lời nào thì người dùng chỉ thấy một hộp
+   * thoại biến mất và phải tự đoán là đã gửi hay đã huỷ.
+   */
+  onSubmitted?: (title: string) => void;
+}) {
   const t = useTranslations("honours");
   const me = useMe();
   const self = usePerson(me.data?.linkedToTree ? (me.data.personId ?? undefined) : undefined);
@@ -88,7 +101,10 @@ export function HonourFormModal({ open, onClose }: { open: boolean; onClose: () 
       () => true,
       () => false
     );
-    if (ok) handleClose();
+    if (ok) {
+      onSubmitted?.(body.title);
+      handleClose();
+    }
   };
 
   return (

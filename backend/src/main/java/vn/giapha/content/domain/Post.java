@@ -9,6 +9,25 @@ import java.util.UUID;
 /**
  * Một bài viết của dòng họ: soạn nháp → gửi duyệt → Trưởng cành/chi/họ duyệt → lên trang chủ.
  *
+ * <h2>Nháp được phép có thân rỗng; bài gửi duyệt thì không (24/09/2026)</h2>
+ * Bản đầu đòi thân bài ngay từ lượt tạo nháp ({@code @NotBlank} ở {@code CreatePostRequest} và
+ * {@code requireBody} trong hàm dựng). Lý do bên ấy — giữ lại vì nó không sai: một bài viết
+ * không có thân thì không phải một bài viết, và kiểm ở cửa vào là cách chắc nhất để không bao giờ
+ * có một hàng như thế trong bảng. Nhưng nghiệm thu bằng trình duyệt thật cho thấy cái giá: màn
+ * soạn tự lưu nháp ngay khi người viết rời ô tiêu đề, và bộ chọn ảnh chỉ mở khi đã có nháp — nên
+ * người viết gõ tiêu đề, rời ô, nhận ngay một {@code 400} và dòng "Chưa lưu được nháp", và không
+ * đính được ảnh cho tới khi gõ xong ít nhất một câu. <b>Nháp theo định nghĩa là chưa hoàn
+ * chỉnh</b> (design 07 §2: "mất một bài viết dở là cách chắc chắn nhất để người ta không viết bài
+ * thứ hai"), và bắt phải có thân mới được đính ảnh là ngược với cách người ta viết — nhiều bác
+ * chọn ảnh trước rồi mới kể chuyện về tấm ảnh ấy.
+ *
+ * <p>Nên luật "phải có thân" <b>chuyển chỗ chứ không mất</b>: nó nằm ở {@link #submit} (và lưới
+ * thứ hai ở {@link #approve}). Bất biến thật sự cần giữ — "không bài nào tới tay người duyệt, và
+ * không bài nào lên trang chủ, với thân rỗng" — vẫn giữ nguyên. Tiêu đề thì vẫn bắt buộc ngay từ
+ * nháp: nó là thứ duy nhất để người viết nhận ra bài của mình ở "Bài của tôi", và CSDL có
+ * {@code ck_post_title_not_blank}; còn {@code body} chỉ {@code NOT NULL}, nên chuỗi rỗng không
+ * cần migration nào.</p>
+ *
  * <h2>Aggregate này KHÔNG tự kiểm quyền — cố ý, và đây là điểm quan trọng nhất</h2>
  * Nó không biết {@code ltree}, không biết vai trò, không biết ai đang đăng nhập. Việc so phạm vi
  * chi là của {@code membership.BranchScopeGuard}, và {@link #approve}/{@link #sendBack} chỉ nhận
@@ -40,7 +59,7 @@ import java.util.UUID;
  */
 public final class Post {
 
-    /** Giới hạn mềm của thân bài. Xem {@link #requireBody}. */
+    /** Giới hạn mềm của thân bài. Xem {@link #draftBody}. */
     public static final int MAX_BODY_LENGTH = 200_000;
 
     public static final int MAX_TITLE_LENGTH = 250;
@@ -68,7 +87,7 @@ public final class Post {
                 Instant createdAt, Instant updatedAt, long version) {
         this.id = Objects.requireNonNull(id, "Post.id khong duoc null");
         this.title = requireTitle(title);
-        this.body = requireBody(body);
+        this.body = draftBody(body);
         this.status = status == null ? ContentStatus.DRAFT : status;
         this.authorPersonId = Objects.requireNonNull(authorPersonId,
                 "Post.authorPersonId khong duoc null — nguoi chua duoc duyet vao pha khong viet bai");
@@ -179,13 +198,13 @@ public final class Post {
     public void edit(String newTitle, String newBody) {
         if (status != ContentStatus.DRAFT) {
             throw new IllegalStateException(
-                    "Chi sua duoc bai o trang thai DRAFT; bai nay dang o " + status);
+                    "Chỉ sửa được bài ở trạng thái DRAFT; bài này đang ở " + status);
         }
         if (newTitle != null) {
             this.title = requireTitle(newTitle);
         }
         if (newBody != null) {
-            this.body = requireBody(newBody);
+            this.body = draftBody(newBody);
         }
     }
 
@@ -194,12 +213,18 @@ public final class Post {
      *
      * <p>Lý do trả lại của lượt trước bị xoá ở đây: nó nói về bản cũ, và để nguyên thì màn duyệt sẽ
      * hiện một lời phê không còn đúng với thứ người duyệt đang đọc.</p>
+     *
+     * <p><b>Đây là cửa đòi thân bài</b> — nháp được phép rỗng (xem đầu lớp), bài gửi đi thì không.
+     * Sai trạng thái ném {@link IllegalStateException} (409), thân rỗng ném
+     * {@link IllegalArgumentException} (422): hai lỗi ấy dẫn tới hai việc khác nhau — "tải lại
+     * xem" và "viết thêm vài dòng".</p>
      */
     public void submit() {
         if (status != ContentStatus.DRAFT) {
             throw new IllegalStateException(
-                    "Chi gui duyet duoc bai o trang thai DRAFT; bai nay dang o " + status);
+                    "Chỉ gửi duyệt được bài ở trạng thái DRAFT; bài này đang ở " + status);
         }
+        requireSubmittableBody(body);
         this.status = ContentStatus.PENDING;
         this.rejectReason = null;
     }
@@ -207,6 +232,9 @@ public final class Post {
     /** Duyệt và đăng. {@code PENDING → PUBLISHED}. */
     public void approve(UUID reviewerUserId, Instant at) {
         requirePending();
+        // Lưới thứ hai: submit() đã chặn, nhưng hàng PENDING cũ (trước khi luật chuyển chỗ) hoặc
+        // một lối ghi khác sau này không được đưa một bài thân rỗng lên trang chủ.
+        requireSubmittableBody(body);
         Objects.requireNonNull(reviewerUserId, "reviewerUserId khong duoc null khi duyet bai");
         requireNotSelfReview(reviewerUserId);
         this.status = ContentStatus.PUBLISHED;
@@ -227,7 +255,7 @@ public final class Post {
         Objects.requireNonNull(reviewerUserId, "reviewerUserId khong duoc null khi tra lai bai");
         requireNotSelfReview(reviewerUserId);
         if (reason == null || reason.isBlank()) {
-            throw new IllegalArgumentException("Tra lai bai viet phai kem ly do");
+            throw new IllegalArgumentException("Trả lại bài viết phải kèm lý do");
         }
         this.status = ContentStatus.DRAFT;
         this.reviewedBy = reviewerUserId;
@@ -244,7 +272,7 @@ public final class Post {
      */
     public void withdraw(UUID byUserId, String reason, Instant at) {
         if (status.isFinal()) {
-            throw new IllegalStateException("Bai viet da o trang thai " + status + ", khong go lai duoc");
+            throw new IllegalStateException("Bài viết đã ở trạng thái " + status + ", không gỡ lại được");
         }
         this.status = ContentStatus.WITHDRAWN;
         this.reviewedBy = byUserId;
@@ -306,7 +334,7 @@ public final class Post {
     private void requirePending() {
         if (status != ContentStatus.PENDING) {
             throw new IllegalStateException(
-                    "Chi duyet duoc bai o trang thai PENDING; bai nay dang o " + status);
+                    "Chỉ duyệt được bài ở trạng thái PENDING; bài này đang ở " + status);
         }
     }
 
@@ -325,28 +353,22 @@ public final class Post {
      */
     private void requireNotSelfReview(UUID reviewerUserId) {
         if (reviewerUserId.equals(authorUserId)) {
-            throw new IllegalStateException("Khong duoc tu duyet bai viet do chinh minh soan");
+            throw new IllegalStateException("Không được tự duyệt bài viết do chính mình soạn");
         }
     }
 
     private static String requireTitle(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Tieu de bai viet khong duoc rong");
+            throw new IllegalArgumentException("Tiêu đề bài viết không được rỗng");
         }
         String trimmed = value.trim();
         if (trimmed.length() > MAX_TITLE_LENGTH) {
             throw new IllegalArgumentException(
-                    "Tieu de bai viet toi da " + MAX_TITLE_LENGTH + " ky tu");
+                    "Tiêu đề bài viết tối đa " + MAX_TITLE_LENGTH + " ký tự");
         }
         return trimmed;
     }
 
-    /**
-     * Thân bài không rỗng và không dài quá {@link #MAX_BODY_LENGTH}.
-     *
-     * <p>Giới hạn ở đây chứ không ở một {@code CHECK} của CSDL: chạm trần phải là một
-     * {@code 422} có câu chữ, không phải một lỗi ràng buộc sau khi người ta đã gõ xong.</p>
-     */
     /** Chuỗi rỗng hoặc chỉ khoảng trắng đọc thành {@code null} — "không có" chỉ có một biểu diễn. */
     private static String blankToNull(String value) {
         if (value == null) {
@@ -356,15 +378,31 @@ public final class Post {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private static String requireBody(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Than bai viet khong duoc rong");
+    /**
+     * Thân bài của một <b>nháp</b>: được rỗng, không được dài quá {@link #MAX_BODY_LENGTH}.
+     * {@code null} đọc thành chuỗi rỗng — cột là {@code NOT NULL}, và "chưa gõ gì" chỉ có một
+     * biểu diễn.
+     *
+     * <p>Giới hạn độ dài ở đây chứ không ở một {@code CHECK} của CSDL: chạm trần phải là một
+     * {@code 422} có câu chữ, không phải một lỗi ràng buộc sau khi người ta đã gõ xong.</p>
+     */
+    private static String draftBody(String value) {
+        if (value == null) {
+            return "";
         }
         if (value.length() > MAX_BODY_LENGTH) {
             throw new IllegalArgumentException(
-                    "Than bai viet toi da " + MAX_BODY_LENGTH + " ky tu");
+                    "Thân bài viết tối đa " + MAX_BODY_LENGTH + " ký tự");
         }
         return value;
+    }
+
+    /** Thân bài của một bài <b>gửi đi</b>: phải có chữ. Xem {@link #submit}. */
+    private static void requireSubmittableBody(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Thân bài viết còn trống — viết vài dòng rồi hãy gửi duyệt");
+        }
     }
 
 }

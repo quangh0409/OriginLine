@@ -76,7 +76,11 @@ function accessMetaFor(full: PersonDto, role: MockRole, tier: VisibleTier): Pers
     // Xoá mềm là việc của người quản chi, không phải của chính chủ: không ai
     // tự gỡ mình khỏi gia phả.
     canDelete: canWriteHere,
-    canRequestCorrection: hasAccount && !canEdit,
+    // `personId !== null`, KHÔNG phải `hasAccount` — đúng như máy chủ thật
+    // (`PrivacyTierService.accessOf`: `daVaoPha = role != GUEST && personId != null`). Tài khoản
+    // vừa đăng ký mà chưa gắn phả có `appUserId` nhưng bị `requireActiveMember` chặn khi gửi; bản
+    // giả cũ mở cờ cho họ, tức "dễ hơn thật" — đúng lớp lỗi mock lệch backend đã lặp nhiều lần.
+    canRequestCorrection: identity.personId !== null && !canEdit,
     isSelf,
     callerRole: mockRoleToRole(role),
   };

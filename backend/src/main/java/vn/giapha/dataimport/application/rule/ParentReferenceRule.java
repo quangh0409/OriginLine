@@ -83,6 +83,9 @@ public class ParentReferenceRule implements ImportRule {
         }
         // CANH BAO chu khong phai loi chan: ke tu la quan he them, khong phai canh giu cay. Thieu
         // no thi nguoi ay van dung dung cho trong pha, chi la chua ghi duoc viec lap nguoi noi doi.
+        // Luat nay chi nhin TEP. Khi ma cung khong co trong pha cua chi thi buoc ghi se chan, nen
+        // ImportPreflight THAY canh bao nay bang loi chan IMP_COMMIT_REF_NOT_FOUND (mang theo goiY)
+        // ngay o buoc kiem — de man doi soat khong hua dieu buoc ghi khong giu.
         ctx.add(ImportIssue.nhanKhau(IssueCode.IMP_HEIR_TARGET_NOT_FOUND, row.rowNo(),
                 ImportColumn.KE_TU_CHO_AI.tieuDe(),
                 "Dòng " + row.nhan() + " khai kế tự cho mã " + ma + " nhưng không tìm thấy mã đó."

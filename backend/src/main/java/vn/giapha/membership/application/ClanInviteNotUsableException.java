@@ -49,10 +49,10 @@ public class ClanInviteNotUsableException extends DomainException {
 
     private static String messageOf(ClanInviteUsability usability) {
         return switch (usability) {
-            case EXPIRED -> "Ma moi cua dong ho da het han";
-            case REVOKED -> "Ma moi cua dong ho da bi thu hoi";
-            case EXHAUSTED -> "Ma moi cua dong ho da dung het so luot cho phep";
-            case USABLE -> "Ma moi khong dung duoc";
+            case EXPIRED -> "Mã mời của dòng họ đã hết hạn";
+            case REVOKED -> "Mã mời của dòng họ đã bị thu hồi";
+            case EXHAUSTED -> "Mã mời của dòng họ đã dùng hết số lượt cho phép";
+            case USABLE -> "Mã mời không dùng được";
         };
     }
 }

@@ -126,7 +126,7 @@ public class PasswordResetRedeemer {
      */
     private static SetPasswordNotAllowedException lienKetKhongDungDuoc() {
         return new SetPasswordNotAllowedException(
-                "Lien ket dat mat khau khong hop le, da duoc dung hoac da het han."
-                        + " Hay lien he Truong chi de duoc cap lai.");
+                "Liên kết đặt mật khẩu không hợp lệ, đã được dùng hoặc đã hết hạn."
+                        + " Hãy liên hệ Trưởng chi để được cấp lại.");
     }
 }

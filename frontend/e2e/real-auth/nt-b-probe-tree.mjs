@@ -1,0 +1,10 @@
+import { open, login, shot, mainText, APP } from "./nt-b-lib.mjs";
+const { browser, page, p } = await open(process.env.KIND ?? "desktop", "probe-tree");
+await login(page, process.env.NTB_ID, process.env.NTB_PW ?? "NghiemThu#2026b", "/vi");
+await page.goto(APP + "/vi/tree", { waitUntil: "networkidle" });
+await page.waitForTimeout(2000);
+await shot(page, "probe-tree");
+p("INPUTS: " + JSON.stringify(await page.locator("input").evaluateAll((els) => els.map((e) => [e.getAttribute("placeholder"), e.getAttribute("aria-label"), e.getAttribute("data-testid"), e.offsetParent !== null]))));
+p("claim actions: " + (await page.getByTestId("tree-claim-actions").allInnerTexts()).join(" | "));
+p("nodes: " + (await page.getByTestId("person-node-name").allInnerTexts()).slice(0, 20).join(", "));
+await browser.close();

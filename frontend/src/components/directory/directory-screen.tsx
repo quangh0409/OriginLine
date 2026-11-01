@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Alert } from "antd";
+import { Alert, Skeleton } from "antd";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useDirectory } from "@/hooks/use-directory";
 import { useMe } from "@/hooks/use-me";
 import { ApiError } from "@/lib/api/http";
+import { useSignedIn } from "@/lib/auth/use-signed-in";
 import { DirectoryCoverageNote } from "./directory-coverage-note";
 import { DirectoryFilters, type DirectoryFilterValues } from "./directory-filters";
 import { DirectoryGuestNotice } from "./directory-guest-notice";
@@ -34,9 +35,16 @@ const PAGE_SIZE = 20;
  * người cụ thể nào. Chỉ `q` (tìm theo tên) là có thể mang tên người, và vì thế
  * nó là tham số duy nhất người dùng phải tự gõ vào.
  *
- * <h2>Khách: một câu, không phải một danh sách rỗng</h2>
- * Máy chủ trả `401`; màn hình dịch đúng một câu ấy. Không đếm, không đoán,
- * không dựng sẵn một danh sách rỗng trông như dòng họ không còn ai.
+ * <h2>Khách: một câu, không phải một danh sách rỗng — và không một lượt gọi</h2>
+ * Máy chủ trả `401` cho khách; màn hình nói đúng một câu ấy. Không đếm, không
+ * đoán, không dựng sẵn một danh sách rỗng trông như dòng họ không còn ai.
+ *
+ * Từ 26/09/2026 câu ấy đến TRƯỚC lượt gọi, không sau: phiên được hỏi ở trình
+ * duyệt (`useSignedIn`), và khách không bao giờ dựng tới `useDirectory`. Bản
+ * trước cứ gọi rồi dịch `401` — đúng câu chữ, nhưng để lại `401 GET /directory`
+ * đỏ trong console trên mỗi lượt khách mở trang, thứ mà người vận hành đọc
+ * thành "có lỗi". Nhánh `401` bên dưới VẪN giữ: một phiên hết hạn giữa chừng
+ * (trình duyệt tưởng còn đăng nhập) vẫn phải ra đúng khối này.
  *
  * <h2>Ba trạng thái hỏng, ba câu khác nhau — không gộp</h2>
  * Một dải đỏ "Chưa tải được danh bạ. Vui lòng thử lại." cho cả ba là cách chắc
@@ -54,6 +62,29 @@ const PAGE_SIZE = 20;
  * người đọc và đổi theo `Accept-Language` (contracts/README §3).
  */
 export function DirectoryScreen() {
+  const signedIn = useSignedIn();
+  if (signedIn === true) return <DirectoryMemberScreen />;
+  return (
+    <div className="space-y-4">
+      <DirectoryHeader />
+      {signedIn === null ? <Skeleton active paragraph={{ rows: 6 }} /> : <DirectoryGuestNotice />}
+    </div>
+  );
+}
+
+function DirectoryHeader() {
+  const t = useTranslations("directory");
+  return (
+    <header>
+      <h1 className="m-0 font-serif text-2xl font-bold text-primary">{t("title")}</h1>
+      <p className="m-0 mt-1 max-w-prose text-than leading-relaxed text-text-muted">
+        {t("subtitle")}
+      </p>
+    </header>
+  );
+}
+
+function DirectoryMemberScreen() {
   const t = useTranslations("directory");
   const router = useRouter();
   const pathname = usePathname();
@@ -119,12 +150,7 @@ export function DirectoryScreen() {
 
   return (
     <div className="space-y-4">
-      <header>
-        <h1 className="m-0 font-serif text-2xl font-bold text-primary">{t("title")}</h1>
-        <p className="m-0 mt-1 max-w-prose text-than leading-relaxed text-text-muted">
-          {t("subtitle")}
-        </p>
-      </header>
+      <DirectoryHeader />
 
       {unauthenticated ? (
         <DirectoryGuestNotice />

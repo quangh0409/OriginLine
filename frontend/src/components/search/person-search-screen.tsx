@@ -125,7 +125,11 @@ export function PersonSearchScreen() {
 
       <div className="space-y-3 rounded-lg border border-border bg-bg-card p-3 sm:p-4">
         <SearchBox value={rawQuery} onChange={setRawQuery} busy={isFetching} />
-        <SearchFilters value={filters} onChange={setFilters} restricted={audience === "public"} />
+        {/* `!== "member"`, không phải `=== "public"`: trong nhịp `check-sso` chưa ngã ngũ
+            (`audience === null`) bản cũ coi người xem là thành viên và dựng ô lọc chi — đủ để
+            khách nhận `401 POST /graphql` (đo thật 26/09). Ẩn thêm một nhịp với thành viên là
+            cái giá rẻ hơn một lượt gọi hỏng với mọi vị khách. */}
+        <SearchFilters value={filters} onChange={setFilters} restricted={audience !== "member"} />
       </div>
 
       <SearchResultList

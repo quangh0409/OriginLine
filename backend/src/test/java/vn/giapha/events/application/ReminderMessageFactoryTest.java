@@ -47,10 +47,10 @@ class ReminderMessageFactoryTest {
         LocalizedText ba = factory.title(gio, null, jobFor(gio, ngayGio, 3));
         LocalizedText mot = factory.title(gio, null, jobFor(gio, ngayGio, 1));
 
-        assertThat(bay.vi()).startsWith("Con 7 ngay toi");
+        assertThat(bay.vi()).startsWith("Còn 7 ngày tới");
         assertThat(bay.en()).startsWith("7 days until");
-        assertThat(ba.vi()).startsWith("Con 3 ngay toi");
-        assertThat(mot.vi()).startsWith("Ngay mai la");
+        assertThat(ba.vi()).startsWith("Còn 3 ngày tới");
+        assertThat(mot.vi()).startsWith("Ngày mai là");
         assertThat(mot.en()).startsWith("Tomorrow is");
     }
 
@@ -63,8 +63,8 @@ class ReminderMessageFactoryTest {
 
         LocalizedText body = factory.body(gio, null, jobFor(gio, ngayGio, 3));
 
-        assertThat(body.vi()).contains("duong lich").contains("am lich")
-                .contains("Dia diem: Tu duong ho Nguyen");
+        assertThat(body.vi()).contains("dương lịch").contains("âm lịch")
+                .contains("Địa điểm: Tu duong ho Nguyen");
         assertThat(body.en()).contains("lunar").contains("Venue:");
     }
 
@@ -80,7 +80,7 @@ class ReminderMessageFactoryTest {
         LocalizedText body = factory.body(gio, subject, jobFor(gio, ngayGioThucTe, 1));
 
         // Đưa ra một ngày khác với sổ mà không giải thích là cách nhanh nhất để cả họ mất tin.
-        assertThat(body.vi()).contains("Nam nay khong co ngay 30 thang 12");
+        assertThat(body.vi()).contains("Năm nay không có ngày 30 tháng 12");
         assertThat(body.en()).contains("does not occur this year");
     }
 
@@ -94,7 +94,7 @@ class ReminderMessageFactoryTest {
 
         LocalizedText body = factory.body(gio, subject, jobFor(gio, ngayGio, 1));
 
-        assertThat(body.vi()).doesNotContain("Nam nay khong co");
+        assertThat(body.vi()).doesNotContain("Năm nay không có");
     }
 
     @Test

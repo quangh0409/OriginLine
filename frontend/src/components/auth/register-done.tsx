@@ -20,6 +20,18 @@ export interface RegisterDoneProps {
    */
   readonly loginIdIsPhone?: boolean;
   /**
+   * Tài khoản vừa lập bằng một **địa chỉ thư điện tử**.
+   *
+   * Realm bật `verifyEmail: true` và máy chủ lập tài khoản với
+   * `emailVerified=false` (cầm mã dòng họ không chứng minh được địa chỉ là của
+   * mình). Hệ quả đo được khi bấm thật 24/09: đặt mật khẩu xong, bấm "Đăng
+   * nhập", gõ đúng mật khẩu — và Keycloak dừng lại ở "Xin xác minh địa chỉ thư"
+   * thay vì cho vào. Không màn nào của ứng dụng báo trước bước ấy, nên người
+   * dùng tưởng mật khẩu vừa đặt không chạy. Câu này báo trước, ở đúng chỗ họ
+   * sắp rời ứng dụng. Tài khoản số điện thoại không có bước này.
+   */
+  readonly loginIdIsEmail?: boolean;
+  /**
    * Rời ứng dụng để đi tới liên kết đặt mật khẩu **máy chủ trả về**.
    *
    * Tiêm được vào là cố ý, cùng lý do với {@code InvitationScreen}: mặc định là
@@ -83,6 +95,7 @@ export interface RegisterDoneProps {
 export function RegisterDone({
   registration,
   loginIdIsPhone,
+  loginIdIsEmail,
   onLeaveForPasswordSetup,
 }: RegisterDoneProps) {
   const t = useTranslations("auth.register");
@@ -124,6 +137,14 @@ export function RegisterDone({
                 className="m-0 mt-2 max-w-prose text-than leading-relaxed text-text-main"
               >
                 {t("donePasswordPhoneRecovery")}
+              </p>
+            )}
+            {loginIdIsEmail && (
+              <p
+                data-register-verify="EMAIL"
+                className="m-0 mt-2 max-w-prose text-than leading-relaxed text-text-main"
+              >
+                {t("donePasswordEmailVerify")}
               </p>
             )}
             <Button

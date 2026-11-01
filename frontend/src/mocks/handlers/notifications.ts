@@ -20,11 +20,27 @@ function inbox(): NotificationDto[] {
 
 export const notificationHandlers = [
   http.get(`${API_BASE_URL}/api/v1/notifications`, ({ request }) => {
-    // An inbox is personal — a guest (not logged in) has no identity to own
-    // one. The real endpoint requires bearerAuth and would 401; this mock
-    // mirrors that by returning an empty inbox rather than the fixture data.
+    // Hộp thư là của riêng một người — khách không có danh tính để sở hữu hộp
+    // thư nào. Máy thật trả `401 UNAUTHENTICATED` (đo 24/09 trên 8088). Bản
+    // trước của mock tự ghi đúng điều ấy rồi vẫn trả một hộp thư RỖNG `200` —
+    // "dễ hơn thật": giao diện được kiểm với "Chưa có thông báo nào" trong khi
+    // khách trên máy thật thấy dải đỏ "Không tải được". Nay trả đúng `401`.
     const role = resolveMockRole(request);
-    const all = role === "guest" ? [] : inbox();
+    if (role === "guest") {
+      const body: Problem = {
+        type: "https://giapha.vn/problems/unauthorized",
+        title: "Chưa đăng nhập",
+        status: 401,
+        detail: "Yêu cầu cần một JWT hợp lệ do Keycloak cấp",
+        instance: "/api/v1/notifications",
+        code: "UNAUTHENTICATED",
+      };
+      return HttpResponse.json(body, {
+        status: 401,
+        headers: { "Content-Type": "application/problem+json" },
+      });
+    }
+    const all = inbox();
 
     const url = new URL(request.url);
     const status = url.searchParams.get("status") ?? "ALL";

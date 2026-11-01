@@ -109,6 +109,35 @@ describe("lớp API nhập liệu · tải lên và đối soát", () => {
     expect(blocking.every((i) => i.severity === "BLOCKING")).toBe(true);
   });
 
+  /**
+   * NT-TC-15 (bấm thật 24/09): dâu/rể khai Đời từng đi qua bộ kiểm và chỉ chết
+   * ở bước ghi. Máy chủ nay chạy lượt soát trước khi ghi ở cuối bước kiểm, nên
+   * bộ giả lập phải sinh được đúng ca ấy — nếu không thì mọi test của màn đối
+   * soát vẫn đang thử cái thế giới mà lỗi này không tồn tại.
+   */
+  it("dâu/rể khai Đời: lỗi chặn NGAY ở bước kiểm, cổng ghi đóng ở điều kiện thứ nhất", async () => {
+    const batch = seedMockBatch({ branchId: "b-chi1", fileName: "dau-re-doi.xlsx" });
+
+    expect(batch.status).toBe("FAILED");
+    expect(batch.blockingCount).toBe(2);
+    expect(batch.canApprove).toBe(false);
+
+    const blocking = await dataImportApi.issues(batch.id, "BLOCKING");
+    expect(blocking.map((i) => i.code)).toEqual([
+      "IMP_UNDECIDED_INLAW_DOI",
+      "IMP_UNDECIDED_INLAW_DOI",
+    ]);
+    expect(blocking.every((i) => i.field === "Đời" && i.rowNo !== undefined)).toBe(true);
+    expect(blocking[0]?.message).toMatch(/xoá ô Đời ở dòng 14/);
+    expect(blocking[0]?.message).toMatch(/suy từ vợ\/chồng/);
+
+    // Không có đường nào tới bước ghi: 422 ở cổng, không phải 202 rồi FAILED.
+    await expect(dataImportApi.commit(batch.id)).rejects.toMatchObject({
+      status: 422,
+      code: "IMP_BLOCKING_ISSUES_PRESENT",
+    });
+  });
+
   it("lô mang đủ các trường hợp đồng công bố, và KHÔNG mang trường đã bị bác", async () => {
     const batch = seedMockBatch({ branchId: "b-chi1", fileName: "chi-nhat.xlsx" });
     for (const field of [
@@ -539,14 +568,23 @@ describe("lớp API nhập liệu · cổng duyệt", () => {
     });
   });
 
-  it("tệp sạch hoàn toàn thì canApprove = true và duyệt được, sang COMMITTING chứ không xong ngay", async () => {
+  it("tệp sạch hoàn toàn thì canApprove = true và duyệt được; thân 202 là lô ĐỌC TRƯỚC khi lật, lượt đọc sau mới thấy COMMITTING", async () => {
     const batch = seedMockBatch({ branchId: "b-chi1", fileName: "chi-nhat-sach.xlsx" });
     expect(batch.warningCount).toBe(0);
     expect(batch.suspectDuplicateCount).toBe(0);
     expect(batch.canApprove).toBe(true);
 
-    const committing = await dataImportApi.commit(batch.id);
-    expect(committing.status).toBe("COMMITTING");
+    // 26/09: bản đầu ghim `commit()` trả thẳng "COMMITTING". Đó là hình dạng của MOCK CŨ, không
+    // phải của backend: `ImportBatchController.commit` giao việc ghi cho executor rồi đọc lại lô
+    // NGAY, nên thân 202 gần như luôn còn "VALIDATED". Màn đối soát được viết theo mock cũ và
+    // trên hệ thật đứng im sau khi bấm ghi (bấm thật 24/09, NT-TC-15). Ca này nay ghim đúng
+    // hai nhịp: thân trả về là ảnh chụp trước khi lật, còn lượt đọc kế tiếp mới thấy lô đã sang
+    // COMMITTING — chính vì thế màn hình phải theo dõi tới khi có kết cục, không tin thân 202.
+    const thanTraVe = await dataImportApi.commit(batch.id);
+    expect(thanTraVe.status).toBe("VALIDATED");
+
+    const docLai = await dataImportApi.batch(batch.id);
+    expect(docLai.status).toBe("COMMITTING");
 
     const progress = await dataImportApi.commitProgress(batch.id);
     // Ước lượng theo BẢN CHẤT: con số đếm ngoài giao dịch ghi.

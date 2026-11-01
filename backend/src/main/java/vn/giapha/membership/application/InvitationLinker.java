@@ -90,7 +90,7 @@ public class InvitationLinker {
                         boolean verifiedCaller) {
         Invitation invitation = invitations.byId(invitationId)
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay loi moi khop ma nay"));
+                        "Không tìm thấy lời mời khớp mã này"));
         InvitationUsability usability = invitation.usabilityAt(Instant.now());
         if (!usability.isUsable()) {
             throw new InvitationNotUsableException(usability);
@@ -141,7 +141,7 @@ public class InvitationLinker {
     public AppUser linkExistingAccount(UUID appUserId, UUID personId, String lyDo) {
         AppUser account = appUsers.byId(appUserId)
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay tai khoan " + appUserId));
+                        "Không tìm thấy tài khoản " + appUserId));
         return ghepVaoNhanKhau(account, personId, lyDo);
     }
 
@@ -157,12 +157,12 @@ public class InvitationLinker {
     private AppUser ghepVaoNhanKhau(AppUser account, UUID personId, String lyDo) {
         if (account.personId() != null && !account.personId().equals(personId)) {
             throw new DomainException(MembershipProblemCodes.ACCOUNT_ALREADY_LINKED,
-                    "Tai khoan nay da gan voi mot nhan khau khac trong pha");
+                    "Tài khoản này đã gắn với một nhân khẩu khác trong phả");
         }
         Optional<AppUser> occupied = appUsers.byPersonId(personId);
         if (occupied.isPresent() && !occupied.get().id().equals(account.id())) {
             throw new DomainException(MembershipProblemCodes.PERSON_ALREADY_LINKED,
-                    "Nhan khau nay da duoc ghep voi mot tai khoan khac");
+                    "Nhân khẩu này đã được ghép với một tài khoản khác");
         }
 
         account.linkPerson(personId);

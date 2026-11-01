@@ -87,8 +87,8 @@ public class PublicTreeController {
         int requestedDepth = depth == null ? properties.getDefaultTreeDepth() : depth;
         if (requestedDepth > properties.getMaxTreeDepth()) {
             throw new IllegalArgumentException(String.format(Locale.ROOT,
-                    "Pha do cong khai gioi han do sau toi da %d doi; hay mo rong tung nhanh"
-                            + " hoac dang nhap de xem day du", properties.getMaxTreeDepth()));
+                    "Phả đồ công khai giới hạn độ sâu tối đa %d đời; hãy mở rộng từng nhánh"
+                            + " hoặc đăng nhập để xem đầy đủ", properties.getMaxTreeDepth()));
         }
 
         // CA HAI buoc deu chay TRONG asGuest. Phan giai goc ma dung ngu canh that cua mot thanh
@@ -97,7 +97,7 @@ public class PublicTreeController {
         PublicTreeDto body = guestScope.asGuest(() -> {
             UUID root = rootId != null ? rootId : defaultRoot.resolve(privacy.caller())
                     .orElseThrow(() -> new NotFoundException(GenealogyProblemCodes.NOT_FOUND,
-                            "Chua co nhan khau da khuat nao de lam goc pha do cong khai"));
+                            "Chưa có nhân khẩu đã khuất nào để làm gốc phả đồ công khai"));
             return guard.tree(treeProjection.project(new TreeQuery(root, requestedDepth, direction,
                     includeSpouses, false, properties.getMaxTreeNodes())), requestedDepth);
         });

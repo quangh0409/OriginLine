@@ -80,6 +80,16 @@ cd backend
 
 Kiểm tra: <http://localhost:8080/actuator/health> phải trả `{"status":"UP"}`.
 
+> **Nếu 8080 đã có người giữ** (trên máy dev hiện tại là `httpd.exe`, một dịch vụ
+> Apache — `netstat -ano | findstr :8080` rồi `tasklist /FI "PID eq <pid>"` để biết),
+> đổi cổng bằng `SERVER_PORT=8088` **và** dựng frontend với đúng địa chỉ ấy:
+> `NEXT_PUBLIC_API_BASE_URL=http://localhost:8088 npm run build:nghiem-thu`, rồi cùng
+> biến ấy `npm run start:nghiem-thu`. Hai script này gọi
+> `frontend/scripts/kiem-dia-chi-backend.mjs`, từ chối chạy khi thiếu biến, khi backend
+> không `UP` ở địa chỉ ấy, hoặc khi bundle trong `.next/` được nướng với một origin
+> khác — vì Next nướng `NEXT_PUBLIC_*` lúc *build*, đặt lúc *start* là vô ích, và
+> mặc định ngầm trong `http.ts` là 8080.
+
 ### Chạy frontend (cổng 3000)
 
 ```bash

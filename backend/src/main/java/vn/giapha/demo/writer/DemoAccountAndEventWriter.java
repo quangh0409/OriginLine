@@ -66,13 +66,17 @@ public class DemoAccountAndEventWriter {
      * <p>Không dùng {@code ON CONFLICT} vì bảng {@code event} không có khoá tự nhiên; thay vào đó
      * {@code NOT EXISTS} theo cặp (người, loại sự kiện) — đúng ngữ nghĩa "mỗi người một giỗ".</p>
      */
+    // Tiêu đề có dấu (26/09/2026). Bản đầu viết 'Gio …' như một dòng log; nhưng tiêu đề sự kiện
+    // đi thẳng vào lời nhắc giỗ và trung tâm thông báo — 880/881 sự kiện mẫu hiện "Gio Nguyễn…"
+    // trước mặt người dùng, và V22 cố ý không chạm phần "người gõ" nên không cứu được chúng.
+    // Dữ liệu mẫu đã sinh trên máy dev được chữa bằng SQL một lần; bản sinh mới đi từ đây.
     private int seedGioEvents() {
         int inserted = jdbc.update("""
                 INSERT INTO event (person_id, event_type, title, lunar_date, is_lunar_based,
                                    is_recurring, target_branch_id, is_clan_level)
                 SELECT p.id,
                        'GIO',
-                       'Gio ' || COALESCE((
+                       'Giỗ ' || COALESCE((
                            -- Ten hien thi khong nam o bang person: moi nguoi co nhieu lop ten
                            -- (huy/tu/hieu/thuy/thuong goi/phap danh). Uu tien dong danh dau
                            -- is_primary, khong co thi lay ten huy.
@@ -103,7 +107,7 @@ public class DemoAccountAndEventWriter {
         inserted += jdbc.update("""
                 INSERT INTO event (person_id, event_type, title, lunar_date, is_lunar_based,
                                    is_recurring, target_branch_id, is_clan_level)
-                SELECT p.id, 'GIO_TO', 'Gio To ho ' || COALESCE(b.name, ''),
+                SELECT p.id, 'GIO_TO', 'Giỗ Tổ họ ' || COALESCE(b.name, ''),
                        jsonb_build_object(
                            'day',  (p.death_lunar->>'day')::int,
                            'month', (p.death_lunar->>'month')::int,

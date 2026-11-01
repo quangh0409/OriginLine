@@ -134,11 +134,17 @@ export function useWithdrawPost() {
 }
 
 /**
- * Ghi thẳng kết quả một thao tác media (xác nhận tải lên / sắp lại thứ tự /
- * sửa `alt` / gỡ) vào `postKeys.detail(postId)` — **cùng một cách** bốn hook
- * `usePost*` phía trên đã làm với thân bài. Không dùng `invalidateQueries`
- * rồi refetch: refetch là một lượt gọi mạng nữa mà kết quả này đã có đủ, và
- * trong lúc chờ nó có một khoảng trắng mà lưới ảnh nhấp nháy hoặc rơi về rỗng.
+ * Ghi thẳng kết quả một thao tác media (gắn tệp mới / sắp lại thứ tự / gỡ —
+ * cả ba đều đi qua `postsApi.setMedia`, xem `currentMediaIds` bên dưới) vào
+ * `postKeys.detail(postId)` — **cùng một cách** bốn hook `usePost*` phía trên
+ * đã làm với thân bài. Không dùng `invalidateQueries` rồi refetch: refetch là
+ * một lượt gọi mạng nữa mà kết quả này đã có đủ, và trong lúc chờ nó có một
+ * khoảng trắng mà lưới ảnh nhấp nháy hoặc rơi về rỗng.
+ *
+ * <p>Không còn "sửa `alt`" trong danh sách thao tác — hợp đồng thật
+ * (`AttachMediaRequest`) chỉ nhận `mediaIds`, không có trường nào mang `alt`;
+ * `alt` chỉ đặt được đúng một lần, ở bước xác nhận. Xem javadoc
+ * `src/lib/api/media.ts`.</p>
  */
 function patchPostMedia(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -155,40 +161,66 @@ function patchPostMedia(
   });
 }
 
-/** Xác nhận một lượt tải lên (bước 3/3, xem `src/lib/api/media.ts`). */
-export function useConfirmMediaUpload(postId: string) {
+/**
+ * Đọc danh sách `mediaId` ĐANG gắn vào bài, thẳng từ cache React Query — cả
+ * ba mutation dưới đây (gắn tệp mới/sắp lại/gỡ) đều cần nó để dựng lại đúng
+ * `mediaIds` gửi cho `postsApi.setMedia`, vì hợp đồng thật không có lệnh
+ * "thêm một tệp"/"gỡ một tệp" riêng — chỉ có MỘT lệnh "đặt cả danh sách".
+ * Không đọc từ tham số hook (đóng gói lúc tạo hook) vì `post.media` có thể đã
+ * đổi giữa hai lượt gọi liên tiếp (vd. gắn hai tệp gần nhau).
+ */
+function currentMediaIds(queryClient: ReturnType<typeof useQueryClient>, postId: string): string[] {
+  const snapshot = queryClient.getQueryData<PostSnapshot>(postKeys.detail(postId));
+  return snapshot?.post.media.map((m) => m.id) ?? [];
+}
+
+/**
+ * Xác nhận một lượt tải lên (bước 3/3, xem `src/lib/api/media.ts`) RỒI gắn
+ * luôn tệp vừa xác nhận vào CUỐI danh sách hiện tại của bài.
+ *
+ * <h2>Vì sao đây là MỘT mutation, không phải hai bước tách rời ở nơi gọi</h2>
+ * Hợp đồng thật tách "xác nhận" (`POST /media/{id}/confirm`, trả một tệp trần
+ * trụi, chưa gắn vào đâu) khỏi "gắn vào bài" (`PUT /posts/{id}/media`, đặt cả
+ * danh sách) — khác hẳn suy đoán trước đây (một lượt xác nhận trả về cả bài
+ * đã cập nhật). Gộp hai lời gọi vào một mutation ở đây để phần còn lại của
+ * giao diện (`useMediaUploadQueue`) không phải tự nhớ thứ tự hai bước này.
+ */
+export function useConfirmAndAttachMedia(postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: Parameters<typeof mediaApi.confirmUpload>[1]) =>
-      mediaApi.confirmUpload(postId, input),
+    mutationFn: async ({ mediaId, alt }: { mediaId: string; alt?: string }) => {
+      await mediaApi.confirmUpload(mediaId, alt);
+      const nextIds = [...currentMediaIds(queryClient, postId), mediaId];
+      return postsApi.setMedia(postId, nextIds);
+    },
     onSuccess: ({ data, etag }) => patchPostMedia(queryClient, postId, data, etag),
   });
 }
 
-/** Sắp lại thứ tự hiển thị của cả album. */
+/**
+ * Sắp lại thứ tự hiển thị của cả album — gửi lại TOÀN BỘ danh sách `mediaId`
+ * theo thứ tự mới qua `postsApi.setMedia` (không có lệnh "sắp lại" riêng).
+ */
 export function useReorderMedia(postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderedMediaIds: string[]) => mediaApi.reorder(postId, orderedMediaIds),
+    mutationFn: (orderedMediaIds: string[]) => postsApi.setMedia(postId, orderedMediaIds),
     onSuccess: ({ data, etag }) => patchPostMedia(queryClient, postId, data, etag),
   });
 }
 
-/** Sửa `alt` của một tệp đã gắn. */
-export function useUpdateMediaAlt(postId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ mediaId, alt }: { mediaId: string; alt: string }) =>
-      mediaApi.updateAlt(postId, mediaId, alt),
-    onSuccess: ({ data, etag }) => patchPostMedia(queryClient, postId, data, etag),
-  });
-}
-
-/** Gỡ một tệp khỏi bài đang soạn (tác giả, chỉ khi còn `DRAFT`). */
+/**
+ * Gỡ một tệp khỏi bài đang soạn (tác giả, chỉ khi còn `DRAFT`) — gửi lại danh
+ * sách hiện tại đã BỚT một phần tử qua `postsApi.setMedia` (không có lệnh
+ * "gỡ một tệp" riêng; tệp bị bỏ ra không xoá ngay, xem javadoc
+ * `AttachMediaRequest` phía backend — nó mồ côi và đường dọn mang đi sau 24
+ * giờ).
+ */
 export function useRemoveMedia(postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (mediaId: string) => mediaApi.remove(postId, mediaId),
+    mutationFn: (mediaId: string) =>
+      postsApi.setMedia(postId, currentMediaIds(queryClient, postId).filter((id) => id !== mediaId)),
     onSuccess: ({ data, etag }) => patchPostMedia(queryClient, postId, data, etag),
   });
 }

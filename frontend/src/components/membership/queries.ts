@@ -17,6 +17,11 @@ import {
   type IssueInvitationBody,
   type IssuedInvitationDto,
 } from "@/lib/api/invitation";
+import {
+  passwordResetApi,
+  type IssuePasswordResetBody,
+  type IssuedPasswordResetDto,
+} from "@/lib/api/password-reset";
 import { queryKeys } from "@/lib/query/keys";
 
 /**
@@ -184,5 +189,23 @@ export function useRevokeInvitation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: membershipKeys.invitations() });
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Cấp lại liên kết đặt mật khẩu — không có GET liệt kê (cố ý, xem
+// `password-reset.ts`), nên không có khoá cache nào để vô hiệu hoá ở đây.
+// ---------------------------------------------------------------------------
+
+/**
+ * Cấp lại liên kết đặt mật khẩu cho một thành viên đã quên mật khẩu.
+ *
+ * Kết quả chứa liên kết và KHÔNG được đưa vào cache của React Query — nó
+ * sống trong `mutation.data` của màn hình phát và mất khi component gọi
+ * `reset()`, đúng khuôn `useIssueInvitation`/`useIssueClanInvite`.
+ */
+export function useIssuePasswordReset() {
+  return useMutation<IssuedPasswordResetDto, ApiError, IssuePasswordResetBody>({
+    mutationFn: (body) => passwordResetApi.issue(body),
   });
 }

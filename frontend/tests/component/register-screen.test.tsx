@@ -366,6 +366,8 @@ describe("ô định danh — nhất quán với ô đăng nhập", () => {
     // khẩu là chuyện của khôi phục, không phải của đăng ký.
     expect(ghiChu.textContent).toContain("đặt lại mật khẩu");
     expect(ghiChu.textContent).toContain("Trưởng chi");
+    // Số điện thoại không có bước xác minh thư của Keycloak — không báo trước điều không xảy ra.
+    expect(view.container.querySelector('[data-register-verify="EMAIL"]')).toBeNull();
   });
 
   it("thư điện tử thì KHÔNG hiện ghi chú khôi phục ấy", async () => {
@@ -376,6 +378,21 @@ describe("ô định danh — nhất quán với ô đăng nhập", () => {
 
     await waitFor(() => expect(state(view.container)).toBe("DONE"));
     expect(view.container.querySelector('[data-register-recovery="PHONE"]')).toBeNull();
+  });
+
+  it("thư điện tử: báo TRƯỚC bước xác minh thư mà Keycloak sẽ đòi ở lần đăng nhập đầu", async () => {
+    // Bấm thật 24/09: đặt mật khẩu xong, đăng nhập đúng mật khẩu, và Keycloak dừng ở "Xin xác
+    // minh địa chỉ thư" (realm `verifyEmail: true`, máy chủ lập tài khoản `emailVerified=false`).
+    // Không có câu này, người dùng tưởng mật khẩu vừa đặt không chạy.
+    const view = render();
+    await goMa(view, MOCK_CLAN_CODE);
+    await waitFor(() => expect(state(view.container)).toBe("ACCOUNT"));
+    await lapTaiKhoan(view, "ba.lan@example.com");
+
+    await waitFor(() => expect(state(view.container)).toBe("DONE"));
+    const ghiChu = view.container.querySelector('[data-register-verify="EMAIL"]');
+    expect(ghiChu).not.toBeNull();
+    expect(ghiChu!.textContent).toContain("bấm liên kết bên trong");
   });
 
   it("thứ đọc không ra thành email LẪN số máy thì lỗi Ở LẠI TRONG Ô", async () => {

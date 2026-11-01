@@ -7,6 +7,8 @@ import {
   usePendingChangeRequests,
 } from "@/hooks/use-change-requests";
 import { useMe } from "@/hooks/use-me";
+import { claimRoutes } from "@/components/claim";
+import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api/http";
 import { MyRequestCard } from "./my-request-card";
 import { ReviewRequestCard } from "./review-request-card";
@@ -45,6 +47,27 @@ export function CorrectionScreen() {
   if (!hasAccount) {
     return <Alert type="info" showIcon message={t("errors.notProvisioned")} />;
   }
+
+  // Có tài khoản nhưng CHƯA gắn vào phả (vừa đăng ký bằng mã dòng họ, đơn nhận mình còn chờ).
+  // Máy chủ chặn mọi đề nghị của nhóm này (`BranchScopeGuard.requireActiveMember` →
+  // ACCOUNT_NOT_LINKED), nhưng màn hình trước đây chỉ nói "Bạn chưa gửi đề nghị đính chính nào" —
+  // đúng về dữ liệu mà sai về ý: người đọc hiểu là "cứ gửi đi", rồi tới hồ sơ nào cũng không thấy
+  // lối gửi và không biết vì sao (NT-MOI-12, bấm thật 24/09). Nói thẳng lý do và chỉ lối đi tiếp.
+  const notLinked = !me?.personId;
+  const notLinkedNotice = notLinked ? (
+    <Alert
+      data-testid="correction-not-linked"
+      type="info"
+      showIcon
+      className="mb-4"
+      message={t("errors.notActive")}
+      description={
+        <Link href={claimRoutes.pending} className="font-semibold">
+          {t("notLinkedAction")}
+        </Link>
+      }
+    />
+  ) : null;
 
   const noScope = me?.role === "BRANCH_HEAD" && (me?.managedBranches.length ?? 0) === 0;
 
@@ -101,7 +124,14 @@ export function CorrectionScreen() {
     { key: "mine", label: t("mine.tab"), children: mineTab },
   ];
 
-  return <Tabs items={items} />;
+  return (
+    <>
+      {notLinkedNotice}
+      {/* Chưa gắn phả mà cũng không có quyền duyệt thì không còn gì để xem: tab "Đề nghị của tôi"
+          chắc chắn rỗng, và một ô rỗng đặt dưới lời giải thích chỉ làm câu ấy nhạt đi. */}
+      {notLinked && !roleCanReview ? null : <Tabs items={items} />}
+    </>
+  );
 }
 
 function QueryList({

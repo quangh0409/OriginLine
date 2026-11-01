@@ -16,6 +16,8 @@ import { claimHandlers } from "./claim";
 import { membershipAdminHandlers } from "./membership-admin";
 import { postHandlers } from "./posts";
 import { honourHandlers } from "./honours";
+import { passwordResetHandlers } from "./password-reset";
+import { clanHandlers } from "./clan";
 
 export const handlers = [
   ...personHandlers,
@@ -63,6 +65,11 @@ export const handlers = [
   // nằm trong `handlers/claim.ts` (`DOAN_DUONG_DANH_RIENG`) — đọc javadoc ở đó
   // trước khi thêm một đường `/person-claims/<chữ>` mới vào tệp này.
   ...membershipAdminHandlers,
+  // Cấp lại liên kết đặt mật khẩu (`/api/v1/password-resets`). Đọc `x-mock-role`
+  // như `membershipAdminHandlers`; đặt ngay cạnh vì cùng là "Trưởng chi/Hội
+  // đồng làm việc gì đó cho một nhân khẩu trong phạm vi mình", nhưng đường
+  // riêng nên không giành route với nhóm nào ở trên.
+  ...passwordResetHandlers,
   // Đường ống nhập liệu ban đầu (kế hoạch 02). Đặt cuối: nhóm `/api/v1/import/**`
   // và `/api/v1/admin/branches/:id/import-template.xlsx` không giành đường với
   // bất kỳ nhóm nào ở trên.
@@ -73,4 +80,9 @@ export const handlers = [
   // TRƯỚC `GET /posts/:id` để không bị nuốt thành một `id` tên "feed".
   ...postHandlers,
   ...honourHandlers,
+  // Khởi tạo dòng họ (`/api/v1/public/clan-profile`,
+  // `/api/v1/admin/clan-profile/**`) — quyết định 26/09/2026. Đường riêng,
+  // không giành route với nhóm nào ở trên; đặt cuối cùng vì đây là nhóm mới
+  // nhất.
+  ...clanHandlers,
 ];

@@ -62,7 +62,7 @@ public final class ChangeRequest {
         this.version = version;
         if (type.requiresExistingPerson() && personId == null) {
             throw new IllegalArgumentException(
-                    "Yeu cau loai " + type + " phai tro toi mot nhan khau co san");
+                    "Yêu cầu loại " + type + " phải trỏ tới một nhân khẩu có sẵn");
         }
     }
 
@@ -141,7 +141,7 @@ public final class ChangeRequest {
     /** Từ chối. Lý do là <b>bắt buộc</b> — người gửi có quyền biết vì sao. */
     public void reject(UUID reviewer, String note, Instant at) {
         if (note == null || note.isBlank()) {
-            throw new IllegalArgumentException("Tu choi yeu cau dinh chinh phai kem ly do");
+            throw new IllegalArgumentException("Từ chối yêu cầu đính chính phải kèm lý do");
         }
         transition(ChangeRequestStatus.REJECTED, reviewer, note, at);
     }
@@ -153,7 +153,7 @@ public final class ChangeRequest {
     public void cancel(UUID by, Instant at) {
         requireOpen();
         if (!requestedBy.equals(by)) {
-            throw new IllegalStateException("Chi nguoi gui moi duoc rut lai yeu cau dinh chinh");
+            throw new IllegalStateException("Chỉ người gửi mới được rút lại yêu cầu đính chính");
         }
         this.status = ChangeRequestStatus.CANCELLED;
         this.reviewerId = by;
@@ -172,7 +172,7 @@ public final class ChangeRequest {
         Objects.requireNonNull(reviewer, "reviewerId khong duoc null khi xu ly yeu cau");
         if (reviewer.equals(requestedBy)) {
             throw new IllegalStateException(
-                    "Khong duoc tu duyet yeu cau dinh chinh do chinh minh gui");
+                    "Không được tự duyệt yêu cầu đính chính do chính mình gửi");
         }
         this.status = next;
         this.reviewerId = reviewer;
@@ -183,7 +183,7 @@ public final class ChangeRequest {
     private void requireOpen() {
         if (status.isFinal()) {
             throw new IllegalStateException(
-                    "Yeu cau dinh chinh da o trang thai cuoi (" + status + "), khong xu ly lai duoc");
+                    "Yêu cầu đính chính đã ở trạng thái cuối (" + status + "), không xử lý lại được");
         }
     }
 

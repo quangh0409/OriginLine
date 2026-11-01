@@ -152,7 +152,7 @@ public final class Invitation {
         Objects.requireNonNull(appUserId, "appUserId khong duoc null khi nhan loi moi");
         InvitationUsability usability = usabilityAt(now);
         if (!usability.isUsable()) {
-            throw new IllegalStateException("Loi moi khong dung duoc: " + usability);
+            throw new IllegalStateException("Lời mời không dùng được: " + usability);
         }
         this.status = InvitationStatus.ACCEPTED;
         this.acceptedBy = appUserId;
@@ -170,7 +170,7 @@ public final class Invitation {
     public void revoke(String reason, Instant now) {
         if (status == InvitationStatus.ACCEPTED) {
             throw new IllegalStateException(
-                    "Loi moi da duoc nhan, khong thu hoi duoc — tai khoan da gan voi nhan khau");
+                    "Lời mời đã được nhận, không thu hồi được — tài khoản đã gắn với nhân khẩu");
         }
         this.status = InvitationStatus.REVOKED;
         this.revokedAt = now;

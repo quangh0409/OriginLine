@@ -129,7 +129,7 @@ public class AppUserProvisioningService {
             log.warn("Tu choi dung lai app_user {} cho mot nguoi goi khong trinh token",
                     existing.get().id());
             throw new DomainException(MembershipProblemCodes.IDENTITY_ALREADY_REGISTERED,
-                    "Dinh danh nay da co tai khoan trong he thong. Hay dang nhap roi thu lai.");
+                    "Định danh này đã có tài khoản trong hệ thống. Hãy đăng nhập rồi thử lại.");
         }
         return create(keycloakSub, email, displayName);
     }
@@ -141,7 +141,7 @@ public class AppUserProvisioningService {
                 .flatMap(user -> appUsers.byKeycloakSub(user.keycloakSub()))
                 .orElseThrow(() -> new NotFoundException(
                         MembershipProblemCodes.ACCOUNT_NOT_PROVISIONED,
-                        "Tai khoan chua duoc khoi tao trong he thong"));
+                        "Tài khoản chưa được khởi tạo trong hệ thống"));
     }
 
     /**
@@ -165,15 +165,15 @@ public class AppUserProvisioningService {
     @Transactional
     public AppUser linkToPerson(UUID appUserId, UUID personId) {
         MemberScope caller = scopes.currentMemberScope();
-        guard.requireClanWide(caller, "ghep tai khoan voi nhan khau trong cay pha he");
+        guard.requireClanWide(caller, "ghép tài khoản với nhân khẩu trong cây phả hệ");
 
         AppUser account = appUsers.byId(appUserId).orElseThrow(() -> new NotFoundException(
-                MembershipProblemCodes.NOT_FOUND, "Khong tim thay tai khoan " + appUserId));
+                MembershipProblemCodes.NOT_FOUND, "Không tìm thấy tài khoản " + appUserId));
 
         Optional<AppUser> occupied = appUsers.byPersonId(personId);
         if (occupied.isPresent() && !occupied.get().id().equals(appUserId)) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Nhan khau nay da duoc ghep voi mot tai khoan khac");
+                    "Nhân khẩu này đã được ghép với một tài khoản khác");
         }
 
         try {
@@ -194,10 +194,10 @@ public class AppUserProvisioningService {
     @Transactional
     public AppUser changeStatus(UUID appUserId, AppUserStatus status, String reason) {
         MemberScope caller = scopes.currentMemberScope();
-        guard.requireSystemAdmin(caller, "thay doi trang thai tai khoan");
+        guard.requireSystemAdmin(caller, "thay đổi trạng thái tài khoản");
 
         AppUser account = appUsers.byId(appUserId).orElseThrow(() -> new NotFoundException(
-                MembershipProblemCodes.NOT_FOUND, "Khong tim thay tai khoan " + appUserId));
+                MembershipProblemCodes.NOT_FOUND, "Không tìm thấy tài khoản " + appUserId));
         Map<String, Object> before = snapshot(account);
         account.changeStatus(status);
         AppUser saved = appUsers.save(account);

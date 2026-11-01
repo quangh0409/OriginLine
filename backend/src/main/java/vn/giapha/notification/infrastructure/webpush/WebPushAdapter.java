@@ -114,14 +114,14 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
     @Override
     public DeliveryResult send(NotificationMessage message) {
         if (keys == null) {
-            return DeliveryResult.skipped("Web Push chua cau hinh khoa VAPID");
+            return DeliveryResult.skipped("Web Push chưa cấu hình khoá VAPID");
         }
         if (message.recipient().appUserId() == null) {
-            return DeliveryResult.skipped("Nguoi nhan chua co tai khoan nen khong co thiet bi nao");
+            return DeliveryResult.skipped("Người nhận chưa có tài khoản nên không có thiết bị nào");
         }
         List<PushSubscription> devices = subscriptions.activeByAppUser(message.recipient().appUserId());
         if (devices.isEmpty()) {
-            return DeliveryResult.skipped("Nguoi nhan chua dang ky thiet bi nao");
+            return DeliveryResult.skipped("Người nhận chưa đăng ký thiết bị nào");
         }
 
         byte[] payload = buildPayload(message);
@@ -157,7 +157,7 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
         }
         // Tất cả thiết bị đều đã bị thu hồi và vừa bị xoá: không còn gì để gửi, và cũng không có gì
         // để sửa. SKIPPED chứ không FAILED — đây là trạng thái bình thường của một người đã gỡ app.
-        return DeliveryResult.skipped(lastDetail == null ? "Khong con thiet bi nao hoat dong" : lastDetail);
+        return DeliveryResult.skipped(lastDetail == null ? "Không còn thiết bị nào hoạt động" : lastDetail);
     }
 
     private Outcome sendTo(PushSubscription device, byte[] payload) {
@@ -167,7 +167,7 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
             authorization = signer.authorizationHeader(keys, device.audience(), properties.getSubject(),
                     properties.getJwtValidity());
             if (authorization == null) {
-                return new Outcome(false, false, true, "Khong ky duoc JWT VAPID");
+                return new Outcome(false, false, true, "Không ký được JWT VAPID");
             }
             body = cipher.encrypt(payload, device.p256dh(), device.auth());
         } catch (GeneralSecurityException | IllegalArgumentException ex) {
@@ -175,7 +175,7 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
             // gọn — đây là dữ liệu chết, không phải sự cố cần người nhìn.
             log.warn("Dang ky {} co khoa/endpoint hong - xoa: {}", device.id(), ex.getMessage());
             subscriptions.deleteByEndpoint(device.endpoint());
-            return new Outcome(false, false, false, "Khoa client khong hop le");
+            return new Outcome(false, false, false, "Khoá client không hợp lệ");
         }
 
         HttpRequest request = HttpRequest.newBuilder(URI.create(device.endpoint()))
@@ -223,7 +223,7 @@ public class WebPushAdapter implements NotificationProvider, VapidKeyProvider {
         log.error("Push service tu choi (HTTP {}) o dang ky {}: {}", status, device.id(),
                 abbreviate(responseBody));
         subscriptions.recordFailure(device.id());
-        return new Outcome(false, false, true, "Push service tu choi (HTTP " + status + ")");
+        return new Outcome(false, false, true, "Push service từ chối (HTTP " + status + ")");
     }
 
     /**

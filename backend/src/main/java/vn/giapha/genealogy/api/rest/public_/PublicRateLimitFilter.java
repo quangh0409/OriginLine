@@ -196,8 +196,8 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
                 + "\"type\":\"https://giapha.vn/problems/rate-limited\","
                 + "\"title\":\"Vượt quá hạn mức truy cập\","
                 + "\"status\":429,"
-                + "\"detail\":\"Cong thong tin cong khai gioi han tan suat truy cap."
-                + " Vui long thu lai sau, hoac dang nhap de tra cuu day du.\","
+                + "\"detail\":\"Cổng thông tin công khai giới hạn tần suất truy cập."
+                + " Vui lòng thử lại sau, hoặc đăng nhập để tra cứu đầy đủ.\","
                 + "\"instance\":\"" + sanitizeInstance(request.getRequestURI()) + "\","
                 + "\"code\":\"RATE_LIMITED\","
                 + "\"timestamp\":\"" + Instant.now() + "\"}");

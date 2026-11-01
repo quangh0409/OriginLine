@@ -104,13 +104,13 @@ public class MediaUploadService {
         MemberScopeView caller = access.requireProvisioned();
         if (kind == null) {
             throw new DomainException(MediaProblemCodes.VALIDATION_FAILED,
-                    "Phai noi ro tep la anh (IMAGE) hay video (VIDEO).");
+                    "Phải nói rõ tệp là ảnh (IMAGE) hay video (VIDEO).");
         }
         long cap = MediaLimits.maxBytes(kind);
         if (declaredSizeBytes <= 0) {
             throw new DomainException(MediaProblemCodes.VALIDATION_FAILED,
-                    "Phai khai kich thuoc tep (sizeBytes) de he thong tu choi som thay vi de ban"
-                            + " tai het roi moi bao loi.");
+                    "Phải khai kích thước tệp (sizeBytes) để hệ thống từ chối sớm thay vì để bạn"
+                            + " tải hết rồi mới báo lỗi.");
         }
         if (declaredSizeBytes > cap) {
             // Tu choi TRUOC KHI ton bang thong — day la ca "vuot tran bi tu choi som".
@@ -156,33 +156,33 @@ public class MediaUploadService {
         MemberScopeView caller = access.requireProvisioned();
         MediaAsset asset = assets.findById(mediaId)
                 .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                        "Khong tim thay phieu tai len nao co ma nay."));
+                        "Không tìm thấy phiếu tải lên nào có mã này."));
 
         // Ai xin phieu thi nguoi ay xac nhan. Chan loi "doan ma phieu cua nguoi khac roi gan chu
         // thay anh cua minh vao".
         if (!asset.isUploadedBy(caller.appUserId())) {
             throw new ForbiddenException(MediaProblemCodes.MEDIA_NOT_OWNED,
-                    "Phieu tai len nay khong phai cua ban.");
+                    "Phiếu tải lên này không phải của bạn.");
         }
 
         Instant now = clock.instant();
         if (asset.status() != vn.giapha.media.domain.MediaStatus.PENDING) {
             throw new MediaConflictException(MediaProblemCodes.MEDIA_TICKET_CLOSED,
-                    "Phieu nay da duoc xu ly roi (dang o trang thai " + asset.status() + ").");
+                    "Phiếu này đã được xử lý rồi (đang ở trạng thái " + asset.status() + ").");
         }
         if (asset.isTicketExpired(now)) {
             // KHONG xoa doi tuong o day: duong don se lam viec ay sau an han, va xoa ngay se dua
             // mot lan tai len cham 16 phut vao the "mat tep ma khong hieu vi sao".
             throw new MediaConflictException(MediaProblemCodes.MEDIA_TICKET_CLOSED,
-                    "Phieu tai len da qua han " + MediaLimits.UPLOAD_TICKET_TTL.toMinutes()
-                            + " phut. Hay xin phieu moi va tai lai.");
+                    "Phiếu tải lên đã quá hạn " + MediaLimits.UPLOAD_TICKET_TTL.toMinutes()
+                            + " phút. Hãy xin phiếu mới và tải lại.");
         }
 
         // --- Lop 2: tep CO THAT tren kho chua? ---
         ObjectStoragePort.StoredObject stored = storage.stat(asset.objectKey())
                 .orElseThrow(() -> new MediaConflictException(MediaProblemCodes.MEDIA_NOT_UPLOADED,
-                        "Tren kho khong co tep nao ung voi phieu nay. Hay tai tep len dia chi da"
-                                + " ky (uploadUrl) TRUOC, roi moi goi xac nhan."));
+                        "Trên kho không có tệp nào ứng với phiếu này. Hãy tải tệp lên địa chỉ đã"
+                                + " ký (uploadUrl) TRƯỚC, rồi mới gọi xác nhận."));
 
         long cap = MediaLimits.maxBytes(asset.kind());
         if (stored.sizeBytes() > cap) {
@@ -194,15 +194,17 @@ public class MediaUploadService {
                 (int) Math.min(VideoHeaderProbe.PROBE_BYTES, stored.sizeBytes()));
         MediaSignature.Detected detected;
         try {
-            detected = MediaSignature.detect(head, "vua tai len");
+            // Nhãn này đi thẳng vào câu `detail` mà giao diện HIỆN NGUYÊN VĂN cho người dùng (chỉ máy chủ
+            // biết tệp thật là gì) — nên phải là tiếng Việt có dấu, không phải "vua tai len".
+            detected = MediaSignature.detect(head, "vừa tải lên");
         } catch (MediaRejectedException ex) {
             throw purge(asset, ex.getCode(), ex.getMessage(), now);
         }
         if (detected.kind() != asset.kind()) {
             throw purge(asset, MediaProblemCodes.MEDIA_BAD_SIGNATURE,
-                    "Ban xin phieu cho " + nhan(asset.kind()) + " nhung tep tai len la "
+                    "Ông/bà chọn " + nhan(asset.kind()) + " nhưng tệp tải lên lại là "
                             + nhan(detected.kind()) + " (" + detected.contentType() + ")."
-                            + " Hay xin phieu dung loai roi tai lai.", now);
+                            + " Xin chọn lại tệp rồi tải lên lần nữa.", now);
         }
 
         // --- Thoi luong, chi voi video ---
@@ -216,10 +218,10 @@ public class MediaUploadService {
             }
             if (durationMs > MediaLimits.MAX_VIDEO_SECONDS * 1000L) {
                 throw purge(asset, MediaProblemCodes.MEDIA_TOO_LONG,
-                        "Doan video dai " + (durationMs / 1000) + " giay, vuot gioi han "
-                                + MediaLimits.MAX_VIDEO_SECONDS + " giay cua trang dong ho."
-                                + " Hay cat ngan lai, hoac dua len mot nen tang video roi dan lien"
-                                + " ket vao than bai.", now);
+                        "Đoạn video dài " + (durationMs / 1000) + " giây, vượt giới hạn "
+                                + MediaLimits.MAX_VIDEO_SECONDS + " giây của trang dòng họ."
+                                + " Hãy cắt ngắn lại, hoặc đưa lên một nền tảng video rồi dán liên"
+                                + " kết vào thân bài.", now);
             }
         }
 
@@ -287,15 +289,15 @@ public class MediaUploadService {
     private static String quaTran(MediaKind kind, long cap) {
         long mib = cap / (1024 * 1024);
         return kind == MediaKind.VIDEO
-                ? "Doan video vuot gioi han " + mib + " MB. Vi he thong khong chuyen ma lai video,"
-                        + " dung bay nhieu byte se duoc tai xuong tren may cua moi nguoi trong ho —"
-                        + " hay xuat lai o 1080p hoac cat ngan clip."
-                : "Tam anh vuot gioi han " + mib + " MB. Hay xuat lai o kich thuoc nho hon"
-                        + " (anh chup bang dien thoai thuong chi 3-5 MB).";
+                ? "Đoạn video vượt giới hạn " + mib + " MB. Vì hệ thống không chuyển mã lại video,"
+                        + " đúng bấy nhiêu byte sẽ được tải xuống trên máy của mọi người trong họ —"
+                        + " hãy xuất lại ở 1080p hoặc cắt ngắn clip."
+                : "Tấm ảnh vượt giới hạn " + mib + " MB. Hãy xuất lại ở kích thước nhỏ hơn"
+                        + " (ảnh chụp bằng điện thoại thường chỉ 3-5 MB).";
     }
 
     private static String nhan(MediaKind kind) {
-        return kind == MediaKind.VIDEO ? "video" : "anh";
+        return kind == MediaKind.VIDEO ? "video" : "ảnh";
     }
 
     /**

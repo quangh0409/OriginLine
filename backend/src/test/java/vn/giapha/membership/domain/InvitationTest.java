@@ -104,9 +104,10 @@ class InvitationTest {
     void daNhanRoiThiKhongThuHoiDuoc() {
         Invitation invitation = loiMoi();
         invitation.accept(UUID.randomUUID(), NOW);
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> invitation.revoke("doi y", NOW))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("da duoc nhan");
+                .hasMessageContaining("đã được nhận");
     }
 
     @Test

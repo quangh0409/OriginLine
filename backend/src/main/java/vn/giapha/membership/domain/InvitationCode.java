@@ -71,7 +71,7 @@ public final class InvitationCode {
      */
     public static String normalize(String raw) {
         if (raw == null) {
-            throw new IllegalArgumentException("Ma moi khong duoc rong");
+            throw new IllegalArgumentException("Mã mời không được rỗng");
         }
         String upper = raw.trim().toUpperCase(Locale.ROOT);
         StringBuilder out = new StringBuilder(upper.length());
@@ -86,12 +86,12 @@ public final class InvitationCode {
                 default -> c;
             };
             if (ALPHABET.indexOf(mapped) < 0) {
-                throw new IllegalArgumentException("Ma moi chua ky tu khong hop le");
+                throw new IllegalArgumentException("Mã mời chứa ký tự không hợp lệ");
             }
             out.append(mapped);
         }
         if (out.length() != LENGTH) {
-            throw new IllegalArgumentException("Ma moi phai co " + LENGTH + " ky tu");
+            throw new IllegalArgumentException("Mã mời phải có " + LENGTH + " ký tự");
         }
         return out.toString();
     }

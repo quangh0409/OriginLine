@@ -117,10 +117,11 @@ class RoleAssignmentServiceTest {
             dangNhapHoiDong();
             AppUser ungVien = clan.account("sub-ung-vien", clan.gocId);
 
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
             assertThatThrownBy(() -> service.grant(new GrantRoleCommand(ungVien.id(),
                     RoleCode.ADMIN, null, null, null, null)))
                     .isInstanceOf(ForbiddenException.class)
-                    .hasMessageContaining("Quan tri he thong");
+                    .hasMessageContaining("Quản trị hệ thống");
         }
 
         @Test

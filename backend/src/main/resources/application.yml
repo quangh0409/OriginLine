@@ -193,7 +193,24 @@ server:
   error:
     whitelabel:
       enabled: false
-  forward-headers-strategy: framework
+  # NATIVE, khong phai `framework` — va day la mot quyet dinh bao mat, khong phai khau vi.
+  #
+  # `framework` cai ForwardedHeaderFilter cua Spring. Bo loc ay KHONG co khai niem "proxy tin
+  # cay": no tin X-Forwarded-For cua MOI request, lay phan tu dau tien, va viet de getRemoteAddr().
+  # Ma getRemoteAddr() la khoa cua ca ba bo dem tan suat (InviteThrottle cho ma moi ca nhan va ma
+  # dong ho, PublicRateLimitFilter cho cong cong khai). Da do tren he dang chay 24/09: sau 10 lan go
+  # sai ma dong ho, POST /clan-invites/lookup tra 429 — cung lenh ay kem mot dong
+  # `X-Forwarded-For: 203.0.113.77` bia ra tra 404, tuc bo dem da bi lach bang mot header. Ma dong
+  # ho song suot han va mo cua cho ca ho, nen do chinh la lop chan do ma bang may bi vo hieu.
+  #
+  # `native` dung RemoteIpValve cua Tomcat: chi tin X-Forwarded-* khi request den tu mot dia chi
+  # trong `server.tomcat.remoteip.internal-proxies` (mac dinh: loopback + dai rieng 10/8, 172.16/12,
+  # 192.168/16 — dung cho proxy nginx/traefik dat cung may hoac cung mang docker), va lay dia chi
+  # KHONG tin cay ngoai cung ben PHAI chuoi, nen phan tu client tu bia o dau chuoi bi bo qua khi
+  # proxy noi them bang $proxy_add_x_forwarded_for. Scheme/host (X-Forwarded-Proto/Host) van duoc
+  # dich nhu cu. Ben thua (`framework`) duoc chon luc khoi tao chi de "scheme/host dung sau proxy"
+  # — `native` giu nguyen loi ich ay. Ghim bang ForwardedHeaderTrustIT.
+  forward-headers-strategy: native
 
 management:
   endpoints:

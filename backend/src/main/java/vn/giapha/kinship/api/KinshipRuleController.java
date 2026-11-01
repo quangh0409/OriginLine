@@ -85,7 +85,7 @@ public class KinshipRuleController {
         if (effective) {
             if (branchId == null) {
                 throw new DomainException("VALIDATION_FAILED",
-                        "effective=true thi bat buoc co 'branchId'");
+                        "effective=true thì bắt buộc có 'branchId'");
             }
             return KinshipApiMapper.toDto(effectiveRuleSets.forBranch(branchId));
         }

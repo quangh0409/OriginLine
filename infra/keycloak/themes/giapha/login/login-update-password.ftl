@@ -2,9 +2,22 @@
 <#--
   ĐẶT MẬT KHẨU MỚI — design/06-dang-nhap §5.2 khung 2 và §6.1 bước 3.
 
-  Đây là trang của nghi thức đặt lại NGOẠI TUYẾN: trưởng chi cấp một mật khẩu
-  tạm qua điện thoại, Keycloak bắt đổi ngay ở lần đăng nhập ấy bằng hành động
-  bắt buộc UPDATE_PASSWORD.
+  Trang này KHÔNG thuộc lối cấp lại mật khẩu của Trưởng chi. Bình luận cũ ở đây
+  tả một "nghi thức ngoại tuyến": Trưởng chi đọc một mật khẩu tạm qua điện
+  thoại, Keycloak bắt đổi ở lần đăng nhập đầu bằng UPDATE_PASSWORD. Cơ chế ấy đã
+  bị thay (V21, PasswordResetGrantService) và không còn được dùng ở đâu cả:
+  Trưởng chi/Hội đồng cấp một LIÊN KẾT DÙNG MỘT LẦN, HẠN 30 PHÚT tại màn
+  /quan-ly/cap-lai-mat-khau; người quên mật khẩu mở liên kết ấy ở màn
+  /dat-mat-khau CỦA ỨNG DỤNG, tự đặt mật khẩu, và máy chủ ghi mật khẩu qua Admin
+  API — không đi qua trang này, không ai đọc mật khẩu qua điện thoại, và chính chủ
+  được báo trong cùng transaction. Luồng mời và luồng đăng ký bằng mã dòng họ cũng
+  đặt mật khẩu ở /dat-mat-khau, không ở đây.
+
+  Trang này chỉ còn hiện ra ở hai chỗ do chính Keycloak điều khiển:
+    · luồng "Quên mật khẩu" gửi thư của Keycloak (reset-credentials) — chỉ có
+      nghĩa với tài khoản CÓ địa chỉ thư;
+    · một quản trị realm tự tay gắn hành động bắt buộc UPDATE_PASSWORD (hoặc
+      đặt mật khẩu "tạm thời") trong Admin Console.
 
   Theo 06 §5.2 khung 2, màn này KHÔNG hỏi thêm gì: không "nhớ mật khẩu?", không
   câu hỏi bảo mật, không xin quyền thông báo. Mỗi câu hỏi thêm ở đây là một chỗ

@@ -71,6 +71,24 @@ export function PostReviewQueueScreen() {
   );
 }
 
+/**
+ * "Sửa nhẹ rồi đăng" — TẠM TẮT (24/09/2026), chờ `ba` phân xử. Không phải bị quên.
+ *
+ * Design 07 §2 hứa "Duyệt, trả lại kèm lý do, hoặc sửa nhẹ rồi đăng", và javadoc `Post.edit` phía
+ * backend cũng nhắc "để người duyệt sửa nhẹ trước khi bấm duyệt" — nhưng hợp đồng
+ * (`PATCH /posts/{id}`: "Chỉ tác giả, và chỉ khi bài đang ở DRAFT") và `PostService.update` KHÔNG
+ * có lối nào cho người duyệt sửa bài đang chờ. Bấm thật bằng `truongchi` trên máy chủ thật:
+ * `PATCH` ⇒ `403 FORBIDDEN "Chi tac gia moi duoc sua bai viet"`, màn hình hiện "không có quyền"
+ * — lần nào cũng thế. Nút này chỉ "chạy" trên MSW vì mock từng cho người duyệt sửa bài PENDING
+ * (đã sửa mock cho khớp máy chủ thật).
+ *
+ * Mở lại nút cần một quyết định nghiệp vụ, không phải một dòng mã: người duyệt được viết lại chữ
+ * của tác giả tới đâu, và nhật ký ghi ai là người viết phần đã sửa. Cho tới lúc ấy, ẩn nút là
+ * trung thực hơn một nút chắc chắn thất bại. Mã luồng sửa-rồi-duyệt ở dưới được giữ nguyên để bật
+ * lại bằng một cờ khi backend có lối ghi tương ứng.
+ */
+const REVIEWER_EDIT_SUPPORTED = false;
+
 function PostQueueCard({ post, isSelf }: { post: PostDto; isSelf: boolean }) {
   const t = useTranslations("posts");
   const format = useFormatter();
@@ -201,9 +219,11 @@ function PostQueueCard({ post, isSelf }: { post: PostDto; isSelf: boolean }) {
             >
               {t("queue.approve")}
             </Button>
-            <Button icon={<EditOutlined aria-hidden />} onClick={startEditing}>
-              {t("queue.editThenApprove")}
-            </Button>
+            {REVIEWER_EDIT_SUPPORTED && (
+              <Button icon={<EditOutlined aria-hidden />} onClick={startEditing}>
+                {t("queue.editThenApprove")}
+              </Button>
+            )}
             <Button danger icon={<CloseOutlined aria-hidden />} onClick={() => setRejecting(true)}>
               {t("queue.reject")}
             </Button>

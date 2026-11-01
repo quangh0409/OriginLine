@@ -44,6 +44,12 @@ import vn.giapha.shared.exception.NotFoundException;
  * vòng gọi CSDL cho cả lô. Kết quả của nó — dòng nào là CREATE, dòng nào là UPDATE — chính là cơ
  * chế bảo đảm <b>tải lại không sinh người trùng</b>, và nhiều luật đọc lại nó.
  *
+ * <h2>Bộ luật, rồi lượt soát trước khi ghi</h2>
+ * Sau bộ luật (mâu thuẫn nội tại của tệp) là {@link ImportPreflight} — đúng lượt soát mà bước ghi
+ * sẽ chạy lại: ba ca Hội đồng chưa chốt, vòng lặp trong thứ tự ghi, mã Hôn phối / kế tự không
+ * phân giải được, nhóm gộp không áp dụng được. Nguyên tắc: <b>bước kiểm không được hứa điều bước
+ * ghi không giữ</b>. Lô {@code VALIDATED} là lô mà bước ghi, với dữ liệu không đổi, sẽ nhận.
+ *
  * <h2>Vẫn không ghi vào phả</h2>
  * Lô kết thúc ở {@link BatchStatus#VALIDATED} (0 lỗi chặn, chờ duyệt) hoặc
  * {@link BatchStatus#FAILED}. Bước ghi là một use case khác, và ranh giới ấy là thứ được kiểm bằng
@@ -60,17 +66,19 @@ public class ValidateImportBatchService {
     private final ExternalRefPort externalRefs;
     private final DuplicatePairRepository duplicatePairs;
     private final List<ImportRule> rules;
+    private final ImportPreflight preflight;
 
     public ValidateImportBatchService(ImportBatchRepository batches, ImportRowRepository rows,
                                       ImportIssueRepository issues, ExternalRefPort externalRefs,
                                       DuplicatePairRepository duplicatePairs,
-                                      List<ImportRule> rules) {
+                                      List<ImportRule> rules, ImportPreflight preflight) {
         this.batches = batches;
         this.rows = rows;
         this.issues = issues;
         this.externalRefs = externalRefs;
         this.duplicatePairs = duplicatePairs;
         this.rules = List.copyOf(rules);
+        this.preflight = preflight;
     }
 
     /** Kết quả tóm tắt một lần kiểm — thứ giao diện hiện ngay đầu báo cáo đối soát. */
@@ -88,7 +96,7 @@ public class ValidateImportBatchService {
                 .orElseThrow(() -> NotFoundException.of("ImportBatch", batchId));
         if (batch.status().daChot()) {
             throw new IllegalStateException(
-                    "Lo " + batchId + " da o trang thai " + batch.status() + ", khong kiem lai duoc");
+                    "Lô " + batchId + " đã ở trạng thái " + batch.status() + ", không kiểm lại được");
         }
         Instant batDau = Instant.now();
         batches.updateStatus(batchId, BatchStatus.VALIDATING, null);
@@ -131,7 +139,6 @@ public class ValidateImportBatchService {
         }
 
         List<ImportIssue> found = ctx.issues();
-        issues.replaceAll(batchId, found);
 
         // --- Dong bo tap cap nghi trung, roi ap quyet dinh len ket qua doi soat ---
         // Thu tu hai buoc nay KHONG doi duoc, va ly do khong hien nhien: bo luat vua chay tren
@@ -152,8 +159,20 @@ public class ValidateImportBatchService {
             rows.updateResolutions(batchId, sauQuyetDinh);
         }
 
-        int loiChan = (int) found.stream().filter(ImportIssue::chan).count();
-        int canhBao = found.size() - loiChan;
+        // --- Luot soat truoc khi ghi, NGAY O BUOC KIEM ---
+        // Cung mot bo voi buoc ghi (ImportPreflight), chay tren du lieu SAU KHI AP quyet dinh gop —
+        // dung tap dong ma buoc ghi se thay. Truoc 24/09 luot nay chi chay luc ghi: man doi soat bao
+        // "khong con loi phai sua", nguoi dung bam ghi, lo nhan 202 roi FAILED voi
+        // IMP_UNDECIDED_INLAW_DOI (NT-TC-15). Chay no o day thi loi hien dung dong, dung o, nhu moi
+        // loi chan khac, va nut ghi khong bao gio mo cho mot lo ma buoc ghi se tu choi.
+        // Chay KE CA khi bo luat da co loi chan: nguoi nhap sua mot luot cho het, thay vi sua xong
+        // 15 loi roi moi biet con 2 loi nua o lan tai len sau.
+        List<ImportIssue> tatCa = preflight.ghepVao(found, batch.branchId(), keHoachGop,
+                keHoachGop.apDung(sauQuyetDinh, marriageRows));
+        issues.replaceAll(batchId, tatCa);
+
+        int loiChan = (int) tatCa.stream().filter(ImportIssue::chan).count();
+        int canhBao = tatCa.size() - loiChan;
         int seTao = (int) sauQuyetDinh.stream().filter(r -> r.plannedAction() == PlannedAction.CREATE).count();
         int seCapNhat = sauQuyetDinh.size() - seTao;
 
@@ -161,7 +180,7 @@ public class ValidateImportBatchService {
         // sinh canh bao MOI thi van tay doi, va cai tick "da xem" cua lan truoc tu het hieu luc —
         // khong ai phai nho di xoa no. Xem WarningDigest.
         batches.updateCounters(batchId, daDoiSoat.size(), marriageRows.size(), loiChan, canhBao,
-                seTao, seCapNhat, WarningDigest.cua(found));
+                seTao, seCapNhat, WarningDigest.cua(tatCa));
         BatchStatus status = loiChan == 0 ? BatchStatus.VALIDATED : BatchStatus.FAILED;
         batches.updateStatus(batchId, status,
                 loiChan == 0 ? null : loiChan + " lỗi chặn cần sửa trong tệp");
@@ -170,7 +189,7 @@ public class ValidateImportBatchService {
                         + " {} cap nghi trung ({} cap moi chua ai quyet)",
                 batchId, Duration.between(batDau, Instant.now()).toMillis(), loiChan, canhBao,
                 seTao, seCapNhat, capVuaDo.size(), capMoi);
-        return new KetQua(batchId, status, loiChan, canhBao, seTao, seCapNhat, found);
+        return new KetQua(batchId, status, loiChan, canhBao, seTao, seCapNhat, tatCa);
     }
 
     /** Tra dòng theo số dòng — bộ dò cặp cần nó để ghép cảnh báo về đúng mã của dòng. */

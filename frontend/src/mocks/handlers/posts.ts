@@ -13,13 +13,13 @@ import type {
   PostWriteBody,
   ReviewPostBody,
 } from "@/lib/api/posts";
-import {
-  namedRejectionKey,
-  type MediaKind,
-  type MediaPolicy,
-  type MediaReportDto,
-  type MediaReportReason,
-  type PostMediaItem,
+import type {
+  MediaAsset,
+  MediaKind,
+  MediaPolicy,
+  MediaReportDto,
+  MediaReportReason,
+  PostMediaItem,
 } from "@/lib/api/media";
 import type { Problem, ValidationProblem } from "@/types/api";
 
@@ -35,9 +35,13 @@ import type { Problem, ValidationProblem } from "@/types/api";
  * `PostStatus` không có giá trị `REJECTED` — "trả lại" đúng nghĩa đen là trả
  * bài về tay người viết để sửa, không phải một ngõ cụt.
  *
- * `withdraw` chỉ hợp lệ từ `PUBLISHED` (gỡ một bài đã lên trang chủ) — khớp
- * đúng trình tự bốn trạng thái mà checklist liệt kê, **không** phải một lối
- * "rút đơn" cho bài đang `PENDING` (hợp đồng không cho endpoint đó).
+ * `withdraw` hợp lệ từ MỌI trạng thái trừ `WITHDRAWN` — khớp `Post.withdraw` phía
+ * backend: gỡ bài đã đăng, VÀ là lối duy nhất để tác giả bỏ một bản nháp/bài đang chờ
+ * (hợp đồng không có lệnh xoá bài). Bản trước của mock chỉ cho gỡ từ `PUBLISHED`.
+ *
+ * Nháp được phép THÂN RỖNG (chỉ tiêu đề bắt buộc ở `POST /posts`); `/submit` mới đòi thân
+ * (`422 VALIDATION_FAILED`). `PATCH` chỉ tác giả + chỉ `DRAFT` — người duyệt KHÔNG sửa được bài
+ * đang chờ (xem ghi chú ở handler `PATCH`).
  *
  * <h2>Phạm vi duyệt dùng lại `mocks/identity.ts`</h2>
  * `roleCanReview` + `canWriteInBranch` — cùng cặp hàm màn hàng-chờ-duyệt-đơn-
@@ -151,7 +155,7 @@ function validationProblem(field: string, message: string): ValidationProblem {
 
 /** Ảnh mẫu vẽ bằng SVG nội tuyến — không phụ thuộc mạng ngoài, chạy được cả khi máy không có Internet. */
 function sampleImage(label: string, fill: string): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="100%" height="100%" fill="${fill}"/><text x="50%" y="50%" font-family="sans-serif" font-size="32" text-anchor="middle" fill="#3a2a1a">${label}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="100%" height="100%" fill="${fill}"/><text x="50%" y="50%" font-family="sans-serif" font-size="32" text-anchor="middle" fill="saddlebrown">${label}</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
@@ -197,22 +201,22 @@ const STORE: PostDto[] = [
       {
         id: "media-seed-1",
         kind: "IMAGE",
+        contentType: "image/jpeg",
+        sizeBytes: 512_000,
+        durationMs: null,
         url: sampleImage("Mái nhà thờ mới", "%23e9dcc8"),
         alt: "Mái ngói nhà thờ họ sau khi trùng tu, nhìn từ sân trước",
-        order: 0,
-        width: 800,
-        height: 600,
-        createdAt: "2026-07-15T03:00:00.000Z",
+        position: 0,
       },
       {
         id: "media-seed-2",
         kind: "IMAGE",
+        contentType: "image/jpeg",
+        sizeBytes: 480_000,
+        durationMs: null,
         url: sampleImage("Sân trước", "%23f2e6d3"),
         alt: "Sân trước nhà thờ họ đã lát lại gạch",
-        order: 1,
-        width: 800,
-        height: 600,
-        createdAt: "2026-07-15T03:00:00.000Z",
+        position: 1,
       },
     ],
     publishedAt: "2026-07-15T03:00:00.000Z",
@@ -270,9 +274,37 @@ function visibleTo(post: PostDto, identity: MockIdentity): boolean {
  * mảng này: `mediaHandlers` là một `const` khai báo BÊN DƯỚI, tham chiếu tới
  * nó ngay tại đây sẽ vỡ vì temporal dead zone lúc module chạy.
  */
+/**
+ * Khách hỏi bất kỳ lối đọc `/posts` nào đều nhận `401`, y như máy thật.
+ *
+ * Hợp đồng ghi thẳng "Khách vãng lai không dùng được endpoint này (`401`): toàn
+ * bộ `/posts` đòi token", và máy chủ đo ngày 24/09 trả đúng như vậy. Bản trước
+ * của mock phục vụ khách `200` với các bài đã đăng — "dễ hơn thật" — nên trang
+ * chủ và bộ kiểm của nó tin rằng khách đọc được bài, trong khi trên máy thật
+ * khách thấy "Chưa có bài viết nào được đăng." (đọc nhầm `401` thành rỗng).
+ * Bài viết đóng với khách là đúng luật: mỗi bài mang tên tác giả, một người
+ * đang sống (BA v2 §10).
+ */
+function guestReadRefused(role: MockRole) {
+  if (role !== "guest") return null;
+  return HttpResponse.json(
+    {
+      type: "https://giapha.vn/problems/unauthorized",
+      title: "Chưa đăng nhập",
+      status: 401,
+      detail: "Yêu cầu cần một JWT hợp lệ do Keycloak cấp",
+      instance: "/api/v1/posts",
+      code: "UNAUTHENTICATED",
+    } satisfies Problem,
+    { status: 401, headers: { "Content-Type": "application/problem+json" } }
+  );
+}
+
 const corePostHandlers = [
   http.get(`${API_BASE_URL}/api/v1/posts`, ({ request }) => {
     const role = resolveMockRole(request);
+    const refused = guestReadRefused(role);
+    if (refused) return refused;
     const identity = identityOf(role);
     const url = new URL(request.url);
     const status = url.searchParams.get("status") as PostStatus | null;
@@ -307,6 +339,8 @@ const corePostHandlers = [
   // Đăng ký TRƯỚC `/:id` — nếu không, `/posts/feed` sẽ khớp nhầm vào route `/posts/:id`.
   http.get(`${API_BASE_URL}/api/v1/posts/feed`, ({ request }) => {
     const role = resolveMockRole(request);
+    const refused = guestReadRefused(role);
+    if (refused) return refused;
     const url = new URL(request.url);
     const limit = Number(url.searchParams.get("limit") ?? "6");
     const published = STORE.filter((p) => p.status === "PUBLISHED").sort((a, b) =>
@@ -317,6 +351,8 @@ const corePostHandlers = [
 
   http.get(`${API_BASE_URL}/api/v1/posts/:id`, ({ request, params }) => {
     const role = resolveMockRole(request);
+    const refused = guestReadRefused(role);
+    if (refused) return refused;
     const identity = identityOf(role);
     const post = STORE.find((p) => p.id === params.id);
     if (!post || !visibleTo(post, identity)) {
@@ -343,8 +379,14 @@ const corePostHandlers = [
       );
     }
     const body = (await request.json()) as PostWriteBody;
+    // Khớp backend thật: chỉ `title` bắt buộc (bean validation ⇒ 400, không phải 422). Thân rỗng
+    // là HỢP LỆ ở bản nháp — màn soạn tạo nháp ngay khi người viết rời ô tiêu đề (đổi 24/09/2026,
+    // xem `CreatePostRequest` trong hợp đồng). Luật "phải có thân" nằm ở `/submit`.
     if (!body.title || !body.title.trim()) {
-      return HttpResponse.json(validationProblem("title", "Xin nhập tiêu đề."), { status: 422 });
+      return HttpResponse.json(
+        { ...validationProblem("title", "Tieu de bai viet khong duoc rong"), status: 400 },
+        { status: 400 }
+      );
     }
 
     const post: PostDto = {
@@ -375,20 +417,15 @@ const corePostHandlers = [
       });
     }
 
+    // Khớp backend thật (`PostService.update`): CHỈ tác giả — người duyệt trong phạm vi KHÔNG
+    // sửa được bài đang chờ duyệt. Bản trước của mock cho người duyệt sửa bài PENDING, nên nút
+    // "Sửa nhẹ rồi đăng" xanh trên MSW mà luôn nhận 403 "Chi tac gia moi duoc sua bai viet" trên
+    // máy chủ thật (đo bằng trình duyệt 24/09/2026) — lần thứ bảy "mock dễ hơn thật".
+    // Thứ tự kiểm cũng khớp: tác giả (403) → If-Match (412/409) → trạng thái (409 CONTENT_CLOSED).
     const isAuthor = identity.personId === post.authorPersonId;
-    const isReviewerInScope = canReviewPost(identity, post);
-    const allowed =
-      (post.status === "DRAFT" && isAuthor) || (post.status === "PENDING" && isReviewerInScope);
-    if (!allowed) {
+    if (!isAuthor) {
       return HttpResponse.json(
-        problem(
-          403,
-          "FORBIDDEN",
-          "Không sửa được bài này",
-          post.status === "PUBLISHED" || post.status === "WITHDRAWN"
-            ? "Bài đã đăng hoặc đã gỡ không sửa trực tiếp được."
-            : "Bạn không có quyền sửa bài này ở trạng thái hiện tại."
-        ),
+        problem(403, "FORBIDDEN", "Không đủ thẩm quyền", "Chi tac gia moi duoc sua bai viet"),
         { status: 403 }
       );
     }
@@ -406,9 +443,16 @@ const corePostHandlers = [
       );
     }
 
+    if (post.status !== "DRAFT") {
+      return HttpResponse.json(
+        problem(409, "CONTENT_CLOSED", "Nội dung đã thay đổi", "Chi sua duoc bai o trang thai DRAFT"),
+        { status: 409 }
+      );
+    }
+
     const patch = (await request.json()) as PostPatchBody;
     if (patch.title !== undefined && !patch.title.trim()) {
-      return HttpResponse.json(validationProblem("title", "Tiêu đề không được để trống."), {
+      return HttpResponse.json(validationProblem("title", "Tieu de bai viet khong duoc rong"), {
         status: 422,
       });
     }
@@ -435,16 +479,27 @@ const corePostHandlers = [
         status: 403,
       });
     }
-    if (post.status === "PENDING") return HttpResponse.json(project(post, role), { headers: { ETag: etagFor(post) } });
+    // Khớp backend thật: gửi lại một bài đã PENDING (hay bất kỳ trạng thái nào khác DRAFT) là
+    // 409 CONTENT_CLOSED — bản trước của mock trả 200 "cho qua", dễ hơn máy chủ thật.
     if (post.status !== "DRAFT") {
-      return HttpResponse.json(problem(403, "FORBIDDEN", "Chỉ nháp mới gửi duyệt được"), {
-        status: 403,
-      });
+      return HttpResponse.json(
+        problem(409, "CONTENT_CLOSED", "Nội dung đã thay đổi", "Chi gui duyet duoc bai o trang thai DRAFT"),
+        { status: 409 }
+      );
     }
-    if (!post.title.trim() || !post.body.trim()) {
-      return HttpResponse.json(validationProblem("body", "Bài viết cần có tiêu đề và nội dung trước khi gửi duyệt."), {
-        status: 422,
-      });
+    // Cửa đòi thân bài — nháp được rỗng thân, bài gửi đi thì không (422, bài ở lại DRAFT).
+    if (!post.body.trim()) {
+      return HttpResponse.json(
+        {
+          ...problem(
+            422,
+            "VALIDATION_FAILED",
+            "Vi phạm quy tắc nghiệp vụ",
+            "Than bai viet con trong — viet vai dong roi hay gui duyet"
+          ),
+        },
+        { status: 422 }
+      );
     }
 
     post.status = "PENDING";
@@ -465,10 +520,18 @@ const corePostHandlers = [
         status: 404,
       });
     }
-    if (post.status !== "PENDING" || !canReviewPost(identity, post)) {
+    if (!canReviewPost(identity, post)) {
       return HttpResponse.json(
-        problem(403, "FORBIDDEN", "Không duyệt được bài này", "Sai phạm vi chi/ngành hoặc bài không còn chờ duyệt."),
+        problem(403, "FORBIDDEN", "Không duyệt được bài này", "Sai phạm vi chi/ngành."),
         { status: 403 }
+      );
+    }
+    // Khớp backend thật: đúng phạm vi mà bài không còn chờ duyệt là 409 CONTENT_CLOSED
+    // (hai người duyệt cùng bấm), không phải 403.
+    if (post.status !== "PENDING") {
+      return HttpResponse.json(
+        problem(409, "CONTENT_CLOSED", "Nội dung đã thay đổi", "Chi duyet duoc bai o trang thai PENDING"),
+        { status: 409 }
       );
     }
     // Cùng tiền lệ ChangeRequest: đúng phạm vi vẫn không được tự duyệt bài của chính mình.
@@ -514,9 +577,17 @@ const corePostHandlers = [
         status: 404,
       });
     }
+    // Khớp backend thật (`Post.withdraw`): tác giả gỡ được cả nháp/bài chờ duyệt (bỏ nháp), không
+    // chỉ bài đã đăng; chỉ bài đã gỡ rồi mới là 409 CONTENT_CLOSED.
     const canWithdraw = identity.personId === post.authorPersonId || canReviewPost(identity, post);
-    if (post.status !== "PUBLISHED" || !canWithdraw) {
+    if (!canWithdraw) {
       return HttpResponse.json(problem(403, "FORBIDDEN", "Không gỡ được bài này"), { status: 403 });
+    }
+    if (post.status === "WITHDRAWN") {
+      return HttpResponse.json(
+        problem(409, "CONTENT_CLOSED", "Nội dung đã thay đổi", "Bai viet da o trang thai WITHDRAWN"),
+        { status: 409 }
+      );
     }
     post.status = "WITHDRAWN";
     post.version += 1;
@@ -526,63 +597,88 @@ const corePostHandlers = [
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════
- * Media — ảnh/video đính kèm (Việc 1–2, xem javadoc `src/lib/api/media.ts`)
+ * Media — ảnh/video đính kèm (xem javadoc `src/lib/api/media.ts`)
  *
- * <h2>Bộ giả lập khó bằng thật, không dễ hơn</h2>
- * Đây là cái bẫy đã lặp bốn lần ở dự án này: một bộ giả lập dễ hơn API thật
- * làm giao diện trông chạy được rồi vỡ trước máy chủ thật. Nên ở đây:
+ * <h2>Đồng bộ đợt ba — hình dạng THẬT, không còn suy đoán</h2>
+ * Bản trước của khối này tưởng tượng một hợp đồng LỒNG (`MediaPolicy.image.
+ * maxBytes`) và bốn điểm cuối dưới `/posts/{id}/media/**` (`uploads`,
+ * `uploads/{id}/confirm`, `order`, `/{mediaId}`) — đây là lần THỨ SÁU cái bẫy
+ * "mock giả lập một API dễ hơn/khác hình dạng hơn API thật" lặp lại ở dự án
+ * này (`design 07`/`Danh_Gia_Gop_Y_Spec_Gia_Pha.html` gọi tên nó). Hình dạng
+ * thật, đối chiếu với `contracts/openapi.yaml` VÀ mã nguồn backend
+ * (`MediaController`, `MediaDtos`, `PostController.setMedia`):
  * <ul>
- *   <li>xin URL đã ký kiểm lại `kind`/`contentType`/`sizeBytes` — CHÍNH nó,
- *       không tin phép kiểm phía client;</li>
- *   <li>`PUT` lên "kho" giả kiểm lại `Content-Type` khớp lúc xin URL, và có
- *       độ trễ thật (không phải 0ms) để thanh tiến trình có ý nghĩa;</li>
- *   <li>xác nhận đòi tệp ĐÃ THẬT SỰ được `PUT` lên (`UPLOADED_KEYS`) — gọi xác
- *       nhận trước khi PUT xong bị từ chối, không phải "coi như đã tải".</li>
+ *   <li><b>`MediaPolicyDto` PHẲNG</b> — không có `image`/`video` lồng nhau;</li>
+ *   <li><b>`POST /media/upload-tickets`</b> chỉ nhận `{kind, sizeBytes}` —
+ *       KHÔNG `fileName`/`contentType`/`postId`. Một tệp tồn tại độc lập với
+ *       bài; server không biết tên tệp gốc ở bất kỳ bước nào;</li>
+ *   <li><b>`POST /media/{mediaId}/confirm`</b> trả một tệp TRẦN TRỤI
+ *       (`MediaAssetDto`), chưa gắn vào bài nào (`position=0`, `url=null`);</li>
+ *   <li><b>`PUT /posts/{id}/media` {@code {mediaIds}}</b> (của `content`, không
+ *       phải `media`) là điểm DUY NHẤT ghi danh sách tệp của một bài — "gắn
+ *       mới"/"sắp lại"/"gỡ" đều là CÙNG lệnh này với một danh sách khác nhau.
+ *       Không còn `PATCH .../media/order` hay `PATCH .../media/{mediaId}`
+ *       (sửa `alt` sau khi gắn) — hợp đồng thật không có chỗ cho nó.</li>
+ * </ul>
+ *
+ * <h2>Bộ giả lập vẫn phải khó bằng thật, không dễ hơn</h2>
+ * <ul>
+ *   <li>xin phiếu kiểm `sizeBytes` so với trần TRƯỚC KHI cấp URL;</li>
+ *   <li>`PUT` lên "kho" giả có độ trễ thật (không phải 0ms) để thanh tiến
+ *       trình có ý nghĩa;</li>
+ *   <li>xác nhận đòi tệp ĐÃ THẬT SỰ được `PUT` lên (`STORED_OBJECTS`), rồi tự
+ *       DÒ CHỮ KÝ BYTE (không tin `sizeBytes`/loại client khai) — đúng tinh
+ *       thần "chữ ký byte là phép kiểm thật, MIME chỉ là gợi ý" mà
+ *       `MediaKind`/`MediaSignature` phía backend ghi rõ;</li>
+ *   <li>gắn vào bài đòi tệp đã `CONFIRMED` VÀ đúng chủ — hai điều kiện độc
+ *       lập, hai mã lỗi khác nhau (`409 MEDIA_NOT_UPLOADED` /
+ *       `403 MEDIA_NOT_OWNED`), khớp đúng bảng lỗi trong
+ *       `contracts/openapi.yaml` (~5904).</li>
  * </ul>
  * ══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * Chính sách media — cùng con số backend media thật đã chốt (design 07
- * đồng bộ đợt hai). `GET /media/policy` trả nguyên object này; các handler
- * dưới đây dùng CHÍNH nó để kiểm, không phải một bộ số khác — hai nơi (chính
- * sách công bố / chính sách áp dụng) lệch nhau là đúng loại lỗi "mock dễ hơn
- * thật" đã lặp lại ở dự án này.
+ * Chính sách media — CÙNG con số `MediaLimits` phía backend thật
+ * (`MediaController.policy()`), hình dạng PHẲNG đúng `MediaPolicyDto`.
+ * `GET /media/policy` trả nguyên object này; các handler dưới đây dùng
+ * CHÍNH nó để kiểm, không phải một bộ số khác.
  */
 const MEDIA_POLICY: MediaPolicy = {
-  image: {
-    maxBytes: 8 * 1024 * 1024, // 8 MiB
-    mimeTypes: ["image/jpeg", "image/png", "image/webp"],
-  },
-  video: {
-    maxBytes: 100 * 1024 * 1024, // 100 MiB — ngân sách TẢI VỀ, không phải tải lên
-    mimeTypes: ["video/mp4", "video/webm"],
-    maxDurationSeconds: 120,
-  },
-  maxAttachmentsPerPost: 12,
-  uploadUrlExpiresInSeconds: 15 * 60,
-  readUrlExpiresInSeconds: 60 * 60,
+  maxImageBytes: 8 * 1024 * 1024, // 8 MiB
+  maxVideoBytes: 100 * 1024 * 1024, // 100 MiB — ngân sách TẢI VỀ, không phải tải lên
+  maxVideoDurationSeconds: 120,
+  maxMediaPerPost: 12,
+  maxAltLength: 300,
+  imageContentTypes: ["image/jpeg", "image/png", "image/webp"],
+  videoContentTypes: ["video/mp4", "video/webm"],
+  uploadUrlTtlSeconds: 15 * 60,
+  viewUrlTtlSeconds: 10 * 60,
 };
 
-interface PendingUpload {
-  uploadId: string;
-  postId: string;
+/**
+ * Một phiếu/tệp trên "kho" giả — tồn tại ĐỘC LẬP với bài, đúng như backend
+ * thật (`media_asset` không mang khoá bài nào; việc gắn là một bảng nối
+ * riêng). `status` đi từ `PENDING` (đã xin phiếu, chưa xác nhận) →
+ * `CONFIRMED` (đã dò chữ ký byte, có `alt` nếu là ảnh) — không có bước lùi.
+ */
+interface MockMediaAsset {
+  id: string;
   kind: MediaKind;
-  contentType: string;
+  /** Chỉ có sau khi xác nhận — dò được từ chữ ký byte, không phải MIME client khai lúc xin phiếu (không hề có trường đó). */
+  contentType: string | null;
   sizeBytes: number;
+  durationMs: number | null;
+  alt: string | null;
   key: string;
-  fileName: string;
+  ownerAppUserId: string;
+  status: "PENDING" | "CONFIRMED";
 }
 
-const PENDING_UPLOADS = new Map<string, PendingUpload>();
-/** Đối tượng đã thật sự `PUT` lên "kho" — byte + kiểu, để lượt `GET` sau trả lại đúng thứ đã gửi. */
+const ASSETS = new Map<string, MockMediaAsset>();
+/** Đối tượng đã thật sự `PUT` lên "kho" — byte + `Content-Type` trình duyệt tự gắn, để dò chữ ký byte lúc xác nhận. */
 const STORED_OBJECTS = new Map<string, { bytes: ArrayBuffer; contentType: string }>();
 
-let uploadSeq = 0;
 let mediaSeq = 0;
-function nextUploadId(): string {
-  uploadSeq += 1;
-  return `up-${uploadSeq}`;
-}
 function nextMediaId(): string {
   mediaSeq += 1;
   return `media-${mediaSeq}`;
@@ -592,24 +688,39 @@ function storageUrl(key: string): string {
   return `${API_BASE_URL}/__mock-storage__/${encodeURIComponent(key)}`;
 }
 
+/**
+ * Dò CHỮ KÝ BYTE — cùng tinh thần `MediaSignature` phía backend thật: MIME
+ * client khai không phải phép kiểm, những byte đầu tệp mới là. Năm định dạng
+ * được nhận (JPEG/PNG/WebP/MP4/WebM); HEIC/GIF/MOV/MKV và bất kỳ thứ gì khác
+ * đều rơi vào `null` → `MEDIA_BAD_SIGNATURE` ở nơi gọi.
+ */
+function detectSignature(bytes: ArrayBuffer): { contentType: string; kind: MediaKind } | null {
+  const head = new Uint8Array(bytes.slice(0, 32));
+  const ascii = (offset: number, len: number) =>
+    String.fromCharCode(...head.slice(offset, offset + len));
+
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) {
+    return { contentType: "image/jpeg", kind: "IMAGE" };
+  }
+  if (head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47) {
+    return { contentType: "image/png", kind: "IMAGE" };
+  }
+  if (ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP") {
+    return { contentType: "image/webp", kind: "IMAGE" };
+  }
+  if (ascii(4, 4) === "ftyp") {
+    return { contentType: "video/mp4", kind: "VIDEO" };
+  }
+  if (head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3) {
+    return { contentType: "video/webm", kind: "VIDEO" };
+  }
+  return null;
+}
+
 /** Cùng cổng quyền với sửa thân bài (chỉ tác giả, chỉ khi còn `DRAFT`) — "ảnh đi theo quyền của bài". */
 function mediaEditAllowed(identity: MockIdentity, post: PostDto): boolean {
   return post.status === "DRAFT" && identity.personId === post.authorPersonId;
 }
-
-/**
- * Câu từ chối theo TÊN tệp — mỗi định dạng một cách sửa cụ thể, khớp đúng
- * khoá dịch `posts.media.rejected.named.*` phía client (cùng nội dung, hai
- * nơi — máy chủ trả câu tiếng Việt hoàn chỉnh trong `detail`, và
- * `MediaPicker` cũng tự dịch được cùng ý cho ca client chặn trước khi gọi
- * mạng, để hai đường luôn nói cùng một điều).
- */
-const NAMED_FORMAT_DETAIL: Record<string, string> = {
-  heic: "Đây là ảnh định dạng HEIC (mặc định của iPhone). Vào Cài đặt > Máy ảnh > Định dạng, chọn \"Tương thích nhất\" để lưu ảnh dạng JPEG — hoặc mở ảnh này, bấm Chia sẻ > Lưu ảnh gốc dạng tương thích, rồi tải lại.",
-  gif: "Ảnh động GIF chưa hỗ trợ. Lưu lại thành ảnh tĩnh (JPEG/PNG) nếu chỉ cần một khung hình, hoặc chuyển thành video MP4 ngắn nếu cần giữ chuyển động.",
-  mov: "Video định dạng MOV (mặc định của iPhone) chưa hỗ trợ. Chuyển sang MP4 trước khi tải lên — trên iPhone: mở Ảnh, chọn video, bấm Chia sẻ > Lưu dưới dạng video đã nén để đổi sang MP4.",
-  mkv: "Video định dạng MKV chưa hỗ trợ. Chuyển sang MP4 bằng một công cụ chuyển đổi định dạng video trước khi tải lên.",
-};
 
 /** Tìm bài đang giữ một `mediaId` — báo cáo gắn với TỆP, không phải bài, nên phải quét ngược lại. */
 function findMediaOwner(mediaId: string): { post: PostDto; item: PostMediaItem } | undefined {
@@ -627,11 +738,39 @@ interface MediaReportRecord {
   reporterId: string;
   reason: MediaReportReason;
   note: string | null;
-  status: "PENDING" | "TAKEN_DOWN" | "DISMISSED";
+  /** Đúng enum `MediaReportStatus` của hợp đồng — bản trước dùng `PENDING`/`TAKEN_DOWN` tự đặt. */
+  status: "OPEN" | "ACTIONED" | "DISMISSED";
   createdAt: string;
   decidedBy?: string;
   decidedAt?: string;
   decisionNote?: string | null;
+  version: number;
+  /** URL đọc lúc tệp còn — `mediaUrl` là `null` sau khi đã gỡ. */
+  mediaUrl: string | null;
+  mediaKind: MediaKind;
+}
+
+/**
+ * Hình dạng THẬT của `MediaReportDto` (hợp đồng + `MediaDtos.MediaReportDto`). Bản trước của mock
+ * trả `postId`/`postTitle`/`reporterDisplayName` — ba trường máy chủ không bao giờ gửi — và màn
+ * duyệt báo cáo dựng lên trên chúng, nên trên hệ thống thật hiện một đường dẫn rỗng.
+ */
+function toReportDto(report: MediaReportRecord): MediaReportDto {
+  return {
+    id: report.id,
+    mediaId: report.mediaId,
+    mediaKind: report.mediaKind,
+    mediaUrl: report.status === "ACTIONED" ? null : report.mediaUrl,
+    reason: report.reason,
+    note: report.note,
+    reportedBy: report.reporterId,
+    status: report.status,
+    reviewedBy: report.decidedBy ?? null,
+    reviewedAt: report.decidedAt ?? null,
+    resolutionNote: report.decisionNote ?? null,
+    createdAt: report.createdAt,
+    version: report.version,
+  };
 }
 
 const REPORTS: MediaReportRecord[] = [];
@@ -641,136 +780,116 @@ function nextReportId(): string {
   return `report-${reportSeq}`;
 }
 
-/** Cùng luật riêng tư với `reviewedByDisplayNameFor` — khách/không thấy người còn sống thì không thấy tên. */
-function reporterDisplayNameFor(reporterId: string, role: MockRole): string | null {
-  const reporter = REVIEWER_PERSON[reporterId];
-  if (!reporter) return null;
-  if (!canSeeLivingPersons(role)) return null;
-  return reporter.displayName ?? null;
-}
-
-function namedFormatProblem(namedKey: string): Problem {
-  return {
-    ...problem(422, "VALIDATION_FAILED", "Định dạng tệp này chưa hỗ trợ"),
-    detail: NAMED_FORMAT_DETAIL[namedKey] ?? "Định dạng tệp này chưa hỗ trợ.",
-  };
-}
-
 function mediaForbidden(post: PostDto): Problem {
   return problem(
     403,
     "FORBIDDEN",
     "Không sửa được ảnh/video của bài này",
     post.status === "DRAFT"
-      ? "Chỉ tác giả mới thêm/sửa/gỡ được tệp đính kèm."
+      ? "Chỉ tác giả mới gắn/sắp lại/gỡ được tệp đính kèm."
       : "Bài không còn ở dạng nháp — tệp đính kèm không sửa trực tiếp được nữa."
   );
 }
 
+/**
+ * Hai mồi sẵn (`media-seed-1`/`media-seed-2`, gắn với `post-3` của
+ * `LOGGED_IN_BRANCH_HEAD_FULL`) cần một `MockMediaAsset` tương ứng để
+ * `PUT /posts/:id/media` (gắn/sắp lại/gỡ) hoạt động được trên chúng, giống
+ * hệt một tệp đã trải qua đúng ba bước thật — không có lối tắt "bỏ qua
+ * `ASSETS` cho riêng dữ liệu mồi".
+ */
+for (const seed of [
+  { id: "media-seed-1", sizeBytes: 512_000, alt: "Mái ngói nhà thờ họ sau khi trùng tu, nhìn từ sân trước" },
+  { id: "media-seed-2", sizeBytes: 480_000, alt: "Sân trước nhà thờ họ đã lát lại gạch" },
+]) {
+  ASSETS.set(seed.id, {
+    id: seed.id,
+    kind: "IMAGE",
+    contentType: "image/jpeg",
+    sizeBytes: seed.sizeBytes,
+    durationMs: null,
+    alt: seed.alt,
+    key: `seed/${seed.id}`,
+    ownerAppUserId: "u-branch-head",
+    status: "CONFIRMED",
+  });
+}
+
 const mediaHandlers = [
-  http.post(`${API_BASE_URL}/api/v1/posts/:id/media/uploads`, async ({ request, params }) => {
+  /**
+   * Bước 1/3 — `POST /media/upload-tickets`. KHÔNG cần `postId` (một tệp
+   * tồn tại độc lập với bài). Kiểm `sizeBytes` so với trần TRƯỚC KHI cấp
+   * URL — đúng tinh thần `413 MEDIA_TOO_LARGE` "từ chối trước khi tốn băng
+   * thông".
+   */
+  http.post(`${API_BASE_URL}/api/v1/media/upload-tickets`, async ({ request }) => {
     const role = resolveMockRole(request);
     const identity = identityOf(role);
-    const post = STORE.find((p) => p.id === params.id);
-    if (!post) return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy bài viết"), { status: 404 });
-    if (!mediaEditAllowed(identity, post)) return HttpResponse.json(mediaForbidden(post), { status: 403 });
-
-    const body = (await request.json()) as {
-      kind?: string;
-      fileName?: string;
-      contentType?: string;
-      sizeBytes?: number;
-    };
-    const fileName = body.fileName ?? "";
-
-    // Từ chối theo TÊN trước — HEIC/GIF/MOV/MKV kèm cách sửa, ưu tiên hơn một
-    // câu "định dạng không hỗ trợ" chung chung. Máy chủ không tin client đã
-    // chặn được — kiểm lại CHÍNH nó, đúng tinh thần "mock khó bằng thật".
-    const namedKey = namedRejectionKey(fileName);
-    if (namedKey) {
-      return HttpResponse.json(namedFormatProblem(namedKey), { status: 422 });
+    if (!identity.appUserId) {
+      return HttpResponse.json(problem(401, "UNAUTHENTICATED", "Cần đăng nhập để tải tệp"), { status: 401 });
     }
 
+    const body = (await request.json()) as { kind?: string; sizeBytes?: number };
     const kind = body.kind;
     if (kind !== "IMAGE" && kind !== "VIDEO") {
-      return HttpResponse.json(validationProblem("kind", "Loại tệp không hợp lệ."), { status: 422 });
-    }
-    const limits = MEDIA_POLICY[kind === "IMAGE" ? "image" : "video"];
-    if (!body.contentType || !limits.mimeTypes.includes(body.contentType)) {
-      return HttpResponse.json(
-        validationProblem("contentType", `Định dạng không được hỗ trợ. Chỉ nhận: ${limits.mimeTypes.join(", ")}.`),
-        { status: 422 }
-      );
+      return HttpResponse.json(validationProblem("kind", "Phải nói rõ IMAGE hay VIDEO."), { status: 422 });
     }
     if (typeof body.sizeBytes !== "number" || body.sizeBytes <= 0) {
-      return HttpResponse.json(validationProblem("sizeBytes", "Thiếu dung lượng tệp."), { status: 422 });
+      return HttpResponse.json(validationProblem("sizeBytes", "Phải khai kích thước tệp."), { status: 422 });
     }
-    if (body.sizeBytes > limits.maxBytes) {
+    const maxBytes = kind === "IMAGE" ? MEDIA_POLICY.maxImageBytes : MEDIA_POLICY.maxVideoBytes;
+    if (body.sizeBytes > maxBytes) {
       return HttpResponse.json(
         {
-          ...problem(413, "VALIDATION_FAILED", "Tệp vượt quá dung lượng cho phép"),
-          detail: `Trần cho ${kind === "IMAGE" ? "ảnh" : "video"} là ${Math.round(limits.maxBytes / (1024 * 1024))} MiB.`,
+          ...problem(413, "MEDIA_TOO_LARGE", "Tệp vượt quá dung lượng cho phép"),
+          detail: `Trần cho ${kind === "IMAGE" ? "ảnh" : "video"} là ${Math.round(maxBytes / (1024 * 1024))} MiB.`,
         },
         { status: 413 }
       );
     }
-    const attachedAndPending =
-      post.media.length + [...PENDING_UPLOADS.values()].filter((u) => u.postId === post.id).length;
-    if (attachedAndPending >= MEDIA_POLICY.maxAttachmentsPerPost) {
-      return HttpResponse.json(
-        validationProblem("kind", `Một bài chỉ mang tối đa ${MEDIA_POLICY.maxAttachmentsPerPost} tệp.`),
-        { status: 422 }
-      );
-    }
 
-    const uploadId = nextUploadId();
-    const key = `posts/${post.id}/${uploadId}-${fileName || "tep"}`;
-    PENDING_UPLOADS.set(uploadId, {
-      uploadId,
-      postId: post.id,
+    const mediaId = nextMediaId();
+    const key = `media/${mediaId}`;
+    ASSETS.set(mediaId, {
+      id: mediaId,
       kind,
-      contentType: body.contentType,
+      contentType: null,
       sizeBytes: body.sizeBytes,
+      durationMs: null,
+      alt: null,
       key,
-      fileName,
+      ownerAppUserId: identity.appUserId,
+      status: "PENDING",
     });
 
     return HttpResponse.json(
       {
-        uploadId,
-        key,
         uploadUrl: storageUrl(key),
-        uploadHeaders: { "Content-Type": body.contentType },
-        expiresAt: new Date(Date.now() + MEDIA_POLICY.uploadUrlExpiresInSeconds * 1000).toISOString(),
+        mediaId,
+        mediaKey: key,
+        expiresAt: new Date(Date.now() + MEDIA_POLICY.uploadUrlTtlSeconds * 1000).toISOString(),
+        maxBytes,
+        maxDurationSeconds: kind === "VIDEO" ? MEDIA_POLICY.maxVideoDurationSeconds : null,
+        acceptedContentTypes: kind === "IMAGE" ? MEDIA_POLICY.imageContentTypes : MEDIA_POLICY.videoContentTypes,
       },
-      { status: 201 }
+      { status: 200, headers: { "Cache-Control": "no-store, private" } }
     );
   }),
 
-  // "Kho" giả — KHÔNG đi qua backend thật, đúng hình dạng ba bước. Đăng ký
-  // cả hai method để một lượt PUT thiếu Content-Type cũng có chỗ mà rơi vào.
+  // "Kho" giả — KHÔNG đi qua backend thật, đúng hình dạng ba bước. Không
+  // kiểm `Content-Type` ở đây: hợp đồng thật không đưa header nào vào chữ ký
+  // của URL đã ký (xem `MinioObjectStorageAdapter.presign`), nên client chỉ
+  // gửi thân tệp — loại thật được dò lại bằng chữ ký byte lúc XÁC NHẬN.
   http.put(`${API_BASE_URL}/__mock-storage__/:key`, async ({ request, params }) => {
     const key = decodeURIComponent(String(params.key));
-    const pending = [...PENDING_UPLOADS.values()].find((u) => u.key === key);
-    if (!pending) {
+    const asset = [...ASSETS.values()].find((a) => a.key === key);
+    if (!asset) {
       return HttpResponse.json(problem(404, "NOT_FOUND", "URL tải lên không hợp lệ hoặc đã hết hạn"), {
         status: 404,
       });
     }
-    const contentType = request.headers.get("content-type") ?? "";
-    if (contentType !== pending.contentType) {
-      return HttpResponse.json(
-        problem(400, "VALIDATION_FAILED", "Content-Type không khớp lúc xin URL tải lên"),
-        { status: 400 }
-      );
-    }
     const bytes = await request.arrayBuffer();
-    if (bytes.byteLength > pending.sizeBytes * 1.05) {
-      // 5% dung sai — tránh vỡ vì làm tròn giữa client và kho, nhưng vẫn chặn một tệp bị tráo giữa chừng.
-      return HttpResponse.json(problem(413, "VALIDATION_FAILED", "Tệp thực nhận lớn hơn dung lượng đã khai"), {
-        status: 413,
-      });
-    }
+    const contentType = request.headers.get("content-type") ?? "application/octet-stream";
     // Độ trễ thật, KHÔNG phải 0ms — để thanh tiến trình có ý nghĩa khi xem bằng `npm run dev:mock`.
     await delay(300);
     STORED_OBJECTS.set(key, { bytes, contentType });
@@ -784,137 +903,172 @@ const mediaHandlers = [
     return new HttpResponse(stored.bytes, { status: 200, headers: { "Content-Type": stored.contentType } });
   }),
 
-  http.post(`${API_BASE_URL}/api/v1/posts/:id/media/uploads/:uploadId/confirm`, async ({ request, params }) => {
+  /**
+   * Bước 3/3 — `POST /media/{mediaId}/confirm`. Trả một tệp TRẦN TRỤI
+   * (`position=0`, `url=null`) — KHÔNG gắn vào bài nào ở đây, khác hẳn bản
+   * trước (từng trả cả bài đã cập nhật). Dò CHỮ KÝ BYTE thật sự
+   * ({@link detectSignature}), không tin `kind` client khai lúc xin phiếu.
+   */
+  http.post(`${API_BASE_URL}/api/v1/media/:mediaId/confirm`, async ({ request, params }) => {
     const role = resolveMockRole(request);
     const identity = identityOf(role);
-    const post = STORE.find((p) => p.id === params.id);
-    if (!post) return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy bài viết"), { status: 404 });
-    if (!mediaEditAllowed(identity, post)) return HttpResponse.json(mediaForbidden(post), { status: 403 });
-
-    const pending = PENDING_UPLOADS.get(String(params.uploadId));
-    if (!pending || pending.postId !== post.id) {
-      return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy lượt tải lên này"), { status: 404 });
+    if (!identity.appUserId) {
+      return HttpResponse.json(problem(401, "UNAUTHENTICATED", "Cần đăng nhập để xác nhận tải lên"), {
+        status: 401,
+      });
     }
-    if (!STORED_OBJECTS.has(pending.key)) {
+    const mediaId = String(params.mediaId);
+    const asset = ASSETS.get(mediaId);
+    if (!asset) {
+      return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy phiếu tải lên này"), { status: 404 });
+    }
+    if (asset.ownerAppUserId !== identity.appUserId) {
+      return HttpResponse.json(problem(403, "MEDIA_NOT_OWNED", "Phiếu này không phải của bạn"), { status: 403 });
+    }
+    if (asset.status === "CONFIRMED") {
       return HttpResponse.json(
-        problem(409, "VALIDATION_FAILED", "Tệp chưa thật sự được tải lên kho", "Xin thử tải lại tệp này."),
+        problem(409, "MEDIA_TICKET_CLOSED", "Phiếu đã xử lý rồi", "Gọi lại xác nhận cho cùng một mediaId không sửa được alt đã đặt."),
+        { status: 409 }
+      );
+    }
+    const stored = STORED_OBJECTS.get(asset.key);
+    if (!stored) {
+      return HttpResponse.json(
+        {
+          ...problem(409, "MEDIA_NOT_UPLOADED", "Tệp chưa thật sự được tải lên kho"),
+          detail: "Xin thử tải lại tệp này.",
+        },
         { status: 409 }
       );
     }
 
-    const body = (await request.json()) as {
-      alt?: string;
-      width?: number;
-      height?: number;
-      durationSeconds?: number;
-    };
-    if (pending.kind === "IMAGE" && (!body.alt || !body.alt.trim())) {
+    const signature = detectSignature(stored.bytes);
+    if (!signature || signature.kind !== asset.kind) {
+      // Ba mã đầu (chữ ký sai/quá trần) XOÁ tệp khỏi kho ngay — khớp
+      // `contracts/openapi.yaml` (~5652).
+      STORED_OBJECTS.delete(asset.key);
+      ASSETS.delete(mediaId);
       return HttpResponse.json(
-        validationProblem("alt", "Ảnh cần có chữ mô tả (alt) trước khi gắn vào bài."),
+        {
+          ...problem(422, "MEDIA_BAD_SIGNATURE", "Định dạng tệp này chưa hỗ trợ"),
+          detail:
+            "Những byte đầu của tệp không khớp một định dạng được nhận (hoặc khớp một định dạng bị loại: HEIC, GIF, MOV, MKV), hoặc khác loại đã khai lúc xin phiếu.",
+        },
         { status: 422 }
       );
     }
-    // Video: máy chủ "đọc thời lượng thật từ phần đầu tệp" — trong bộ giả
-    // lập, đó là chính giá trị client gửi kèm. VẮNG MẶT nghĩa là không đọc
-    // được (đúng hành vi thật đã chốt: từ chối, không coi như hợp lệ).
-    if (pending.kind === "VIDEO") {
-      if (body.durationSeconds === undefined) {
-        return HttpResponse.json(
-          {
-            ...problem(422, "VALIDATION_FAILED", "Không đọc được thời lượng video"),
-            detail: "Tệp có thể bị hỏng phần đầu, hoặc không phải video thật. Xin thử một tệp khác.",
-          },
-          { status: 422 }
-        );
-      }
-      if (body.durationSeconds > MEDIA_POLICY.video.maxDurationSeconds) {
-        return HttpResponse.json(
-          {
-            ...problem(422, "VALIDATION_FAILED", "Video vượt trần thời lượng"),
-            detail: `Trần thời lượng video là ${MEDIA_POLICY.video.maxDurationSeconds} giây.`,
-          },
-          { status: 422 }
-        );
-      }
-    }
-
-    const item: PostMediaItem = {
-      id: nextMediaId(),
-      kind: pending.kind,
-      url: storageUrl(pending.key),
-      alt: pending.kind === "IMAGE" ? (body.alt ?? "").trim() : null,
-      order: post.media.length,
-      width: body.width,
-      height: body.height,
-      createdAt: now(),
-    };
-    post.media.push(item);
-    post.version += 1;
-    post.updatedAt = now();
-    PENDING_UPLOADS.delete(pending.uploadId);
-
-    return HttpResponse.json(project(post, role), { headers: { ETag: etagFor(post) } });
-  }),
-
-  http.patch(`${API_BASE_URL}/api/v1/posts/:id/media/order`, async ({ request, params }) => {
-    const role = resolveMockRole(request);
-    const identity = identityOf(role);
-    const post = STORE.find((p) => p.id === params.id);
-    if (!post) return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy bài viết"), { status: 404 });
-    if (!mediaEditAllowed(identity, post)) return HttpResponse.json(mediaForbidden(post), { status: 403 });
-
-    const body = (await request.json()) as { order?: string[] };
-    const order = body.order ?? [];
-    const currentIds = new Set(post.media.map((m) => m.id));
-    const sameSet = order.length === post.media.length && order.every((id) => currentIds.has(id));
-    if (!sameSet) {
+    const maxBytes = asset.kind === "IMAGE" ? MEDIA_POLICY.maxImageBytes : MEDIA_POLICY.maxVideoBytes;
+    if (stored.bytes.byteLength > maxBytes) {
+      STORED_OBJECTS.delete(asset.key);
+      ASSETS.delete(mediaId);
       return HttpResponse.json(
-        validationProblem("order", "Danh sách thứ tự không khớp các tệp đang gắn vào bài."),
-        { status: 400 }
+        {
+          ...problem(413, "MEDIA_TOO_LARGE", "Tệp thực nhận lớn hơn dung lượng cho phép"),
+          detail: `Trần là ${Math.round(maxBytes / (1024 * 1024))} MiB.`,
+        },
+        { status: 413 }
       );
     }
 
-    const byId = new Map(post.media.map((m) => [m.id, m]));
-    post.media = order.map((id, index) => ({ ...byId.get(id)!, order: index }));
-    post.version += 1;
-    post.updatedAt = now();
-    return HttpResponse.json(project(post, role), { headers: { ETag: etagFor(post) } });
+    const body = (await request.json().catch(() => ({}))) as { alt?: string };
+    // `VALIDATION_FAILED` (thiếu `alt`) KHÔNG xoá tệp — người dùng chỉ cần
+    // gõ thêm rồi gọi lại đúng điểm cuối này, không phải tải lại từ đầu.
+    if (asset.kind === "IMAGE" && !body.alt?.trim()) {
+      return HttpResponse.json(
+        validationProblem("alt", "Ảnh cần có chữ mô tả (alt) trước khi xác nhận."),
+        { status: 422 }
+      );
+    }
+    if (body.alt && body.alt.length > MEDIA_POLICY.maxAltLength) {
+      return HttpResponse.json(
+        validationProblem("alt", `Chữ thay ảnh tối đa ${MEDIA_POLICY.maxAltLength} ký tự.`),
+        { status: 422 }
+      );
+    }
+
+    asset.status = "CONFIRMED";
+    asset.contentType = signature.contentType;
+    asset.alt = asset.kind === "IMAGE" ? (body.alt ?? "").trim() : null;
+    // Video thật đọc thời lượng từ header container; bộ giả lập không phân
+    // tích byte video thật (không bài kiểm nào ở đây tải một video thật lên),
+    // nên gán 0 thay vì bịa một con số không kiểm chứng được.
+    asset.durationMs = asset.kind === "VIDEO" ? 0 : null;
+
+    const dto: MediaAsset = {
+      id: asset.id,
+      kind: asset.kind,
+      contentType: asset.contentType,
+      sizeBytes: asset.sizeBytes,
+      durationMs: asset.durationMs,
+      alt: asset.alt,
+      position: 0,
+      url: null,
+    };
+    return HttpResponse.json(dto, { status: 200, headers: { "Cache-Control": "no-store, private" } });
   }),
 
-  http.patch(`${API_BASE_URL}/api/v1/posts/:id/media/:mediaId`, async ({ request, params }) => {
+  /**
+   * `PUT /posts/{id}/media` — của `content`, không `media`, nhưng vẫn sống
+   * ở đây vì nó dùng chung `mediaEditAllowed`/`ASSETS` với phần còn lại của
+   * khối này. Đặt CẢ danh sách, đúng thứ tự — gắn tệp mới/sắp lại/gỡ đều là
+   * CÙNG lệnh này với một `mediaIds` khác nhau (không có lệnh riêng nào).
+   */
+  http.put(`${API_BASE_URL}/api/v1/posts/:id/media`, async ({ request, params }) => {
     const role = resolveMockRole(request);
     const identity = identityOf(role);
     const post = STORE.find((p) => p.id === params.id);
     if (!post) return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy bài viết"), { status: 404 });
     if (!mediaEditAllowed(identity, post)) return HttpResponse.json(mediaForbidden(post), { status: 403 });
 
-    const item = post.media.find((m) => m.id === params.mediaId);
-    if (!item) return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy tệp này"), { status: 404 });
-    if (item.kind === "VIDEO") {
-      return HttpResponse.json(validationProblem("alt", "Video không có chữ thay thế."), { status: 422 });
+    const body = (await request.json()) as { mediaIds?: unknown };
+    if (!Array.isArray(body.mediaIds)) {
+      // Lỗi kiểm thân yêu cầu (thiếu trường bắt buộc) là 400, không 422 —
+      // khớp `GlobalExceptionHandler.handleMethodArgumentNotValid` phía
+      // backend thật (bean validation → 400 VALIDATION_FAILED).
+      return HttpResponse.json(
+        {
+          ...problem(400, "VALIDATION_FAILED", "Dữ liệu gửi lên không hợp lệ"),
+          errors: [{ field: "mediaIds", message: "Phải gửi danh sách tệp, dù là danh sách rỗng." }],
+        },
+        { status: 400 }
+      );
+    }
+    const mediaIds = body.mediaIds as string[];
+    if (mediaIds.length > MEDIA_POLICY.maxMediaPerPost) {
+      return HttpResponse.json(
+        problem(422, "MEDIA_TOO_MANY", "Quá nhiều tệp", `Một bài gắn tối đa ${MEDIA_POLICY.maxMediaPerPost} tệp.`),
+        { status: 422 }
+      );
     }
 
-    const body = (await request.json()) as { alt?: string };
-    if (!body.alt || !body.alt.trim()) {
-      return HttpResponse.json(validationProblem("alt", "Chữ mô tả không được để trống."), { status: 422 });
+    const items: PostMediaItem[] = [];
+    for (const mediaId of mediaIds) {
+      const asset = ASSETS.get(mediaId);
+      if (!asset || asset.status !== "CONFIRMED") {
+        return HttpResponse.json(
+          problem(409, "MEDIA_NOT_UPLOADED", "Một tệp trong danh sách chưa được xác nhận hoặc đã bị gỡ"),
+          { status: 409 }
+        );
+      }
+      if (asset.ownerAppUserId !== identity.appUserId) {
+        return HttpResponse.json(
+          problem(403, "MEDIA_NOT_OWNED", "Không gắn được tệp này", "Tệp không do bạn tải lên."),
+          { status: 403 }
+        );
+      }
+      items.push({
+        id: asset.id,
+        kind: asset.kind,
+        contentType: asset.contentType ?? "application/octet-stream",
+        sizeBytes: asset.sizeBytes,
+        durationMs: asset.durationMs,
+        alt: asset.alt,
+        position: items.length,
+        url: storageUrl(asset.key),
+      });
     }
-    item.alt = body.alt.trim();
-    post.version += 1;
-    post.updatedAt = now();
-    return HttpResponse.json(project(post, role), { headers: { ETag: etagFor(post) } });
-  }),
 
-  http.delete(`${API_BASE_URL}/api/v1/posts/:id/media/:mediaId`, ({ request, params }) => {
-    const role = resolveMockRole(request);
-    const identity = identityOf(role);
-    const post = STORE.find((p) => p.id === params.id);
-    if (!post) return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy bài viết"), { status: 404 });
-    if (!mediaEditAllowed(identity, post)) return HttpResponse.json(mediaForbidden(post), { status: 403 });
-
-    const index = post.media.findIndex((m) => m.id === params.mediaId);
-    if (index === -1) return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy tệp này"), { status: 404 });
-    post.media.splice(index, 1);
-    post.media = post.media.map((m, i) => ({ ...m, order: i }));
+    post.media = items;
     post.version += 1;
     post.updatedAt = now();
     return HttpResponse.json(project(post, role), { headers: { ETag: etagFor(post) } });
@@ -949,13 +1103,13 @@ const mediaHandlers = [
       );
     }
 
-    // Một người chỉ mở được MỘT báo cáo đang treo cho mỗi tệp.
+    // Một người chỉ mở được MỘT báo cáo đang treo cho mỗi tệp — mã thật là REPORT_DUPLICATE.
     const alreadyOpen = REPORTS.some(
-      (r) => r.mediaId === mediaId && r.reporterId === identity.appUserId && r.status === "PENDING"
+      (r) => r.mediaId === mediaId && r.reporterId === identity.appUserId && r.status === "OPEN"
     );
     if (alreadyOpen) {
       return HttpResponse.json(
-        problem(409, "VALIDATION_FAILED", "Đã có một báo cáo đang chờ xử lý cho tệp này"),
+        problem(409, "REPORT_DUPLICATE", "Nội dung đã thay đổi", "Ban da bao tep nay va don van dang mo"),
         { status: 409 }
       );
     }
@@ -967,11 +1121,14 @@ const mediaHandlers = [
       reporterId: identity.appUserId,
       reason,
       note: body.note?.trim() || null,
-      status: "PENDING",
+      status: "OPEN",
       createdAt: now(),
+      version: 0,
+      mediaUrl: owner.item.url,
+      mediaKind: owner.item.kind,
     };
     REPORTS.push(report);
-    return HttpResponse.json({ id: report.id }, { status: 201 });
+    return HttpResponse.json(toReportDto(report), { status: 201 });
   }),
 
   http.get(`${API_BASE_URL}/api/v1/media/reports`, ({ request }) => {
@@ -980,7 +1137,7 @@ const mediaHandlers = [
     const url = new URL(request.url);
     const limit = Number(url.searchParams.get("limit") ?? "50");
 
-    const inScope = REPORTS.filter((r) => r.status === "PENDING")
+    const inScope = REPORTS.filter((r) => r.status === "OPEN")
       .map((r) => ({ report: r, owner: findMediaOwner(r.mediaId) }))
       .filter((x): x is { report: MediaReportRecord; owner: NonNullable<ReturnType<typeof findMediaOwner>> } =>
         Boolean(x.owner) && canReviewPost(identity, x.owner!.post)
@@ -988,18 +1145,9 @@ const mediaHandlers = [
       .sort((a, b) => b.report.createdAt.localeCompare(a.report.createdAt))
       .slice(0, limit);
 
-    const dtos: MediaReportDto[] = inScope.map(({ report, owner }) => ({
-      id: report.id,
-      mediaId: report.mediaId,
-      mediaUrl: owner.item.url,
-      mediaKind: owner.item.kind,
-      postId: owner.post.id,
-      postTitle: owner.post.title,
-      reason: report.reason,
-      note: report.note,
-      reporterDisplayName: reporterDisplayNameFor(report.reporterId, role),
-      createdAt: report.createdAt,
-    }));
+    const dtos: MediaReportDto[] = inScope.map(({ report, owner }) =>
+      toReportDto({ ...report, mediaUrl: owner.item.url })
+    );
     return HttpResponse.json(dtos);
   }),
 
@@ -1007,12 +1155,24 @@ const mediaHandlers = [
     const role = resolveMockRole(request);
     const identity = identityOf(role);
     const report = REPORTS.find((r) => r.id === params.id);
-    if (!report || report.status !== "PENDING") {
-      return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy báo cáo đang chờ này"), { status: 404 });
+    if (!report) {
+      return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy báo cáo này"), { status: 404 });
+    }
+    // Khớp máy chủ thật: đơn đã xử lý là 409 REPORT_CLOSED, không phải 404.
+    if (report.status !== "OPEN") {
+      return HttpResponse.json(problem(409, "REPORT_CLOSED", "Nội dung đã thay đổi", "Don da duoc xu ly"), {
+        status: 409,
+      });
     }
     const owner = findMediaOwner(report.mediaId);
     if (!owner || !canReviewPost(identity, owner.post)) {
-      return HttpResponse.json(problem(403, "FORBIDDEN", "Không có quyền duyệt báo cáo này"), { status: 403 });
+      return HttpResponse.json(problem(403, "BRANCH_SCOPE_VIOLATION", "Không có quyền duyệt báo cáo này"), { status: 403 });
+    }
+    if (report.reporterId === identity.appUserId) {
+      return HttpResponse.json(
+        problem(403, "SELF_REVIEW_FORBIDDEN", "Không đủ thẩm quyền", "Nguoi bao khong tu xu don cua minh"),
+        { status: 403 }
+      );
     }
 
     const body = (await request.json().catch(() => ({}))) as { note?: string };
@@ -1021,28 +1181,34 @@ const mediaHandlers = [
     const index = owner.post.media.findIndex((m) => m.id === report.mediaId);
     if (index !== -1) {
       owner.post.media.splice(index, 1);
-      owner.post.media = owner.post.media.map((m, i) => ({ ...m, order: i }));
+      owner.post.media = owner.post.media.map((m, i) => ({ ...m, position: i }));
       owner.post.version += 1;
       owner.post.updatedAt = now();
     }
-    report.status = "TAKEN_DOWN";
+    report.status = "ACTIONED";
     report.decidedBy = identity.appUserId ?? undefined;
     report.decidedAt = now();
     report.decisionNote = body.note?.trim() || null;
+    report.version += 1;
 
-    return HttpResponse.json({ id: report.id });
+    return HttpResponse.json(toReportDto(report));
   }),
 
   http.post(`${API_BASE_URL}/api/v1/media/reports/:id/dismiss`, async ({ request, params }) => {
     const role = resolveMockRole(request);
     const identity = identityOf(role);
     const report = REPORTS.find((r) => r.id === params.id);
-    if (!report || report.status !== "PENDING") {
-      return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy báo cáo đang chờ này"), { status: 404 });
+    if (!report) {
+      return HttpResponse.json(problem(404, "NOT_FOUND", "Không tìm thấy báo cáo này"), { status: 404 });
+    }
+    if (report.status !== "OPEN") {
+      return HttpResponse.json(problem(409, "REPORT_CLOSED", "Nội dung đã thay đổi", "Don da duoc xu ly"), {
+        status: 409,
+      });
     }
     const owner = findMediaOwner(report.mediaId);
     if (!owner || !canReviewPost(identity, owner.post)) {
-      return HttpResponse.json(problem(403, "FORBIDDEN", "Không có quyền duyệt báo cáo này"), { status: 403 });
+      return HttpResponse.json(problem(403, "BRANCH_SCOPE_VIOLATION", "Không có quyền duyệt báo cáo này"), { status: 403 });
     }
 
     const body = (await request.json().catch(() => ({}))) as { note?: string };
@@ -1050,8 +1216,9 @@ const mediaHandlers = [
     report.decidedBy = identity.appUserId ?? undefined;
     report.decidedAt = now();
     report.decisionNote = body.note?.trim() || null;
+    report.version += 1;
 
-    return HttpResponse.json({ id: report.id });
+    return HttpResponse.json(toReportDto(report));
   }),
 ];
 

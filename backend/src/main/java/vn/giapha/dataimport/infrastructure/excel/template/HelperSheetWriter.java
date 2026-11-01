@@ -139,17 +139,38 @@ final class HelperSheetWriter {
         r = tua(sheet, r, "Mẫu nhập gia phả — " + (chi == null ? "chi chưa xác định" : chi.ten()),
                 chi == null ? "Tệp này chưa gắn với chi nào."
                         : "Chi: " + chi.ten() + "  ·  Đường dẫn: " + chi.path()
-                                + "  ·  Đã có sẵn trong phả: " + chi.soNguoi() + " người.");
+                                + "  ·  Đã có sẵn trong phả: " + chi.soNguoi() + " người mang mã"
+                                + (chi.soNguoiChuaCoMa() > 0
+                                        ? ", và " + chi.soNguoiChuaCoMa() + " người chưa có mã."
+                                        : "."));
         r++;
 
+        boolean coNguoiChuaCoMa = chi != null && chi.soNguoiChuaCoMa() > 0;
         r = muc(sheet, r, "Tệp này đã điền sẵn gì cho bạn",
                 soNguoiDienSan == 0
-                        ? "Chưa có ai. Đây là lần nhập đầu của chi — bạn khai từ đầu."
+                        ? (coNguoiChuaCoMa
+                                ? "Chưa có ai mang mã nhập liệu, nên trang Nhân khẩu để trống."
+                                        + " Nhưng chi KHÔNG trống — xem mục ngay dưới."
+                                : "Chưa có ai. Đây là lần nhập đầu của chi — bạn khai từ đầu.")
                         : "Trang Nhân khẩu đã có " + soNguoiDienSan + " người và trang Hôn phối đã"
                                 + " có " + soHonPhoi + " cặp, kèm đúng mã của họ."
                                 + " ĐỪNG xoá các dòng đó và ĐỪNG đổi mã: hệ thống tra theo mã để"
                                 + " CẬP NHẬT người cũ. Đổi mã thì lần nộp sau sẽ tạo ra một người"
                                 + " thứ hai y hệt.");
+
+        if (coNguoiChuaCoMa) {
+            // Nguoi khong co ma KHONG vao tep duoc (khong co ma de lan nop sau tra lai), nhung ho
+            // co that. Im lang ve ho la de Truong chi go lai tung nguoi tu so giay, roi nhan ve mot
+            // bang do trung dai hang tram dong o buoc doi soat.
+            r = muc(sheet, r, "Người đã có trong phả nhưng CHƯA có mã",
+                    "Chi này đã có " + chi.soNguoiChuaCoMa() + " người trong phả mà không qua"
+                            + " Excel — nhập tay, hoặc được duyệt qua đơn \"Tôi chưa có trong"
+                            + " phả\". Họ KHÔNG có trong tệp này vì chưa có mã để hệ thống tra"
+                            + " lại. Nếu sổ giấy có họ: khai họ vào trang Nhân khẩu thì ở bước đối"
+                            + " soát hệ thống sẽ dò trùng và hỏi bạn từng cặp — ghép vào người đã"
+                            + " có, hay là hai người khác nhau. Không ai bị thêm trùng mà bạn không"
+                            + " được hỏi.");
+        }
 
         r = muc(sheet, r, "Các dòng nền xanh nhạt — người còn sống",
                 "Ở những dòng ấy, các ô Năm sinh, Tên huý, Thuỵ hiệu, Nguyên quán, Ngày mất âm được"
@@ -161,6 +182,18 @@ final class HelperSheetWriter {
         r = muc(sheet, r, "Cột có dấu * là bắt buộc",
                 "Tiêu đề nền đỏ, chữ trắng. Thiếu chúng thì cả dòng không dùng được."
                         + " Các cột còn lại: biết tới đâu điền tới đó, đừng bịa.");
+
+        // Noi ra o day, khong de toi luc kiem moi biet: day la loi chan sinh ra tu mot QUY UOC chu
+        // khong tu mot o go sai, nen nguoi dien khong co cach nao tu doan ra. Cau chu phai khop voi
+        // thong diep IMP_UNDECIDED_INLAW_DOI (CommitPreflight) — Hoi dong chot khac thi sua ca hai.
+        r = muc(sheet, r, "Dâu/rể — ĐỂ TRỐNG ô Đời",
+                "Dâu/rể là người lấy về từ họ khác: không có Mã cha, không có Mã mẹ, nhưng có mặt ở"
+                        + " trang Hôn phối. Với họ, ĐỪNG điền ô Đời — đời của dâu/rể được suy từ"
+                        + " vợ/chồng khi ghi. Lý do: chưa rõ con số ấy là đời của vợ/chồng hay đời"
+                        + " trong họ gốc, và Hội đồng Tộc biểu chưa chốt quy ước; điền vào thì bước"
+                        + " kiểm sẽ báo lỗi chặn ở đúng dòng đó. Ngoại lệ: vợ Thuỷ tổ ghi Đời 1"
+                        + " cũng được. Con gái trong họ đi lấy chồng thì KHÔNG phải trường hợp này —"
+                        + " bà có Mã cha/Mã mẹ, cứ điền Đời như mọi người trong họ.");
 
         r = muc(sheet, r, "Ngày mất âm — chỗ hay sai nhất",
                 "Gõ theo ngày ÂM LỊCH:  15/8  ·  15/8/1945  ·  15/8 nhuận  ·  15/8 nhuận 1945."

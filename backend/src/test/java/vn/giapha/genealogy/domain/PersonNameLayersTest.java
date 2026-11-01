@@ -91,9 +91,10 @@ class PersonNameLayersTest {
     @Test
     @DisplayName("Nhân khẩu bắt buộc có ít nhất một lớp tên — tạo mới và thay thế đều bị chặn")
     void batBuocCoItNhatMotLopTen() {
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> Person.create(PersonId.newId(), Gender.MALE, true, List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("it nhat mot lop ten");
+                .hasMessageContaining("ít nhất một lớp tên");
 
         Person person = PersonFixtures.nam("Nguyễn Văn A");
         assertThatThrownBy(() -> person.replaceNames(List.of()))
@@ -124,7 +125,7 @@ class PersonNameLayersTest {
 
         assertThatThrownBy(() -> PersonName.of(NameType.HUY, "   ", true))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("khong duoc rong");
+                .hasMessageContaining("không được rỗng");
         assertThatThrownBy(() -> PersonName.of(NameType.HUY, null, true))
                 .isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> PersonName.of(null, "Nguyễn Văn A", true))

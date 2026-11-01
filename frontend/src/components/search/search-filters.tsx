@@ -42,7 +42,6 @@ const MAX_GENERATION_OPTION = 20;
  */
 export function SearchFilters({ value, onChange, restricted = false }: SearchFiltersProps) {
   const t = useTranslations("search");
-  const { data: branches, isLoading: branchesLoading } = useBranches();
 
   const hasAnyFilter =
     value.generation !== undefined ||
@@ -50,9 +49,7 @@ export function SearchFilters({ value, onChange, restricted = false }: SearchFil
     (!restricted && (value.nativePlace ?? "").length > 0);
 
   return (
-    <div
-      className={`grid grid-cols-1 gap-3 ${restricted ? "sm:max-w-xs" : "sm:grid-cols-3"}`}
-    >
+    <div className={`grid grid-cols-1 gap-3 ${restricted ? "sm:max-w-xs" : "sm:grid-cols-3"}`}>
       <label className="block" htmlFor="search-filter-generation">
         <span className="mb-1 block text-than text-text-muted">{t("filters.generation")}</span>
         <Select<number>
@@ -74,40 +71,13 @@ export function SearchFilters({ value, onChange, restricted = false }: SearchFil
 
       {!restricted && (
         <>
-          <label className="block" htmlFor="search-filter-branch">
-            <span className="mb-1 block text-than text-text-muted">{t("filters.branch")}</span>
-            <Select<string>
-              id="search-filter-branch"
-              className="w-full"
-              size="large"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              loading={branchesLoading}
-              placeholder={t("filters.anyBranch")}
-              value={value.branchId}
-              onChange={(next) => onChange({ ...value, branchId: next ?? undefined })}
-              options={(branches ?? []).map((branch) => ({
-                value: branch.id,
-                label: branch.name,
-                // Indent by ltree depth so ngành/nhánh read as children of a chi.
-                title: branch.path,
-                depth: branchDepth(branch),
-              }))}
-              optionRender={(option) => (
-                <span
-                  style={{ paddingLeft: `${(option.data as { depth: number }).depth * 12}px` }}
-                >
-                  {option.label}
-                </span>
-              )}
-            />
-          </label>
+          <BranchFilter
+            value={value.branchId}
+            onChange={(branchId) => onChange({ ...value, branchId })}
+          />
 
           <label className="block" htmlFor="search-filter-native-place">
-            <span className="mb-1 block text-than text-text-muted">
-              {t("filters.nativePlace")}
-            </span>
+            <span className="mb-1 block text-than text-text-muted">{t("filters.nativePlace")}</span>
             <Input
               id="search-filter-native-place"
               size="large"
@@ -115,9 +85,7 @@ export function SearchFilters({ value, onChange, restricted = false }: SearchFil
               autoCorrect="off"
               placeholder={t("filters.nativePlacePlaceholder")}
               value={value.nativePlace ?? ""}
-              onChange={(e) =>
-                onChange({ ...value, nativePlace: e.target.value || undefined })
-              }
+              onChange={(e) => onChange({ ...value, nativePlace: e.target.value || undefined })}
             />
           </label>
         </>
@@ -137,5 +105,59 @@ export function SearchFilters({ value, onChange, restricted = false }: SearchFil
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Ô "Chi / Ngành" — tách thành thành phần riêng để `useBranches()` chỉ chạy khi
+ * ô này thật sự được dựng.
+ *
+ * Trước đây hook nằm ở đầu `SearchFilters`, nên nó chạy cả khi ô bị ẩn với
+ * khách (`restricted`): đo 24/09 trên hệ thật, mỗi lượt khách mở `/search` bắn
+ * ba `POST /api/v1/graphql` (lượt đầu + hai lần React Query tự thử lại) và nhận
+ * ba `401` — để lấy danh sách chi cho một ô không ai nhìn thấy. Resolver
+ * `branches` đòi token, đúng: cấu trúc chi/ngành không thuộc bề mặt công khai.
+ */
+function BranchFilter({
+  value,
+  onChange,
+}: {
+  value: string | undefined;
+  onChange: (next: string | undefined) => void;
+}) {
+  const t = useTranslations("search");
+  const { data: branches, isLoading: branchesLoading } = useBranches();
+  return (
+    <label className="block" htmlFor="search-filter-branch">
+      <span className="mb-1 block text-than text-text-muted">{t("filters.branch")}</span>
+      <Select<string>
+        id="search-filter-branch"
+        className="w-full"
+        size="large"
+        allowClear
+        showSearch
+        optionFilterProp="label"
+        loading={branchesLoading}
+        placeholder={t("filters.anyBranch")}
+        value={value}
+        onChange={(next) => onChange(next ?? undefined)}
+        options={(branches ?? []).map((branch) => ({
+          value: branch.id,
+          label: branch.name,
+          // Indent by ltree depth so ngành/nhánh read as children of a chi.
+          title: branch.path,
+          depth: branchDepth(branch),
+        }))}
+        optionRender={(option) => (
+          <span
+            style={{
+              paddingLeft: `${(option.data as { depth: number }).depth * 12}px`,
+            }}
+          >
+            {option.label}
+          </span>
+        )}
+      />
+    </label>
   );
 }

@@ -104,7 +104,7 @@ public class PersonClaimService {
      * lối đi tiếp của họ vẫn đúng và vẫn khả thi: gọi Trưởng chi.</p>
      */
     private static final String KHONG_NHAN_DUOC =
-            "Khong gui don cho nguoi nay duoc. Hay chon mot o khac, hoac hoi Truong chi.";
+            "Không gửi đơn cho người này được. Hãy chọn một ô khác, hoặc hỏi Trưởng chi.";
 
     private final PersonClaimRepository claims;
     private final AppUserRepository appUsers;
@@ -166,19 +166,19 @@ public class PersonClaimService {
     public PersonClaimView submitExisting(SubmitPersonClaimCommand command) {
         if (command == null || command.personId() == null) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Phai chon mot nhan khau trong pha");
+                    "Phải chọn một nhân khẩu trong phả");
         }
         MemberScope caller = requireUnlinkedMember();
 
         Invitee target = persons.byId(command.personId())
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay nhan khau " + command.personId()));
+                        "Không tìm thấy nhân khẩu " + command.personId()));
 
         if (!target.alive()) {
             // CHAN CUNG. Khong ai can mot tai khoan de "la" mot nguoi da khuat, va ho so nguoi da
             // khuat von cong khai nen noi thang khong lo them gi.
             throw new DomainException(MembershipProblemCodes.CLAIM_TARGET_UNAVAILABLE,
-                    "Khong the nhan minh la mot nguoi da khuat");
+                    "Không thể nhận mình là một người đã khuất");
         }
         if (target.deleted() || appUsers.byPersonId(command.personId()).isPresent()) {
             // MOT CAU TRA LOI CHUNG CHO HAI LY DO — xem javadoc KHONG_NHAN_DUOC.
@@ -210,19 +210,19 @@ public class PersonClaimService {
     public PersonClaimView submitNew(SubmitNewPersonClaimCommand command) {
         if (command == null || command.fullName() == null || command.fullName().isBlank()) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Phai khai ho ten cua nguoi can them vao pha");
+                    "Phải khai họ tên của người cần thêm vào phả");
         }
         if (command.relativePersonId() == null || command.relativeKind() == null) {
             // RANG BUOC 2. Khong co nguoi than thi nhan khau moi thanh node mo coi: khong gan vao
             // cay, khong tinh duoc doi, khong tra duoc danh xung — va khong biet ai duyet.
             throw new DomainException(MembershipProblemCodes.CLAIM_RELATIVE_UNUSABLE,
-                    "Phai chi ra mot nguoi than da co trong pha (bo, me, hoac vo/chong)");
+                    "Phải chỉ ra một người thân đã có trong phả (bố, mẹ, hoặc vợ/chồng)");
         }
         MemberScope caller = requireUnlinkedMember();
 
         Invitee relative = persons.byId(command.relativePersonId())
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay nguoi than " + command.relativePersonId() + " trong pha"));
+                        "Không tìm thấy người thân " + command.relativePersonId() + " trong phả"));
         if (relative.deleted()) {
             throw new DomainException(MembershipProblemCodes.CLAIM_RELATIVE_UNUSABLE,
                     KHONG_NHAN_DUOC);
@@ -232,8 +232,8 @@ public class PersonClaimService {
             // ke thua duoc chi nao. Noi that ly do: nguoi dung khong sua duoc, nhung Truong chi thi
             // sua duoc — va cau tra loi mo ho o day se khien ho khong bao giờ biet can sua gi.
             throw new DomainException(MembershipProblemCodes.CLAIM_RELATIVE_UNUSABLE,
-                    "Nguoi than duoc chi ra chua duoc gan vao chi nao trong pha, "
-                            + "nen chua xac dinh duoc ai duyet don. Hay bao Truong chi.");
+                    "Người thân được chỉ ra chưa được gắn vào chi nào trong phả, "
+                            + "nên chưa xác định được ai duyệt đơn. Hãy báo Trưởng chi.");
         }
 
         UUID claimId = UUID.randomUUID();
@@ -372,7 +372,7 @@ public class PersonClaimService {
     public PersonClaimView review(ReviewPersonClaimCommand command) {
         if (command == null || command.claimId() == null) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Phai chi dinh don can xu");
+                    "Phải chỉ định đơn cần xử");
         }
         MemberScope caller = scopes.currentMemberScope();
         guard.requireProvisionedAccount(caller);
@@ -520,13 +520,24 @@ public class PersonClaimService {
      * thể chưa được ghép vào phả), và để nó ném ra thì cả lần duyệt hợp lệ bị cuộn lại vì một đơn
      * phụ.</p>
      */
+    /**
+     * Lý do ghi vào các đơn bị đóng theo — và đây là câu <b>người gửi đọc</b>, hiện nguyên văn ở
+     * mục "Trưởng chi trả lời" trên màn chờ duyệt của họ. Bản trước viết không dấu theo thói quen
+     * chuỗi log ("Nhan khau nay da duoc ghep..."), nên người bị từ chối nhận một câu tiếng Việt
+     * không dấu, cụt, không nói việc cần làm tiếp. Bấm thật 24–26/09 (NT-TC-06).
+     */
+    static final String LY_DO_DA_GHEP_DON_KHAC =
+            "Ô này đã được gắn cho một người khác cùng nhận, sau khi Trưởng chi đối chiếu. Nếu"
+                    + " ông/bà tin đây đúng là mình, xin gọi Trưởng chi của chi ấy để hỏi lại, hoặc"
+                    + " tìm lại đúng ô của mình trên phả đồ.";
+
     private void dongCacDonConLai(PersonClaim approved, MemberScope reviewer, Instant now) {
         List<PersonClaim> others = claims.othersClaiming(approved.personId(), approved.id(),
                 PersonClaimStatus.PENDING);
         if (others.isEmpty()) {
             return;
         }
-        String lyDo = "Nhan khau nay da duoc ghep voi mot don khac da duoc duyet";
+        String lyDo = LY_DO_DA_GHEP_DON_KHAC;
         for (PersonClaim other : others) {
             if (other.requestedBy().equals(reviewer.appUserId())) {
                 other.cancel(reviewer.appUserId(), now);
@@ -588,11 +599,11 @@ public class PersonClaimService {
 
         if (caller.personId() != null) {
             throw new DomainException(MembershipProblemCodes.ACCOUNT_ALREADY_LINKED,
-                    "Tai khoan cua ban da duoc ghep voi mot nhan khau trong pha");
+                    "Tài khoản của bạn đã được ghép với một nhân khẩu trong phả");
         }
         if (claims.openForRequester(caller.appUserId()).isPresent()) {
             throw new DomainException(MembershipProblemCodes.CLAIM_ALREADY_OPEN,
-                    "Ban dang co mot don cho duyet. Hay rut don ay truoc khi gui don khac.");
+                    "Bạn đang có một đơn chờ duyệt. Hãy rút đơn ấy trước khi gửi đơn khác.");
         }
         // TRAN TONG SO DON — dem CA don da rut. Xem javadoc phuong thuc.
         int daGui = claims.totalCountOf(caller.appUserId());
@@ -600,8 +611,8 @@ public class PersonClaimService {
             log.warn("App_user {} da gui {} don, cham tran tong so lan gui", caller.appUserId(),
                     daGui);
             throw new DomainException(MembershipProblemCodes.CLAIM_LIMIT_REACHED,
-                    "Ban da gui " + daGui + " don tu nhan. Hay lien he Truong chi de duoc ho tro"
-                            + " truc tiep.");
+                    "Bạn đã gửi " + daGui + " đơn tự nhận. Hãy liên hệ Trưởng chi để được hỗ trợ"
+                            + " trực tiếp.");
         }
         int daBiTuChoi = claims.rejectedCountOf(caller.appUserId());
         if (daBiTuChoi >= maxRejected) {
@@ -610,8 +621,8 @@ public class PersonClaimService {
             log.warn("App_user {} da bi tu choi {} lan, chan gui don moi",
                     caller.appUserId(), daBiTuChoi);
             throw new DomainException(MembershipProblemCodes.CLAIM_LIMIT_REACHED,
-                    "Don cua ban da bi tu choi " + daBiTuChoi + " lan. "
-                            + "Hay lien he Truong chi de duoc ho tro truc tiep.");
+                    "Đơn của bạn đã bị từ chối " + daBiTuChoi + " lần. "
+                            + "Hãy liên hệ Trưởng chi để được hỗ trợ trực tiếp.");
         }
         return caller;
     }
@@ -621,7 +632,7 @@ public class PersonClaimService {
         guard.requireProvisionedAccount(caller);
         if (!caller.role().canReview()) {
             throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
-                    "Chi Truong chi, Hoi dong Toc bieu hoac Quan tri he thong duoc duyet don tu nhan");
+                    "Chỉ Trưởng chi, Hội đồng Tộc biểu hoặc Quản trị hệ thống được duyệt đơn tự nhận");
         }
         return caller;
     }
@@ -638,13 +649,13 @@ public class PersonClaimService {
 
     private PersonClaim load(UUID claimId) {
         return claims.byId(claimId).orElseThrow(() -> new NotFoundException(
-                MembershipProblemCodes.NOT_FOUND, "Khong tim thay don " + claimId));
+                MembershipProblemCodes.NOT_FOUND, "Không tìm thấy đơn " + claimId));
     }
 
     private static void requireOpen(PersonClaim claim) {
         if (claim.status().isFinal()) {
             throw new DomainException(MembershipProblemCodes.CLAIM_CLOSED,
-                    "Don da o trang thai " + claim.status() + ", khong xu ly lai duoc");
+                    "Đơn đã ở trạng thái " + claim.status() + ", không xử lý lại được");
         }
     }
 

@@ -1,15 +1,18 @@
 package vn.giapha.membership.infrastructure.branch;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import vn.giapha.membership.application.ClanNameProvider;
 import vn.giapha.membership.domain.BranchSummary;
 import vn.giapha.membership.domain.port.BranchLookupPort;
 import vn.giapha.shared.vo.BranchPath;
@@ -80,7 +83,7 @@ public class BranchLookupJdbcAdapter implements BranchLookupPort {
             """;
 
     private static final String SQL_CLAN_NAME = """
-            SELECT b.name
+            SELECT b.name, b.path::text AS root_label
               FROM branch b
              WHERE nlevel(b.path) = 1
                AND b.is_deleted = FALSE
@@ -96,8 +99,12 @@ public class BranchLookupJdbcAdapter implements BranchLookupPort {
 
     private final NamedParameterJdbcTemplate jdbc;
 
-    public BranchLookupJdbcAdapter(NamedParameterJdbcTemplate jdbc) {
+    private final ObjectProvider<ClanNameProvider> clanNames;
+
+    public BranchLookupJdbcAdapter(NamedParameterJdbcTemplate jdbc,
+                                   ObjectProvider<ClanNameProvider> clanNames) {
         this.jdbc = jdbc;
+        this.clanNames = clanNames;
     }
 
     @Override
@@ -162,7 +169,18 @@ public class BranchLookupJdbcAdapter implements BranchLookupPort {
     @Override
     @Transactional(readOnly = true)
     public Optional<String> clanName() {
-        return first(jdbc.queryForList(SQL_CLAN_NAME, new MapSqlParameterSource(), String.class));
+        // Ten trong HO SO dong ho (V23) thang ten chi goc: ho so la nguon chan ly, ten chi goc chi
+        // la duong lui cho ban cai chua khoi tao — xem ClanNameProvider.
+        List<Map<String, Object>> rows =
+                jdbc.queryForList(SQL_CLAN_NAME, new MapSqlParameterSource());
+        if (rows.isEmpty()) {
+            return Optional.empty();
+        }
+        String rootLabel = (String) rows.get(0).get("root_label");
+        String branchName = (String) rows.get(0).get("name");
+        ClanNameProvider provider = clanNames.getIfAvailable();
+        return Optional.ofNullable(provider == null ? branchName
+                : provider.clanNameOfRoot(rootLabel).orElse(branchName));
     }
 
     @Override

@@ -160,12 +160,13 @@ class GenealogyExceptionHandlerTest {
                             List.of(ungVien(UUID.randomUUID(), null, TEN_TRONG_PHA, 5))),
                     request);
 
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
             assertThat(problem.getDetail())
                     .doesNotContain(TEN_TRONG_PHA)
                     .contains("88")                          // diem
                     .contains("trùng ngày giỗ")              // vi sao nghi
                     .contains("personId")                    // phai lam gi tiep
-                    .contains("Xac nhan");                   // van ghi de duoc
+                    .contains("Xác nhận");                   // van ghi de duoc
         }
 
         @Test
@@ -292,9 +293,9 @@ class GenealogyExceptionHandlerTest {
             assertThat(problem.getDetail())
                     .isNotEqualTo(ex.getMessage())
                     .doesNotContain(TEN_HUY_TRONG_PHA)
-                    .contains("trung nguyen van")            // vi sao canh bao
+                    .contains("trùng nguyên văn")            // vi sao canh bao
                     .contains("ancestorPersonId")            // phai lam gi tiep
-                    .contains("Xac nhan de van ghi");        // van ghi de duoc
+                    .contains("Xác nhận để vẫn ghi");        // van ghi de duoc
         }
     }
 

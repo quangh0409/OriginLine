@@ -118,6 +118,22 @@ public class SecurityConfig {
                         // Cổng thông tin công khai: CHỈ dữ liệu người đã khuất mới được lộ ở đây.
                         // Bộ lọc phân tầng hiển thị vẫn phải chạy trên mọi phản hồi.
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
+                        // GIỖ/LỄ VÀ VINH DANH CHO KHÁCH — quyết định của chủ dự án 26/09/2026.
+                        // Chỉ GET, chỉ bốn đường liệt kê tường minh. Lối lọc thật nằm ở
+                        // EventQueryService (GuestEventPolicy) và HonourService (searchForGuest):
+                        // Khách CHỈ thấy bản ghi mà chủ thể đã khuất. Mở ở đây mà thiếu lối lọc ấy
+                        // là đưa lịch mừng thọ của người sống ra ngoài — đó là lý do hai đường này
+                        // từng bị để cho anyRequest().authenticated() chặn hộ.
+                        //
+                        // /honours/pending/count KHỚP mẫu /honours/{id} nên phải đóng lại TRƯỚC:
+                        // requestMatchers ăn theo thứ tự khai báo, luật đầu tiên khớp thắng. Nó
+                        // trả 0 cho Khách nên mở cũng không lộ gì, nhưng một endpoint "đếm hàng đợi
+                        // duyệt" mở cho người lạ là tín hiệu sai về thiết kế.
+                        // /posts KHÔNG ở đây, và cố ý: bài viết là tiếng nói của người còn sống.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/honours/pending/count").authenticated()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/events", "/api/v1/events/{id}",
+                                "/api/v1/honours", "/api/v1/honours/{id}").permitAll()
                         // LUỒNG MỜI — hai đường duy nhất mở cho người CHƯA có tài khoản.
                         // Thẩm quyền ở đây là VIỆC SỞ HỮU MÃ, không phải một vai trong token:
                         // người bấm chính là người chưa đăng nhập được, nên đòi token là đóng

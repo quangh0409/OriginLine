@@ -26,7 +26,7 @@ final class IfMatch {
     static long parse(String header) {
         if (header == null || header.isBlank()) {
             throw new ContentPreconditionException(
-                    "Thieu header If-Match; hay lay ETag tu lan GET gan nhat truoc khi sua");
+                    "Thiếu header If-Match; hãy lấy ETag từ lần GET gần nhất trước khi sửa");
         }
         String value = header.trim();
         if (value.startsWith("W/")) {
@@ -36,7 +36,7 @@ final class IfMatch {
         try {
             return Long.parseLong(value);
         } catch (NumberFormatException ex) {
-            throw new ContentPreconditionException("If-Match khong hop le: " + header);
+            throw new ContentPreconditionException("If-Match không hợp lệ: " + header);
         }
     }
 

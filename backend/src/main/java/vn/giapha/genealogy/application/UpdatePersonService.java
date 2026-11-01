@@ -152,13 +152,13 @@ public class UpdatePersonService {
     private Person load(UpdatePersonCommand cmd) {
         return persons.byId(PersonId.of(cmd.personId())).orElseThrow(() -> new NotFoundException(
                 GenealogyProblemCodes.NOT_FOUND,
-                "Khong tim thay nhan khau voi dinh danh " + cmd.personId()));
+                "Không tìm thấy nhân khẩu với định danh " + cmd.personId()));
     }
 
     private void requireMatchingVersion(UpdatePersonCommand cmd, Person person) {
         if (cmd.expectedVersion() != null && cmd.expectedVersion() != person.version()) {
             throw new GenealogyConflictException(GenealogyProblemCodes.OPTIMISTIC_LOCK_CONFLICT,
-                    "Ban ghi da duoc nguoi khac cap nhat, hay tai lai va thu lai");
+                    "Bản ghi đã được người khác cập nhật, hãy tải lại và thử lại");
         }
     }
 
@@ -226,7 +226,7 @@ public class UpdatePersonService {
         if (target == null || !target.inferred() || !changed.contains("isAlive")) {
             return cmd.note();
         }
-        String suyDien = "Suy dien: body co ngay mat nhung khong co isAlive, he thong tu dat "
+        String suyDien = "Suy diễn: body có ngày mất nhưng không có isAlive, hệ thống tự đặt "
                 + "isAlive=false.";
         return cmd.note() == null || cmd.note().isBlank() ? suyDien : cmd.note() + " | " + suyDien;
     }
@@ -248,7 +248,7 @@ public class UpdatePersonService {
         }
         if (!caller.isSelf(person.rawId()) && !caller.isAdmin()) {
             throw new ForbiddenException(GenealogyProblemCodes.FORBIDDEN,
-                    "Chi chinh chu the (hoac Quan tri he thong thay mat ho) duoc doi muc rieng tu");
+                    "Chỉ chính chủ thể (hoặc Quản trị hệ thống thay mặt họ) được đổi mức riêng tư");
         }
         Map<PrivacyFieldGroup, ShareScope> changes = cmd.privacyConsent().value();
         PrivacyConsent target = changes == null

@@ -65,6 +65,23 @@ public class HonourRepositoryAdapter implements HonourRepository {
     }
 
     @Override
+    public List<Honour> searchPublishedOfDeceased(UUID personId, HonourKind kind, UUID branchId,
+                                                  int limit, int offset) {
+        // `status` vẫn đi vào FILTERS dưới dạng null (không lọc thêm) — mệnh đề PUBLIC_DECEASED_ONLY
+        // đã chốt 'PUBLISHED'. Truyền giá trị khác ở đây chỉ có thể thu hẹp, không nới được.
+        return jpa.findPublishedOfDeceased(text(personId), kind == null ? null : kind.name(),
+                        text(branchId), null, limit, offset).stream()
+                .map(HonourRepositoryAdapter::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countPublishedOfDeceased(UUID personId, HonourKind kind, UUID branchId) {
+        return jpa.countPublishedOfDeceased(text(personId), kind == null ? null : kind.name(),
+                text(branchId), null);
+    }
+
+    @Override
     public long countPendingInScope(List<BranchPath> scopes, boolean clanWide) {
         if (!clanWide && (scopes == null || scopes.isEmpty())) {
             return 0L;

@@ -151,14 +151,37 @@ describe("nút Hiện mật khẩu · câu chữ khớp với theme Keycloak", (
   });
 });
 
-describe("trang này chỉ đường tới đúng màn Keycloak mà nghi thức đặt lại dùng", () => {
-  it("màn 410 mô tả đúng quy trình `UPDATE_PASSWORD` mà theme đã dựng sẵn", () => {
-    // `login-update-password.ftl` tồn tại là vì trưởng chi cấp một mật khẩu tạm
-    // qua điện thoại rồi Keycloak bắt đổi ngay. Câu chữ ở màn 410 phải dẫn tới
-    // đúng quy trình ấy, không phải một lời an ủi chung chung.
+describe("màn 410 mô tả ĐÚNG cơ chế cấp lại thật, không phải nghi thức Keycloak đã bị thay thế", () => {
+  // `login-update-password.ftl` vẫn còn trong theme (tài sản Keycloak riêng,
+  // có thể còn dùng cho một luồng admin khác) và javadoc cũ của NÓ vẫn mô tả
+  // một thiết kế đã bị thay thế: "trưởng chi cấp mật khẩu tạm qua điện thoại,
+  // Keycloak bắt đổi ở lần đăng nhập đầu bằng UPDATE_PASSWORD". Bản thật đã
+  // dựng (`PasswordResetGrantService`, `V21`) không đi đường đó — nó đúc một
+  // LIÊN KẾT MỘT LẦN, hạn 30 phút, chạy qua đúng `/dat-mat-khau` và
+  // `POST /invitations/set-password` mà trang NÀY đang dùng, không hề chạm
+  // `login-update-password.ftl`. Bài kiểm cũ từng ghim đúng cái giả định sai
+  // ấy vào `expiredNext`; giữ nguyên nó sẽ khoá một câu nói sai sự thật.
+  it("theme vẫn tồn tại (tài sản riêng, không phải bằng chứng cho cơ chế của MÀN này)", () => {
     expect(() => docTheme("login-update-password.ftl")).not.toThrow();
-    expect(viSetPassword.expiredNext).toContain("mật khẩu tạm");
-    expect(viSetPassword.expiredNext).toContain("đăng nhập đầu");
-    expect(enSetPassword.expiredNext).toContain("temporary password");
+  });
+
+  it("expiredNext nói đúng: liên kết một lần/30 phút, KHÔNG phải mật khẩu tạm đọc qua điện thoại", () => {
+    expect(viSetPassword.expiredNext).toContain("liên kết");
+    expect(viSetPassword.expiredNext).toMatch(/ba mươi phút|30 phút/);
+    expect(viSetPassword.expiredNext).not.toContain("mật khẩu tạm");
+
+    expect(enSetPassword.expiredNext).toContain("link");
+    expect(enSetPassword.expiredNext).toMatch(/thirty minutes|30 minutes/);
+    expect(enSetPassword.expiredNext).not.toContain("temporary password");
+  });
+
+  it("noLinkNext chỉ đúng người: Trưởng chi CHỈ khi tài khoản không có email", () => {
+    // Trước bản sửa này câu này bảo "gọi cho người đã mời ông/bà" vô điều
+    // kiện — đúng cho một cụ đăng ký bằng số điện thoại, sai cho ai đã có
+    // email (lối đúng của họ là tự bấm "Quên mật khẩu", không nhờ ai cấp hộ).
+    expect(viSetPassword.noLinkNext).toContain("Quên mật khẩu");
+    expect(viSetPassword.noLinkNext).toContain("Trưởng chi");
+    expect(enSetPassword.noLinkNext).toContain("Forgot password");
+    expect(enSetPassword.noLinkNext).toContain("Branch Head");
   });
 });

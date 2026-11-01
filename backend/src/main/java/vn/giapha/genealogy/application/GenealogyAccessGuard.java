@@ -35,11 +35,11 @@ public class GenealogyAccessGuard {
                 return;
             }
             throw new ForbiddenException(GenealogyProblemCodes.BRANCH_SCOPE_VIOLATION,
-                    "Tai khoan khong co quyen tren pham vi chi/nganh cua nhan khau nay");
+                    "Tài khoản không có quyền trên phạm vi chi/ngành của nhân khẩu này");
         }
         throw new ForbiddenException(GenealogyProblemCodes.FORBIDDEN,
-                "Chi Truong chi (trong pham vi duoc giao), Hoi dong Toc bieu hoac Quan tri he thong "
-                        + "duoc sua du lieu pha he");
+                "Chỉ Trưởng chi (trong phạm vi được giao), Hội đồng Tộc biểu hoặc Quản trị hệ thống "
+                        + "được sửa dữ liệu phả hệ");
     }
 
     /**
@@ -61,7 +61,7 @@ public class GenealogyAccessGuard {
     public void requireClanWide(CallerContext caller, String what) {
         if (!caller.role().isClanWide()) {
             throw new ForbiddenException(GenealogyProblemCodes.FORBIDDEN,
-                    "Chi Hoi dong Toc bieu hoac Quan tri he thong duoc " + what);
+                    "Chỉ Hội đồng Tộc biểu hoặc Quản trị hệ thống được " + what);
         }
     }
 

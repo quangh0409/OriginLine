@@ -51,4 +51,24 @@ public interface HonourRepository {
 
     /** Số bản ghi chờ duyệt trong phạm vi — cho badge trên giao diện. */
     long countPendingInScope(List<BranchPath> scopes, boolean clanWide);
+
+    /**
+     * Lối đọc của <b>Khách</b> (quyết định 26/09/2026): chỉ bản ghi {@code PUBLISHED} của nhân
+     * khẩu <b>đã khuất</b> và chưa xoá mềm.
+     *
+     * <p>Tách hẳn khỏi {@link #search} thay vì truyền {@code callerUserId = null} vào đó, vì hai lẽ.
+     * Một: luật "ai được XỬ LÝ" của {@link #search} không có nghĩa gì với người không có tài khoản,
+     * và một tham số {@code uuid} rỗng đứng cạnh {@code =} là loại lỗi kiểu Postgres chỉ nổ lúc
+     * chạy. Hai, quan trọng hơn: lọc {@code is_alive = FALSE} <b>trong SQL</b> làm
+     * {@code totalElements} của Khách đếm đúng — đếm trước bộ lọc riêng tư như lối thành viên thì
+     * chính con số tổng đã nói ra "có N vinh danh của người còn sống", một lần lộ không cần tên.</p>
+     *
+     * <p>Tầng trên <b>vẫn</b> hỏi {@code genealogy} cho từng nhân khẩu; mệnh đề SQL này là lớp chặn
+     * thứ nhất, không phải lớp duy nhất.</p>
+     */
+    List<Honour> searchPublishedOfDeceased(UUID personId, HonourKind kind, UUID branchId,
+                                           int limit, int offset);
+
+    /** Đếm cho phân trang của Khách — <b>cùng mệnh đề WHERE</b> với {@link #searchPublishedOfDeceased}. */
+    long countPublishedOfDeceased(UUID personId, HonourKind kind, UUID branchId);
 }

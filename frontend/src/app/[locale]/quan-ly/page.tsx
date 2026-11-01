@@ -60,6 +60,16 @@ export default async function QuanLyPage({
       title: tImport("title"),
       desc: tImport("subtitle"),
     },
+    // Ô THỨ SÁU. `POST /api/v1/password-resets` xong từ lâu (10 test tích hợp
+    // xanh, migration `V21`) nhưng cho tới bản này không một màn hình nào gọi
+    // tới — một cụ đăng ký bằng số điện thoại rồi quên mật khẩu thì Trưởng chi
+    // không có nút nào để bấm, chỉ có cách gọi điện. Cùng vấn đề "lối vào"
+    // design 07 §4 đã ghi nhận, lần thứ tư ở sản phẩm này.
+    {
+      href: "/quan-ly/cap-lai-mat-khau",
+      title: t("passwordReset.title"),
+      desc: t("passwordReset.lead"),
+    },
   ];
 
   return (

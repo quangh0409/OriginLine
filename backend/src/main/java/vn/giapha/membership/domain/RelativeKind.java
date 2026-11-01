@@ -34,7 +34,7 @@ public enum RelativeKind {
 
     public static RelativeKind of(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("Phai chi ra quan he voi nguoi than da co trong pha");
+            throw new IllegalArgumentException("Phải chỉ ra quan hệ với người thân đã có trong phả");
         }
         return valueOf(raw.trim().toUpperCase(Locale.ROOT));
     }

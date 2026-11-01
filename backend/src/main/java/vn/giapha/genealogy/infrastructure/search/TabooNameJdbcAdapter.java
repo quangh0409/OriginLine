@@ -144,12 +144,12 @@ public class TabooNameJdbcAdapter implements TabooNamePort {
      */
     private static String relationHint(Integer ancestorGeneration, Integer newPersonGeneration) {
         if (ancestorGeneration == null) {
-            return "Chua xac dinh doi thu";
+            return "Chưa xác định đời thứ";
         }
         if (newPersonGeneration == null) {
-            return "Doi thu " + ancestorGeneration;
+            return "Đời thứ " + ancestorGeneration;
         }
         int distance = newPersonGeneration - ancestorGeneration;
-        return "Doi thu " + ancestorGeneration + " (tren " + distance + " doi)";
+        return "Đời thứ " + ancestorGeneration + " (trên " + distance + " đời)";
     }
 }

@@ -47,10 +47,11 @@ class PersonClaimTest {
     @Test
     @DisplayName("đơn nhận mình phải trỏ tới một nhân khẩu có sẵn")
     void donNhanMinhPhaiTroToiNhanKhau() {
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> PersonClaim.nhanMinh(UUID.randomUUID(), NGUOI_GUI, null, CHI,
                 "0912345678", null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("nhan khau co san");
+                .hasMessageContaining("nhân khẩu có sẵn");
     }
 
     @Test
@@ -62,7 +63,7 @@ class PersonClaimTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 // Khong co nguoi than thi nhan khau moi thanh node mo coi: khong tinh duoc doi,
                 // khong tra duoc danh xung, va khong biet AI DUYET.
-                .hasMessageContaining("nguoi than");
+                .hasMessageContaining("người thân");
     }
 
     @Test
@@ -73,7 +74,7 @@ class PersonClaimTest {
                 CHI, "0912345678", null, List.of(), PersonClaimStatus.PENDING, null, null, null,
                 null, NOW, 0L))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("rang buoc 1");
+                .hasMessageContaining("ràng buộc 1");
     }
 
     @Test
@@ -82,7 +83,7 @@ class PersonClaimTest {
         assertThatThrownBy(() -> PersonClaim.nhanMinh(UUID.randomUUID(), NGUOI_GUI, NHAN_KHAU, CHI,
                 "  ", null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("so dien thoai");
+                .hasMessageContaining("số điện thoại");
     }
 
     // -------------------------------------------------------------------------------------
@@ -131,7 +132,7 @@ class PersonClaimTest {
     void tuChoiPhaiKemLyDo() {
         assertThatThrownBy(() -> donNhanMinh().reject(NGUOI_DUYET, "   ", NOW))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("ly do");
+                .hasMessageContaining("lý do");
     }
 
     @Test
@@ -150,7 +151,7 @@ class PersonClaimTest {
     void khongTuDuyetDonCuaMinh() {
         assertThatThrownBy(() -> donNhanMinh().approve(NGUOI_GUI, "Toi tu duyet", NOW, null))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("tu duyet");
+                .hasMessageContaining("tự duyệt");
         // Va tu choi cung the: mot nguoi tu dong don cua minh phai dung loi RUT, de nhat ky noi
         // dung chuyen gi da xay ra.
         assertThatThrownBy(() -> donNhanMinh().reject(NGUOI_GUI, "Toi tu tu choi", NOW))
@@ -164,7 +165,7 @@ class PersonClaimTest {
         don.approve(NGUOI_DUYET, null, NOW, null);
         assertThatThrownBy(() -> don.reject(NGUOI_DUYET, "Doi y", NOW))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("trang thai cuoi");
+                .hasMessageContaining("trạng thái cuối");
     }
 
     @Test

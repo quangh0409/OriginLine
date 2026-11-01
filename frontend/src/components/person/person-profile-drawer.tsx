@@ -2,6 +2,7 @@
 
 import { Drawer, Grid } from "antd";
 import { useTranslations } from "next-intl";
+import { PersonClaimAction, useIsUnlinkedViewer } from "./person-claim-action";
 import { PersonProfile } from "./person-profile";
 
 export interface PersonProfileDrawerProps {
@@ -22,6 +23,9 @@ export function PersonProfileDrawer({ personId, onClose }: PersonProfileDrawerPr
   const t = useTranslations("person");
   const screens = Grid.useBreakpoint();
   const isDesktop = Boolean(screens.sm);
+  // Chỉ người đã đăng nhập mà chưa gắn phả mới có chân ngăn — với mọi người khác, một dải trống
+  // có viền là nhiễu. Xem <PersonClaimAction> để biết vì sao nút phải nằm ở đây.
+  const unlinked = useIsUnlinkedViewer();
 
   return (
     <Drawer
@@ -32,6 +36,7 @@ export function PersonProfileDrawer({ personId, onClose }: PersonProfileDrawerPr
       width={isDesktop ? 460 : undefined}
       height={isDesktop ? undefined : "82vh"}
       destroyOnClose
+      footer={unlinked && personId ? <PersonClaimAction personId={personId} /> : null}
       styles={{ body: { background: "var(--color-bg-page)", padding: 12 } }}
     >
       {personId && <PersonProfile personId={personId} compact />}

@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { Layout } from "antd";
-import { SettingOutlined } from "@ant-design/icons";
+import { BellOutlined, SettingOutlined } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { LanguageSwitcher } from "./language-switcher";
@@ -12,7 +12,9 @@ import { CorrectionQueueLink } from "@/components/correction/correction-queue-li
 import { ManagementQueueLink } from "@/components/membership";
 import { MockRoleSwitcher } from "@/components/dev/mock-role-switcher";
 import { AuthMenu } from "./auth-menu";
+import { SystemAdminLink } from "./system-admin-link";
 import { useMe } from "@/hooks/use-me";
+import { clanDisplayName, clanDisplayShortName, useClanProfile } from "@/hooks/use-clan-profile";
 
 const { Header: AntHeader } = Layout;
 
@@ -59,8 +61,21 @@ const NAV_LINK =
 export function Header() {
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const tNotifications = useTranslations("notifications");
   const { data: me } = useMe();
   const hasAccount = Boolean(me?.appUserId);
+  // Tên dòng họ đọc từ hồ sơ công khai, không phải thương hiệu sản phẩm cứng.
+  // `useClanProfile` không chặn render (xem javadoc hook): khi chưa tải xong
+  // hoặc dòng họ chưa khởi tạo, hai biến này giữ nguyên chuỗi chung cũ.
+  const clanProfile = useClanProfile();
+  const brandFull = clanDisplayName(clanProfile.data, tCommon("appName"));
+  const brandShort = clanDisplayShortName(clanProfile.data, tCommon("appNameShort"));
+  // Hộp thư chỉ tồn tại cho tài khoản ĐÃ GẮN vào phả: khách nhận `401`, tài khoản chờ duyệt
+  // nhận `403 ACCOUNT_NOT_LINKED` ("chưa có hộp thư"). Chuông tự hỏi `/notifications` mỗi phút
+  // và mỗi lần cửa sổ lấy lại tiêu điểm, nên dựng nó cho hai nhóm ấy là đặt một cái máy bắn
+  // lỗi định kỳ vào thanh đầu trang (đo 24/09: mỗi trang khách tải đều có `401 /notifications`).
+  // Lối vào vẫn giữ — một liên kết thường tới `/notifications`, nơi màn hộp thư tự giải thích.
+  const hasInbox = hasAccount && me?.linkedToTree === true;
   const navItems = NAV_ITEMS.filter((item) => !("membersOnly" in item) || hasAccount);
 
   return (
@@ -81,8 +96,8 @@ export function Header() {
         href="/"
         className="flex min-h-11 shrink-0 items-center font-serif font-bold text-primary no-underline"
       >
-        <span className="whitespace-nowrap text-base sm:hidden">{tCommon("appNameShort")}</span>
-        <span className="hidden text-lg sm:inline sm:text-xl">{tCommon("appName")}</span>
+        <span className="whitespace-nowrap text-base sm:hidden">{brandShort}</span>
+        <span className="hidden text-lg sm:inline sm:text-xl">{brandFull}</span>
       </Link>
 
       {/* FLEX THUẦN, KHÔNG DÙNG <Space> CỦA ANT DESIGN — và đây là số đo, không phải sở thích.
@@ -123,9 +138,22 @@ export function Header() {
             <CorrectionQueueLink>, nên Khách và thành viên thường không thấy
             gì thêm. */}
         <div className="hidden items-center gap-2 md:flex">
+          <SystemAdminLink />
           <ManagementQueueLink />
           <CorrectionQueueLink />
-          <NotificationBell />
+          {hasInbox ? (
+            <NotificationBell />
+          ) : (
+            <Link
+              href="/notifications"
+              className={NAV_LINK}
+              aria-label={tNotifications("title")}
+              data-testid="header-notifications-link"
+            >
+              <BellOutlined aria-hidden className="text-lg lg:mr-1.5" />
+              <span className="hidden lg:inline">{tNotifications("title")}</span>
+            </Link>
+          )}
           <Link href="/settings" className={NAV_LINK} data-testid="header-settings">
             <SettingOutlined aria-hidden className="mr-1.5" />
             {t("settings")}

@@ -43,6 +43,18 @@ public interface RuleSetRepository {
     KinshipRuleSet replace(RuleSetCommand command);
 
     /**
+     * Đổi <b>cha kế thừa</b> (và cột vùng) của một bộ luật, <b>không đụng tới luật của nó</b>.
+     *
+     * <p>Khác {@link #replace}: replace xoá rồi chèn lại toàn bộ luật và ghi đè cả mô tả. Lối đổi
+     * cha này sinh ra cho lúc dòng họ đổi vùng miền — khi Hội đồng đã tự sửa luật ở tầng
+     * {@code CLAN} thì những luật ấy là công của họ, và "đổi vùng" không được là cái cớ để xoá
+     * chúng đi rồi chèn lại (mất id, mất mô tả, mất dấu thời gian).</p>
+     *
+     * @return bộ luật sau khi đổi, đã nối lại chuỗi cha
+     */
+    KinshipRuleSet reparent(UUID ruleSetId, UUID parentRuleSetId, Region region);
+
+    /**
      * Lệnh ghi đè một bộ luật.
      *
      * @param id              {@code null} = tạo mới

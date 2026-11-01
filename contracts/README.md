@@ -230,5 +230,6 @@ mock, nhưng đây là chỗ cần một câu trả lời dứt khoát trước 
 | 2026-09-11 | `1.1.0-privacy-consent` | *Tương thích ngược.* Thêm `RelationshipDto.otherPerson` (không nằm trong `required`). | — |
 | 2026-09-11 | `1.1.0-privacy-consent` | **PHÁ VỠ (ngữ nghĩa).** `EventType` thêm `SINH_NHAT`, `KHANH_THANH`, `HOP_HO`, `CUOI_HOI`; `MUNG_THO` không còn gộp sinh nhật và `KHAC` không còn gộp họp họ/cưới hỏi/khánh thành. | *chờ BE + FE xác nhận* |
 | 2026-09-11 | `1.1.0-privacy-consent` | **PHÁ VỠ.** `ConflictProblem.conflicts[]` nay là `oneOf [TabooConflict, DuplicateCandidate]` (trước đây khai sai là chỉ `TabooConflict`, không khớp `DUPLICATE_PERSON_SUSPECTED`). Thêm schema `DuplicateCandidate`. | *chờ BE + FE xác nhận* |
+| 2026-09-26 | `1.1.0-privacy-consent` | *Tương thích ngược.* Tag `clan` (V23): `GET /public/clan-profile`, `GET`/`PUT /admin/clan-profile`, `GET /admin/clan-profile/readiness`, `POST /admin/clan-profile/council-accounts`. `ProblemCode` thêm `CLAN_NOT_INITIALIZED`, `CLAN_ROOT_LOCKED` (danh sách đóng — FE phải thêm cả hai). | — |
 
 Mọi thay đổi **phá vỡ tương thích** phải thêm một dòng ở đây, kèm tên người của cả hai phía đã đồng ý.

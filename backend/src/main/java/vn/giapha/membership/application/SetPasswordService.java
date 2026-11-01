@@ -60,11 +60,11 @@ public class SetPasswordService {
     public void setPassword(String token, String rawPassword) {
         if (token == null || token.isBlank()) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Thieu lien ket dat mat khau");
+                    "Thiếu liên kết đặt mật khẩu");
         }
         if (rawPassword == null || rawPassword.isBlank()) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Mat khau khong duoc rong");
+                    "Mật khẩu không được rỗng");
         }
         // HAI LOAI TOKEN, MOT ENDPOINT. Hoi luong cap lai truoc, va cau hoi ay duoc tra loi bang
         // KHOA KY chu khong bang hinh dang chuoi: readGrantRef chi doc duoc token do luong cap lai

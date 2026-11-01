@@ -36,6 +36,9 @@ import vn.giapha.genealogy.domain.ShareScope;
  * @param self          hồ sơ của chính người đang đăng nhập
  * @param clanWide      vai phạm vi toàn dòng họ ({@code ADMIN} / {@code COUNCIL})
  * @param inBranchScope người gọi cùng chi/ngành với hồ sơ, hoặc được giao quản trị chi đó
+ * @param linkedToTree  người gọi <b>đã vào phả</b>: tài khoản đã được duyệt và gắn với một nhân
+ *                      khẩu. Xem {@link #allows} — "Cả họ xem" nghĩa là <i>họ</i>, không phải
+ *                      bất kỳ ai cầm được mã mời dòng họ
  * @param minor         dưới 18 tuổi, suy từ <b>năm</b> sinh
  * @param consent       ý chí của chủ thể; không bao giờ {@code null}
  */
@@ -43,6 +46,7 @@ public record PersonVisibility(boolean deceased,
                                boolean self,
                                boolean clanWide,
                                boolean inBranchScope,
+                               boolean linkedToTree,
                                boolean minor,
                                PrivacyConsent consent) {
 
@@ -72,10 +76,30 @@ public record PersonVisibility(boolean deceased,
         ShareScope scope = consent.scopeOf(group);
         return switch (scope) {
             case PRIVATE -> false;
-            case BRANCH -> inBranchScope;
-            case CLAN -> true;
+            case BRANCH -> inBranchScope && linkedToTree;
+            case CLAN -> linkedToTree;
         };
     }
+
+    /*
+     * VÌ SAO {@code CLAN} KHÔNG CÒN LÀ {@code true} VÔ ĐIỀU KIỆN (26/09/2026, NT-MOI-07):
+     *
+     * Bản đầu viết {@code case CLAN -> true} với lập luận "tới được đây thì người gọi đã qua
+     * {@code existsFor}, tức không phải Khách — và không phải Khách thì là người trong họ". Vế
+     * sau sai kể từ khi có mã mời dòng họ (V16): một tài khoản vừa đăng ký bằng mã ấy, CHƯA được
+     * Trưởng chi duyệt, đã không còn là Khách nhưng cũng chưa là người trong họ. Đo được bằng
+     * tay: tài khoản {@code nghiem-thu-b07} chờ duyệt gọi {@code GET /persons/{id}} và nhận về
+     * số điện thoại, email, địa chỉ đầy đủ, ngày sinh của một người đang sống đặt mức "Cả họ
+     * xem" — trong khi chính màn chờ duyệt hứa "Chưa xem được số điện thoại, địa chỉ hay ngày
+     * sinh đầy đủ của người đang sống". Mã mời dòng họ được phát rộng (dán trong nhóm Zalo của
+     * họ), nên "cầm được mã" không phải bằng chứng "là người trong họ" — bước duyệt của Trưởng
+     * chi mới là bằng chứng ấy, và mức CLAN phải chờ bằng chứng ấy.
+     *
+     * Với người chưa vào phả, hai mức BRANCH/CLAN vì thế được đối xử như PRIVATE. Họ vẫn thấy
+     * Tầng 1 (tên, đời, quan hệ lõi) vì {@code existsFor} đã cho bản ghi tồn tại — đúng như màn
+     * chờ duyệt mô tả. {@code PrivacyTierService.accessOf} đã dùng cùng điều kiện
+     * ({@code daVaoPha}) cho quyền gửi đính chính; hai chỗ nay nói cùng một luật.
+     */
 
     /**
      * Trường <b>không thuộc nhóm nào</b>: nguyên quán, <i>năm</i> sinh, các lớp tên phụ

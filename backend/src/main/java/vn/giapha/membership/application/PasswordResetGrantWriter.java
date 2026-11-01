@@ -68,9 +68,17 @@ public class PasswordResetGrantWriter {
 
     static final String ENTITY = "PasswordResetGrant";
 
-    /** Giờ Việt Nam: thông báo hiện cho người trong họ đọc, không cho máy chủ đọc. */
-    private static final DateTimeFormatter GIO_VN = DateTimeFormatter
-            .ofPattern("HH:mm 'ngay' dd/MM/yyyy").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+    /**
+     * Giờ Việt Nam: thông báo hiện cho người trong họ đọc, không cho máy chủ đọc.
+     *
+     * <p>Chữ "ngày" PHẢI có dấu. Bản trước viết {@code 'ngay'} theo thói quen của các chuỗi log
+     * (log cố ý không dấu), nên câu thông báo — câu duy nhất của cả tính năng mà chính chủ đọc,
+     * và là lớp bảo vệ duy nhất của nó — in ra "hiệu lực tới 02:04 ngay 24/09/2026" giữa một câu
+     * tiếng Việt có dấu đầy đủ. Đọc thật trên hộp thư ngày 24/09. Đây là chữ cho người đọc, không
+     * phải chữ cho log.</p>
+     */
+    static final DateTimeFormatter GIO_VN = DateTimeFormatter
+            .ofPattern("HH:mm 'ngày' dd/MM/yyyy").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
 
     private static final DateTimeFormatter GIO_EN = DateTimeFormatter
             .ofPattern("HH:mm 'on' dd/MM/yyyy").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
@@ -95,7 +103,7 @@ public class PasswordResetGrantWriter {
     @Transactional
     public PasswordResetGrant write(PasswordResetGrant grant, AppUser target, AppUser issuer) {
         grants.revokeOpenFor(grant.targetAppUserId(), grant.issuedAt(),
-                "Cap lai lien ket dat mat khau moi");
+                "Cấp lại liên kết đặt mật khẩu mới");
         PasswordResetGrant saved = grants.save(grant);
 
         // KHONG ghi url, KHONG ghi token, KHONG ghi keycloak_sub vao audit: dong nhat ky la vinh

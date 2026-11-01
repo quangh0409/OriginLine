@@ -47,7 +47,8 @@ public final class TemplateColumns {
                 "Chọn trong danh sách. Không rõ thì để trống hoặc chọn Không rõ — đừng đoán.",
                 "Nam");
         khai(ImportColumn.DOI,
-                "Đời thứ mấy tính từ Thuỷ tổ của dòng họ (số nguyên, Thuỷ tổ là 1).",
+                "Đời thứ mấy tính từ Thuỷ tổ của dòng họ (số nguyên, Thuỷ tổ là 1)."
+                        + " Dâu/rể (không có Mã cha, Mã mẹ) thì ĐỂ TRỐNG — đời suy từ vợ/chồng.",
                 "3");
         khai(ImportColumn.MA_CHA,
                 "Mã của người cha, lấy ở cột Mã. Cha ở chi khác hoặc chưa nhập thì để trống.",

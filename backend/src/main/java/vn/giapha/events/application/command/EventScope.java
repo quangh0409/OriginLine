@@ -28,12 +28,12 @@ public record EventScope(boolean clanWide, UUID branchId) {
     public EventScope {
         if (clanWide && branchId != null) {
             throw new IllegalArgumentException(
-                    "Su kien cap dong ho khong duoc gan chi/nganh (ck_event_scope)");
+                    "Sự kiện cấp dòng họ không được gắn chi/ngành (ck_event_scope)");
         }
         if (!clanWide && branchId == null) {
             throw new IllegalArgumentException(
-                    "Phai chon pham vi: hoac ca dong ho (clanWide), hoac mot chi/nganh"
-                            + " (scopeBranchId). Bo trong ca hai thi he thong se nhac ca ho.");
+                    "Phải chọn phạm vi: hoặc cả dòng họ (clanWide), hoặc một chi/ngành"
+                            + " (scopeBranchId). Bỏ trống cả hai thì hệ thống sẽ nhắc cả họ.");
         }
     }
 

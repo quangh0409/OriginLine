@@ -60,7 +60,7 @@ public class PersonQueryService {
     public PersonView byId(UUID personId) {
         return find(personId).orElseThrow(() -> new NotFoundException(
                 GenealogyProblemCodes.NOT_FOUND,
-                "Khong tim thay nhan khau voi dinh danh " + personId));
+                "Không tìm thấy nhân khẩu với định danh " + personId));
     }
 
     /** Như {@link #byId} nhưng trả rỗng thay vì ném - dạng mà GraphQL cần. */

@@ -216,7 +216,7 @@ public class ChangeRequestService {
         guard.requireProvisionedAccount(caller);
         if (!caller.role().canReview()) {
             throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
-                    "Chi Truong chi, Hoi dong Toc bieu hoac Quan tri he thong xem duoc hang doi duyet");
+                    "Chỉ Trưởng chi, Hội đồng Tộc biểu hoặc Quản trị hệ thống xem được hàng đợi duyệt");
         }
         int limit = clamp(size);
         return requests.pendingInScope(caller.managedBranches(), caller.isClanWide(),
@@ -329,7 +329,7 @@ public class ChangeRequestService {
         List<String> problems = CorrectionPayload.violations(type, payload, false);
         if (!problems.isEmpty()) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Noi dung de nghi dinh chinh khong hop le: " + String.join("; ", problems));
+                    "Nội dung đề nghị đính chính không hợp lệ: " + String.join("; ", problems));
         }
         if (!CorrectionPayload.isApplicable(type)
                 || CorrectionPayload.baseVersion(payload) != null) {
@@ -339,9 +339,9 @@ public class ChangeRequestService {
         Long current = branches.versionOfPerson(command.personId()).orElse(null);
         if (current == null) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Khong doc duoc phien ban hien tai cua nhan khau " + command.personId()
-                            + "; hay gui kem " + CorrectionPayload.BASE_VERSION_KEY
-                            + " lay tu ETag cua lan GET ho so gan nhat");
+                    "Không đọc được phiên bản hiện tại của nhân khẩu " + command.personId()
+                            + "; hãy gửi kèm " + CorrectionPayload.BASE_VERSION_KEY
+                            + " lấy từ ETag của lần GET hồ sơ gần nhất");
         }
         log.debug("Dong dau {}={} cho de nghi tren nhan khau {}",
                 CorrectionPayload.BASE_VERSION_KEY, current, command.personId());
@@ -361,13 +361,13 @@ public class ChangeRequestService {
     private ChangeRequest load(UUID id) {
         return requests.byId(id).orElseThrow(() -> new NotFoundException(
                 MembershipProblemCodes.NOT_FOUND,
-                "Khong tim thay yeu cau dinh chinh voi dinh danh " + id));
+                "Không tìm thấy yêu cầu đính chính với định danh " + id));
     }
 
     private void requireOpen(ChangeRequest request) {
         if (request.status().isFinal()) {
             throw new DomainException(MembershipProblemCodes.CHANGE_REQUEST_CLOSED,
-                    "Yeu cau dinh chinh da o trang thai " + request.status() + ", khong xu ly lai duoc");
+                    "Yêu cầu đính chính đã ở trạng thái " + request.status() + ", không xử lý lại được");
         }
     }
 

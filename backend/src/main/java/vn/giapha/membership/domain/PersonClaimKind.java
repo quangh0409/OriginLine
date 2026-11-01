@@ -35,7 +35,7 @@ public enum PersonClaimKind {
 
     public static PersonClaimKind of(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("Loai don khong duoc rong");
+            throw new IllegalArgumentException("Loại đơn không được rỗng");
         }
         return valueOf(raw.trim().toUpperCase(Locale.ROOT));
     }

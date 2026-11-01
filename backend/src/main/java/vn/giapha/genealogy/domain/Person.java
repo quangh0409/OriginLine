@@ -121,7 +121,7 @@ public class Person extends AggregateRoot<PersonId> {
         person.updatedAt = person.createdAt;
         person.version = 0L;
         if (names == null || names.isEmpty()) {
-            throw new IllegalArgumentException("Nhan khau phai co it nhat mot lop ten");
+            throw new IllegalArgumentException("Nhân khẩu phải có ít nhất một lớp tên");
         }
         person.names.addAll(names);
         person.normalizeNames();
@@ -149,7 +149,7 @@ public class Person extends AggregateRoot<PersonId> {
      */
     public void softDelete(String reason) {
         if (deleted) {
-            throw new IllegalStateException("Nhan khau da o trang thai xoa mem");
+            throw new IllegalStateException("Nhân khẩu đã ở trạng thái xoá mềm");
         }
         this.deleted = true;
         this.deletedAt = Instant.now();
@@ -183,7 +183,7 @@ public class Person extends AggregateRoot<PersonId> {
      */
     public void replaceNames(List<PersonName> newNames) {
         if (newNames == null || newNames.isEmpty()) {
-            throw new IllegalArgumentException("Nhan khau phai co it nhat mot lop ten");
+            throw new IllegalArgumentException("Nhân khẩu phải có ít nhất một lớp tên");
         }
         names.clear();
         names.addAll(newNames);
@@ -262,7 +262,7 @@ public class Person extends AggregateRoot<PersonId> {
      */
     public void placeInGeneration(Integer value) {
         if (value != null && value < 1) {
-            throw new IllegalArgumentException("Doi thu phai >= 1 (Thuy to = 1), nhan duoc: " + value);
+            throw new IllegalArgumentException("Đời thứ phải >= 1 (Thuỷ tổ = 1), nhận được: " + value);
         }
         this.generation = value;
         touch();
@@ -271,7 +271,7 @@ public class Person extends AggregateRoot<PersonId> {
     /** Thứ tự sinh trong các con của cùng một người cha (con cả = 1) — đầu vào của danh xưng. */
     public void placeInBirthOrder(Integer value) {
         if (value != null && value < 1) {
-            throw new IllegalArgumentException("Thu tu sinh phai >= 1, nhan duoc: " + value);
+            throw new IllegalArgumentException("Thứ tự sinh phải >= 1, nhận được: " + value);
         }
         this.birthOrder = value;
         touch();

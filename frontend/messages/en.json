@@ -23,7 +23,8 @@
     "primary": "Main navigation",
     "settings": "Settings",
     "more": "More",
-    "language": "Language"
+    "language": "Language",
+    "systemAdmin": "System administration"
   },
   "auth": {
     "login": "Log in",
@@ -123,6 +124,7 @@
       "doneNextNote": "You can browse the phả đồ before that approval — you have to see the phả in order to find yourself in it.",
       "doneNextCta": "Who am I in the phả",
       "donePasswordPhoneRecovery": "You registered with a phone number, so please remember the password you just set: password-reset links are sent by email, and this account has no email address. If you forget it, call your branch head — they can reopen it for you.",
+      "donePasswordEmailVerify": "The first time you sign in, the clan will send a letter to the address you just gave and ask you to confirm it. Open that email and click the link inside, and you are in — this is to make sure the address really is yours; nothing is wrong with your password.",
       "signInThenCode": "Sign in, then enter the code",
       "doneAlreadySignedInTitle": "You were already signed in — no password to set",
       "doneAlreadySignedInBody": "You entered the code while signed in, so the system opened the gate for the account you are already using rather than creating a second one. That is also why there is no set-password link: you already have a way in. Next time, just sign in as usual."
@@ -228,7 +230,7 @@
       "pageTitle": "Set your password",
       "pageDescription": "Page for setting the first password on an account that has just accepted an invitation.",
       "title": "Set a password for your account",
-      "intro": "Your account has been created and linked to your profile in the clan record. One thing is left: choose a password, so that from now on you can sign in yourself.",
+      "intro": "One thing is left: choose a password, so that from now on you can sign in yourself.",
       "oneTimeNote": "This link works once and expires after thirty minutes. If it runs out, a new one can be arranged straight away — nothing is lost.",
       "passwordLabel": "New password",
       "confirmLabel": "Type the new password again",
@@ -258,21 +260,21 @@
         }
       },
       "doneTitle": "All done — your password is set",
-      "doneBody": "From now on you sign in with the password you just chose. Your profile in the clan record is already linked to this account; there is no approval to wait for.",
+      "doneBody": "From now on you sign in with the password you just chose.",
       "doneWhatsThere": "Once you sign in, you can see:",
-      "doneItem1": "the phả đồ (clan tree), including living members of your own chi (branch)",
-      "doneItem2": "danh xưng lookups — what to call whom, correctly",
-      "doneItem3": "giỗ (death anniversary) reminders for your own branch, by the lunar calendar",
+      "doneItem1": "the phả đồ (clan tree), from the founding ancestor down",
+      "doneItem2": "the profiles of deceased ancestors, with their giỗ (death anniversary) by the lunar calendar",
+      "doneItem3": "the clan's posts, honours and calendar",
       "doneCta": "Sign in and open the clan tree",
       "expiredTitle": "This password link can no longer be used",
-      "expiredAccountSafe": "Your account is still there and still linked to your profile in the clan record. Only this link has run out — you do not need a new invitation code, and you do not have to start again.",
-      "expiredBody": "The link opens only within thirty minutes of accepting the invitation, and only once — so that a message forwarded to the wrong person cannot open your account.",
-      "expiredNext": "Please call the person who invited you. They can set a temporary password for you and read it out over the phone; the very first time you sign in, the system will invite you to change it there and then.",
+      "expiredAccountSafe": "Your account is still there. Only this link has run out — you do not have to start again.",
+      "expiredBody": "The link opens only within thirty minutes of being issued, and only once — so that a message forwarded to the wrong person cannot open your account.",
+      "expiredNext": "Please contact whoever issued this link — the person who invited you, or your Branch Head. They can issue you a new one: a single-use link, valid for thirty minutes, for you to set your own password. Nobody sets it for you, and nobody reads a password out over the phone.",
       "expiredAlreadySetCta": "I already set my password — sign in",
       "expiredAlreadySetHint": "If you opened this link once before and finished setting a password, that password still works: you only need to sign in.",
       "noLinkTitle": "Your account already has a password",
       "noLinkBody": "This page is used exactly once, when an account is first created. The system deliberately does not open it for an account that already has a password — if it did, anyone holding an invitation code could change your password.",
-      "noLinkNext": "Please press “Sign in” and use the password you normally use. If you have forgotten it, call the person who invited you and ask for a reset.",
+      "noLinkNext": "Please press “Sign in” and use the password you normally use. If you have forgotten it: with an email address on the account, press “Forgot password” right there on the sign-in screen; with only a phone number on the account, ask your Branch Head to issue a new reset link.",
       "noLinkCta": "Sign in"
     },
     "accountState": {
@@ -311,8 +313,13 @@
     "subheading": "Preserving our roots, connecting descendants near and far",
     "pendingNotice": {
       "title": "Your profile is awaiting approval",
-      "body": "While a branch head or the Clan Council reviews your request, you can already see the tree at name-and-generation level, plus every deceased ancestor's profile. The posts and honours below look the same to everyone.",
+      "body": "While a branch head or the Clan Council reviews your request, you can already see the tree at name-and-generation level, plus every deceased ancestor's profile. The posts, honours and clan events below look the same to every clan account.",
       "link": "Check my request status"
+    },
+    "uninitializedNotice": {
+      "title": "The clan has not been set up yet",
+      "body": "No clan profile exists in the system yet. Go to Clan setup to enter the name, root branch, the first Council accounts, and start importing the genealogy.",
+      "link": "Set up the clan"
     },
     "quickLinks": {
       "tree": {
@@ -343,6 +350,11 @@
       "title": "Upcoming clan events",
       "viewAll": "View all",
       "empty": "No upcoming clan events."
+    },
+    "loadError": "This section could not be loaded. Please reload the page in a few minutes.",
+    "membersOnly": {
+      "body": "This section is currently open only to relatives signed in with a clan account. The family tree and the profiles of deceased ancestors are open to you right now, no account needed.",
+      "login": "Sign in to see it"
     }
   },
   "posts": {
@@ -463,6 +475,9 @@
       "draftsEmpty": "No drafts in progress.",
       "othersTitle": "Submitted ({n})",
       "othersEmpty": "No posts submitted for review yet.",
+      "submittedTitle": "Post sent for review",
+      "submittedBody": "“{title}” is waiting for the branch head or the clan council to review it. Once approved it will appear under Clan posts; if it is sent back for changes, it returns to Drafts with the reason.",
+      "submittedBodyNoTitle": "Your post is waiting for the branch head or the clan council to review it. Once approved it will appear under Clan posts; if it is sent back for changes, it returns to Drafts with the reason.",
       "prevPage": "Previous page",
       "nextPage": "Next page",
       "pageOf": "Page {page}/{total}"
@@ -556,6 +571,7 @@
         "loadFailed": "Couldn't load the review queue. Please try again.",
         "forbidden": "You don't have permission to act on this report.",
         "alreadyHandled": "This report has already been handled elsewhere.",
+        "selfReview": "You filed this report, so you cannot decide it yourself — ask another reviewer for this branch.",
         "actionFailed": "Couldn't complete this action. Please try again."
       }
     }
@@ -588,6 +604,10 @@
       "anyBranch": "Any branch"
     },
     "proposeAction": "Propose an honour",
+    "submitted": {
+      "title": "Honour proposal sent",
+      "body": "“{title}” stays under Pending review until the branch head or the clan council looks at it."
+    },
     "empty": "No honours yet.",
     "errors": {
       "loadFailed": "Couldn't load the honours list. Please try again."
@@ -641,6 +661,8 @@
     "markRead": "Mark as read",
     "unread": "{count} unread",
     "loadError": "Failed to load notifications",
+    "signInRequired": "Sign in to see your notifications",
+    "signInRequiredHint": "The giỗ reminder inbox belongs to each relative personally, so it opens only after you sign in with a clan account.",
     "accountNotLinked": "Your account is not linked to anyone in the genealogy yet.",
     "accountNotLinkedHint": "That is why this inbox is empty. Please ask the clan council (Hội đồng Tộc biểu) or your branch head to link your account to your record; you will then receive your chi/nhánh's giỗ reminders.",
     "pageSubtitle": "Every death-anniversary reminder arrives here first.",
@@ -800,6 +822,7 @@
     "biography": "Biography and notes",
     "edit": "Edit profile",
     "viewOnTree": "View on the family tree",
+    "openFullPage": "Open the full profile page",
     "lookupKinship": "Look up kinship with this person",
     "notFound": "This person was not found.",
     "loadError": "Could not load this profile. Please try again.",
@@ -952,7 +975,7 @@
     "subtitle": "Pick two people in the clan to see how they should properly address each other.",
     "guest": {
       "title": "Sign in to look up kinship terms",
-      "body": "Kinship lookup has to look at records of people in the clan, including living ones, so only signed-in members can use it. This differs from reading the family tree — the tree still opens for guests at the generation-and-relations level, but kinship lookup needs a clan account.",
+      "body": "Kinship lookup has to look at records of people in the clan, including living ones, so only signed-in members can use it. This differs from the public family tree — there guests see only deceased ancestors, never a living person — while kinship lookup needs a clan account.",
       "viewTree": "View the family tree (no account needed)"
     },
     "fromLabel": "Speaker (I am…)",
@@ -1450,6 +1473,7 @@
   "correction": {
     "title": "Correction requests",
     "subtitle": "Where members report an error and a Trưởng chi or the Hội đồng Tộc biểu decides.",
+    "notLinkedAction": "See the status of my request to be placed in the phả",
     "nav": {
       "label": "Correction requests",
       "labelWithCount": "Correction requests — {count} awaiting review",
@@ -1651,7 +1675,7 @@
         "title": "Four things to know before you start",
         "sheets": {
           "title": "The file has five sheets",
-          "body": "Instructions · People · Marriages · Lists · Already recorded. The Instructions sheet opens first — read it before typing a single row."
+          "body": "Instructions · People · Marriages · Examples · Lists (the last one is hidden — it feeds the drop-down lists, do not delete it). The Instructions sheet opens first — read it before typing a single row."
         },
         "code": {
           "title": "The Code column matters most",
@@ -1667,8 +1691,8 @@
         }
       },
       "example": {
-        "title": "Delete the example rows before you submit",
-        "body": "The People sheet ships with a three-generation family as an example, on a different background. Delete those rows before uploading."
+        "title": "The sample rows live on their own Examples sheet — nothing to delete",
+        "body": "The Examples sheet holds a few sample rows to show how to type. The upload never reads that sheet, so forgetting it adds nobody to the phả. Do not copy a sample row into the People sheet — its codes are made up."
       },
       "next": "Finished filling it in? Upload the file",
       "kind": {
@@ -1951,7 +1975,12 @@
       "IMP_UNKNOWN_PLACE_CODE": "Province/country code is not in the catalogue",
       "IMP_MISSING_PLACE_CODE": "Native place given in words but no province code",
       "IMP_HEIR_TARGET_NOT_FOUND": "The person being succeeded was not found",
-      "IMP_MERGE_NOT_APPLICABLE": "Cannot merge into two existing tree records"
+      "IMP_MERGE_NOT_APPLICABLE": "Cannot merge into two existing tree records",
+      "IMP_UNDECIDED_INLAW_DOI": "In-law (dâu/rể) must not state a generation — clear the Đời cell",
+      "IMP_UNDECIDED_ADOPTION": "Adopted from within the clan — awaiting the clan council's ruling",
+      "IMP_UNDECIDED_LIFE_STATUS": "Unknown whether living or deceased",
+      "IMP_COMMIT_CYCLE": "No valid write order — a loop remains",
+      "IMP_COMMIT_REF_NOT_FOUND": "Marriage or succession code not found"
     },
     "evidence": {
       "DEATH_LUNAR": "Giỗ date (lunar)",
@@ -2367,6 +2396,7 @@
       "personLabel": "Who are you inviting?",
       "personPlaceholder": "Type a name to search the phả",
       "personRequired": "Please choose the person to invite.",
+      "reissueWarning": "This person already has an open invitation, valid until {at}. Issuing a new one cancels the old code immediately — only reissue if they have lost the old code.",
       "scopeHint": "You can only invite people inside the branch assigned to you.",
       "ttlLabel": "Valid for (days)",
       "noteLabel": "Note to yourself (optional)",
@@ -2398,7 +2428,173 @@
         "NEEDS_ACCOUNT": "Please sign in again and retry.",
         "ACCOUNT_ALREADY_LINKED": "This account is already linked to a different record in the phả.",
         "PERSON_ALREADY_LINKED": "This person already has an account, so no further invitation can be issued."
+      },
+      "issueErrors": {
+        "BRANCH_SCOPE": "This person belongs to another branch, outside the scope assigned to you. Please ask that branch's Head or the Clan Council to issue the invitation.",
+        "NOT_INVITABLE": "An invitation cannot be issued for this person: they are deceased, or their record has been removed from the phả. Please check you have the right person.",
+        "PERSON_ALREADY_LINKED": "This person already has an account, so no further invitation can be issued. If they have forgotten their password, use “Reissue a password reset link”.",
+        "FORBIDDEN": "You do not have permission to invite this person.",
+        "NOT_FOUND": "This person can no longer be found in the phả. Please reload the page and choose again.",
+        "RATE_LIMITED": "Too many actions too quickly. Please wait a moment and try again.",
+        "NEEDS_ACCOUNT": "Please sign in again and retry.",
+        "UNAVAILABLE": "Could not reach the server. Please try again."
       }
+    },
+    "scopedPicker": {
+      "empty": "Nobody living within your scope matches this name.",
+      "hiddenOutside": "{n, plural, one {# person} other {# people}} matching this name in other branches are not shown — you can only choose people in the branch assigned to you.",
+      "chosen": "Selected: {name} — {detail}"
+    },
+    "passwordReset": {
+      "title": "Reissue a password reset link",
+      "lead": "For someone who already has an account in the clan but forgot their password and has no email address to recover it themselves. Choose the right person in your own branch and issue a link — they set their own new password, you never see or set it for them.",
+      "issueTitle": "Issue a new link",
+      "personLabel": "Who forgot their password?",
+      "personPlaceholder": "Type a name to search the phả",
+      "personRequired": "Please choose the person who forgot their password.",
+      "scopeHint": "You can only issue this for someone inside the branch assigned to you, and never for yourself.",
+      "noteLabel": "Note to yourself (optional)",
+      "notePlaceholder": "For example: she called this morning, does not remember the old password.",
+      "issue": "Issue link",
+      "powerWarningTitle": "This is real power, not a convenience feature",
+      "powerWarningBody": "Whoever holds this link for the next half hour can set that person's password. Only issue it when that person themselves asked, and hand it over directly or in a private message — never post it to a group chat. The system notifies the account holder the moment you issue it, so this is never a quiet act.",
+      "issuedTitle": "Issued — this link appears exactly this once",
+      "linkFor": "Link for {name}",
+      "linkHint": "Issuing again immediately invalidates this link — two links are never allowed to open the same account at once.",
+      "expiresAt": "Valid until {at}. Past that it is useless, and you can issue a new one right away at no cost.",
+      "selfNotified": "The account holder has already been notified of this grant, the moment you pressed \"Issue link\".",
+      "errors": {
+        "noIssueRight": "Only a Branch Head or the Clan Council can reissue password reset links.",
+        "noScope": "The Clan Council has not assigned you any branch yet, so you cannot issue this for anyone. Please contact the Council to be assigned one.",
+        "BRANCH_SCOPE": "This person belongs to a different branch, outside the scope assigned to you. Please ask that branch's Head or the Clan Council.",
+        "SELF": "You cannot issue this for yourself. If you forgot your own password, please use \"Forgot password\" on the sign-in screen, or ask another Branch Head or Council member to issue it for you.",
+        "HAS_EMAIL": "This person already has an email address on file, so they can recover their own password — you do not need to issue anything. Please tell them to use \"Forgot password\" on the sign-in screen to receive the email.",
+        "NOT_READY": "This person cannot be issued a link right now — they may not have an account yet (issue an invitation instead), their account may be temporarily locked, or it may no longer exist. Please contact the System Administrator if you are not sure why.",
+        "NOT_FOUND": "This person could no longer be found in the phả. Please reload the page and choose again.",
+        "RATE_LIMITED": "You have issued a lot of links in a short time. Please wait and try again.",
+        "PROVIDER_DOWN": "Could not reach the account system. This is a server-side issue; please try again in a few minutes.",
+        "UNAVAILABLE": "Could not reach the server. Please try again."
+      }
+    }
+  },
+  "clanSetup": {
+    "pageTitle": "Clan setup",
+    "pageSubtitle": "Five steps to bring a new clan into the system — do it once, in order or revisit any step at any time.",
+    "gate": {
+      "forbidden": "Only System Administrators can access this screen."
+    },
+    "steps": {
+      "legend": "Clan setup progress",
+      "doneLabel": "Done",
+      "current": "You are on this step",
+      "pending": "Not started",
+      "profile": { "name": "Clan profile" },
+      "council": { "name": "First Council" },
+      "import": { "name": "Import from Excel" },
+      "invite": { "name": "Issue invite codes" },
+      "done": { "name": "Ready" }
+    },
+    "profileStep": {
+      "lead": "Clan name, root branch, region and ancestral hall — the foundation everything else (Council, kinship titles, the tree) builds on.",
+      "loadFailed": "Could not load the clan profile. Please try again.",
+      "nameLabel": "Clan name",
+      "namePlaceholder": "e.g. The Nguyễn Đình clan",
+      "shortNameLabel": "Short name",
+      "shortNamePlaceholder": "e.g. Nguyễn Đình clan",
+      "rootBranchLabel": "Root branch (ltree)",
+      "rootBranchHint": "Suggested from the clan name — editable, but only before the first person is added to the tree.",
+      "rootBranchLockedHint": "The tree already has {count} people — the root branch is permanently locked. Changing it now would change every branch head's scope at once.",
+      "regionLabel": "Region",
+      "regionHint": "Picks the default kinship-title rule set (Bắc/Trung/Nam). The Clan Council can change it later, once the system is running.",
+      "regionOptions": { "BAC": "North", "TRUNG": "Central", "NAM": "South" },
+      "ancestralHallNameLabel": "Ancestral hall name",
+      "ancestralHallAddressLabel": "Ancestral hall address",
+      "ancestorNameLabel": "Founding ancestor",
+      "gioToLabel": "Ancestor memorial day (lunar)",
+      "gioToDayLabel": "Day",
+      "gioToMonthLabel": "Month",
+      "foundedNoteLabel": "Founding note",
+      "save": "Save profile",
+      "saved": "Clan profile saved.",
+      "errors": {
+        "ROOT_LOCKED": "The root branch is locked because the tree already has people. Reload the page and edit the other fields.",
+        "VERSION_CONFLICT": "Someone else just edited this profile. Reload the page and edit again.",
+        "MISSING_ETAG": "Missing a profile version to check against. Reload the page and try again.",
+        "VALIDATION": "Some fields are invalid — see the details below.",
+        "FORBIDDEN": "You do not have permission to edit the clan profile.",
+        "UNAVAILABLE": "Could not save right now. Please try again later."
+      },
+      "validation": {
+        "nameRequired": "Enter the clan name.",
+        "nameTooLong": "The clan name is at most 120 characters.",
+        "rootBranchRequired": "Enter the root branch.",
+        "rootBranchInvalid": "The root branch may only contain lowercase letters, digits and underscores, segments separated by dots — e.g. ho_nguyen_dinh.",
+        "regionRequired": "Choose a region.",
+        "foundedNoteTooLong": "The founding note is at most 2000 characters.",
+        "lunarDayRange": "The lunar day is between 1 and 30.",
+        "lunarMonthRange": "The lunar month is between 1 and 12.",
+        "ancestralHallNameRequired": "Enter the ancestral hall's name before its address."
+      }
+    },
+    "councilStep": {
+      "title": "First Council",
+      "lead": "Create the first account for the Clan Council. This person logs in with a phone number or email, and has full authority over the clan information portal.",
+      "existingCount": "There {count, plural, one {is # Council account} other {are # Council accounts}} so far.",
+      "displayNameLabel": "Full name",
+      "loginIdLabel": "Phone number or email to log in with",
+      "attachPersonToggle": "Link to a person already in the tree",
+      "personLabel": "Person",
+      "personPlaceholder": "Search by name…",
+      "submit": "Create Council account",
+      "powerWarningTitle": "This is real authority",
+      "powerWarningBody": "You will see this person's password-setup link. For the next 30 minutes, anyone holding that link can set the password for the Council account you just created — hand it over in person or message it privately, never post it publicly.",
+      "issuedTitle": "Council account created",
+      "linkHint": "Hand this link to the right person through a private channel (Zalo, in person) — never post it publicly.",
+      "expiresAt": "This link is valid until {at}.",
+      "createAnother": "Create another account",
+      "errors": {
+        "IDENTITY_TAKEN": "This phone number/email already has an account in the system.",
+        "PERSON_TAKEN": "The selected person already has a different account. Grant the Council role to that existing account from the Roles screen, or pick another person.",
+        "PERSON_NOT_FOUND": "The selected person could no longer be found. Please pick again.",
+        "VALIDATION": "Some fields are invalid.",
+        "FORBIDDEN": "You do not have permission to create Council accounts.",
+        "UNAVAILABLE": "Could not create the account right now. Please try again later."
+      },
+      "validation": {
+        "displayNameRequired": "Enter a full name.",
+        "loginIdRequired": "Enter a phone number or email."
+      }
+    },
+    "importStep": {
+      "title": "Import from Excel",
+      "lead": "Bring the whole clan into the tree from an Excel file — not one person at a time. This pipeline already exists: it reads the file, screens for duplicates and taboo names, then writes everything in one go.",
+      "countFailed": "Could not count the current number of people.",
+      "countLine": "There are currently {persons} people across {branches} branches.",
+      "action": "Go to the import screen"
+    },
+    "inviteStep": {
+      "title": "Issue invite codes",
+      "lead": "Invite codes let the rest of the clan join the system and create their own accounts, without the Council creating one for each person.",
+      "countFailed": "Could not count active invite codes.",
+      "countLine": "{count, plural, one {# invite code is} other {# invite codes are}} currently active.",
+      "action": "Go to the invite screen"
+    },
+    "readyStep": {
+      "title": "Ready",
+      "summaryProfileLabel": "Clan profile",
+      "summaryCouncilLabel": "Council accounts",
+      "summaryPersonsLabel": "People",
+      "summaryBranchesLabel": "Branches",
+      "summaryInvitesLabel": "Active invite codes",
+      "pendingCouncilTitle": "Rulings owed to the Clan Council",
+      "pendingCouncilIntro": "The system is usable today, but the Clan Council has not yet ruled on the following. The first item MUST be settled before importing a real clan's data — changing the rule after thousands of people are in the tree is no longer a code change.",
+      "pendingCouncil": {
+        "divorceDeletion": "Deletion rights for a daughter/son-in-law's data after divorce.",
+        "badgeColours": "The daughter-in-law/son-in-law badge colours on the tree.",
+        "privatePhone": "Whether the Council may read a phone number set to PRIVATE.",
+        "hanNomVisibility": "Whether a living person's Hán-Nôm name stays visible (today it is)."
+      },
+      "openHome": "Open the home page"
     }
   }
 }

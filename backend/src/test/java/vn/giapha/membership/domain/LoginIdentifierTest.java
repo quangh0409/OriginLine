@@ -88,9 +88,10 @@ class LoginIdentifierTest {
     @Test
     @DisplayName("rỗng thì nói rõ là phải cho biết email hoặc số điện thoại")
     void rongThiNoiRo() {
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> LoginIdentifier.of("   "))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("so dien thoai");
+                .hasMessageContaining("số điện thoại");
     }
 
     @Test

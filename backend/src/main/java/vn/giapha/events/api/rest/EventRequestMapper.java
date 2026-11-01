@@ -90,8 +90,8 @@ final class EventRequestMapper {
     }
 
     private static String mauThuanPhamVi(String rawType, boolean expected) {
-        return "Loai su kien " + rawType + " da an dinh pham vi clanWide=" + expected
-                + "; khong gui kem mot co mau thuan. Dung GIO_HO cho viec ca ho va GIO_CHI cho"
-                + " viec mot chi.";
+        return "Loại sự kiện " + rawType + " đã ấn định phạm vi clanWide=" + expected
+                + "; không gửi kèm một cờ mâu thuẫn. Dùng GIO_HO cho việc cả họ và GIO_CHI cho"
+                + " việc một chi.";
     }
 }

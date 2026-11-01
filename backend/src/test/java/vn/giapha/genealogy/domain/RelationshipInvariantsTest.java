@@ -23,9 +23,10 @@ class RelationshipInvariantsTest {
     @Test
     @DisplayName("Một người không thể có quan hệ với chính mình")
     void khongTuNoiVoiChinhMinh() {
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> Relationship.of(UUID.randomUUID(), cha, cha, RelType.SPOUSE))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("chinh minh");
+                .hasMessageContaining("chính mình");
     }
 
     @Test
@@ -49,12 +50,12 @@ class RelationshipInvariantsTest {
 
         assertThatThrownBy(() -> Relationship.spouse(UUID.randomUUID(), cha, con, 0, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("bat dau tu 1");
+                .hasMessageContaining("bắt đầu từ 1");
 
         Relationship chaCon = Relationship.parent(UUID.randomUUID(), cha, con, false);
         assertThatThrownBy(() -> chaCon.spouseOrder(2))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("chi co nghia voi canh SPOUSE");
+                .hasMessageContaining("chỉ có nghĩa với cạnh SPOUSE");
     }
 
     @Test
@@ -70,12 +71,12 @@ class RelationshipInvariantsTest {
     void heirKindBatBuocVoiCanhHeirVaCamVoiCanhKhac() {
         assertThatThrownBy(() -> Relationship.heir(UUID.randomUUID(), cha, con, null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("bat buoc co heirKind");
+                .hasMessageContaining("bắt buộc có heirKind");
 
         Relationship chaCon = Relationship.parent(UUID.randomUUID(), cha, con, false);
         assertThatThrownBy(() -> chaCon.heirKind(HeirKind.DICH_TON))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("chi co nghia voi canh HEIR");
+                .hasMessageContaining("chỉ có nghĩa với cạnh HEIR");
     }
 
     @Test
@@ -85,7 +86,7 @@ class RelationshipInvariantsTest {
 
         assertThatThrownBy(() -> rel.validity(LocalDate.of(2000, 1, 1), LocalDate.of(1999, 12, 31)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("validTo khong duoc truoc validFrom");
+                .hasMessageContaining("validTo không được trước validFrom");
     }
 
     @Test

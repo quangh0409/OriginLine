@@ -126,8 +126,8 @@ public class ChangeRequestApplier {
         List<String> problems = CorrectionPayload.violations(event.requestType(), payload, true);
         if (!problems.isEmpty()) {
             throw new DomainException(GenealogyProblemCodes.VALIDATION_FAILED,
-                    "Yeu cau dinh chinh " + event.changeRequestId() + " co noi dung khong ap dung "
-                            + "duoc: " + String.join("; ", problems));
+                    "Yêu cầu đính chính " + event.changeRequestId() + " có nội dung không áp dụng "
+                            + "được: " + String.join("; ", problems));
         }
     }
 
@@ -143,18 +143,18 @@ public class ChangeRequestApplier {
         UUID personId = event.personId();
         if (personId == null) {
             throw new DomainException(GenealogyProblemCodes.VALIDATION_FAILED,
-                    "Yeu cau dinh chinh " + event.changeRequestId()
-                            + " loai UPDATE_PERSON nhung khong tro toi nhan khau nao");
+                    "Yêu cầu đính chính " + event.changeRequestId()
+                            + " loại UPDATE_PERSON nhưng không trỏ tới nhân khẩu nào");
         }
         Person person = persons.byId(PersonId.of(personId)).orElseThrow(() -> new NotFoundException(
                 GenealogyProblemCodes.NOT_FOUND,
-                "Khong tim thay nhan khau " + personId + " de ap dung yeu cau dinh chinh "
+                "Không tìm thấy nhân khẩu " + personId + " để áp dụng yêu cầu đính chính "
                         + event.changeRequestId()));
         if (person.isDeleted()) {
             throw new GenealogyConflictException(GenealogyProblemCodes.PERSON_ALREADY_DELETED,
-                    "Nhan khau " + personId + " da bi xoa mem, khong ap dung duoc yeu cau dinh "
-                            + "chinh " + event.changeRequestId()
-                            + ". Hay khoi phuc ho so truoc, hoac tu choi yeu cau.");
+                    "Nhân khẩu " + personId + " đã bị xoá mềm, không áp dụng được yêu cầu đính "
+                            + "chính " + event.changeRequestId()
+                            + ". Hãy khôi phục hồ sơ trước, hoặc từ chối yêu cầu.");
         }
     }
 
@@ -230,7 +230,7 @@ public class ChangeRequestApplier {
     private static LifeDate toLifeDate(Object raw) {
         if (!(raw instanceof Map<?, ?> map)) {
             throw new DomainException(GenealogyProblemCodes.VALIDATION_FAILED,
-                    "Moc thoi gian trong de nghi dinh chinh khong dung dang DateDual");
+                    "Mốc thời gian trong đề nghị đính chính không đúng dạng DateDual");
         }
         LocalDate solar = toSolar(map.get("solar"));
         LunarDate lunar = toLunar(map.get("lunar"));
@@ -249,7 +249,7 @@ public class ChangeRequestApplier {
             return LocalDate.parse(String.valueOf(raw));
         } catch (DateTimeParseException ex) {
             throw new DomainException(GenealogyProblemCodes.VALIDATION_FAILED,
-                    "Ngay duong trong de nghi dinh chinh khong phai ISO yyyy-MM-dd: " + raw, ex);
+                    "Ngày dương trong đề nghị đính chính không phải ISO yyyy-MM-dd: " + raw, ex);
         }
     }
 

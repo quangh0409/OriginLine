@@ -74,6 +74,9 @@ class PrivacyFieldGroupMatrixIT extends AbstractIntegrationTest {
                 .birthYear(1982).branch(chiAt).generation(4));
         insertAppUser("sub-cung-chi", nguoiCungChi);
         insertAppUser("sub-khac-chi", nguoiKhacChi);
+        // Tài khoản đã đăng ký bằng mã mời dòng họ nhưng CHƯA được duyệt: có app_user, chưa có
+        // nhân khẩu. Không phải Khách (có token), cũng chưa phải người trong họ.
+        insertAppUser("sub-cho-duyet", null);
 
         chuThe.clear();
         for (ShareScope scope : ShareScope.values()) {
@@ -144,6 +147,25 @@ class PrivacyFieldGroupMatrixIT extends AbstractIntegrationTest {
                 .allSatisfy((nhom, hien) -> assertThat(hien).as(nhom.name()).isFalse());
         assertThat(hienRa(personQuery.byId(chuThe.get(ShareScope.CLAN))))
                 .allSatisfy((nhom, hien) -> assertThat(hien).as(nhom.name()).isTrue());
+    }
+
+    @Test
+    @DisplayName("Tài khoản chờ duyệt (chưa gắn nhân khẩu): không thấy nhóm nào, kể cả mức Cả họ — 15/15 ô")
+    void taiKhoanChoDuyet_khongThayNhomNao() {
+        // Lỗ hổng đo được ngày 26/09/2026 (NT-MOI-07): trước bản vá, `PersonVisibility` viết
+        // `case CLAN -> true` với giả định "không phải Khách thì là người trong họ". Một tài
+        // khoản vừa đăng ký bằng mã dòng họ — thứ được dán trong nhóm Zalo của cả họ — vì thế
+        // đọc được số điện thoại, địa chỉ đầy đủ, ngày sinh của người đang sống. Ca này ghim:
+        // bước duyệt của Trưởng chi mới là bằng chứng "là người trong họ", không phải cái mã.
+        authenticateAs("sub-cho-duyet", "MEMBER");
+
+        for (ShareScope scope : ShareScope.values()) {
+            PersonView view = personQuery.byId(chuThe.get(scope));
+            assertThat(view).as("Tầng 1 vẫn thấy — bản ghi tồn tại với người đã đăng nhập").isNotNull();
+            assertThat(hienRa(view))
+                    .as("mức " + scope + ": chưa vào phả thì như PRIVATE")
+                    .allSatisfy((nhom, hien) -> assertThat(hien).as(nhom.name()).isFalse());
+        }
     }
 
     @Test

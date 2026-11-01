@@ -72,6 +72,13 @@ interface SeedInput {
   createdAt: string;
 }
 
+/** Tên trường hồ sơ trong payload — bỏ khoá điều khiển `_…`, khớp `CorrectionPayload.fieldKeys`. */
+export function controlFreeKeys(payload: Record<string, unknown>): string[] {
+  return Object.keys(payload)
+    .filter((key) => !key.startsWith("_"))
+    .sort();
+}
+
 function build(seed: SeedInput): ChangeRequestView {
   const branchId = seed.targetBranchId;
   const status = seed.status ?? "PENDING";
@@ -81,8 +88,13 @@ function build(seed: SeedInput): ChangeRequestView {
     status,
     personId: seed.personId,
     targetBranchId: branchId,
-    payload: seed.payload,
-    payloadFields: Object.keys(seed.payload).sort(),
+    // Máy chủ thật LUÔN đóng mốc `_baseVersion` vào payload của UPDATE_PERSON (thiếu thì tự đọc
+    // `person.version` lúc nhận — `ChangeRequestService`), và loại mọi khoá `_…` khỏi
+    // `payloadFields` (`CorrectionPayload.fieldKeys`). Bản giả cũ không có khoá ấy, nên giao diện
+    // chưa bao giờ phải chịu nó — và in "_BASEVERSION · Đề nghị sửa thành 0" lên thẻ đề nghị
+    // thật (bấm thật 24/09). Giả phải khó như thật.
+    payload: seed.type === "UPDATE_PERSON" ? { ...seed.payload, _baseVersion: 0 } : seed.payload,
+    payloadFields: controlFreeKeys(seed.payload),
     reason: seed.reason,
     requestedBy: seed.requestedBy,
     reviewerId: seed.reviewerId ?? null,

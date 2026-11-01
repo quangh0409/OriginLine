@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import { Alert, App, Progress, Skeleton } from "antd";
 import { CheckCircleOutlined } from "@ant-design/icons";
@@ -77,7 +77,22 @@ export function ImportReconcileScreen({ batchId }: ImportReconcileScreenProps) {
   const [commitError, setCommitError] = useState<string | null>(null);
 
   const committing = batch?.status === "COMMITTING";
-  const progressQuery = useCommitProgress(batchId, committing);
+  /**
+   * "Vừa bấm ghi, chưa biết kết cục". Cần riêng một cờ vì phản hồi `202` của
+   * `POST /commit` KHÔNG đáng tin về trạng thái: máy chủ xếp việc ghi vào luồng
+   * nền rồi đọc lại lô ngay, nên thân phản hồi thường vẫn là `VALIDATED` — lượt
+   * ghi chưa kịp lật sang `COMMITTING`. Màn cũ chỉ theo dõi tiến độ khi lô đang
+   * `COMMITTING`, nên với phản hồi ấy nó không hỏi gì nữa và đứng im ở "Đã đối
+   * soát, chờ duyệt · Chưa có gì được ghi" với nút duyệt vẫn sáng — trong khi ở
+   * máy chủ lô đã `FAILED` sau 110 ms vì hai câu hỏi Hội đồng chưa chốt. Bấm
+   * thật 24/09, lô `5629bdf3…`: người dùng không được báo gì cả.
+   */
+  const [choKetCuc, setChoKetCuc] = useState(false);
+  const progressQuery = useCommitProgress(batchId, committing || choKetCuc);
+  const trangThaiTienDo = progressQuery.data?.status;
+  useEffect(() => {
+    if (trangThaiTienDo === "COMMITTED" || trangThaiTienDo === "FAILED") setChoKetCuc(false);
+  }, [trangThaiTienDo]);
 
   const { blocking, warnings } = useMemo(() => {
     const all = issuesQuery.data ?? [];
@@ -117,6 +132,7 @@ export function ImportReconcileScreen({ batchId }: ImportReconcileScreenProps) {
     setCommitError(null);
     try {
       await commit.mutateAsync();
+      setChoKetCuc(true);
     } catch (error) {
       setCommitError(describeProblem(error));
     }
@@ -183,7 +199,7 @@ export function ImportReconcileScreen({ batchId }: ImportReconcileScreenProps) {
       )}
 
       {/* Trước khi ghi: lời trấn an. Sau khi ghi: nó không còn đúng, nên biến mất. */}
-      {batch.status !== "COMMITTED" && batch.status !== "COMMITTING" && <NotWrittenYetBanner />}
+      {batch.status !== "COMMITTED" && batch.status !== "COMMITTING" && !choKetCuc && <NotWrittenYetBanner />}
 
       <section
         className="rounded-lg border px-4 py-3"
@@ -203,7 +219,7 @@ export function ImportReconcileScreen({ batchId }: ImportReconcileScreenProps) {
         plannedUpdateCount={batch.plannedUpdateCount}
       />
 
-      {batch.status === "COMMITTING" && (
+      {(batch.status === "COMMITTING" || choKetCuc) && (
         <section
           className="rounded-lg border px-4 py-3"
           style={{ borderColor: colorVars.accent, backgroundColor: colorVars.warningBg }}
@@ -288,7 +304,7 @@ export function ImportReconcileScreen({ batchId }: ImportReconcileScreenProps) {
         </section>
       )}
 
-      {batch.status !== "COMMITTED" && batch.status !== "COMMITTING" && (
+      {batch.status !== "COMMITTED" && batch.status !== "COMMITTING" && !choKetCuc && (
         <>
           {issuesQuery.isPending ? (
             <Skeleton active paragraph={{ rows: 6 }} />

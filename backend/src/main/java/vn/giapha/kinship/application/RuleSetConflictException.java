@@ -29,16 +29,16 @@ public class RuleSetConflictException extends DomainException {
 
     public static RuleSetConflictException optimisticLock(Object ruleSetId) {
         return new RuleSetConflictException(OPTIMISTIC_LOCK_CONFLICT,
-                "Bo luat '" + ruleSetId + "' da bi nguoi khac thay doi, hay tai lai va thu lai");
+                "Bộ luật '" + ruleSetId + "' đã bị người khác thay đổi, hãy tải lại và thử lại");
     }
 
     public static RuleSetConflictException cycle(Object ruleSetId) {
         return new RuleSetConflictException(RULE_SET_CYCLE,
-                "Chuoi ke thua bo luat tao thanh vong tai '" + ruleSetId + "'");
+                "Chuỗi kế thừa bộ luật tạo thành vòng tại '" + ruleSetId + "'");
     }
 
     public static RuleSetConflictException duplicateRule(String relationCode) {
         return new RuleSetConflictException(DUPLICATE_RULE,
-                "Ma quan he '" + relationCode + "' xuat hien nhieu hon mot lan trong cung mot bo luat");
+                "Mã quan hệ '" + relationCode + "' xuất hiện nhiều hơn một lần trong cùng một bộ luật");
     }
 }

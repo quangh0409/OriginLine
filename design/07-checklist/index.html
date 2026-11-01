@@ -44,6 +44,20 @@
   .tt b { color: var(--xanh); }
   .tt.dang b { color: var(--ho-phach); }
   .tt.chua b { color: var(--do-loi); }
+
+  /* ---- Khối sửa QUYẾT ĐỊNH, thêm ngày 26/09/2026 -------------------------
+     Khác `.tt` ở chỗ: `.tt` đổi TRẠNG THÁI và giữ lập luận; `.sua` ghi một chỗ
+     chính LẬP LUẬN đã bị quyết định khác đi. Lập luận cũ vẫn giữ nguyên chữ
+     ở trên (gạch ngang phần bị bỏ), và khối này ghi lý do của bên thua. ---- */
+  .sua {
+    display: block; margin-top: 8px; padding: 8px 12px;
+    border-left: 3px solid var(--ho-phach); background: var(--vang-nen);
+    border-radius: 0 4px 4px 0; font-size: 14px; line-height: 1.62; color: var(--muc);
+  }
+  .sua .nhan-sua {
+    display: block; font-weight: 700; font-size: 12.5px; letter-spacing: .04em;
+    text-transform: uppercase; color: #8a5200; margin-bottom: 3px;
+  }
 </style>
 </head>
 <body>
@@ -457,8 +471,27 @@
     <strong>Hàng chờ duyệt bài</strong> <span class="chip must">chặn</span>
     <span class="chip xong">đã xong</span>
     <span class="vi-sao">
-      Duyệt, trả lại kèm lý do, hoặc sửa nhẹ rồi đăng. Ghi rõ <em>ai</em> duyệt và
+      Duyệt, trả lại kèm lý do<del>, hoặc sửa nhẹ rồi đăng</del>. Ghi rõ <em>ai</em> duyệt và
       <em>lúc nào</em> — bài lên trang chủ là tiếng nói của cả dòng họ.
+    </span>
+    <span class="sua">
+      <span class="nhan-sua">26/09 — chủ dự án quyết: bỏ “sửa nhẹ rồi đăng”</span>
+      Người duyệt chỉ có hai việc: <strong>Duyệt</strong>, hoặc <strong>Trả lại kèm lý do</strong>.
+      Bài cần sửa một chữ thì trả lại, ghi rõ chữ nào — người viết sửa và gửi lại.
+      <br><strong>Lý do của bản trước (bên thua):</strong> một bài chỉ sai một năm sinh mà phải đi
+      một vòng trả lại – chờ người viết – gửi lại – duyệt lại là chậm, và với người viết 70 tuổi,
+      mỗi lần “bị trả lại” là một lần nản; người duyệt sửa hộ một chữ thì bài lên ngay.
+      <br><strong>Vì sao thua:</strong> sửa bài của người khác rồi đăng <em>dưới tên người ấy</em> là
+      đặt vào miệng họ một câu họ chưa viết — trong khi bài lên trang chủ là tiếng nói có tên của một
+      người trong họ. Làm cho an toàn thì phải có quyền sửa riêng cho người duyệt, nhật ký “ai sửa gì
+      trên bài của ai”, và báo cho tác giả — ba thứ chưa hề có: bấm thật 24–26/09 cho thấy hợp đồng
+      và backend chỉ cho <strong>tác giả</strong> gọi <code>PATCH /posts/{id}</code>, nên nút ấy đã bị
+      ẩn vì không lưu được gì. Nay nó bị bỏ hẳn khỏi thiết kế, không còn là việc chờ làm.
+      <br><em>Dọn còn lại:</em> <code>post-review-queue-screen.tsx</code> vẫn giữ nhánh sửa tại chỗ sau
+      cờ <code>REVIEWER_EDIT_SUPPORTED</code> (hàm <code>saveThenApprove</code>, nút
+      <code>queue.editThenApprove</code> / <code>queue.saveAndApprove</code>, lỗi
+      <code>queue.errors.missingEtag</code>) — bỏ ở đợt sửa mã kế tiếp. <strong>Giữ</strong>
+      <code>queue.cancelEdit</code>: nút <span style="white-space:nowrap">“Huỷ”</span> của ô trả lại cũng dùng khoá ấy.
     </span>
     <span class="tt">
       <b>22/09 — đã chạy thật.</b> <code>/quan-ly/bai-viet</code>,

@@ -89,6 +89,13 @@
   .timeline-desc { font-size: 13px; color: var(--text-muted); }
   .footer { text-align: center; padding: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); background: #fbf9f6; }
   .note { font-size: 12.5px; color: var(--text-muted); border-left: 3px solid var(--border-dark); padding-left: 10px; margin: 8px 0; }
+  /* Khối sửa đổi có ngày (từ 26/09/2026) — cùng quy ước với design/09: ghi quyết định mới
+     VÀ lý do của bản trước, để người đọc sau biết bên thua có lý ở đâu. Bản gốc không bị
+     xoá chữ nào ngoài đúng ô được sửa. */
+  .sua { margin: 10px 0 16px; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--amber-bg); border-radius: 0 4px 4px 0; font-size: 13px; }
+  .sua p { font-size: 13px; margin-bottom: 8px; }
+  .sua p:last-child { margin-bottom: 0; }
+  .sua .nhan-sua { display: block; font-weight: 700; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: #8a5200; margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -174,9 +181,15 @@
           <tr><td><strong>Hội đồng Tộc biểu / Tộc trưởng</strong><br><span class="en-inline">Clan Council / Head</span></td><td>Toàn dòng họ<br><span class="en-inline">Whole clan</span></td><td>Phê duyệt cây chung, tài chính dòng họ, vinh danh, quyết định phả hệ. <span class="en-inline">Approve master tree, finances, honors.</span></td></tr>
           <tr><td><strong>Trưởng Chi / Trưởng Ngành</strong><br><span class="en-inline">Branch Head</span></td><td><strong>Chi/ngành được giao</strong><br><span class="en-inline">Assigned branch only</span></td><td>Quản lý &amp; duyệt cập nhật nhân khẩu <em>trong nhánh</em>; không sửa nhánh khác. <span class="en-inline">Manage/approve within own branch only.</span></td></tr>
           <tr><td><strong>Thành viên</strong><br><span class="en-inline">Member</span></td><td>Theo phân quyền<br><span class="en-inline">Scoped</span></td><td>Xem theo giới hạn, gửi yêu cầu đính chính, cập nhật hồ sơ bản thân. <span class="en-inline">Scoped view, submit corrections, edit own profile.</span></td></tr>
-          <tr><td><strong>Khách</strong><br><span class="en-inline">Guest</span></td><td>Công khai<br><span class="en-inline">Public</span></td><td>Xem thông tin công khai (chủ yếu người đã khuất), tin tức. <span class="en-inline">Public info (mostly deceased), news.</span></td></tr>
+          <tr><td><strong>Khách</strong><br><span class="en-inline">Guest</span></td><td>Công khai<br><span class="en-inline">Public</span></td><td>Xem thông tin công khai <strong>về người đã khuất</strong>: phả đồ, hồ sơ, tìm kiếm, <strong>giỗ và lễ cúng tổ tiên</strong>, <strong>vinh danh đã duyệt của người đã khuất</strong>. <strong>Không</strong> đọc bài viết (đòi đăng nhập) và không thấy bất cứ điều gì của người còn sống. <span class="en-inline">Public information about deceased persons only — tree, profiles, search, death anniversaries and ancestral rites, approved honours of deceased persons. No posts (login required); nothing about living persons.</span></td></tr>
         </tbody>
       </table>
+    </div>
+    <div class="sua">
+      <span class="nhan-sua">Sửa 26/09/2026 — quyền của Khách (quyết định của chủ dự án)</span>
+      <p><strong>Bản trước viết:</strong> "Xem thông tin công khai (chủ yếu người đã khuất), <em>tin tức</em>." <strong>Lý do của bản trước:</strong> cổng thông tin dòng họ là bộ mặt của họ với bên ngoài — con cháu chưa có tài khoản, người họ khác, người nghiên cứu — và tin tức là thứ khiến người ta quay lại; một cổng chỉ có phả đồ người đã khuất trông như chưa làm xong.</p>
+      <p><strong>Vì sao đổi:</strong> mỗi bài viết mang <strong>tên tác giả, là một người đang sống</strong>, và §10 cấm Khách thấy bất cứ điều gì của người còn sống, kể cả tên. "Tin tức" vì thế không thể mở cho Khách mà không phá §10. Ngược lại, giỗ và vinh danh của <em>người đã khuất</em> vốn là dữ liệu công khai theo chính §10 (hàng "Người đã khuất") — bản trước đóng chúng lại cùng bài viết là đóng chặt hơn luật. Hợp đồng <code>contracts/openapi.yaml</code> đã chốt <code>/posts</code> đòi token.</p>
+      <p><strong>Ranh giới cụ thể:</strong> Khách thấy sự kiện gắn với người đã khuất và các lễ cúng tổ tiên không gắn người (giỗ Tổ, tế lễ, tảo mộ); <strong>không</strong> thấy sự kiện về người sống (mừng thọ, sinh nhật, cưới hỏi) và các việc họ nhập tay không gắn người (họp họ, khánh thành) — vì chữ tự do của chúng có thể nhắc tên người sống. Vinh danh: chỉ bản đã duyệt của người đã khuất, bỏ tên người khai và người duyệt. Muốn có tin tức cho Khách thì đó là yêu cầu mới (bài không mang tên người sống, do người nhập chủ động công bố), không phải lý do để mở lại <code>/posts</code>.</p>
     </div>
 
     <!-- 4 -->
@@ -361,7 +374,12 @@
     <ul>
       <li><strong>Chủ thể tự kiểm soát:</strong> mỗi thành viên tự chỉnh mức chia sẻ hồ sơ của mình. <span class="en-inline">Each member controls their own sharing level.</span></li>
       <li><strong>Trẻ vị thành niên:</strong> ẩn tối đa mặc định, do phụ huynh/người giám hộ quản lý. <span class="en-inline">Minors hidden by default, managed by guardian.</span></li>
+      <li><strong>Nội dung mang tên người còn sống thì không công khai, kể cả khi chủ đề là người đã khuất:</strong> bài viết (tên tác giả) chỉ mở cho người đã đăng nhập; vinh danh và sự kiện của người đã khuất mở cho Khách nhưng bỏ mọi trường chỉ tới người còn sống (người khai, người duyệt, người tổ chức). <span class="en-inline">Content carrying a living person's name is not public even when its subject is deceased: posts require login; deceased persons' honours and events are public with living-person fields removed.</span></li>
     </ul>
+    <div class="sua">
+      <span class="nhan-sua">Thêm 26/09/2026 — cùng quyết định với mục 3 (quyền của Khách)</span>
+      <p>Bảng phân tầng ở trên vốn đã xếp "vinh danh" của người đã khuất vào hàng <em>Công khai — kể cả Khách</em>; dòng vừa thêm chỉ nói rõ điều bảng ngầm định cho <strong>nội dung</strong> (bài viết, sự kiện, vinh danh) chứ không chỉ cho <strong>hồ sơ</strong>. <strong>Bản trước không có dòng này</strong>, và chỗ trống ấy đã được đọc theo hai hướng ngược nhau: mục 3 cũ đọc là "Khách đọc tin tức", còn đợt làm 24/09 đọc là "đóng hết bài viết, vinh danh, việc họ với Khách". Lý do của cách đọc thứ hai — cũng là bên thua lần này — là an toàn: một khối trang chủ đóng chặt không bao giờ lộ tên ai. Nó thua vì nó đóng cả dữ liệu mà chính bảng này gọi là công khai.</p>
+    </div>
 
     <!-- 11 -->
     <h2 id="s11">11. Lộ Trình &amp; MVP <span class="en">Roadmap &amp; MVP</span></h2>

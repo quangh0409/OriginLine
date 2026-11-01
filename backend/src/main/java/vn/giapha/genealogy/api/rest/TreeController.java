@@ -144,7 +144,7 @@ public class TreeController {
     private UUID defaultRootOrFail(CallerContext caller) {
         return defaultRoot.resolve(caller).orElseThrow(() -> new NotFoundException(
                 GenealogyProblemCodes.NOT_FOUND,
-                "Chua co nhan khau nao de lam goc pha do"));
+                "Chưa có nhân khẩu nào để làm gốc phả đồ"));
     }
 
     /**

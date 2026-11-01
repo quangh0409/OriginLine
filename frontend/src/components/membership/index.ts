@@ -14,6 +14,7 @@ export { NewPersonRequestCard } from "./new-person-request-card";
 export { ClanCodeCard } from "./clan-code-card";
 export { ClanCodePanel } from "./clan-code-panel";
 export { PersonalInvitePanel } from "./personal-invite-panel";
+export { PasswordResetScreen } from "./password-reset-screen";
 export { InvitationRow } from "./invitation-row";
 export { DuplicateMatchList } from "./duplicate-match-list";
 export { OneTimeCode } from "./one-time-code";
@@ -26,6 +27,7 @@ export {
   useInvitations,
   useIssueClanInvite,
   useIssueInvitation,
+  useIssuePasswordReset,
   usePendingClaimCount,
   usePendingClaims,
   useReviewClaim,

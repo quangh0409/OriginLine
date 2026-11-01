@@ -190,22 +190,22 @@ public class GenealogyExceptionHandler {
      */
     private static String moTaKyHuy(List<TabooConflict> conflicts) {
         if (conflicts == null || conflicts.isEmpty()) {
-            return "Ten huy moi trung ten huy cua bac tren";
+            return "Tên huý mới trùng tên huý của bậc trên";
         }
         TabooConflict dau = conflicts.get(0);
         String kieu = dau.matchKind() == null ? "" : " (" + kieuKhop(dau.matchKind().name()) + ")";
-        return "Ten huy vua nhap trung ten huy cua " + conflicts.size() + " bac tren" + kieu
-                + ". Vi ly do rieng tu, than loi khong neu danh tinh bac tren:"
-                + " mo ho so theo ancestorPersonId de xem phan minh duoc phep xem."
-                + " Xac nhan de van ghi.";
+        return "Tên huý vừa nhập trùng tên huý của " + conflicts.size() + " bậc trên" + kieu
+                + ". Vì lý do riêng tư, thân lỗi không nêu danh tính bậc trên:"
+                + " mở hồ sơ theo ancestorPersonId để xem phần mình được phép xem."
+                + " Xác nhận để vẫn ghi.";
     }
 
     /** Nhãn không dấu cho {@code TabooMatchKind} - chỉ để hiển thị trong câu mô tả. */
     private static String kieuKhop(String matchKind) {
         return switch (matchKind) {
-            case "EXACT" -> "trung nguyen van";
-            case "GIVEN_NAME" -> "trung phan ten chinh";
-            case "UNACCENTED" -> "trung khi bo dau";
+            case "EXACT" -> "trùng nguyên văn";
+            case "GIVEN_NAME" -> "trùng phần tên chính";
+            case "UNACCENTED" -> "trùng khi bỏ dấu";
             default -> matchKind;
         };
     }

@@ -10,6 +10,7 @@ import {
   ReadOutlined,
   SettingOutlined,
   TeamOutlined,
+  ToolOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
@@ -17,6 +18,7 @@ import { Link } from "@/i18n/navigation";
 import { LanguageSwitcher } from "./language-switcher";
 import { usePendingChangeRequestCount } from "@/hooks/use-change-requests";
 import { useMe } from "@/hooks/use-me";
+import { useClanProfile } from "@/hooks/use-clan-profile";
 
 /**
  * Ngăn kéo "Thêm" — CHỈ có trên điện thoại.
@@ -70,6 +72,15 @@ export function MoreMenu() {
     me?.role === "ADMIN" || me?.role === "COUNCIL" || me?.role === "BRANCH_HEAD";
   const pendingCount = usePendingChangeRequestCount({ enabled: hasAccount && canReview });
   const badgeCount = canReview ? pendingCount : 0;
+
+  // `/quan-tri` — CHỈ `ADMIN`, khác `canReview` ở trên (khởi tạo dòng họ là
+  // việc kỹ thuật một lần của vai quản trị, không phải danh xưng dòng họ mà
+  // Hội đồng/Trưởng chi cũng mang). Bề mặt công khai nên gọi được ở đây mà
+  // không mở thêm lỗ quyền nào; số "1" trên huy hiệu là "còn một việc phải
+  // làm", không phải một phép đếm hàng chờ.
+  const isSystemAdmin = hasAccount && me?.role === "ADMIN";
+  const clanProfile = useClanProfile({ enabled: isSystemAdmin });
+  const chuaKhoiTao = isSystemAdmin && clanProfile.data?.initialized === false;
 
   const rows = [
     // Khách bớt: `/kinship` đòi một tài khoản (xem `KinshipGuestNotice`) —
@@ -137,6 +148,21 @@ export function MoreMenu() {
             icon: <TeamOutlined />,
             label: tMembership("nav.label"),
             count: 0,
+          },
+        ]
+      : []),
+    // `/quan-tri` — CHỈ `ADMIN` (xem `isSystemAdmin` ở trên), đứng RIÊNG khỏi
+    // mục "membership" ngay trên: hai cổng khoá theo hai điều kiện khác nhau,
+    // và một Hội đồng/Trưởng chi (qua được `canReview`) không được mời vào một
+    // màn chắc chắn `403` chỉ vì hai mục trông giống nhau.
+    ...(isSystemAdmin
+      ? [
+          {
+            key: "systemAdmin",
+            href: "/quan-tri",
+            icon: <ToolOutlined />,
+            label: t("systemAdmin"),
+            count: chuaKhoiTao ? 1 : 0,
           },
         ]
       : []),

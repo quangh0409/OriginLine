@@ -216,9 +216,10 @@ class PersonClaimFlowIT extends AbstractIntegrationTest {
                 .extracting(ex -> ((DomainException) ex).getCode())
                 .isEqualTo(MembershipProblemCodes.CLAIM_TARGET_UNAVAILABLE);
         authenticateAs("sub-nguoi-moi", "MEMBER");
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> claims.submitExisting(
                 new SubmitPersonClaimCommand(cuToPersonId, "0912345678", "Chau la cu To")))
-                .hasMessageContaining("da khuat");
+                .hasMessageContaining("đã khuất");
         assertThat(countRows("person_claim")).isZero();
     }
 

@@ -21,8 +21,10 @@ export interface MediaGridProps {
  * <h2>Không trang nhảy khi tệp tải xong</h2>
  * Mỗi ô là một khung `aspect-square` — kích thước khung **không phụ thuộc**
  * kích thước thật của tệp, nên trình duyệt dành đúng chỗ đó trước khi byte đầu
- * tiên của ảnh về tới. `width`/`height` trên `<img>` là lớp phòng thủ thứ hai
- * (khi trình duyệt hỗ trợ suy tỷ lệ từ chúng), không phải cơ chế chính.
+ * tiên của ảnh về tới. Không còn `width`/`height` trên `<img>` làm lớp phòng
+ * thủ thứ hai như bản trước: `MediaAssetDto`/`PostMediaDto` thật không mang
+ * kích thước ảnh, nên không có gì để đọc — khung `aspect-square` là cơ chế
+ * DUY NHẤT ở đây, và nó đã đủ.
  */
 export function MediaGrid({ media, postTitle, compact = false }: MediaGridProps) {
   const t = useTranslations("posts.media");
@@ -56,13 +58,7 @@ export function MediaGrid({ media, postTitle, compact = false }: MediaGridProps)
               >
                 {item.kind === "IMAGE" ? (
                   // eslint-disable-next-line @next/next/no-img-element -- URL đã ký, ngắn hạn — không hợp với bộ tối ưu hoá của next/image
-                  <img
-                    src={item.url}
-                    alt=""
-                    width={item.width ?? undefined}
-                    height={item.height ?? undefined}
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={item.url} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <>
                     <video

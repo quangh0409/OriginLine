@@ -86,6 +86,34 @@ public interface HonourJpaRepository extends JpaRepository<HonourJpaEntity, UUID
                       @Param("paths") String paths,
                       @Param("clanWide") int clanWide);
 
+    /**
+     * Luật của <b>Khách</b>: đã duyệt, và chủ thể <b>đã khuất</b>, chưa xoá mềm. Xem
+     * {@code HonourRepository.searchPublishedOfDeceased} — mệnh đề này thay cho
+     * {@link #VISIBLE_TO_CALLER}, không cộng thêm vào nó.
+     */
+    String PUBLIC_DECEASED_ONLY = """
+               AND h.status = 'PUBLISHED'
+               AND pe.is_alive = FALSE
+               AND pe.is_deleted = FALSE
+            """;
+
+    @Query(value = "SELECT h.* " + FROM_HONOUR + FILTERS + PUBLIC_DECEASED_ONLY
+            + " ORDER BY h.year DESC NULLS LAST, h.created_at DESC LIMIT :limit OFFSET :offset",
+            nativeQuery = true)
+    List<HonourJpaEntity> findPublishedOfDeceased(@Param("personId") String personId,
+                                                  @Param("kind") String kind,
+                                                  @Param("branchId") String branchId,
+                                                  @Param("status") String status,
+                                                  @Param("limit") int limit,
+                                                  @Param("offset") int offset);
+
+    @Query(value = "SELECT count(*) " + FROM_HONOUR + FILTERS + PUBLIC_DECEASED_ONLY,
+            nativeQuery = true)
+    long countPublishedOfDeceased(@Param("personId") String personId,
+                                  @Param("kind") String kind,
+                                  @Param("branchId") String branchId,
+                                  @Param("status") String status);
+
     @Query(value = "SELECT count(*) " + FROM_HONOUR + """
              WHERE h.is_deleted = FALSE
                AND h.status = 'PENDING'

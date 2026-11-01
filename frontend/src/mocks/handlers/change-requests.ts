@@ -9,6 +9,7 @@ import type {
 import {
   allChangeRequestsMock,
   branchOfPerson,
+  controlFreeKeys,
   branchPathOf,
   findChangeRequestMock,
   insertChangeRequestMock,
@@ -146,7 +147,12 @@ export const changeRequestHandlers = [
       );
     }
 
-    const payload = body.payload ?? {};
+    // Như máy chủ: UPDATE_PERSON thiếu `_baseVersion` thì được đóng mốc phiên bản hiện tại.
+    const rawPayload = body.payload ?? {};
+    const payload =
+      type === "UPDATE_PERSON" && !("_baseVersion" in rawPayload)
+        ? { ...rawPayload, _baseVersion: 0 }
+        : rawPayload;
     const targetBranchId =
       body.targetBranchId ?? branchOfPerson(body.personId ?? null).branchId;
 
@@ -157,7 +163,7 @@ export const changeRequestHandlers = [
       personId: body.personId ?? null,
       targetBranchId,
       payload,
-      payloadFields: Object.keys(payload).sort(),
+      payloadFields: controlFreeKeys(payload),
       reason: body.reason ?? null,
       requestedBy: identity.appUserId as string,
       reviewerId: null,

@@ -40,7 +40,9 @@ import vn.giapha.shared.security.CurrentUserProvider;
  * <h2>Phân tầng riêng tư</h2>
  * Sự kiện gắn với người <b>còn sống</b> (mừng thọ, cưới hỏi) bị ẩn khỏi Khách — Nghị định 13/2023
  * và BA v2 §10: khách không thấy bất kỳ người còn sống nào, và một dòng "Mừng thọ cụ X" cũng là một
- * lần lộ. Sự kiện của người đã khuất là công khai.
+ * lần lộ. Sự kiện của người đã khuất là công khai. Từ 26/09/2026 {@code GET /events} thật sự mở cho
+ * Khách (trước đó chuỗi bảo mật chặn 401 trước khi nhánh này kịp chạy), nên luật được siết lại và
+ * gom về {@link GuestEventPolicy}.
  */
 @Service
 public class EventQueryService {
@@ -79,7 +81,7 @@ public class EventQueryService {
             // không trả null. Sự kiện cấp dòng họ không gắn nhân khẩu, còn sự kiện không gắn chi thì
             // targetBranchId rỗng — cả hai đều là trường hợp thường gặp.
             EventSubject subject = event.personId() == null ? null : subjectsById.get(event.personId());
-            if (guest && subject != null && subject.alive()) {
+            if (guest && !GuestEventPolicy.visibleToGuest(event, subject)) {
                 continue;
             }
             EventSubject.BranchSnapshot branch = event.targetBranchId() == null
@@ -124,7 +126,7 @@ public class EventQueryService {
 
         EventSubject subject = event.personId() == null
                 ? null : subjects.findPerson(event.personId()).orElse(null);
-        if (CurrentUserProvider.current().isEmpty() && subject != null && subject.alive()) {
+        if (CurrentUserProvider.current().isEmpty() && !GuestEventPolicy.visibleToGuest(event, subject)) {
             log.debug("Khach xem su kien {} cua nguoi con song -> tra 404", id);
             throw NotFoundException.of("Event", id);
         }

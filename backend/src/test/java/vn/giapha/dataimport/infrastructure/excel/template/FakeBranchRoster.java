@@ -35,6 +35,12 @@ final class FakeBranchRoster implements BranchRosterPort {
         return this;
     }
 
+    /** Chi có sẵn {@code n} người trong phả KHÔNG mang mã nhập liệu (nhập tay, qua đơn...). */
+    FakeBranchRoster chiCoNguoiChuaCoMa(String ten, String path, long n) {
+        this.chi = new Chi(UUID.randomUUID(), ten, path, nguoi.size(), n);
+        return this;
+    }
+
     FakeBranchRoster them(NhanKhauDaCo n) {
         nguoi.add(n);
         return this;

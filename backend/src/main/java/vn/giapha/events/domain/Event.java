@@ -55,22 +55,22 @@ public final class Event {
         this.version = builder.version;
         if (this.lunarBased && this.lunarDate == null) {
             throw new IllegalArgumentException(
-                    "Su kien theo am lich bat buoc co lunar_date (ck_event_date_source): " + this.id);
+                    "Sự kiện theo âm lịch bắt buộc có lunar_date (ck_event_date_source): " + this.id);
         }
         if (!this.lunarBased && this.solarDate == null) {
             throw new IllegalArgumentException(
-                    "Su kien theo duong lich bat buoc co solar_date (ck_event_date_source): " + this.id);
+                    "Sự kiện theo dương lịch bắt buộc có solar_date (ck_event_date_source): " + this.id);
         }
         if (this.clanLevel && this.targetBranchId != null) {
             throw new IllegalArgumentException(
-                    "Su kien cap dong ho khong duoc gan chi/nganh (ck_event_scope): " + this.id);
+                    "Sự kiện cấp dòng họ không được gắn chi/ngành (ck_event_scope): " + this.id);
         }
         // Bản sao Java của ck_event_oneoff_lunar_year (V18). Một lễ khánh thành xảy ra đúng một
         // lần: "ngày 12 tháng 2 âm" mà không có năm thì không quy đổi được sang ngày dương nào, và
         // cái sai ấy không lộ ra lúc ghi — nó lộ ra dưới dạng một sự kiện lặp lại tới vô tận.
         if (this.lunarBased && !this.recurring && this.lunarDate.year() <= 0) {
             throw new IllegalArgumentException(
-                    "Su kien mot lan theo am lich bat buoc co nam am (ck_event_oneoff_lunar_year): "
+                    "Sự kiện một lần theo âm lịch bắt buộc có năm âm (ck_event_oneoff_lunar_year): "
                             + this.id);
         }
     }

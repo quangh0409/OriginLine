@@ -173,6 +173,61 @@ export function invitationFailureOf(error: unknown): InvitationFailure {
 }
 
 /**
+ * Nhánh hỏng của lượt **PHÁT** lời mời (`POST /invitations`) — phía Trưởng
+ * chi, KHÁC hẳn phía người nhận mà {@link invitationFailureOf} phục vụ.
+ *
+ * <h2>Vì sao phải tách</h2>
+ * Contract liệt kê ba phép kiểm chạy ngay lúc phát: `403
+ * BRANCH_SCOPE_VIOLATION` (ngoài chi), `422 VALIDATION_FAILED` (người đã khuất
+ * hoặc đã xoá mềm), `422 PERSON_ALREADY_LINKED`. Hàm của phía người nhận không
+ * biết hai mã đầu, nên chúng rơi xuống mặc định `UNAVAILABLE` — và màn phát mã
+ * nói với Trưởng chi "Chưa nối được với máy chủ. Xin thử lại." cho một người
+ * ở chi khác. Đo trên hệ thật 24/09 bằng `truongchi` mời một người Chi Giáp.
+ * Thử lại bao nhiêu lần cũng ra đúng câu ấy: một lời khuyên sai, không phải
+ * một câu báo lỗi.
+ *
+ * `422 VALIDATION_FAILED` ở ĐÚNG endpoint này chỉ có một nghĩa trong contract
+ * (người được mời không còn mời được), nên đọc nó thành `NOT_INVITABLE` là
+ * theo `code` + endpoint, không phải đoán `detail`.
+ */
+export type InvitationIssueFailure =
+  | "BRANCH_SCOPE"
+  | "NOT_INVITABLE"
+  | "PERSON_ALREADY_LINKED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "RATE_LIMITED"
+  | "NEEDS_ACCOUNT"
+  | "UNAVAILABLE";
+
+export function invitationIssueFailureOf(error: unknown): InvitationIssueFailure {
+  if (!(error instanceof ApiError)) return "UNAVAILABLE";
+  switch (error.code) {
+    case "BRANCH_SCOPE_VIOLATION":
+      return "BRANCH_SCOPE";
+    case "VALIDATION_FAILED":
+      return error.status === 422 ? "NOT_INVITABLE" : "UNAVAILABLE";
+    case "PERSON_ALREADY_LINKED":
+      return "PERSON_ALREADY_LINKED";
+    case "FORBIDDEN":
+      return "FORBIDDEN";
+    case "NOT_FOUND":
+      return "NOT_FOUND";
+    case "RATE_LIMITED":
+      return "RATE_LIMITED";
+    case "UNAUTHENTICATED":
+      return "NEEDS_ACCOUNT";
+    default:
+      break;
+  }
+  if (error.status === 403) return "FORBIDDEN";
+  if (error.status === 404) return "NOT_FOUND";
+  if (error.status === 429) return "RATE_LIMITED";
+  if (error.status === 401) return "NEEDS_ACCOUNT";
+  return "UNAVAILABLE";
+}
+
+/**
  * `true` khi lỗi là một `VALIDATION_FAILED` trần ở `/accept` — thân yêu cầu
  * sai hình dạng, gần như luôn là {@code loginId} đọc không ra thành email lẫn
  * số điện thoại (xem {@code LoginIdentifier.of} phía máy chủ).

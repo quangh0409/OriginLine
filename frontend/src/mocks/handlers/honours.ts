@@ -3,6 +3,7 @@ import { API_BASE_URL } from "@/lib/api/http";
 import { findPersonMock, LOGGED_IN_BRANCH_HEAD_FULL } from "@/mocks/data";
 import { canWriteInBranch, identityOf, roleCanReview, type MockIdentity } from "@/mocks/identity";
 import { canSeeLivingPersons, resolveMockRole, type MockRole } from "./role";
+import { privacyOf } from "@/mocks/privacy-settings";
 import type {
   HonourDto,
   HonourPatchBody,
@@ -216,6 +217,14 @@ function recordVisible(h: StoredHonour, identity: MockIdentity): boolean {
     // Khách: không thấy vinh danh của bất kỳ người còn sống nào, bất kể đã duyệt.
     return false;
   }
+  // Khớp máy chủ thật (`HonourService.disclosable` → `PersonLens.honourVisible`): vinh danh ĐÃ
+  // DUYỆT của người còn sống mà nhóm trường thứ sáu còn đóng thì CẢ BẢN GHI vắng mặt — chỉ chính
+  // chủ và vai toàn họ thấy. Trưởng chi, kể cả khi phạm vi CHỨA người ấy, cũng không thấy. Bản
+  // trước của mock trả bản ghi kèm tên rỗng (và cho người duyệt trong phạm vi thấy tên): nghiệm
+  // thu 24/09/2026 bằng `truongchi` trên máy chủ thật cho thấy mục ấy không xuất hiện chút nào.
+  if (alive && !isSelf && !identity.clanWide && !h.nameOpenToClan) {
+    return false;
+  }
   return true;
 }
 
@@ -228,6 +237,15 @@ function project(h: StoredHonour, identity: MockIdentity, role: MockRole): Honou
   const { nameOpenToClan: _nameOpenToClan, branchIdInternal: _branchIdInternal, ...dto } = h;
   void _nameOpenToClan;
   void _branchIdInternal;
+  if (identity.appUserId === null) {
+    // Khách (quyết định 26/09/2026): máy chủ dựng `HonourView.forGuest` — không khoá tài khoản
+    // người duyệt, không tên người duyệt (DTO phía FE không mang `rejectReason`).
+    return {
+      ...dto,
+      reviewedBy: null,
+      reviewedByDisplayName: null,
+    };
+  }
   return {
     ...dto,
     personDisplayName: canSeeName ? dto.personDisplayName : null,
@@ -262,9 +280,11 @@ export const honourHandlers = [
       page: {
         page,
         size,
-        // Đếm TRƯỚC lọc riêng tư theo đúng thật — giao diện không được dùng số
+        // Thành viên: đếm TRƯỚC lọc riêng tư theo đúng thật — giao diện không được dùng số
         // này để vẽ trang, chỉ `hasNext` (xem javadoc `src/lib/api/honours.ts`).
-        totalElements: STORE.length,
+        // Khách: máy chủ lọc "người đã khuất" ngay trong SQL nên tổng đếm ĐÚNG — một tổng
+        // đếm trước lọc sẽ tự nói "có N vinh danh của người sống".
+        totalElements: identity.appUserId === null ? sorted.length : STORE.length,
         totalPages: Math.max(1, Math.ceil(sorted.length / size)),
         hasNext: start + size < sorted.length,
       },
@@ -313,7 +333,10 @@ export const honourHandlers = [
       status: "PENDING",
       createdAt: now(),
       version: 1,
-      nameOpenToClan: true,
+      // Khớp máy chủ thật: nhóm trường vinh danh mặc định PRIVATE — một đề nghị mới cho người
+      // còn sống KHÔNG lộ tên chỉ vì được tạo ra. Bản trước đặt cứng `true` (mock dễ hơn thật):
+      // trên MSW ai cũng thấy tên, trên máy chủ thật `truongchi` không thấy (nghiệm thu NT-TV-15).
+      nameOpenToClan: privacyOf(body.personId).honour !== "PRIVATE",
       branchIdInternal,
     };
     STORE.unshift(record);

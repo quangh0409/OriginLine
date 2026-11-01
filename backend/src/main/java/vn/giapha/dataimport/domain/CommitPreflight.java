@@ -7,8 +7,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Phép soát <b>ngay trước khi ghi</b>: ba ca dữ liệu gia phả Việt mà <b>Hội đồng Tộc biểu chưa
- * chốt</b>, cộng phép kiểm vòng lặp lần cuối.
+ * Ba ca dữ liệu gia phả Việt mà <b>Hội đồng Tộc biểu chưa chốt</b>.
+ *
+ * <h2>Chạy ở bước kiểm, và chạy lại ở bước ghi</h2>
+ * Tên lớp giữ chữ "Commit" vì lịch sử: ban đầu nó chỉ chạy ngay trước khi ghi, và hệ quả đo được
+ * khi bấm thật (24/09, NT-TC-15) là màn đối soát báo "Không còn lỗi phải sửa" rồi lô vẫn
+ * {@code FAILED} sau khi người dùng bấm ghi. Nay nó chạy qua
+ * {@code application.ImportPreflight} ở <b>cuối bước kiểm</b> (và sau mỗi quyết định nghi trùng),
+ * nên lỗi hiện ra ở màn đối soát như mọi lỗi chặn khác; bước ghi vẫn gọi lại nó làm lưới thứ hai.
+ * Hệ quả cho lớp này: nó phải chịu được dữ liệu <b>chưa sạch</b> (dòng thiếu Mã) mà không ném.
  *
  * <h2>Đây không phải một bộ kiểm thứ hai</h2>
  * Bộ kiểm ({@code ImportRule}) bắt <b>mâu thuẫn nội tại</b>: vòng lặp, con sinh trước cha, ngày âm
@@ -58,7 +65,11 @@ public final class CommitPreflight {
 
         List<ImportIssue> issues = new ArrayList<>();
         for (PersonRow row : rows) {
-            if (row.plannedAction() == PlannedAction.SKIP) {
+            // Dong khong co Ma da bi IMP_MISSING_CODE chan o bo kiem. Lop nay nay chay CA o buoc
+            // kiem (xem ImportPreflight), tuc la tren du lieu chua sach: bo qua dong ay thay vi nem
+            // NPE tu Map.of va lam mat ca danh sach loi cua cac dong con lai.
+            if (row.plannedAction() == PlannedAction.SKIP
+                    || row.externalCode() == null || row.externalCode().isBlank()) {
                 continue;
             }
             khongRoSongChet(row, issues);
@@ -80,7 +91,7 @@ public final class CommitPreflight {
             return;
         }
         issues.add(ImportIssue.nhanKhau(IssueCode.IMP_UNDECIDED_LIFE_STATUS, row.rowNo(),
-                "Còn sống",
+                ImportColumn.CON_SONG.tieuDe(),
                 "Dòng " + row.rowNo() + " (" + row.nhan() + ") bỏ trống cả ô Còn sống lẫn ô Ngày"
                         + " mất âm, nên không biết người này còn sống hay đã mất. Hệ thống không"
                         + " đoán: đoán còn sống thì phả đồ đầy người sống từ đời thứ ba, đoán đã"
@@ -100,7 +111,8 @@ public final class CommitPreflight {
         if (row.parentRel() != CellCodec.ParentRel.ADOPT || (!row.coCha() && !row.coMe())) {
             return;
         }
-        issues.add(ImportIssue.nhanKhau(IssueCode.IMP_UNDECIDED_ADOPTION, row.rowNo(), "Quan hệ",
+        issues.add(ImportIssue.nhanKhau(IssueCode.IMP_UNDECIDED_ADOPTION, row.rowNo(),
+                ImportColumn.QUAN_HE.tieuDe(),
                 "Dòng " + row.rowNo() + " (" + row.nhan() + ") khai là con nuôi của một người"
                         + " trong họ. Mẫu Excel chỉ chở được một cặp Mã cha / Mã mẹ, nên ghi cha"
                         + " nuôi là mất cha ruột khỏi phả, và ngược lại — trong khi cả hai đều"
@@ -130,12 +142,20 @@ public final class CommitPreflight {
                 || !coTrongHonPhoi.contains(row.externalCode())) {
             return;
         }
-        issues.add(ImportIssue.nhanKhau(IssueCode.IMP_UNDECIDED_INLAW_DOI, row.rowNo(), "Đời",
+        // Cau chu noi ro QUY UOC va CACH SUA, khong chi noi "chua chot": nguoi doc la Truong chi,
+        // va mot loi chan khong chi ra duoc o nao phai sua thi ho se bam kiem lai toi khi bo cuoc.
+        // Quy uoc "dau/re KHONG khai Doi" la quy uoc TAM cho toi khi Hoi dong chot (ke hoach §14
+        // ca 2) — neu Hoi dong chot khac thi sua cau nay cung luc voi trang Huong dan cua tep mau.
+        issues.add(ImportIssue.nhanKhau(IssueCode.IMP_UNDECIDED_INLAW_DOI, row.rowNo(),
+                ImportColumn.DOI.tieuDe(),
                 "Dòng " + row.rowNo() + " (" + row.nhan() + ") là dâu/rể — không có Mã cha, không"
-                        + " có Mã mẹ, nhưng có mặt ở trang Hôn phối — mà vẫn ghi Đời "
-                        + row.generation() + ". Chưa rõ đó là đời của chồng hay đời trong họ gốc,"
-                        + " và Hội đồng Tộc biểu chưa chốt quy ước. Cách gỡ ngay: để trống ô Đời"
-                        + " cho các dòng dâu/rể, đời thứ sẽ suy theo vợ/chồng.",
+                        + " có Mã mẹ, nhưng có mặt ở trang Hôn phối — mà vẫn khai Đời "
+                        + row.generation() + ". Quy ước hiện hành: dâu/rể KHÔNG khai Đời, vì chưa"
+                        + " rõ con số ấy là đời của vợ/chồng hay đời trong họ gốc, và Hội đồng Tộc"
+                        + " biểu chưa chốt. Cách sửa: xoá ô Đời ở dòng " + row.rowNo() + " — đời"
+                        + " của dâu/rể sẽ suy từ vợ/chồng khi ghi. Nếu người này thực ra sinh ra"
+                        + " trong họ thì điền Mã cha hoặc Mã mẹ thay vì xoá Đời; nếu đây là một"
+                        + " dòng chép trùng của người đã có thì quyết gộp ở màn nghi trùng.",
                 Map.of("externalCode", row.externalCode(), "doiDaKhai", row.generation())));
     }
 

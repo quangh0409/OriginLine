@@ -59,10 +59,10 @@ public record KinshipRule(
     public KinshipRule {
         Objects.requireNonNull(relationCode, "relationCode khong duoc null");
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("title khong duoc rong (luat " + relationCode + ")");
+            throw new IllegalArgumentException("title không được rỗng (luật " + relationCode + ")");
         }
         if (priority < 0) {
-            throw new IllegalArgumentException("priority phai >= 0 (luat " + relationCode + ")");
+            throw new IllegalArgumentException("priority phải >= 0 (luật " + relationCode + ")");
         }
     }
 

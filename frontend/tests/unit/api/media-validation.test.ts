@@ -17,11 +17,15 @@ import {
  * mà một bài kiểm dựng cả `MediaPicker` sẽ tốn vài giây cho từng ca.
  */
 const POLICY: MediaPolicy = {
-  image: { maxBytes: 8 * 1024 * 1024, mimeTypes: ["image/jpeg", "image/png", "image/webp"] },
-  video: { maxBytes: 100 * 1024 * 1024, mimeTypes: ["video/mp4", "video/webm"], maxDurationSeconds: 120 },
-  maxAttachmentsPerPost: 12,
-  uploadUrlExpiresInSeconds: 900,
-  readUrlExpiresInSeconds: 3600,
+  maxImageBytes: 8 * 1024 * 1024,
+  maxVideoBytes: 100 * 1024 * 1024,
+  maxVideoDurationSeconds: 120,
+  maxMediaPerPost: 12,
+  maxAltLength: 300,
+  imageContentTypes: ["image/jpeg", "image/png", "image/webp"],
+  videoContentTypes: ["video/mp4", "video/webm"],
+  uploadUrlTtlSeconds: 900,
+  viewUrlTtlSeconds: 600,
 };
 
 function fileOfSize(name: string, type: string, sizeBytes: number): File {
@@ -60,10 +64,10 @@ describe("validateMediaFile — trần đọc từ MediaPolicy, không phải h�
   });
 
   it("ảnh đúng 8 MiB thì lọt, đúng 8 MiB + 1 byte thì không", () => {
-    const exact = fileOfSize("anh.jpg", "image/jpeg", POLICY.image.maxBytes);
+    const exact = fileOfSize("anh.jpg", "image/jpeg", POLICY.maxImageBytes);
     expect(validateMediaFile(exact, 0, POLICY).ok).toBe(true);
 
-    const overByOne = fileOfSize("anh.jpg", "image/jpeg", POLICY.image.maxBytes + 1);
+    const overByOne = fileOfSize("anh.jpg", "image/jpeg", POLICY.maxImageBytes + 1);
     const result = validateMediaFile(overByOne, 0, POLICY);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe("SIZE");
@@ -78,7 +82,7 @@ describe("validateMediaFile — trần đọc từ MediaPolicy, không phải h�
 
   it("đủ 12 tệp thì tệp thứ 13 bị chặn vì SỐ LƯỢNG — trước cả khi xét tới loại/dung lượng của nó", () => {
     const thirteenth = fileOfSize("anh.jpg", "image/jpeg", 100);
-    const result = validateMediaFile(thirteenth, POLICY.maxAttachmentsPerPost, POLICY);
+    const result = validateMediaFile(thirteenth, POLICY.maxMediaPerPost, POLICY);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe("COUNT");
   });

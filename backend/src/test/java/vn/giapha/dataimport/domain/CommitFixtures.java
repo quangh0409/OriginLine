@@ -84,7 +84,11 @@ public final class CommitFixtures {
 
         public PersonRow build() {
             Map<String, String> o = new LinkedHashMap<>();
-            o.put("Mã", ma);
+            if (ma != null) {
+                // Dong thieu Ma (IMP_MISSING_CODE) la dau vao hop le cua luot soat o buoc kiem;
+                // Map.copyOf trong PersonRow khong nhan gia tri null.
+                o.put("Mã", ma);
+            }
             o.put("Họ tên", hoTen);
             return new PersonRow(rowNo, ma, o, o, hoTen, null, null, null, Gender.MALE, doi,
                     cha, me, quanHe, conSong, null, gio, null, null, keTuCho, loaiKeTu, null,

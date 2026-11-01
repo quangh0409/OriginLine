@@ -66,9 +66,10 @@ class PersonSoftDeleteTest {
         Person person = PersonFixtures.nam("Nguyễn Văn Ba");
         person.softDelete("lần đầu");
 
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> person.softDelete("lần hai"))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("xoa mem");
+                .hasMessageContaining("xoá mềm");
     }
 
     @Test

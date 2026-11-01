@@ -35,7 +35,7 @@ public class CurrentAccountService {
     /** @throws ForbiddenException khi chưa đăng nhập hoặc tài khoản chưa ghép với nhân khẩu */
     public Recipient require() {
         return find().orElseThrow(() -> new ForbiddenException(CODE_UNLINKED_ACCOUNT,
-                "Tai khoan chua duoc ghep voi nhan khau trong gia pha nen chua co hop thu."));
+                "Tài khoản chưa được ghép với nhân khẩu trong gia phả nên chưa có hộp thư."));
     }
 
     public Optional<Recipient> find() {

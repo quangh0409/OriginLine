@@ -70,7 +70,7 @@ public class RoleAssignmentService {
     @Transactional
     public BranchAssignment grant(GrantRoleCommand command) {
         MemberScope caller = scopes.currentMemberScope();
-        guard.requireClanWide(caller, "cap vai tro cho tai khoan");
+        guard.requireClanWide(caller, "cấp vai trò cho tài khoản");
         if (command.role() == RoleCode.ADMIN) {
             guard.requireSystemAdmin(caller, "cap vai tro Quan tri he thong");
         }
@@ -78,13 +78,13 @@ public class RoleAssignmentService {
 
         appUsers.byId(command.appUserId()).orElseThrow(() -> new NotFoundException(
                 MembershipProblemCodes.NOT_FOUND,
-                "Khong tim thay tai khoan " + command.appUserId()));
+                "Không tìm thấy tài khoản " + command.appUserId()));
 
         BranchPath path = command.branchId() == null
                 ? null
                 : branches.pathOfBranch(command.branchId()).orElseThrow(() -> new NotFoundException(
                         MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay chi/nganh " + command.branchId()));
+                        "Không tìm thấy chi/ngành " + command.branchId()));
 
         BranchAssignment assignment = new BranchAssignment(UUID.randomUUID(), command.appUserId(),
                 command.role(), command.branchId(), path, command.validFrom(), command.validTo(),
@@ -108,7 +108,7 @@ public class RoleAssignmentService {
 
         BranchAssignment assignment = assignments.byId(assignmentId)
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay phan cong " + assignmentId));
+                        "Không tìm thấy phân công " + assignmentId));
         if (assignment.role() == RoleCode.ADMIN) {
             guard.requireSystemAdmin(caller, "thu hoi vai tro Quan tri he thong");
         }
@@ -125,7 +125,7 @@ public class RoleAssignmentService {
     public List<BranchAssignment> assignmentsOf(UUID appUserId) {
         MemberScope caller = scopes.currentMemberScope();
         if (!caller.isClanWide() && !appUserId.equals(caller.appUserId())) {
-            guard.requireClanWide(caller, "xem phan cong vai tro cua tai khoan khac");
+            guard.requireClanWide(caller, "xem phân công vai trò của tài khoản khác");
         }
         return assignments.allFor(appUserId);
     }
@@ -139,24 +139,24 @@ public class RoleAssignmentService {
     private void validate(GrantRoleCommand command) {
         if (command.role() == null) {
             throw new DomainException(MembershipProblemCodes.INVALID_ROLE_ASSIGNMENT,
-                    "Phai chi ro vai tro can cap");
+                    "Phải chỉ rõ vai trò cần cấp");
         }
         if (command.role() == RoleCode.BRANCH_HEAD && command.branchId() == null) {
             throw new DomainException(MembershipProblemCodes.INVALID_ROLE_ASSIGNMENT,
-                    "Vai Truong Chi/Nganh bat buoc phai kem pham vi chi/nganh");
+                    "Vai Trưởng Chi/Ngành bắt buộc phải kèm phạm vi chi/ngành");
         }
         if (command.role() == RoleCode.GUEST) {
             throw new DomainException(MembershipProblemCodes.INVALID_ROLE_ASSIGNMENT,
-                    "Vai Khach la mac dinh cho nguoi chua dang nhap, khong cap duoc");
+                    "Vai Khách là mặc định cho người chưa đăng nhập, không cấp được");
         }
         if (command.role().isClanWide() && command.branchId() != null) {
             throw new DomainException(MembershipProblemCodes.INVALID_ROLE_ASSIGNMENT,
-                    "Vai pham vi toan dong ho khong duoc gioi han vao mot chi");
+                    "Vai phạm vi toàn dòng họ không được giới hạn vào một chi");
         }
         if (command.validFrom() != null && command.validTo() != null
                 && command.validTo().isBefore(command.validFrom())) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Ngay het hieu luc phai khong som hon ngay bat dau");
+                    "Ngày hết hiệu lực phải không sớm hơn ngày bắt đầu");
         }
     }
 

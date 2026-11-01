@@ -73,14 +73,19 @@ public enum IssueCode {
     IMP_MASS_CREATE_GUARD(BLOCKING),
 
     // ---------------------------------------------------------------------------------------
-    // Lỗi chặn phát sinh Ở BƯỚC GHI, không phải ở bộ kiểm
+    // Lỗi chặn của LƯỢT SOÁT TRƯỚC KHI GHI (ImportPreflight)
     // ---------------------------------------------------------------------------------------
-    // Bốn mã dưới đây do bước ghi vào phả sinh ra, và chúng dừng cả lô TRƯỚC khi một dòng nào
-    // được viết. Chúng KHÔNG trùng lặp với bộ kiểm: bộ kiểm bắt mâu thuẫn nội tại của tệp, còn
-    // đây là những câu hỏi mà **Hội đồng Tộc biểu chưa trả lời** (kế hoạch §14, ba ca cuối tài
-    // liệu). Máy không được phép tự chọn một đáp án rồi ghi vào phả — một đời thứ đoán sai làm
-    // lệch danh xưng của cả một cành, và nó chỉ lộ ra khi một cụ cao niên nhìn phả đồ ba tháng
-    // sau.
+    // Sáu mã dưới đây chỉ do ImportPreflight sinh ra. Lượt soát ấy chạy ở CUỐI BƯỚC KIỂM (và sau
+    // mỗi quyết định nghi trùng), nên chúng hiện ở màn đối soát như mọi lỗi chặn khác; bước ghi
+    // chạy lại nó làm lưới thứ hai. Tiền tố IMP_COMMIT_ là dấu vết lịch sử: trước 24/09 (NT-TC-15)
+    // chúng chỉ sinh lúc ghi, và lô "sạch lỗi" vẫn FAILED sau khi người dùng bấm ghi. Giữ tên để
+    // không vỡ dữ liệu import_issue đã lưu và hợp đồng.
+    // Chúng KHÔNG trùng lặp với bộ luật: bộ luật bắt mâu thuẫn nội tại của tệp thô, còn đây là
+    // câu hỏi Hội đồng Tộc biểu chưa trả lời (kế hoạch §14) và các phép soát trên tập dòng SAU KHI
+    // GỘP. Máy không được tự chọn một đáp án rồi ghi vào phả — một đời thứ đoán sai làm lệch danh
+    // xưng của cả một cành, và nó chỉ lộ ra khi một cụ cao niên nhìn phả đồ ba tháng sau.
+    // Đừng dùng lại sáu mã này trong một ImportRule: lượt soát chạy lại bằng cách gỡ đúng sáu mã
+    // này khỏi danh sách đã lưu, nên lỗi của luật mang cùng mã sẽ bị xoá theo.
 
     /**
      * Vòng lặp tổ tiên vẫn còn ở bước ghi.
@@ -179,7 +184,13 @@ public enum IssueCode {
     /** Có nguyên quán bằng chữ nhưng không có mã tỉnh — dòng này không vào được báo cáo dân số. */
     IMP_MISSING_PLACE_CODE(WARNING),
 
-    /** Mã người được kế tự không tìm thấy. */
+    /**
+     * Mã người được kế tự không tìm thấy <b>trong tệp</b>.
+     *
+     * <p>Vẫn là cảnh báo khi mã ấy có trong phả của chi (bộ luật chỉ nhìn tệp). Khi mã không có ở
+     * đâu cả thì bước ghi sẽ chặn, nên lượt soát <b>thay</b> cảnh báo này bằng
+     * {@link #IMP_COMMIT_REF_NOT_FOUND} — xem {@code ImportPreflight}.</p>
+     */
     IMP_HEIR_TARGET_NOT_FOUND(WARNING);
 
     private final IssueSeverity severity;

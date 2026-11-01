@@ -204,6 +204,41 @@ describe("đối soát · hai nhóm lỗi tách bạch", () => {
   });
 });
 
+/**
+ * NT-TC-15 (bấm thật 24/09): hai dòng dâu/rể có khai Đời. Màn cũ báo "Không còn
+ * lỗi phải sửa", nút ghi mở, lô nhận 202 rồi mới FAILED. Nay máy chủ chạy lượt
+ * soát trước khi ghi ở cuối bước kiểm, và màn này phải hiện kết quả ấy như mọi
+ * lỗi chặn khác — không có nhánh riêng nào cho "lỗi của bước ghi".
+ */
+describe("đối soát · dâu/rể khai Đời bị chặn ở bước kiểm, không đợi tới lúc ghi", () => {
+  it("hiện hai lỗi chặn ở đúng dòng, đúng ô Đời, kèm quy ước và cách sửa", async () => {
+    const batch = seedMockBatch({ branchId: "b-chi1", fileName: "chi-nhat-dau-re-doi.xlsx" });
+    renderWithProviders(<ImportReconcileScreen batchId={batch.id} />, { role: "branch-head" });
+
+    await waitFor(() => expect(blockingSection()).toBeInTheDocument());
+    const region = blockingSection();
+    expect(within(region).getByText(/2 lỗi phải sửa/i)).toBeInTheDocument();
+    expect(within(region).getByText(/Nhân khẩu · dòng 14/i)).toBeInTheDocument();
+    expect(within(region).getByText(/Nhân khẩu · dòng 27/i)).toBeInTheDocument();
+    expect(within(region).getAllByText("Đời")).toHaveLength(2);
+    // Nhãn theo mã — không rơi về tên khoá thô khi thiếu bản dịch.
+    expect(within(region).getAllByText("Dâu/rể không khai Đời — xoá ô Đời")).toHaveLength(2);
+    expect(within(region).queryByText(/IMP_UNDECIDED_INLAW_DOI/)).not.toBeInTheDocument();
+    // Câu của máy chủ nói ra quy ước và CÁCH SỬA, không chỉ "chưa chốt".
+    expect(within(region).getByText(/xoá ô Đời ở dòng 14/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Không còn lỗi phải sửa/i)).not.toBeInTheDocument();
+  });
+
+  it("nút duyệt khoá và nêu đúng lý do — lô không bao giờ đến được bước ghi", async () => {
+    const batch = seedMockBatch({ branchId: "b-chi1", fileName: "chi-nhat-dau-re-doi.xlsx" });
+    renderWithProviders(<ImportReconcileScreen batchId={batch.id} />, { role: "branch-head" });
+
+    const commit = await screen.findByRole("button", { name: /Duyệt và ghi .* vào phả/i });
+    expect(commit).toBeDisabled();
+    expect(within(screen.getByTestId("commit-blockers")).getByText(/2 lỗi/i)).toBeInTheDocument();
+  });
+});
+
 describe("đối soát · cửa duyệt", () => {
   it("còn lỗi chặn thì nút duyệt bị khoá VÀ nói ra lý do", async () => {
     const batch = seedMockBatch({ branchId: "b-chi1", fileName: "chi-nhat.xlsx" });
@@ -233,6 +268,29 @@ describe("đối soát · cửa duyệt", () => {
     await waitFor(() => expect(commit).toBeEnabled());
     expect(screen.queryByTestId("commit-blockers")).not.toBeInTheDocument();
   });
+
+  it("bấm ghi thì màn THEO DÕI tới kết cục, dù phản hồi 202 còn nói 'chờ duyệt'", async () => {
+    // Backend thật trả thân 202 là lô đọc TRƯỚC khi luồng nền lật trạng thái
+    // (gần như luôn `VALIDATED`). Màn cũ chỉ theo dõi khi lô đã `COMMITTING`,
+    // nên trên hệ thật nó đứng im sau khi bấm — bấm thật 24/09, lô đã FAILED
+    // ở máy chủ mà màn vẫn "chờ duyệt". Mock nay trả đúng hình dạng ấy.
+    const batch = seedMockBatch({ branchId: "b-chi1", fileName: "chi-nhat-sach.xlsx" });
+    const { user } = renderWithProviders(<ImportReconcileScreen batchId={batch.id} />, {
+      role: "branch-head",
+    });
+
+    const commit = await screen.findByRole("button", { name: /Duyệt và ghi 318 người vào phả/i });
+    await waitFor(() => expect(commit).toBeEnabled());
+    await user.click(commit);
+    await user.click(await screen.findByRole("button", { name: /Ghi vào phả/ }));
+
+    // Ngay sau khi bấm: khối "Đang ghi", không còn lời "chưa có gì được ghi".
+    expect(await screen.findByText(/Đang ghi vào phả/)).toBeInTheDocument();
+    // Rồi tới kết cục thật, không phải đứng im.
+    expect(
+      await screen.findByText(/Đã ghi 318 người vào phả/, {}, { timeout: 20_000 })
+    ).toBeInTheDocument();
+  }, 45_000);
 
   it("tick 'đã xem' ghi lại được, và ô tick nhường chỗ cho dòng lịch sử", async () => {
     const batch = seedMockBatch({ branchId: "b-chi1", fileName: "chi-nhat-sach.xlsx" });

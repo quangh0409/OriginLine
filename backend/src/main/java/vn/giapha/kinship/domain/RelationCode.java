@@ -69,7 +69,7 @@ public record RelationCode(String value) implements ValueObject {
         value = value.trim().toUpperCase(Locale.ROOT);
         if (!VALID.matcher(value).matches()) {
             throw new IllegalArgumentException(
-                    "relation_code chi nhan [A-Z0-9_] toi da 48 ky tu: " + value);
+                    "relation_code chỉ nhận [A-Z0-9_] tối đa 48 ký tự: " + value);
         }
     }
 

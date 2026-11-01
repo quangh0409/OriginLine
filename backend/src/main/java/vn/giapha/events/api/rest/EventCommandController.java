@@ -130,7 +130,7 @@ public class EventCommandController {
      */
     private UpdateEventRequest readBody(JsonNode body) {
         if (body == null || !body.isObject()) {
-            throw new IllegalArgumentException("Than yeu cau PATCH phai la mot object JSON");
+            throw new IllegalArgumentException("Thân yêu cầu PATCH phải là một object JSON");
         }
         try {
             UpdateEventRequest request = objectMapper.treeToValue(body, UpdateEventRequest.class);
@@ -140,7 +140,7 @@ public class EventCommandController {
             }
             return request;
         } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
-            throw new IllegalArgumentException("Than yeu cau khong hop le: " + ex.getOriginalMessage(), ex);
+            throw new IllegalArgumentException("Thân yêu cầu không hợp lệ: " + ex.getOriginalMessage(), ex);
         }
     }
 
@@ -165,7 +165,7 @@ public class EventCommandController {
     private static long parseIfMatch(String ifMatch) {
         if (ifMatch == null || ifMatch.isBlank()) {
             throw new EventPreconditionRequiredException(
-                    "Thieu header If-Match; hay lay ETag tu GET /api/v1/events/{id} truoc khi sua");
+                    "Thiếu header If-Match; hãy lấy ETag từ GET /api/v1/events/{id} trước khi sửa");
         }
         String value = ifMatch.trim();
         if (value.startsWith("W/")) {
@@ -175,7 +175,7 @@ public class EventCommandController {
         try {
             return Long.parseLong(value);
         } catch (NumberFormatException ex) {
-            throw new EventPreconditionRequiredException("If-Match khong hop le: " + ifMatch);
+            throw new EventPreconditionRequiredException("If-Match không hợp lệ: " + ifMatch);
         }
     }
 }

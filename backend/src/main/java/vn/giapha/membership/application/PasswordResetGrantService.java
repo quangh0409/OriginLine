@@ -150,14 +150,14 @@ public class PasswordResetGrantService {
     public IssuedPasswordReset issue(IssuePasswordResetCommand command) {
         if (command == null || command.personId() == null) {
             throw new DomainException(MembershipProblemCodes.VALIDATION_FAILED,
-                    "Phai chi dinh nhan khau can cap lai lien ket dat mat khau");
+                    "Phải chỉ định nhân khẩu cần cấp lại liên kết đặt mật khẩu");
         }
         MemberScope caller = scopes.currentMemberScope();
         guard.requireProvisionedAccount(caller);
 
         Invitee target = invitees.byId(command.personId())
                 .orElseThrow(() -> new NotFoundException(MembershipProblemCodes.NOT_FOUND,
-                        "Khong tim thay nhan khau " + command.personId()));
+                        "Không tìm thấy nhân khẩu " + command.personId()));
 
         // (1) PHEP KIEM PHAM VI CHI — doc ltree hien hanh cua nhan khau dich, khong doc anh chup
         // nao. Dat truoc moi thu khac: xem javadoc.
@@ -166,19 +166,19 @@ public class PasswordResetGrantService {
         AppUser targetUser = appUsers.byPersonId(command.personId())
                 .orElseThrow(() -> new DomainException(
                         MembershipProblemCodes.PASSWORD_RESET_NOT_ALLOWED,
-                        "Nhan khau nay chua co tai khoan — hay phat loi moi thay vi cap lai mat khau"));
+                        "Nhân khẩu này chưa có tài khoản — hãy phát lời mời thay vì cấp lại mật khẩu"));
 
         // (2) KHONG AI TU CAP CHO CHINH MINH.
         if (targetUser.id().equals(caller.appUserId()) || caller.isSelf(command.personId())) {
             throw new ForbiddenException(MembershipProblemCodes.SELF_PASSWORD_RESET_FORBIDDEN,
-                    "Khong tu cap lien ket dat mat khau cho chinh minh duoc; day la luong"
-                            + " quen mat khau, hay dung duong khac");
+                    "Không tự cấp liên kết đặt mật khẩu cho chính mình được; đây là luồng"
+                            + " quên mật khẩu, hãy dùng đường khác");
         }
 
         if (targetUser.status() != AppUserStatus.ACTIVE) {
             throw new DomainException(MembershipProblemCodes.PASSWORD_RESET_NOT_ALLOWED,
-                    "Tai khoan cua nguoi nay dang o trang thai " + targetUser.status()
-                            + ", khong cap lai lien ket dat mat khau duoc");
+                    "Tài khoản của người này đang ở trạng thái " + targetUser.status()
+                            + ", không cấp lại liên kết đặt mật khẩu được");
         }
 
         kiemTaiKhoanDich(targetUser);
@@ -212,11 +212,11 @@ public class PasswordResetGrantService {
         IdentityAccount account = resets.findBySubject(targetUser.keycloakSub())
                 .orElseThrow(() -> new DomainException(
                         MembershipProblemCodes.PASSWORD_RESET_NOT_ALLOWED,
-                        "Tai khoan dang nhap cua nguoi nay khong con ton tai, hay bao Quan tri he thong"));
+                        "Tài khoản đăng nhập của người này không còn tồn tại, hãy báo Quản trị hệ thống"));
         if (account.email() != null && !account.email().isBlank()) {
             throw new DomainException(MembershipProblemCodes.PASSWORD_RESET_NOT_ALLOWED,
-                    "Tai khoan nay co dia chi thu nen tu lay lai mat khau duoc:"
-                            + " bam 'Quen mat khau' o man dang nhap de nhan thu");
+                    "Tài khoản này có địa chỉ thư nên tự lấy lại mật khẩu được:"
+                            + " bấm 'Quên mật khẩu' ở màn đăng nhập để nhận thư");
         }
     }
 
@@ -227,7 +227,7 @@ public class PasswordResetGrantService {
             log.warn("Chan cap lai mat khau: app_user {} da cap {} lan trong mot gio", issuerAppUserId,
                     issued);
             throw new TooManyAttemptsException(
-                    "Da cap qua nhieu lien ket dat mat khau trong mot gio, hay doi roi lam tiep",
+                    "Đã cấp quá nhiều liên kết đặt mật khẩu trong một giờ, hãy đợi rồi làm tiếp",
                     Duration.ofHours(1).toSeconds());
         }
     }

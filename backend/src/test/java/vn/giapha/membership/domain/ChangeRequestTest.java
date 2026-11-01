@@ -58,10 +58,11 @@ class ChangeRequestTest {
                     ChangeRequestType.CREATE_PERSON, null, CHI_DICH, Map.of(), null, NGUOI_GUI);
             assertThat(themNguoiMoi.personId()).isNull();
 
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
             assertThatThrownBy(() -> ChangeRequest.submit(UUID.randomUUID(),
                     ChangeRequestType.UPDATE_PERSON, null, CHI_DICH, Map.of(), null, NGUOI_GUI))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("nhan khau co san");
+                    .hasMessageContaining("nhân khẩu có sẵn");
         }
 
         @Test
@@ -104,7 +105,7 @@ class ChangeRequestTest {
 
             assertThatThrownBy(() -> request.reject(NGUOI_DUYET, "   ", LUC))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("ly do");
+                    .hasMessageContaining("lý do");
             assertThatThrownBy(() -> request.reject(NGUOI_DUYET, null, LUC))
                     .isInstanceOf(IllegalArgumentException.class);
             // Bi tu choi khong duoc lam hong trang thai dang mo.
@@ -124,7 +125,7 @@ class ChangeRequestTest {
 
             assertThatThrownBy(() -> request.approve(NGUOI_GUI, "tự duyệt", LUC))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("tu duyet");
+                    .hasMessageContaining("tự duyệt");
             assertThatThrownBy(() -> request.reject(NGUOI_GUI, "tự từ chối", LUC))
                     .isInstanceOf(IllegalStateException.class);
             assertThat(request.status()).isEqualTo(ChangeRequestStatus.PENDING);
@@ -160,7 +161,7 @@ class ChangeRequestTest {
 
             assertThatThrownBy(() -> request.approve(NGUOI_DUYET, "ok lần hai", LUC))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("trang thai cuoi");
+                    .hasMessageContaining("trạng thái cuối");
             assertThatThrownBy(() -> request.reject(NGUOI_DUYET, "đổi ý", LUC))
                     .isInstanceOf(IllegalStateException.class);
             assertThatThrownBy(() -> request.cancel(NGUOI_GUI, LUC))
@@ -213,7 +214,7 @@ class ChangeRequestTest {
 
             assertThatThrownBy(() -> request.cancel(NGUOI_DUYET, LUC))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Chi nguoi gui");
+                    .hasMessageContaining("Chỉ người gửi");
         }
     }
 

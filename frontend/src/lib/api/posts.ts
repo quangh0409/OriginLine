@@ -37,12 +37,16 @@ export type { PostMediaItem, MediaKind } from "./media";
  * <ul>
  *   <li><b>Không có `coverImageKey` đơn lẻ, và sẽ không bao giờ có.</b> Cột ấy
  *       từng bị gỡ khỏi cả CSDL lẫn DTO vì lúc đó backend chưa có SDK MinIO/S3
- *       nào. Đợt này PO chốt lại hình dạng khác hẳn "ảnh bìa": một danh sách
+ *       nào. Hình dạng chốt khác hẳn "ảnh bìa": một danh sách
  *       {@link PostDto.media} có thứ tự, nhiều ảnh/video, không có khái niệm
- *       "ảnh đại diện". Xem `src/lib/api/media.ts` cho luồng ba bước (xin URL
- *       đã ký → `PUT` thẳng lên kho → xác nhận) — một agent backend khác đang
- *       dựng phần MinIO cùng lúc với tệp này, nên hình dạng dưới đây vẫn là đề
- *       xuất của FE cho tới khi `contracts/openapi.yaml` có nhóm này.</li>
+ *       "ảnh đại diện". Xem `src/lib/api/media.ts` cho ba bước tải lên (xin
+ *       phiếu → `PUT` thẳng lên kho → xác nhận) — cả ba bước đó KHÔNG cần
+ *       biết bài nào; {@link postsApi.setMedia} (`PUT /posts/{id}/media`,
+ *       `contracts/openapi.yaml` ~5904) mới là bước gắn tệp đã xác nhận vào
+ *       MỘT bài, bằng danh sách `mediaIds` đầy đủ theo đúng thứ tự — cùng một
+ *       điểm cuối này cũng lo luôn việc "sắp lại thứ tự" và "gỡ một tệp"
+ *       (gửi lại danh sách đã đổi thứ tự / đã bớt một phần tử), vì hợp đồng
+ *       không có lệnh thêm/bớt/sắp riêng.</li>
  *   <li><b>`reviewedByDisplayName`</b> — tên người duyệt, tra qua ĐÚNG
  *       `PersonDisclosureService` dùng cho `authorDisplayName`. `null` khi
  *       người đọc không được thấy người duyệt (vd. khách không thấy một
@@ -147,4 +151,22 @@ export const postsApi = {
     apiFetch<PostDto>(`${BASE}/${id}/review`, { method: "POST", body }),
 
   withdraw: (id: string) => apiFetch<PostDto>(`${BASE}/${id}/withdraw`, { method: "POST" }),
+
+  /**
+   * `PUT /posts/{id}/media` — đặt CẢ danh sách tệp đính kèm, đúng thứ tự.
+   * Nhận **khoá** (`mediaId`) của những tệp đã xác nhận qua `mediaApi`, không
+   * nhận file. Danh sách rỗng hợp lệ (gỡ hết ảnh). Chỉ tác giả, chỉ khi bài
+   * còn `DRAFT`; không đòi `If-Match` (gắn tệp không đụng `post.version` theo
+   * hợp đồng, dù bản thân bài VẪN tăng `version` — client vẫn nên đọc lại
+   * `version`/`ETag` mới từ phản hồi này để lượt `PATCH` thân bài kế tiếp
+   * dùng đúng `If-Match`).
+   *
+   * <p>Đây là điểm cuối DUY NHẤT ghi danh sách tệp — "gắn tệp mới" (nối
+   * `mediaId` mới vào cuối danh sách hiện tại), "sắp lại thứ tự" (gửi lại
+   * đúng danh sách đã đổi chỗ) và "gỡ một tệp" (gửi lại danh sách đã bớt một
+   * phần tử) đều là CÙNG một lệnh này với một `mediaIds` khác nhau — xem
+   * `src/components/posts/queries.ts`.</p>
+   */
+  setMedia: (postId: string, mediaIds: string[]): Promise<ApiResult<PostDto>> =>
+    apiFetchWithMeta<PostDto>(`${BASE}/${postId}/media`, { method: "PUT", body: { mediaIds } }),
 };

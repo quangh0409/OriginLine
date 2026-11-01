@@ -354,6 +354,7 @@ export function batchDto(batch: StoredBatch): ImportBatch {
  * đổi một tuần công lấy thứ sẽ bị vứt đi. Nên tên tệp đóng vai công tắc kịch
  * bản, và **đây là chỗ bộ giả lập khác bản thật rõ nhất**:
  *
+ *   `*dau-re-doi*` / `*inlaw-doi*` → 2 lỗi chặn `IMP_UNDECIDED_INLAW_DOI`, không gì khác
  *   `*sach*` / `*clean*`      → 0 lỗi chặn, 0 cảnh báo, 0 cặp nghi trùng
  *   `*da-sua*` / `*fixed*`    → 0 lỗi chặn, còn 11 cảnh báo và 3 cặp nghi trùng
  *   còn lại                   → 6 lỗi chặn + 11 cảnh báo + 3 cặp nghi trùng
@@ -367,10 +368,13 @@ export function batchDto(batch: StoredBatch): ImportBatch {
  * và bước gỡ, nên nó là ca duy nhất kiểm được hai bước ấy mà không phải giả vờ
  * một endpoint đã tồn tại.
  */
-export type MockScenario = "DIRTY" | "FIXED" | "CLEAN";
+export type MockScenario = "DIRTY" | "FIXED" | "CLEAN" | "INLAW_DOI";
 
 export function scenarioOf(fileName: string): MockScenario {
   const lower = fileName.toLowerCase();
+  // Xét TRƯỚC "sạch": tên như `dau-re-doi-sach.xlsx` vẫn phải ra ca dâu/rể —
+  // ca này tồn tại chính để chứng minh tệp "trông sạch" vẫn bị chặn ở bước kiểm.
+  if (lower.includes("dau-re-doi") || lower.includes("inlaw-doi")) return "INLAW_DOI";
   if (lower.includes("sach") || lower.includes("clean")) return "CLEAN";
   return lower.includes("da-sua") || lower.includes("fixed") ? "FIXED" : "DIRTY";
 }
@@ -457,6 +461,39 @@ function blockingIssues(batchId: string): ImportIssue[] {
         "Lô này sẽ tạo mới 276 người trong khi chi chỉ có 42 người trong phả. Hãy kiểm lại cột Mã trước khi duyệt.",
     },
   ];
+}
+
+/**
+ * NT-TC-15 (bấm thật 24/09): hai dòng dâu/rể có khai Đời.
+ *
+ * Trước bản vá, backend để ca này đi qua bộ kiểm — màn đối soát báo "Không còn
+ * lỗi phải sửa", người dùng bấm ghi, lô nhận 202 rồi mới FAILED. Nay lượt soát
+ * trước khi ghi chạy ở cuối bước kiểm, nên ca này là **lỗi chặn ngay ở bước
+ * kiểm**, đúng dòng, đúng ô Đời, và nút ghi không bao giờ mở. Câu chữ chép theo
+ * `CommitPreflight` của backend: nói ra quy ước (đang chờ Hội đồng) và cách sửa.
+ *
+ * Không cảnh báo, không cặp nghi trùng: ca này phải chứng minh rằng **chỉ riêng**
+ * nó đã đủ đóng cửa duyệt.
+ */
+function inlawDoiIssues(batchId: string): ImportIssue[] {
+  return [
+    { rowNo: 14, ma: "AT-03-101", ten: "Trần Thị Dâu", doi: 3 },
+    { rowNo: 27, ma: "AT-04-102", ten: "Lê Văn Rể", doi: 4 },
+  ].map<ImportIssue>(({ rowNo, ma, ten, doi }, i) => ({
+    id: `${batchId}-inlaw-${i}`,
+    severity: "BLOCKING",
+    code: "IMP_UNDECIDED_INLAW_DOI",
+    sheet: "NHAN_KHAU",
+    rowNo,
+    field: "Đời",
+    externalCode: ma,
+    message:
+      `Dòng ${rowNo} (${ma} (${ten})) là dâu/rể — không có Mã cha, không có Mã mẹ, nhưng có mặt ở ` +
+      `trang Hôn phối — mà vẫn khai Đời ${doi}. Quy ước hiện hành: dâu/rể KHÔNG khai Đời, vì ` +
+      `chưa rõ con số ấy là đời của vợ/chồng hay đời trong họ gốc, và Hội đồng Tộc biểu chưa ` +
+      `chốt. Cách sửa: xoá ô Đời ở dòng ${rowNo} — đời của dâu/rể sẽ suy từ vợ/chồng khi ghi.`,
+    context: { externalCode: ma, doiDaKhai: doi },
+  }));
 }
 
 /** Mười một mục "cần xem lại" — vẫn nhập được, nhưng phải có người đọc qua. */
@@ -781,9 +818,15 @@ export function buildBatch(args: {
 }): CreatedBatch {
   const { id, branch, fileName, uploadedBy, now, priorPersonsInTree } = args;
   const scenario = scenarioOf(fileName);
-  const blocking = scenario === "DIRTY" ? blockingIssues(id) : [];
-  const warnings = scenario === "CLEAN" ? [] : warningIssues(id);
-  const pairs = scenario === "CLEAN" ? [] : duplicatePairs();
+  const blocking =
+    scenario === "DIRTY"
+      ? blockingIssues(id)
+      : scenario === "INLAW_DOI"
+        ? inlawDoiIssues(id)
+        : [];
+  const quiet = scenario === "CLEAN" || scenario === "INLAW_DOI";
+  const warnings = quiet ? [] : warningIssues(id);
+  const pairs = quiet ? [] : duplicatePairs();
 
   const personRowCount = 318;
   // Tải lại vào một chi đã có người: phần lớn dòng là cập nhật, đúng ngữ nghĩa

@@ -116,19 +116,19 @@ public class MediaReportService {
      */
     @Transactional
     public MediaReportView report(UUID mediaId, ReportReason reason, String note) {
-        MemberScopeView caller = access.requireActiveMember("bao go tep dinh kem");
+        MemberScopeView caller = access.requireActiveMember("báo gỡ tệp đính kèm");
         MediaAsset asset = servableAsset(mediaId);
         MediaLink link = ownerOf(asset);
         if (!access.canView(link.ownerType(), link.ownerId())) {
             // 404, khong phai 403 — tra 403 la tu xac nhan tep do co that.
             throw new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                    "Khong tim thay tep dinh kem nao co ma nay.");
+                    "Không tìm thấy tệp đính kèm nào có mã này.");
         }
         Optional<MediaReport> existing = reports.findOpenBy(mediaId, caller.appUserId());
         if (existing.isPresent()) {
             throw new MediaConflictException(MediaProblemCodes.REPORT_DUPLICATE,
-                    "Ban da bao tep nay roi va don van dang cho nguoi duyet xem."
-                            + " Bam them lan nua khong lam no duoc xu som hon.");
+                    "Bạn đã báo tệp này rồi và đơn vẫn đang chờ người duyệt xem."
+                            + " Bấm thêm lần nữa không làm nó được xử sớm hơn.");
         }
 
         MediaReport saved;
@@ -191,15 +191,15 @@ public class MediaReportService {
         MediaReport report = openReport(reportId);
         MediaAsset asset = assets.findById(report.mediaId())
                 .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                        "Khong tim thay tep cua don nay."));
+                        "Không tìm thấy tệp của đơn này."));
         MediaLink link = links.findByMediaId(asset.id()).orElse(null);
 
         requireReviewAuthority(caller, link);
         if (report.reportedBy().equals(caller.appUserId())) {
             // Cung luat "khong tu duyet viec cua minh" da co o luong dinh chinh va luong bai viet.
             throw new ForbiddenException("SELF_REVIEW_FORBIDDEN",
-                    "Nguoi bao khong tu duyet don cua minh. Hay de mot nguoi khac trong hoi dong"
-                            + " xem giup.");
+                    "Người báo không tự duyệt đơn của mình. Hãy để một người khác trong hội đồng"
+                            + " xem giúp.");
         }
 
         Instant now = clock.instant();
@@ -243,7 +243,7 @@ public class MediaReportService {
         MediaReport report = openReport(reportId);
         MediaAsset asset = assets.findById(report.mediaId())
                 .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                        "Khong tim thay tep cua don nay."));
+                        "Không tìm thấy tệp của đơn này."));
         requireReviewAuthority(caller, links.findByMediaId(asset.id()).orElse(null));
 
         report.dismiss(caller.appUserId(), resolution, clock.instant());
@@ -263,8 +263,8 @@ public class MediaReportService {
             // "chi rong khong phai chi cong cong".
             if (!caller.clanWide()) {
                 throw new ForbiddenException(MediaProblemCodes.BRANCH_SCOPE_VIOLATION,
-                        "Tep nay khong con gan vao ban ghi nao nen khong xac dinh duoc chi."
-                                + " Chi vai toan dong ho xu ly duoc don nay.");
+                        "Tệp này không còn gắn vào bản ghi nào nên không xác định được chi."
+                                + " Chỉ vai toàn dòng họ xử lý được đơn này.");
             }
             return;
         }
@@ -274,11 +274,11 @@ public class MediaReportService {
     private MediaReport openReport(UUID reportId) {
         MediaReport report = reports.findById(reportId)
                 .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                        "Khong tim thay don bao go nao co ma nay."));
+                        "Không tìm thấy đơn báo gỡ nào có mã này."));
         if (report.status() != ReportStatus.OPEN) {
             throw new MediaConflictException(MediaProblemCodes.REPORT_CLOSED,
-                    "Don nay da duoc xu ly roi (" + report.status() + ")."
-                            + " Hay tai lai danh sach de xem trang thai hien tai.");
+                    "Đơn này đã được xử lý rồi (" + report.status() + ")."
+                            + " Hãy tải lại danh sách để xem trạng thái hiện tại.");
         }
         return report;
     }
@@ -286,10 +286,10 @@ public class MediaReportService {
     private MediaAsset servableAsset(UUID mediaId) {
         MediaAsset asset = assets.findById(mediaId)
                 .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                        "Khong tim thay tep dinh kem nao co ma nay."));
+                        "Không tìm thấy tệp đính kèm nào có mã này."));
         if (!asset.isServable()) {
             throw new MediaConflictException(MediaProblemCodes.REPORT_CLOSED,
-                    "Tep nay da bi go roi.");
+                    "Tệp này đã bị gỡ rồi.");
         }
         return asset;
     }
@@ -297,7 +297,7 @@ public class MediaReportService {
     private MediaLink ownerOf(MediaAsset asset) {
         return links.findByMediaId(asset.id())
                 .orElseThrow(() -> new NotFoundException(MediaProblemCodes.NOT_FOUND,
-                        "Tep nay khong gan vao ban ghi nao nen khong ai dang nhin thay no."));
+                        "Tệp này không gắn vào bản ghi nào nên không ai đang nhìn thấy nó."));
     }
 
     private MediaReportView toView(MediaReport report, MediaAsset asset) {

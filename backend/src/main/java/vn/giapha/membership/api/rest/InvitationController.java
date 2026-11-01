@@ -204,8 +204,11 @@ public class InvitationController {
      * <p>Lấy {@code getRemoteAddr()} chứ không tự đọc {@code X-Forwarded-For}: một header do client
      * gửi lên thì client cũng bịa được, và tin nó nghĩa là ai cũng bỏ qua được giới hạn bằng một
      * header. Khi hệ thống chạy sau reverse proxy thật, chỗ đúng để dịch header ấy là
-     * {@code ForwardedHeaderFilter} / {@code server.forward-headers-strategy}, nơi có thể khai báo
-     * proxy nào đáng tin.</p>
+     * {@code server.forward-headers-strategy: native} ({@code RemoteIpValve}), nơi khai báo proxy
+     * nào đáng tin qua {@code server.tomcat.remoteip.internal-proxies}. Bản cũ của câu này chỉ
+     * tới {@code ForwardedHeaderFilter} — bộ lọc ấy KHÔNG có khái niệm proxy tin cậy, tin mọi
+     * header, và đã để một {@code X-Forwarded-For} bịa ra lách bộ đếm (xem
+     * {@code ForwardedHeaderTrustIT}).</p>
      *
      * <p>Giá trị được băm ngay ở tầng application trước khi chạm CSDL — IP là dữ liệu cá nhân theo
      * Nghị định 13/2023.</p>

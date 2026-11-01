@@ -125,6 +125,18 @@ nav.mucluc a:hover{ color:var(--do-tram); }
 .khoi.chua-co{ background:var(--do-loi-nen); border-left-color:var(--do-loi); }
 .khoi.chua-co .nhan{ color:var(--do-loi); }
 
+/* Khối "sửa" có ngày — cùng quy ước với tài liệu 09: nói bản trước viết gì,
+   vì sao bản trước viết thế, và vì sao nay đổi. Chữ vẫn không nhỏ hơn 16px. */
+.sua{
+  background:var(--vang-nen); border:1px solid var(--vien);
+  border-left:4px solid var(--ho-phach); border-radius:6px;
+  padding:12px 16px; margin:16px 0; font-size:16px;
+}
+.sua > :last-child{ margin-bottom:0; }
+.sua .nhan-sua{
+  display:block; font-weight:700; font-size:16px; color:#8a5200; margin:0 0 6px;
+}
+
 /* ---- Danh sách các bước ---- */
 ol.buoc{ counter-reset:b; list-style:none; padding-left:0; margin:16px 0 20px; }
 ol.buoc > li{
@@ -237,30 +249,95 @@ th{ background:var(--nen-giay); font-weight:700; }
   </p>
   <p class="phu">
     Tài liệu 08 · <strong>viết ngày 22/09/2026</strong> ·
-    <strong>cập nhật ngày 22/09/2026</strong> (bản 2) · có chỗ nào tài liệu nói mà màn hình
+    <strong>cập nhật ngày 26/09/2026</strong> (bản 4, sửa thêm chiều cùng ngày) · có chỗ nào tài liệu nói mà màn hình
     không có, xin báo lại để sửa — đó là lỗi của tài liệu, không phải của ông/bà.
   </p>
 </div>
 
 <div class="khoi chot">
-  <p class="nhan">Bản cập nhật ngày 22/09/2026 — bốn việc trước đây còn thiếu nay đã có</p>
+  <p class="nhan">Bản 4 — cập nhật ngày 26/09/2026</p>
   <p>
-    Bản viết lần đầu (cùng ngày) ghi bốn việc ở mục 10 là <em>chưa làm được</em>. Bốn việc ấy
-    <strong>nay đã làm được</strong>, và tài liệu đã sửa lại cho đúng:
+    Bản này viết sau ba ngày <strong>bấm thử thật trên trình duyệt</strong> (24–26/09/2026), từng
+    màn một. Những việc sau đã đổi kể từ bản 3:
   </p>
   <ol>
-    <li><strong>Bật chia sẻ vinh danh của người còn sống</strong> — đã có công tắc thứ sáu.
-      Xem mục <a href="#m5">5.3</a> và mục <a href="#m9">9.2</a>.</li>
-    <li><strong>Bài viết · Vinh danh · Quản lý trên máy tính</strong> — đã có ngay trên thanh
-      đầu trang, không phải gõ địa chỉ nữa. Xem mục <a href="#m3">3.1</a>.</li>
-    <li><strong>Nhập liệu Excel</strong> — đã có lối vào từ trang
-      <span class="nut">Quản lý dòng họ</span>. Xem mục <a href="#m7">7</a>.</li>
-    <li><strong>Trang đăng ký</strong> — đã có nút dẫn tới, ở màn soạn bài. Xem mục
-      <a href="#m2">2.2</a>.</li>
+    <li><strong>Cấp lại mật khẩu nay có màn hình riêng.</strong> Trang
+      <span class="nut">Quản lý dòng họ</span> có <strong>sáu</strong> ô, ô thứ sáu là
+      <span class="nut">Cấp lại liên kết đặt mật khẩu</span>. Trưởng chi không còn phải nhờ người
+      vận hành chạy lệnh hộ. Mục <a href="#m6">6.1</a> và <a href="#m6">6.9</a> đã viết lại.</li>
+    <li><strong>Khách chưa đăng nhập không đọc được bài viết</strong> — mỗi bài mang tên người viết,
+      một người đang sống. <em>Sửa chiều 26/09:</em> khách <strong>lại xem được</strong> ngày giỗ và vinh
+      danh <strong>của các cụ đã khuất</strong> (xem khung "Sửa chiều 26/09" ngay dưới). Mục
+      <a href="#m1">1</a> và <a href="#m3">3.2</a>.</li>
+    <li><strong>Viết bài không còn mất chữ.</strong> Gõ xong tiêu đề là đã có nháp; bấm tải lại
+      trang không mất bài; gửi duyệt xong màn hình đưa ông/bà sang
+      <span class="nut">Bài của tôi</span>. Mục <a href="#m4">4.2</a>.</li>
+    <li><strong>Con dâu, con rể bấm <span class="nut">Về chỗ tôi</span></strong> nay thấy phả đồ nhà
+      chồng/nhà vợ, không còn chỉ thấy mình. Mục <a href="#m3">3.3</a>.</li>
+    <li><strong>Nhập liệu Excel</strong>: tả lại đúng tên năm trang của tệp mẫu và chỗ các dòng ví
+      dụ; màn hình ghi vào phả nay theo tới khi có kết quả. Mục <a href="#m7">7</a>.</li>
   </ol>
-  <p>
-    Ngoài ra, màn <strong>tạo việc họ</strong> nay tự khớp phạm vi theo loại việc (mục 6.7),
-    và <strong>tra danh xưng</strong> nay nói thẳng với khách rằng cần đăng nhập (mục 3.4).
+  <p class="phu">
+    Và <strong>một chỗ tài liệu tự sửa mình</strong>: mục 6.3 bản trước tả một nút
+    <span class="nut">Sửa nhẹ rồi đăng</span> cho người duyệt bài. Nút ấy đã được ẩn — xem mục
+    <a href="#m6">6.3</a>.
+  </p>
+</div>
+
+<div class="sua">
+  <span class="nhan-sua">Sửa chiều 26/09/2026 — hai quyết định của chủ dự án</span>
+  <ol>
+    <li><strong>Khách xem được Việc họ và Vinh danh — chỉ phần của các cụ đã khuất.</strong> Sáng cùng
+      ngày bản này viết khách không xem được cả hai; lý do khi ấy là cho chắc — đóng hết thì không lộ
+      tên ai. Chủ dự án quyết lại: ngày giỗ và vinh danh của người đã khuất là phần công khai của gia
+      phả, đóng chúng là đóng chặt hơn luật. <strong>Bài viết vẫn cần đăng nhập.</strong> Mục
+      <a href="#m1">1</a>, <a href="#m3">3.2</a>, <a href="#m4">4.2</a>.</li>
+    <li><strong>Bỏ hẳn “Sửa nhẹ rồi đăng”.</strong> Người duyệt bài chỉ
+      <span class="nut">Duyệt</span> hoặc <span class="nut">Trả lại</span> kèm lý do — không còn là
+      việc “đang chờ quyết”. Mục <a href="#m6">6.3</a>.</li>
+  </ol>
+  <p class="phu">
+    Nếu ông/bà mở trang chủ khi chưa đăng nhập mà khối Vinh danh hoặc Việc họ vẫn mời đăng nhập, đó là
+    phần mềm chưa kịp cập nhật theo quyết định này, không phải ông/bà bấm sai.
+  </p>
+</div>
+
+<div class="khoi chot">
+  <p class="nhan">Bản 3 — cập nhật ngày 23/09/2026</p>
+  <p>Kể từ bản 2 (22/09/2026), bốn việc sau đã đổi:</p>
+  <ol>
+    <li><strong>Quên mật khẩu của tài khoản đăng ký bằng số điện thoại — nay có đường
+      chữa.</strong> Trưởng chi và Hội đồng cấp lại được một liên kết đặt mật khẩu cho người
+      trong chi mình. Đây là mục <strong>mới</strong> của tài liệu:
+      xem <a href="#m6">6.9</a>, và phần cảnh báo ở <a href="#m2">2.2</a> đã viết lại.</li>
+    <li><strong>Ô lọc <span class="nut">Chi / Ngành</span> nay thật sự chạy.</strong> Trước đây
+      nó <em>không bao giờ</em> tải được danh sách chi — ô quay một lúc rồi rỗng, và trông y
+      như một dòng họ chưa chia chi. Hỏng ấy kéo theo bốn màn hình cùng lúc: mục
+      <a href="#m3">3.5</a>, <a href="#m3">3.6</a>, <a href="#m6">6.7</a> và mục Vinh danh.</li>
+    <li><strong>Màn duyệt báo gỡ ảnh</strong> đã ghi rõ ở mục <a href="#m6">6.5</a>, kèm điều
+      quan trọng nhất: <em>gỡ là xoá tệp ngay, không hoàn tác được</em>.</li>
+    <li><strong>Câu lỗi khi gõ sai nay nói được lý do.</strong> Trước đây nhiều lỗi nhập liệu
+      chỉ trả về một câu chung chung — có lúc còn là một câu nghe như máy chủ hỏng — cho
+      những thứ thật ra chỉ là gõ quá dài hay chọn nhầm tệp. Mục
+      <a href="#m8">8</a> đã sửa theo.</li>
+  </ol>
+  <p>Và <strong>ba chỗ tài liệu tự sửa mình</strong>:</p>
+  <ul>
+    <li><strong>“Quản trị hệ thống” nay đã được định nghĩa</strong> — tài liệu dùng chữ ấy ở
+      mấy chỗ mà chưa bao giờ nói đó là ai. Xem khung ở mục <a href="#m1">1</a>.</li>
+    <li><strong>Đã ghi rõ ai chịu trách nhiệm về dữ liệu của ông/bà trước pháp luật</strong> —
+      một con người có tên, không phải “hệ thống” chung chung. Mục <a href="#m1">1</a> có một
+      khung để dòng họ <strong>điền tên và số máy người ấy một lần rồi in kèm</strong>.</li>
+    <li><strong>Đính chính về sáu công tắc riêng tư.</strong> Bản trước viết rằng quản trị hệ
+      thống “xem được nhưng không đổi được” mức chia sẻ của ông/bà. <strong>Câu ấy sai</strong>
+      — người ấy đổi được, khi làm thay mặt ông/bà. Mục <a href="#m9">9.2</a> nay có cả
+      <strong>quy ước ba vế</strong> về việc ấy.</li>
+  </ul>
+  <p class="phu">
+    Bản 2 ghi nhận: công tắc chia sẻ vinh danh (mục 5.3 và 9.2); lối vào Bài viết · Vinh danh ·
+    Quản lý trên máy tính (mục 3.1); lối vào nhập liệu Excel (mục 7); lối vào trang đăng ký
+    (mục 2.2); màn tạo việc họ tự khớp phạm vi (mục 6.7); và <span class="nut">Tra danh
+    xưng</span> không còn mời khách bấm vào (mục 3.4). Những việc ấy vẫn đúng như đã tả.
   </p>
 </div>
 
@@ -289,13 +366,94 @@ th{ background:var(--nen-giay); font-weight:700; }
 </p>
 
 <ul>
-  <li><strong>Khách</strong> — chưa có tài khoản. Xem được các cụ đã khuất và phả đồ theo
-    đường các cụ. Không thấy một người đang sống nào, kể cả tên.</li>
+  <li><strong>Khách</strong> — chưa có tài khoản. Xem được các cụ đã khuất: phả đồ công khai và
+    tìm kiếm công khai <strong>chỉ có người đã khuất</strong>, cùng <strong>ngày giỗ, lễ cúng tổ tiên
+    và vinh danh của các cụ đã khuất</strong>. Không thấy một người đang sống nào, kể cả tên. Vì vậy
+    khách <strong>không đọc được bài viết</strong> — mỗi bài mang tên người viết, một người đang
+    sống — không thấy vinh danh của người đang sống, và không thấy những việc họ có thể nhắc tên
+    người đang sống (mừng thọ, cưới hỏi, họp họ, khánh thành…).
+    Phần <span class="nut">Bài mới</span> trên trang chủ hiện một dòng mời đăng nhập thay vì nội dung.</li>
   <li><strong>Thành viên</strong> — đã có tài khoản và đã được nối vào một ô trong phả.
     Xem được người trong họ, tra danh xưng, nhận nhắc giỗ, viết bài, xin đính chính.</li>
   <li><strong>Trưởng chi và Hội đồng Tộc biểu</strong> — thêm việc duyệt: duyệt đơn xin vào
     phả, duyệt bài viết, duyệt vinh danh, phát mã mời, tạo việc họ, nhập liệu.</li>
 </ul>
+
+<div class="khoi">
+  <p class="nhan">Còn “quản trị hệ thống” là ai — xin đọc một lần cho rõ</p>
+  <p>
+    Tài liệu này nhắc tới <strong>quản trị hệ thống</strong> ở mấy chỗ. Đó
+    <strong>không phải</strong> một chức danh trong dòng họ, và <strong>không phải</strong> Hội
+    đồng Tộc biểu hay Tộc trưởng. Đó là <strong>người vận hành phần mềm</strong>: người giữ cho
+    máy chủ chạy, cho bản sao lưu còn, cho việc gửi thông báo thông suốt.
+  </p>
+  <p>
+    Người ấy <strong>đứng ngoài dòng họ</strong>. Việc của họ là kỹ thuật, không phải việc họ:
+    họ không duyệt đơn xin vào phả, không duyệt bài viết, không quyết ai là con ai. Ngược lại,
+    một bác trong Hội đồng Tộc biểu dù quyền cao nhất trong họ cũng
+    <strong>không</strong> vì thế mà thành quản trị hệ thống.
+  </p>
+  <p class="phu">
+    Một người <em>có thể</em> kiêm cả hai — ví dụ một người cháu trong họ làm nghề tin học,
+    nhận giúp việc máy móc. Nhưng đó là hai vai khác nhau trên cùng một con người, và hệ thống
+    ghi nhận chúng riêng ra.
+    <br>Hôm nay bản cài đặt này phục vụ <strong>một dòng họ</strong>. <em>Dự kiến</em> về sau
+    một bản cài sẽ phục vụ nhiều dòng họ cùng lúc, và lúc ấy quản trị hệ thống là người trông
+    coi tất cả — <strong>chưa phải hiện trạng</strong>, ghi ra đây để ông/bà hiểu vì sao vai
+    này được tách bạch kỹ đến thế.
+  </p>
+  <p class="phu">
+    Ông/bà cần gọi người ấy <strong>rất hiếm khi</strong>, và hầu như luôn là qua Trưởng chi
+    hoặc Hội đồng chứ không gọi thẳng. Ba chỗ tài liệu này nhắc tới họ: thông báo đẩy chưa bật
+    được (mục 8.6), máy chủ chưa mở danh bạ (mục 8.3), và một câu lỗi chung cứ lặp lại mãi (mục
+    8.5).
+    <br><em>Bản 3 kể bốn chỗ; chỗ thứ tư là “cấp lại mật khẩu khi chưa có màn hình”. Nay màn hình
+    ấy đã có (mục 6.9), Trưởng chi tự làm được, nên không còn phải gọi người vận hành.</em>
+  </p>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Và đây là điều đáng nói hơn cả: người ấy chịu trách nhiệm trước pháp luật</p>
+  <p>
+    Gia phả trên mạng chứa <strong>dữ liệu cá nhân</strong> của người đang sống — tên, ngày
+    sinh, số điện thoại, ảnh, nơi ở. Pháp luật Việt Nam (Nghị định 13/2023) đòi phải có
+    <strong>một người thật đứng ra chịu trách nhiệm</strong> về khối dữ liệu ấy: giữ cho nó
+    không lọt ra ngoài, trả lời khi có người hỏi, và gánh phần pháp lý nếu có chuyện.
+  </p>
+  <p>
+    Với bản cài này, <strong>người vận hành phần mềm chính là người chịu trách nhiệm ấy</strong>.
+    Đây không phải “hệ thống” chung chung, không phải một công ty ở đâu đó —
+    <strong>là một con người, có tên, gọi được</strong>. Xin điền vào khung dưới đây một lần
+    rồi in kèm tài liệu này.
+  </p>
+  <table>
+    <thead><tr><th colspan="2">Người vận hành bản cài này — dòng họ tự điền một lần</th></tr></thead>
+    <tbody>
+      <tr><td style="width:38%">Họ và tên</td><td style="height:2.4em">&nbsp;</td></tr>
+      <tr><td>Số điện thoại</td><td style="height:2.4em">&nbsp;</td></tr>
+      <tr><td>Cách liên hệ khác (Zalo, thư điện tử)</td><td style="height:2.4em">&nbsp;</td></tr>
+      <tr><td>Ngày điền</td><td style="height:2.4em">&nbsp;</td></tr>
+    </tbody>
+  </table>
+  <p class="phu">
+    Tài liệu này <strong>cố ý để trống</strong> bốn ô trên. Một bản hướng dẫn in sẵn một cái tên
+    hay một số máy không còn đúng thì tệ hơn hẳn một bản để trống: người cần giúp sẽ gọi vào
+    một số không ai nghe, rồi tin rằng chẳng có ai chịu trách nhiệm cả.
+    <br>Điền rồi thì <strong>vẫn xin gọi Trưởng chi trước</strong> cho những việc thường ngày —
+    quên mật khẩu, hỏi cách dùng. Số máy ở trên dành cho <em>việc của nó</em>: hỏi về dữ liệu cá
+    nhân của mình, yêu cầu xoá thông tin (mục <a href="#m9">9.4</a>), hoặc khi Trưởng chi và Hội
+    đồng đã bó tay.
+  </p>
+  <p class="phu">
+    <strong>Một điều nữa xin nói thẳng, vì người đọc hay hiểu sai:</strong> ở bản cài này,
+    <em>cùng một người</em> vừa chịu trách nhiệm pháp lý, vừa là người gạt được sáu công tắc
+    riêng tư thay mặt bà con (mục <a href="#m9">9.2</a>). Hai vai ấy <strong>không tách
+    rời</strong>, và đó là chủ ý chứ không phải sơ hở: trách nhiệm dồn về một chỗ thì còn biết
+    hỏi ai, chia cho nhiều người rồi rốt cuộc không ai nhận mới là điều đáng sợ. Nhưng ông/bà
+    <strong>có quyền biết</strong> — và biết rồi thì cuốn nhật ký ghi lại mọi lần đổi mới có
+    nghĩa thật: nó là chỗ để đối chiếu với đúng người ấy.
+  </p>
+</div>
 
 <p>
   Hệ thống mở được trên <strong>điện thoại</strong> và trên máy tính. Trên điện thoại,
@@ -403,19 +561,28 @@ th{ background:var(--nen-giay); font-weight:700; }
 <div class="khoi canh-bao">
   <p class="nhan">Nếu ông/bà đăng ký bằng số điện thoại, xin nhớ kỹ mật khẩu</p>
   <p>
-    Hệ thống gửi liên kết đặt lại mật khẩu <strong>qua thư điện tử</strong>. Tài khoản đăng ký
-    bằng số điện thoại thì không có địa chỉ thư, nên không nhận được liên kết ấy.
+    Màn hình nói đúng như sau, và xin đọc kỹ câu này:
+    <em>“Ông/bà đăng ký bằng số điện thoại, nên xin nhớ kỹ mật khẩu vừa đặt: hệ thống gửi liên
+    kết đặt lại mật khẩu qua thư điện tử, mà tài khoản này thì không có địa chỉ thư. Nếu quên,
+    xin gọi cho Trưởng chi của mình — Trưởng chi mở lại được.”</em>
   </p>
   <p>
-    <strong>Cách làm hôm nay:</strong> quên mật khẩu thì <strong>gọi cho Trưởng chi của
-    mình</strong> (hoặc người đã gửi lời mời). Người ấy cấp lại cho ông/bà một liên kết đặt
-    mật khẩu mới, hoặc đặt một mật khẩu tạm rồi đọc qua điện thoại — lần đăng nhập đầu hệ
-    thống sẽ mời ông/bà đổi lại.
+    <strong>Quên mật khẩu thì gọi cho Trưởng chi của mình</strong> (hoặc người đã gửi lời mời).
+    Người ấy cấp lại cho ông/bà <strong>một liên kết đặt mật khẩu mới</strong>, đọc qua điện
+    thoại hoặc nhắn qua Zalo cho ông/bà. Liên kết ấy <strong>hết hạn sau ba mươi phút</strong>
+    và <strong>dùng được một lần</strong>, nên xin bấm ngay khi nhận được.
+  </p>
+  <p>
+    <strong>Mỗi lần có người cấp lại mật khẩu cho ông/bà, chính ông/bà được báo.</strong>
+    Thông báo ấy nằm trong <span class="nut">Trung tâm thông báo</span>, ghi rõ
+    <em>ai</em> vừa cấp và liên kết còn hiệu lực <em>tới lúc nào</em>. Nếu ông/bà
+    <strong>không</strong> hề nhờ ai làm việc này mà vẫn nhận được thông báo ấy, xin báo ngay
+    Hội đồng Tộc biểu và đổi mật khẩu.
   </p>
   <p class="phu">
-    Một lối <em>tự phục vụ</em> — để ông/bà tự xin lại liên kết mà không phải gọi ai —
-    <strong>đang được làm, chưa dùng được</strong>. Chừng nào tài liệu này chưa ghi khác thì
-    cách trên vẫn là cách duy nhất.
+    Cách làm chi tiết nằm ở mục <a href="#m6">6.9</a> — phần dành cho Trưởng chi.
+    Một lối <em>tự phục vụ</em> (ông/bà tự xin lại liên kết mà không phải gọi ai) vẫn
+    <strong>chưa có</strong>; đó là lý do việc này phải qua Trưởng chi.
   </p>
 </div>
 
@@ -600,6 +767,12 @@ hoặc vợ/chồng.</p>
     <span class="nut">Sự kiện &amp; Giỗ</span> · <span class="nut">Bài viết dòng họ</span> ·
     <span class="nut">Vinh danh</span>.</li>
 </ul>
+<p class="phu">
+  Người <em>chưa đăng nhập</em> đếm được <strong>sáu</strong>:
+  <span class="nut">Tra danh xưng</span> không hiện với khách, ở đây cũng như ở nút
+  <span class="nut">Thêm</span> trên điện thoại và ở ô lối tắt trên trang chủ — cả ba chỗ cùng
+  một luật (xem mục 3.4).
+</p>
 <p>
   Bên phải hàng ấy là: <span class="nut">Quản lý thành viên</span> (chỉ Trưởng chi và Hội
   đồng thấy), <span class="nut">Yêu cầu đính chính</span>, chuông thông báo,
@@ -648,6 +821,43 @@ hoặc vợ/chồng.</p>
   vẫn đọc được bài viết và vinh danh ở đây như mọi người. Phần riêng của ông/bà là dòng nhắc
   <span class="nut">Hồ sơ của ông/bà đang chờ duyệt</span> ở trên cùng.
 </p>
+<div class="khoi">
+  <p class="nhan">Khách chưa đăng nhập thấy trang chủ khác đi</p>
+  <p>
+    Ở phần <span class="nut">Bài mới</span>, khách thấy một dòng:
+    <em>“Phần này hiện chỉ mở cho bà con đã đăng nhập bằng tài khoản dòng họ. Phả đồ và hồ sơ các
+    cụ đã khuất thì ông/bà xem được ngay, không cần tài khoản.”</em> kèm nút
+    <span class="nut">Đăng nhập để xem</span>.
+  </p>
+  <p>
+    Ở hai phần <span class="nut">Vinh danh</span> và <span class="nut">Việc họ sắp tới</span>, khách
+    thấy nội dung thật — nhưng <strong>chỉ phần của các cụ đã khuất</strong>: vinh danh đã duyệt của
+    người đã khuất; ngày giỗ các cụ và các lễ cúng tổ tiên (giỗ Tổ, tế lễ, tảo mộ). Vinh danh của người
+    đang sống — kể cả khi chính chủ đã bật <span class="nut">Cả họ xem</span> — và các việc như mừng thọ,
+    cưới hỏi, họp họ thì khách không thấy; đăng nhập rồi mới thấy.
+  </p>
+  <p>
+    Lý do: mỗi bài viết mang tên người viết — một người đang sống — mà luật riêng tư (mục 9.1) không
+    cho khách thấy bất cứ điều gì của người đang sống, kể cả tên. Ngày giỗ và vinh danh của các cụ đã
+    khuất thì là phần công khai của gia phả, như chính hồ sơ các cụ.
+  </p>
+  <div class="sua">
+    <span class="nhan-sua">Sửa chiều 26/09/2026</span>
+    <p>
+      Bản sáng cùng ngày viết: cả ba phần <span class="nut">Bài mới</span>,
+      <span class="nut">Vinh danh</span>, <span class="nut">Việc họ sắp tới</span> đều mời đăng nhập.
+      Lý do khi ấy: vinh danh và việc họ hay gắn với người đang sống (người khai, người tổ chức), đóng
+      hết thì chắc chắn không lộ tên ai. Chủ dự án quyết lại: phần của các cụ đã khuất mở cho khách,
+      phần có thể nhắc người đang sống vẫn đóng, bài viết vẫn cần đăng nhập.
+    </p>
+  </div>
+  <p class="phu">
+    Bản trước của tài liệu này nói khách cũng đọc được bài viết và vinh danh trên trang chủ, theo
+    đúng bản yêu cầu ban đầu (“khách: xem tin tức”). Khi làm thật, luật riêng tư thắng: một cái tên
+    người đang sống không vì nằm trong một bài viết mà thành công khai. Muốn có tin tức cho khách
+    thì phải là một loại bài riêng, không mang tên người đang sống — việc ấy Hội đồng chưa quyết.
+  </p>
+</div>
 
 <h3>3.3 · Xem phả đồ</h3>
 <p>
@@ -667,7 +877,11 @@ hoặc vợ/chồng.</p>
     — thu gọn chỉ ẩn bớt phần đang hiện, không bỏ dữ liệu đã tải.</li>
   <li><span class="nut">Thu toàn cây</span> — thu nhỏ để thấy trọn phả đồ. Chữ sẽ nhỏ đi;
     chụm hai ngón hoặc bấm phóng to để xem lại chi tiết.</li>
-  <li><span class="nut">Về chỗ tôi</span> — đưa phả đồ về đúng ô của ông/bà.</li>
+  <li><span class="nut">Về chỗ tôi</span> — đưa phả đồ về đúng ô của ông/bà.
+    <br><em>Con dâu, con rể</em>: phả đồ vẫn giữ nguyên <strong>tổ tiên nhà chồng (hoặc nhà
+    vợ)</strong>, ô của ông/bà nằm cạnh chồng/vợ trong đời ấy. Trước bản sửa 26/09, nút này lấy
+    chính người dâu làm gốc cây — mà người dâu không có cha mẹ trong phả nhà chồng — nên phả đồ chỉ
+    còn lại hai người. Nay đã sửa; nếu ông/bà còn thấy như vậy, xin báo lại.</li>
   <li><span class="nut">Chú giải</span> — giải thích các nét: vợ chồng, con đẻ, con nuôi,
     hôn phối đã kết thúc, kế tự/thừa tự, tuyệt tự.</li>
   <li>Một dòng ở trên cùng luôn nói rõ <span class="nut">Đang mở <em>(chi)</em>, từ cụ
@@ -710,7 +924,13 @@ hoặc vợ/chồng.</p>
   <li>Gõ tên <strong>có dấu hay không dấu đều được</strong>. Kết quả hiện ngay khi gõ.</li>
   <li>Hệ thống tìm trên mọi lớp tên: húy, tự, hiệu, thụy, thường gọi, pháp danh.</li>
   <li>Lọc theo <span class="nut">Đời thứ</span>, <span class="nut">Chi / Ngành</span>,
-    <span class="nut">Quê quán</span>.</li>
+    <span class="nut">Quê quán</span>.
+    <br>Ô <span class="nut">Chi / Ngành</span> mở ra là <strong>cả danh sách chi và ngành của
+    dòng họ</strong>, xếp thụt vào theo cây: ngành nằm thụt dưới chi của nó. Bỏ trống là
+    <span class="nut">Mọi chi/ngành</span>.
+    <br>Mỗi ngành ghi <strong>kèm tên chi</strong>, ví dụ <em>“Chi Bính › Ngành Út”</em> — vì nhiều
+    chi cùng có một “Ngành Út”. Gõ tên chi (ví dụ <code>Bính</code>) là ra cả chi ấy lẫn các ngành
+    trong chi.</li>
   <li><strong>Chưa đăng nhập thì chỉ tìm được các cụ đã khuất</strong> — con cháu còn tại thế
     không có trong danh sách. Màn hình nói rõ điều đó bằng một dòng:
     <em>“Tra cứu công khai: chỉ hiện những vị đã khuất trong dòng họ…”</em>
@@ -719,6 +939,25 @@ hoặc vợ/chồng.</p>
     <em>ẩn hẳn</em> vì tra cứu công khai không lọc theo hai thứ đó — ẩn đi còn hơn để ông/bà
     chọn rồi không thấy gì thay đổi.</li>
 </ul>
+
+<div class="khoi chot">
+  <p class="nhan">Đã sửa: ô <span class="nut">Chi / Ngành</span> trước đây không bao giờ mở ra được</p>
+  <p>
+    Bản trước của tài liệu này tả ô ấy như một ô dùng được. Thật ra <strong>nó chưa bao giờ tải
+    được danh sách chi</strong>: bấm vào thì ô quay một lúc rồi rỗng, không có một câu lỗi nào.
+    Một danh sách rỗng trông y hệt một dòng họ chưa chia chi, nên không ai nhận ra là hỏng.
+  </p>
+  <p>
+    <strong>Nay đã chạy.</strong> Nếu ông/bà từng thử ô này và thấy nó trống rỗng, xin thử lại —
+    đó là hỏng hóc đã được chữa, không phải dòng họ mình chưa khai chi.
+  </p>
+  <p class="phu">
+    Cùng một danh sách chi ấy phục vụ <em>bốn</em> chỗ, nên bốn chỗ cùng hỏng và nay cùng chạy:
+    ô lọc ở màn tìm kiếm (mục này), ô <span class="nut">Lọc theo chi / ngành</span> ở lịch giỗ
+    (mục 3.6), ô chọn phạm vi khi tạo việc họ (mục 6.7), và ô lọc chi ở mục
+    <span class="nut">Vinh danh</span>.
+  </p>
+</div>
 
 <h3>3.6 · Lịch giỗ và việc họ</h3>
 <p>
@@ -732,7 +971,8 @@ hoặc vợ/chồng.</p>
     <span class="nut">Cả dòng họ</span>. Ngay dưới ô có dòng nhắc:
     <em>“Giỗ cấp dòng họ luôn hiện, dù bạn lọc theo chi nào.”</em>
     <br>Ô này <strong>chỉ hiện khi dòng họ đã khai từ hai chi trở lên</strong> — một chi thì
-    không có gì để lọc.
+    không có gì để lọc. <em>Trước bản sửa này ô ấy không hiện ra với ai cả</em>, vì danh sách
+    chi không tải được (xem khung ở mục 3.5); nếu ông/bà từng tìm mãi không thấy nó thì nay có.
     <br>Lọc xong mà danh sách trống, màn hình ghi rõ <em>“Không có việc họ nào khớp bộ lọc
     đang đặt”</em> kèm nút <span class="nut">Bỏ bộ lọc</span>. Đó là <em>trống vì đang lọc</em>,
     không phải mất dữ liệu.</li>
@@ -841,16 +1081,33 @@ liên hệ, tiểu sử, và <span class="nut">Quan hệ trong dòng họ</span>
   <li>Gõ <span class="nut">Tiêu đề</span> — tối đa <strong>250 ký tự</strong>.</li>
   <li>Gõ <span class="nut">Nội dung</span>. Viết như đang kể lại cho con cháu nghe.
     Độ dài gần như không có trần (200.000 ký tự).</li>
-  <li>Thêm ảnh hoặc video nếu muốn — xem 4.3.</li>
-  <li>Bấm <span class="nut">Gửi duyệt</span>.</li>
+  <li>Thêm ảnh hoặc video nếu muốn — xem 4.3. Ảnh gắn xong nằm ngay trong bài và ở lại đó.</li>
+  <li>Bấm <span class="nut">Gửi duyệt</span>. Gửi được rồi thì màn hình đưa ông/bà sang
+    <span class="nut">Bài của tôi</span>, với dòng <span class="nut">Đã gửi bài đi duyệt</span> —
+    thấy dòng ấy là bài đã đi.</li>
 </ol>
 
 <div class="khoi chot">
   <p class="nhan">Máy tự lưu nháp, ông/bà không mất bài</p>
   <p>
-    Cứ khoảng <strong>8 giây</strong>, khi có thay đổi, máy tự lưu một bản nháp và hiện dòng
+    <strong>Gõ xong tiêu đề, bấm sang ô khác là đã có nháp</strong> — chưa cần viết chữ nào ở phần
+    nội dung. Từ lúc ấy địa chỉ trên thanh trình duyệt đổi sang địa chỉ riêng của bài
+    (<code>/bai-viet/…/sua</code>), nên <strong>lỡ tay bấm tải lại trang (F5) cũng không mất
+    bài</strong>: trang mở lại đúng bài đang viết.
+  </p>
+  <p>
+    Sau đó, cứ khoảng <strong>8 giây</strong>, khi có thay đổi, máy tự lưu một bản nháp và hiện dòng
     <span class="nut">Đã lưu nháp lúc …</span>. Nháp nằm <em>trên máy chủ</em>, nên đóng trình
     duyệt rồi mở lại lúc nào cũng thấy.
+  </p>
+  <p>
+    Nháp được phép để trống phần nội dung. Chỉ khi bấm <span class="nut">Gửi duyệt</span> thì bài
+    mới <strong>bắt buộc có nội dung</strong> — bài trống bị trả lại ngay, nháp vẫn còn đó.
+  </p>
+  <p class="phu">
+    Bản trước tả rằng phải gõ cả tiêu đề lẫn nội dung rồi chờ vài giây mới có nháp — đúng như
+    phần mềm lúc ấy, vì máy chủ khi ấy đòi nội dung ngay từ bản nháp. Hệ quả là người viết gõ tiêu
+    đề, bấm tải lại trang, và mất bài. Đã đổi.
   </p>
   <p>
     Phiên đăng nhập hết hạn giữa chừng thì <strong>chữ đang gõ vẫn còn nguyên trên màn
@@ -863,6 +1120,8 @@ liên hệ, tiểu sử, và <span class="nut">Quan hệ trong dòng họ</span>
   <span class="nut">Bài của tôi</span>. Bài đã đăng rồi vẫn
   <span class="nut">Gỡ bài</span> được.
 </p>
+<p>Bài viết <strong>chỉ bà con đã đăng nhập mới đọc được</strong> — khách không thấy, vì bài nào
+cũng mang tên người viết (mục 3.2).</p>
 <p>Bốn trạng thái của một bài: <span class="nut">Nháp</span> →
 <span class="nut">Đang chờ duyệt</span> → <span class="nut">Đã đăng</span> ·
 <span class="nut">Đã gỡ</span>.</p>
@@ -873,8 +1132,10 @@ liên hệ, tiểu sử, và <span class="nut">Quan hệ trong dòng họ</span>
 <table>
   <thead><tr><th>Mục</th><th>Giới hạn</th></tr></thead>
   <tbody>
-    <tr><td>Định dạng ảnh nhận được</td><td><strong>JPG · PNG · WEBP</strong></td></tr>
-    <tr><td>Định dạng video nhận được</td><td><strong>MP4 · WEBM</strong></td></tr>
+    <tr><td>Định dạng ảnh nhận được</td><td><strong>JPEG · PNG · WebP</strong></td></tr>
+    <tr><td>Định dạng video nhận được</td><td><strong>MP4 · WebM</strong></td></tr>
+    <tr><td>Ảnh HEIC của iPhone</td><td><strong>bị từ chối</strong>, kèm cách chữa ngay trên màn
+      hình — xem khung dưới</td></tr>
     <tr><td>Một tấm ảnh</td><td>tối đa <strong>8 MiB</strong></td></tr>
     <tr><td>Một đoạn video</td><td>tối đa <strong>100 MiB</strong> và <strong>120 giây</strong></td></tr>
     <tr><td>Số tệp trong một bài</td><td>tối đa <strong>12 tệp</strong></td></tr>
@@ -1057,7 +1318,7 @@ liên hệ, tiểu sử, và <span class="nut">Quan hệ trong dòng họ</span>
   Mục này chỉ hiện với người có quyền duyệt (Hội đồng Tộc biểu, Tộc trưởng, Trưởng chi và
   quản trị hệ thống). Thành viên thường không thấy, và đó là đúng.
 </p>
-<p>Trang <span class="nut">Quản lý dòng họ</span> có <strong>năm</strong> lối vào:</p>
+<p>Trang <span class="nut">Quản lý dòng họ</span> có <strong>sáu</strong> lối vào:</p>
 <ul>
   <li><span class="nut">Đơn xin vào phả</span></li>
   <li><span class="nut">Phát mã và phát lời mời</span></li>
@@ -1065,7 +1326,12 @@ liên hệ, tiểu sử, và <span class="nut">Quan hệ trong dòng họ</span>
   <li><span class="nut">Duyệt báo cáo ảnh/video</span></li>
   <li><span class="nut">Nhập liệu ban đầu</span> — <em>“Đưa bản phả gốc của một chi vào hệ
     thống”</em>. Đây là lối vào phần nhập bằng tệp Excel ở mục 7.</li>
+  <li><span class="nut">Cấp lại liên kết đặt mật khẩu</span> — cho người trong chi mình quên mật
+    khẩu mà không có địa chỉ thư. Cách làm ở mục 6.9.</li>
 </ul>
+<p class="phu">
+  Bản 3 đếm năm ô: lúc ấy việc cấp lại mật khẩu chạy được nhưng chưa có ô nào trên trang này.
+</p>
 
 <div class="khoi">
   <p class="nhan">Phạm vi: Trưởng chi chỉ quyết việc trong chi mình</p>
@@ -1116,14 +1382,37 @@ liên hệ, tiểu sử, và <span class="nut">Quan hệ trong dòng họ</span>
 </p>
 
 <h3>6.3 · Duyệt bài viết</h3>
-<p>Vào <span class="nut">Duyệt bài viết</span>. Với mỗi bài có ba lựa chọn:</p>
+<p>Vào <span class="nut">Duyệt bài viết</span>. Với mỗi bài có hai lựa chọn:</p>
 <ul>
   <li><span class="nut">Duyệt</span> — bài lên trang chủ.</li>
-  <li><span class="nut">Sửa nhẹ rồi đăng</span> — sửa tại chỗ rồi
-    <span class="nut">Lưu &amp; Duyệt</span>.</li>
   <li><span class="nut">Trả lại</span> — phải ghi lý do, rồi
     <span class="nut">Xác nhận trả lại</span>. Người viết đọc được lý do và sửa rồi gửi lại.</li>
 </ul>
+<div class="khoi">
+  <p class="nhan">Bài cần sửa một chữ thì trả lại — người duyệt không sửa bài của người khác</p>
+  <p>
+    Người duyệt chỉ có hai nút: <span class="nut">Duyệt</span> và <span class="nut">Trả lại</span>.
+    Muốn bài được sửa, xin <span class="nut">Trả lại</span> kèm lời dặn cụ thể — ví dụ <em>“sửa năm
+    mất của cụ thành 1947 rồi gửi lại”</em>. Ô lý do để trống thì nút
+    <span class="nut">Xác nhận trả lại</span> không bấm được. Người viết thấy bài quay về
+    <span class="nut">Bài của tôi</span> với dòng <em>“Bài đã được trả lại để sửa”</em> và đúng lời
+    dặn của ông/bà.
+  </p>
+  <p>
+    Vì sao không có nút sửa hộ: bài đăng lên là <strong>lời của người viết, mang tên người viết</strong>.
+    Người duyệt sửa rồi đăng thì trên trang chủ là một câu người viết chưa từng viết, dưới tên họ.
+  </p>
+</div>
+<div class="sua">
+  <span class="nhan-sua">Sửa chiều 26/09/2026 — đã quyết: bỏ hẳn “Sửa nhẹ rồi đăng”</span>
+  <p>
+    Bản 3 của tài liệu này tả một nút <span class="nut">Sửa nhẹ rồi đăng</span> cho người duyệt, theo
+    đúng bản thiết kế; bản sáng 26/09 ghi nút ấy đã được ẩn và việc còn “đang chờ quyết”. Nay chủ dự
+    án đã quyết: <strong>bỏ hẳn</strong>. Lý do bản thiết kế từng có nút ấy cũng có thật — bài chỉ sai
+    một con số mà phải đi một vòng trả lại, sửa, gửi lại là chậm, và các cụ viết bài dễ nản khi bị trả
+    lại. Nhưng sửa lời của người khác rồi đăng dưới tên họ là chuyện nhạy cảm hơn một vòng chờ.
+  </p>
+</div>
 <p class="phu">Bài của chính ông/bà thì màn hình khoá nút duyệt và nói rõ: nhờ một người khác
 trong Hội đồng hoặc chi/ngành xem xét.</p>
 
@@ -1140,18 +1429,40 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
 
 <h3>6.5 · Xử lý báo cáo ảnh/video</h3>
 <p>
-  Vào <span class="nut">Duyệt báo cáo ảnh/video</span>. Đọc lý do người báo nêu, rồi chọn:
+  Vào <span class="nut">Quản lý thành viên</span> → <span class="nut">Duyệt báo cáo
+  ảnh/video</span> (ô thứ tư trên trang <span class="nut">Quản lý dòng họ</span>).
+  Màn hình ghi ngay dưới tiêu đề: <em>“Ảnh/video bị báo cáo cần xem lại, theo phạm vi chi/ngành
+  được giao.”</em> — tức hàng chờ này cũng lọc theo chi như mọi hàng chờ khác.
 </p>
+<p>Mỗi báo cáo hiện lý do người báo chọn, ghi chú của họ, và ai báo lúc nào. Ông/bà chọn một
+trong hai:</p>
 <ul>
-  <li><span class="nut">Bỏ qua báo cáo</span> — tệp giữ nguyên.</li>
-  <li><span class="nut">Gỡ vĩnh viễn</span> → <span class="nut">Xác nhận gỡ, không thể hoàn
-    tác</span>.</li>
+  <li><span class="nut">Bỏ qua báo cáo</span> — tệp giữ nguyên, bài viết không đổi.</li>
+  <li><span class="nut">Gỡ vĩnh viễn</span> → rồi
+    <span class="nut">Xác nhận gỡ, không thể hoàn tác</span>.</li>
 </ul>
+<p class="phu">
+  Ô <span class="nut">Ghi chú của người duyệt (không bắt buộc)</span> để lại lời giải thích cho
+  người đọc hồ sơ về sau. Hàng chờ rỗng thì màn hình ghi
+  <em>“Không còn báo cáo nào đang chờ.”</em>
+</p>
 <div class="khoi canh-bao">
-  <p class="nhan">Gỡ là xoá NGAY LẬP TỨC</p>
+  <p class="nhan">Gỡ là xoá tệp NGAY LẬP TỨC</p>
   <p>
-    Không có thời gian ân hạn và <strong>không có nút hoàn tác</strong>. Hãy chắc chắn trước
-    khi xác nhận. Màn hình cũng cảnh báo đúng câu này trước khi ông/bà bấm.
+    Màn hình cảnh báo đúng câu này trước khi ông/bà bấm:
+    <em>“Gỡ là xoá tệp NGAY LẬP TỨC, không có thời gian ân hạn và không có nút hoàn tác. Hãy
+    chắc chắn trước khi xác nhận.”</em>
+  </p>
+  <p>
+    Không có thùng rác, không có ba mươi ngày chờ, không có ai khôi phục lại giúp được —
+    <strong>kể cả quản trị hệ thống</strong>. Tấm ảnh nhà thờ họ chụp năm 1998 mà bị gỡ nhầm
+    thì chỉ còn cách đi xin lại bản gốc.
+  </p>
+  <p>
+    <strong>Xin làm theo thứ tự này:</strong> đọc lý do người báo nêu → mở ảnh ra xem → nếu còn
+    phân vân thì <em>để đấy</em> và hỏi người trong chi, báo cáo không tự mất đi → chỉ khi đã
+    chắc mới bấm <span class="nut">Gỡ vĩnh viễn</span>. Nghiêng về
+    <span class="nut">Bỏ qua báo cáo</span> khi chưa chắc: bỏ qua thì sửa lại được, gỡ thì không.
   </p>
 </div>
 
@@ -1215,7 +1526,10 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
   <li><strong>Phạm vi quyết định AI SẼ NHẬN LỜI NHẮC.</strong> Chọn
     <span class="nut">Một chi/ngành</span> hoặc <span class="nut">Cả dòng họ</span>.
     Nhắc nhầm cả họ cho việc của một chi là cách nhanh nhất khiến người ta tắt thông báo.
-    <br><em>Chỉ Hội đồng Tộc biểu / Tộc trưởng mới phát được lời nhắc cho cả dòng họ.</em></li>
+    <br><em>Chỉ Hội đồng Tộc biểu / Tộc trưởng mới phát được lời nhắc cho cả dòng họ.</em>
+    <br>Chọn <span class="nut">Một chi/ngành</span> thì ô bên dưới mở ra danh sách chi và ngành,
+    xếp thụt vào theo cây. <em>Trước bản sửa này danh sách ấy không tải được</em> — ô quay rồi
+    rỗng, và không chọn được chi nào (xem khung ở mục 3.5). Nay chọn được.</li>
   <li><strong>Hai loại tự nó đã nói phạm vi, và nay màn hình tự khớp giúp</strong>: chọn
     <span class="nut">Giỗ họ</span> thì phạm vi tự nhảy về <span class="nut">Cả dòng họ</span>;
     chọn <span class="nut">Giỗ chi</span> thì tự nhảy về <span class="nut">Một chi/ngành</span>.
@@ -1243,6 +1557,141 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
   <strong>từ chối bắt buộc nêu lý do</strong>, người gửi có quyền biết vì sao.
 </p>
 
+<h3>6.9 · Cấp lại mật khẩu cho một cụ đăng ký bằng số điện thoại</h3>
+
+<p>
+  Việc này có từ bản 3; <strong>từ bản 4 (26/09/2026) nó có màn hình riêng</strong>, Trưởng chi tự
+  bấm được, không phải nhờ ai.
+</p>
+
+<p>
+  Bà con đăng ký bằng <strong>địa chỉ thư điện tử</strong> mà quên mật khẩu thì tự lo được:
+  bấm <span class="nut">Quên mật khẩu</span> ở màn đăng nhập, hệ thống gửi thư, xong. Ông/bà
+  không phải làm gì cả.
+</p>
+<p>
+  Nhưng nhiều cụ trong họ <strong>không có địa chỉ thư</strong> — các cụ đăng ký bằng số điện
+  thoại, và lối ấy có chính là để phục vụ các cụ. Thư thì không gửi đi đâu được. Trước đây các
+  cụ quên mật khẩu là hết đường; <strong>nay Trưởng chi và Hội đồng cấp lại được</strong> cho
+  người trong chi mình.
+</p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Ba điều phải nắm trước khi làm việc này</p>
+  <ol>
+    <li>
+      <strong>Chỉ cấp được cho tài khoản KHÔNG có địa chỉ thư.</strong> Ai đã khai thư điện tử
+      thì hệ thống <em>từ chối</em>, và nói rõ vì sao: người ấy tự bấm
+      <span class="nut">Quên mật khẩu</span> là xong, không cần ai đụng vào tài khoản của họ.
+      Đây là một luật, không phải một thiếu sót — mở rộng ra thì hoá thành một đường để người
+      này đổi mật khẩu của người kia mà không có lý do chính đáng nào.
+    </li>
+    <li>
+      <strong>Không ai tự cấp cho chính mình.</strong> Hệ thống chặn cứng. Ông/bà quên mật khẩu
+      của <em>chính ông/bà</em> thì phải nhờ một người khác trong Hội đồng, y như mọi người.
+    </li>
+    <li>
+      <strong>Chỉ cấp được trong chi/ngành mình được giao.</strong> Trưởng chi Ất không cấp
+      được cho người chi Bính; Hội đồng Tộc biểu thì cả họ. Gặp người ngoài phạm vi, màn hình
+      nói rõ và mời chuyển cho đúng người.
+    </li>
+  </ol>
+</div>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Liên kết chỉ hiện MỘT LẦN, trên màn hình của chính ông/bà</p>
+  <p>
+    Hệ thống <strong>không gửi liên kết cho cụ ấy</strong> — vì không có đường nào để gửi, đó
+    là cả gốc của vấn đề. Liên kết hiện <strong>trên màn hình người cấp</strong>, tức trên máy
+    của ông/bà. Đóng màn ấy là không xem lại được nữa; lỡ mất thì cấp một liên kết khác.
+  </p>
+  <p>
+    <strong>Việc của ông/bà là đưa liên kết ấy đến tay cụ:</strong> đọc qua điện thoại, nhắn
+    Zalo, hoặc chép ra giấy đưa tận tay. Xin làm <em>ngay</em> —
+    <strong>liên kết hết hạn sau ba mươi phút và dùng được một lần</strong>. Cụ bấm vào là tới
+    màn <span class="nut">Đặt mật khẩu</span>, tự chọn mật khẩu của mình; ông/bà không biết và
+    không cần biết mật khẩu ấy.
+  </p>
+  <p>
+    Quá ba mươi phút thì cấp lại là xong, không mất gì cả — nhưng <strong>liên kết cũ tự hết
+    dùng được</strong> ngay khi có liên kết mới. Đừng đọc cho cụ hai liên kết cùng lúc.
+  </p>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Chính chủ luôn được báo — xin nói trước điều này với cụ</p>
+  <p>
+    <strong>Mỗi lần có người cấp lại mật khẩu cho một tài khoản, chủ tài khoản ấy nhận được
+    một thông báo</strong>, ghi rõ ai vừa cấp và liên kết còn hiệu lực tới lúc nào. Thông báo
+    nằm trong <span class="nut">Trung tâm thông báo</span> của cụ, và cụ đọc được nó ngay sau
+    khi đặt mật khẩu xong và đăng nhập lại.
+  </p>
+  <p>
+    Đây không phải phiền phức, đây là <strong>chỗ dựa</strong>. Cấp lại mật khẩu cho người khác
+    nghĩa là <em>đổi được</em> mật khẩu của người ấy — không có cách nào làm cho việc ấy vô
+    hại, chỉ có cách làm cho nó <strong>không im lặng</strong>. Cụ nào nhận được thông báo ấy
+    mà <em>không</em> hề nhờ ai thì phải báo ngay Hội đồng Tộc biểu: đó là dấu hiệu có người
+    đang mượn tài khoản Trưởng chi.
+  </p>
+  <p class="phu">
+    Mỗi lượt cấp còn để lại một dòng trong nhật ký dòng họ: ai cấp, cho ai, lúc nào, hạn tới
+    bao giờ.
+    <br>Có một <strong>trần số lượt cấp trong mỗi giờ</strong> cho từng người cấp — để một tài
+    khoản Trưởng chi bị chiếm không phát đi hàng loạt liên kết trong một đêm. Con số hiện đặt
+    là <strong>mười lượt một giờ</strong>, và mức ấy <strong>đã được cân nhắc là đủ</strong>
+    cho cả một buổi họp họ. Đây là một <em>mức cấu hình</em>, không phải một con số đóng cứng
+    trong phần mềm: cần thì quản trị hệ thống nâng được. Chạm trần thì màn hình bảo đợi rồi làm
+    tiếp, không mất gì cả.
+  </p>
+</div>
+
+<h4>Các bước bấm</h4>
+<ol class="buoc">
+  <li>Vào <span class="nut">Quản lý thành viên</span> → ở trang
+    <span class="nut">Quản lý dòng họ</span> bấm ô thứ sáu,
+    <span class="nut">Cấp lại liên kết đặt mật khẩu</span>.</li>
+  <li>Ở ô <span class="nut">Ai quên mật khẩu?</span>, gõ tên cụ — không cần bỏ dấu.
+    <br>Ô này <strong>chỉ gợi ý người còn sống trong chi/ngành ông/bà được giao</strong>. Mỗi dòng
+    ghi kèm <strong>cả đường nhánh</strong> (chi › ngành) để ông/bà phân biệt hai người trùng tên.
+    Nếu có người khớp tên ở chi khác, màn hình báo <strong>số người bị ẩn</strong> — <em>“… người
+    khớp tên ở chi khác không hiện ở đây…”</em> — mà không nêu tên họ.</li>
+  <li>Đọc lại tên, chọn đúng cụ. Ô <span class="nut">Ghi chú cho mình (không bắt buộc)</span> để
+    nhớ vì sao, ví dụ <em>“cụ gọi điện sáng nay, không nhớ mật khẩu cũ.”</em></li>
+  <li>Đọc khung cảnh báo <span class="nut">Đây là một quyền lực thật, không phải một tiện
+    ích</span>, rồi bấm <span class="nut">Cấp liên kết</span>.</li>
+  <li>Màn hình hiện <span class="nut">Đã cấp — liên kết chỉ hiện đúng lần này</span>, kèm liên
+    kết, giờ hết hạn, và dòng xác nhận chính chủ đã được báo. <strong>Chép liên kết và đưa cho cụ
+    ngay</strong> — đọc qua điện thoại hoặc nhắn riêng, đừng dán vào nhóm chung.</li>
+</ol>
+
+<table>
+  <thead><tr><th>Luật</th><th>Con số / cách chạy</th></tr></thead>
+  <tbody>
+    <tr><td>Liên kết dùng được</td><td><strong>một lần</strong>; bấm lại lần hai thì báo
+      <em>“Liên kết đặt mật khẩu không còn dùng được”</em></td></tr>
+    <tr><td>Hạn của liên kết</td><td><strong>30 phút</strong> kể từ lúc bấm
+      <span class="nut">Cấp liên kết</span></td></tr>
+    <tr><td>Cấp liên kết mới cho cùng người</td><td>liên kết cũ <strong>mất tác dụng
+      ngay</strong></td></tr>
+    <tr><td>Số lượt cấp của một người cấp</td><td>tối đa <strong>10 lượt trong một giờ</strong>;
+      lượt thứ 11 nhận <em>“Ông/bà vừa cấp nhiều liên kết liên tiếp trong một giờ. Xin chờ rồi thử
+      lại.”</em></td></tr>
+    <tr><td>Tự cấp cho chính mình</td><td><strong>không được</strong>, kể cả Hội đồng</td></tr>
+    <tr><td>Người trong chi khác</td><td><strong>không được</strong> với Trưởng chi — không hiện
+      trong ô chọn. Hội đồng Tộc biểu thì chọn được cả họ.</td></tr>
+    <tr><td>Tài khoản có địa chỉ thư</td><td><strong>không cấp</strong>; người ấy tự bấm
+      <span class="nut">Quên mật khẩu</span> ở màn đăng nhập của hệ thống tài khoản để nhận thư</td></tr>
+  </tbody>
+</table>
+
+<p class="phu">
+  <strong>Bản 3 có một khung đỏ “Hôm nay chưa có nút bấm cho việc này”</strong>, bảo Trưởng chi
+  nhờ quản trị hệ thống chạy lệnh rồi đọc liên kết lại. Khung ấy đúng ở ngày 23/09: phần máy móc đã
+  xong nhưng chưa có màn hình. Màn hình đã lên ngày 26/09 và đã được bấm thử trọn luồng — cấp, mở
+  liên kết ở một máy khác, đặt mật khẩu, bấm lại lần hai bị từ chối, đăng nhập bằng mật khẩu mới —
+  nên lối nhờ người vận hành đã bỏ, đúng như bản 3 đã hứa.
+</p>
+
 <a class="len" href="#mucluc">↑ Về mục lục</a>
 
 
@@ -1258,8 +1707,9 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
   <p class="nhan">Lối vào — nay đi từ trang Quản lý, không phải gõ địa chỉ</p>
   <p>
     Vào <span class="nut">Quản lý thành viên</span> (mục 6.1) → ở trang
-    <span class="nut">Quản lý dòng họ</span> bấm ô cuối cùng:
+    <span class="nut">Quản lý dòng họ</span> bấm ô thứ năm:
     <span class="nut">Nhập liệu ban đầu</span>.
+    <em>(Bản 3 ghi “ô cuối cùng”; nay sau nó còn ô thứ sáu, cấp lại mật khẩu.)</em>
   </p>
   <p>
     Từ đó có đủ ba lối: <span class="nut">Lấy mẫu Excel của chi tôi</span>,
@@ -1303,8 +1753,11 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
 
 <h4>Bốn điều cần biết trước khi điền</h4>
 <ol class="buoc">
-  <li><strong>Tệp có năm trang</strong>: Hướng dẫn · Nhân khẩu · Hôn phối · Danh mục · Đã có.
-    Mở tệp ra là thấy trang Hướng dẫn trước tiên — <em>đọc trang đó trước khi gõ dòng nào</em>.</li>
+  <li><strong>Tệp có năm trang</strong>, theo thứ tự: Hướng dẫn · Nhân khẩu · Hôn phối ·
+    <strong>Ví dụ</strong> · Danh mục.
+    Mở tệp ra là thấy trang Hướng dẫn trước tiên — <em>đọc trang đó trước khi gõ dòng nào</em>.
+    Trang ấy nói rõ chi mình hiện có <strong>bao nhiêu người đã có mã</strong> (đã mang sẵn trong
+    mẫu) và <strong>bao nhiêu người chưa có mã</strong>.</li>
   <li><strong>Cột Mã là thứ quan trọng nhất.</strong> Mã lấy từ số thứ tự trong sổ giấy của
     chi mình. Cột <em>Mã cha</em> và <em>Mã mẹ</em> trỏ vào cột Mã này. Lần nhập sau vẫn dùng
     đúng mã ấy, nên <strong>đừng đánh số lại</strong>.</li>
@@ -1316,9 +1769,28 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
     điện tử, địa chỉ, ảnh. Người còn sống tự khai phần của mình ở bước 5. Đây là quyết định,
     không phải thiếu sót.</li>
 </ol>
+<div class="khoi canh-bao">
+  <p class="nhan">Dâu/rể: để trống ô Đời</p>
+  <p>
+    Dâu/rể là người lấy về từ họ khác — trên tệp là dòng <em>không có Mã cha, không có Mã mẹ</em>
+    nhưng có mặt ở trang Hôn phối. Với những dòng ấy, <strong>đừng điền ô Đời</strong>: đời của
+    dâu/rể được suy từ vợ/chồng khi ghi. Lý do: chưa rõ con số ấy là đời của chồng hay đời trong
+    họ gốc của bà, và <strong>Hội đồng Tộc biểu chưa chốt</strong> quy ước — nên điền vào thì bước
+    đối soát báo lỗi phải sửa ở đúng dòng đó. Vợ Thuỷ tổ ghi Đời 1 thì được. Con gái trong họ đi
+    lấy chồng <em>không</em> thuộc trường hợp này (bà có Mã cha/Mã mẹ), cứ điền Đời như thường.
+    Trang Hướng dẫn trong tệp mẫu cũng nói điều này.
+  </p>
+</div>
 <p>
-  Trang <em>Nhân khẩu</em> có sẵn một gia đình ba đời làm mẫu, tô nền khác.
-  <strong>Xoá hết các dòng đó rồi hãy tải lên.</strong>
+  Các dòng làm mẫu nằm ở <strong>trang <em>Ví dụ</em> riêng</strong>, không nằm trên trang
+  <em>Nhân khẩu</em>. Trang Nhân khẩu giao xuống đã sạch (hoặc chỉ có những người đã có mã của
+  chi), nên <strong>không phải xoá gì</strong> trước khi tải lên; trang Ví dụ thì cứ để nguyên —
+  hệ thống không đọc trang ấy.
+</p>
+<p class="phu">
+  Bản trước của tài liệu này kể tên trang thứ năm là “Đã có” và bảo xoá các dòng mẫu trên trang
+  Nhân khẩu — tả theo bản thiết kế tệp mẫu, trước khi đối chiếu với tệp tải về thật. Tệp thật
+  không có trang “Đã có”, và dòng mẫu nằm ở trang Ví dụ.
 </p>
 
 <h3>7.3 · Tải tệp lên</h3>
@@ -1348,6 +1820,17 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
     bấm <span class="nut">Tôi đã xem xong … mục cần xem lại</span>.</li>
   <li><strong><span class="nut">… cặp nghi trùng</span></strong> — phải quyết từng cặp.</li>
 </ul>
+<p>
+  Trong <span class="nut">… lỗi phải sửa</span> có cả những câu hỏi <strong>quy ước dòng họ chưa
+  trả lời</strong>, không chỉ lỗi gõ: dâu/rể có khai Đời
+  (<span class="nut">Dâu/rể không khai Đời — xoá ô Đời</span>), con nuôi của một người trong họ,
+  người không rõ còn sống hay đã mất, mã ở trang Hôn phối hoặc mã kế tự không tìm thấy ở đâu cả.
+  Mỗi câu lỗi chỉ đúng dòng, đúng cột và nói cách sửa. Đây là <strong>đúng những điều bước ghi sẽ
+  kiểm</strong>, nên khi màn này báo <span class="nut">Không còn lỗi phải sửa</span> thì bước ghi,
+  với tệp không đổi, sẽ không từ chối vì chúng. Quyết một cặp nghi trùng cũng có thể làm số lỗi
+  phải sửa đổi ngay — ví dụ hợp nhất một dòng chép trùng không có Mã cha thì lỗi “dâu/rể khai
+  Đời” của dòng ấy tự mất.
+</p>
 <p>
   Bấm <span class="nut">Tải danh sách lỗi ra Excel</span> để sửa trong Excel — nơi ông/bà quen
   tay — rồi <span class="nut">Tải lại tệp đã sửa</span>.
@@ -1389,6 +1872,23 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
   tiếp.</strong>
 </p>
 <p>
+  Màn hình <strong>tự theo dõi tới khi có kết quả</strong>, và chỉ có hai kết quả:
+  <strong>đã ghi xong</strong> (có nút <span class="nut">Gỡ toàn bộ lô này</span>), hoặc
+  <strong>ghi hỏng</strong> (kèm lý do; phả không đổi gì, vì lô được ghi trọn hoặc không ghi gì).
+  Mở lại lô sau khi đã đóng trang thì thấy đúng kết quả ấy.
+</p>
+<p class="phu">
+  Trước bản sửa 26/09, có lúc lô đã hỏng mà màn hình vẫn đứng ở “chờ duyệt”, khiến người dùng ngồi
+  đợi một việc đã kết thúc. Nay không còn; nếu ông/bà thấy màn hình đứng yên quá lâu, tải lại
+  trang để xem kết quả thật, và báo lại.
+</p>
+<p class="phu">
+  Cũng trước bản sửa 26/09, một lô được báo “Không còn lỗi phải sửa” vẫn có thể <em>ghi hỏng</em>
+  vì dâu/rể có khai Đời — phép kiểm ấy chỉ chạy lúc ghi. Nay nó chạy ngay ở bước đối soát. Bước ghi
+  vẫn kiểm lại một lần nữa; nếu lô vẫn hỏng ở đây thì nghĩa là dữ liệu đã đổi giữa hai bước — bấm
+  <span class="nut">Kiểm lại lô này</span> để xem danh sách lỗi mới.
+</p>
+<p>
   Phát hiện sai sau khi ghi → <span class="nut">Gỡ toàn bộ lô này</span>. Toàn bộ người và
   quan hệ do lô ấy đưa vào sẽ được gỡ khỏi phả, <strong>không có gì bị xoá vĩnh viễn</strong>.
 </p>
@@ -1423,6 +1923,22 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
   Tìm <strong>đúng câu mà màn hình đang hiện</strong> trong danh sách dưới đây. Câu nào không
   có ở đây thì xin gọi cho Trưởng chi của mình.
 </p>
+
+<div class="khoi chot">
+  <p class="nhan">Đã sửa: câu lỗi nay nói được lý do</p>
+  <p>
+    Trước bản sửa này, gõ sai một ô thường chỉ nhận lại <strong>một câu chung chung</strong> —
+    có lúc còn là một câu nghe như <em>máy chủ hỏng</em> — cho những thứ thật ra chỉ là
+    <strong>gõ quá dài</strong> hoặc <strong>chọn nhầm loại tệp</strong>. Người dùng đọc nó
+    xong ngồi đợi, vì câu ấy bảo “thử lại sau ít phút”; mà số điện thoại bốn mươi chữ số thì
+    đợi bao lâu cũng không ngắn lại.
+  </p>
+  <p>
+    <strong>Nay màn hình nói thẳng ô nào sai và sai ra sao</strong>, ngay tại chỗ ông/bà vừa
+    gõ. Vậy nên: <em>câu lỗi nào bảo “thử lại sau” thì hãy tin nó và thử lại thật</em> — nay nó
+    chỉ còn dùng cho trục trặc đường truyền, không còn đội lốt cho lỗi gõ nữa.
+  </p>
+</div>
 
 <h3>8.1 · Lúc đăng ký hoặc nhận lời mời</h3>
 <div class="tracuu">
@@ -1521,8 +2037,15 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
         thứ hết hạn chỉ là cái liên kết.</dd>
       <dt>Làm gì tiếp</dt>
       <dd>Nếu ông/bà đã đặt mật khẩu ở lần bấm trước thì chỉ cần
-        <span class="nut">Đăng nhập</span>. Nếu chưa, gọi cho người đã mời: người ấy đặt cho
-        ông/bà một mật khẩu tạm và đọc qua điện thoại, lần đăng nhập đầu hệ thống sẽ mời đổi lại.</dd>
+        <span class="nut">Đăng nhập</span> — màn hình cũng có sẵn nút
+        <span class="nut">Tôi đã đặt mật khẩu rồi — đăng nhập</span>.
+        <br>Nếu chưa, <strong>gọi cho Trưởng chi của mình</strong> (hoặc người đã mời). Người
+        ấy cấp cho ông/bà <strong>một liên kết mới</strong> rồi đọc qua điện thoại hoặc nhắn
+        Zalo; liên kết ấy cũng hết hạn sau ba mươi phút, nên xin bấm ngay.
+        <br>Đó là một <strong>liên kết</strong> để chính ông/bà tự chọn mật khẩu — không
+        ai đặt hộ, và không ai biết mật khẩu ông/bà chọn. <em>(Bản 3 của hướng dẫn này từng
+        ghi rằng màn hình còn viết “đặt cho ông/bà một mật khẩu tạm” — câu ấy đã được sửa trên
+        màn hình ngày 23/09/2026, nay hai bên nói cùng một việc.)</em></dd>
     </dl>
   </div>
 
@@ -1580,6 +2103,27 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
       <dd>Số lần gửi có hạn để không ai thử lần lượt từng người trong họ.</dd>
       <dt>Làm gì tiếp</dt>
       <dd>Gọi cho Trưởng chi của mình, hoặc cho người đã đưa mã mời, để các bác làm giúp từ đầu.</dd>
+    </dl>
+  </div>
+
+  <div class="muc">
+    <p class="cau">Một câu lỗi hiện <em>ngay dưới ô ông/bà vừa gõ</em></p>
+    <dl>
+      <dt>Nghĩa là gì</dt>
+      <dd>Một ô nào đó gõ chưa đạt: <span class="nut">Số điện thoại</span> còn thiếu chữ số,
+        hoặc phần <span class="nut">Vài dòng tự giới thiệu</span> quá ngắn hoặc quá dài. Màn
+        hình nói thẳng ô nào và vì sao, ví dụ: <em>“Số điện thoại này hình như còn thiếu chữ
+        số. Xin ông/bà xem lại.”</em> hay <em>“Xin viết thêm vài chữ nữa — ít nhất là con ông
+        nào, bà nào, quê quán ở đâu.”</em></dd>
+      <dt>Làm gì tiếp</dt>
+      <dd>Sửa đúng ô ấy rồi bấm gửi lại. <strong>Những gì ông/bà đã gõ vẫn còn nguyên</strong>,
+        không phải nhập lại từ đầu, và <strong>không mất lượt gửi nào</strong> — đơn chưa hề
+        được gửi đi.</dd>
+      <dt>Vì sao ghi vào đây</dt>
+      <dd><strong>Trước bản sửa này, những lỗi ấy hiện ra thành một câu khác hẳn:</strong>
+        <em>“Chưa gửi được lúc này — đường truyền tới máy chủ đang trục trặc… xin thử lại.”</em>
+        Người đọc nó sẽ ngồi bấm gửi lại, mà phần tự giới thiệu quá dài thì bấm bao nhiêu lần
+        cũng vẫn dài y như cũ. Nay câu lỗi nói đúng việc phải sửa.</dd>
     </dl>
   </div>
 
@@ -1656,6 +2200,24 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
       <dt>Làm gì tiếp</dt>
       <dd>Đăng nhập bằng tài khoản dòng họ. Phần các cụ đã khuất thì mở cho tất cả mọi người —
         xem phả đồ được ngay.</dd>
+    </dl>
+  </div>
+
+  <div class="muc">
+    <p class="cau">“Có người vừa cấp liên kết đặt lại mật khẩu cho tài khoản của bạn”</p>
+    <dl>
+      <dt>Nghĩa là gì</dt>
+      <dd>Một Trưởng chi hoặc một bác trong Hội đồng vừa cấp cho tài khoản của ông/bà một liên
+        kết để đặt lại mật khẩu. Thông báo ghi rõ <strong>ai</strong> đã cấp và liên kết còn
+        hiệu lực <strong>tới lúc nào</strong>. Đây là lời nhắn của hệ thống gửi thẳng cho chính
+        chủ, không phải cho ai khác.</dd>
+      <dt>Làm gì tiếp</dt>
+      <dd><strong>Nếu chính ông/bà vừa nhờ người ta</strong> — không phải làm gì cả, cứ bấm
+        liên kết người ấy đưa và đặt mật khẩu mới.
+        <br><strong>Nếu ông/bà KHÔNG hề nhờ ai</strong> — xin
+        <strong>báo ngay Hội đồng Tộc biểu</strong> và đổi mật khẩu của mình. Màn hình cũng nói
+        đúng vậy. Đừng bỏ qua: thông báo này có mặt chính là để ông/bà bắt được một lượt cấp mà
+        mình không xin.</dd>
     </dl>
   </div>
 
@@ -1763,6 +2325,44 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
   </div>
 
   <div class="muc">
+    <p class="cau">“Tệp không đúng định dạng. Chỉ nhận tệp .xlsx thật.” &nbsp;·&nbsp;
+      “Tệp quá lớn. Giới hạn là 10 MB — thường là do có ảnh nhúng.” &nbsp;·&nbsp;
+      “Tệp thiếu trang Nhân khẩu. Hãy dùng đúng mẫu của chi mình.”</p>
+    <dl>
+      <dt>Nghĩa là gì</dt>
+      <dd>Tệp bị từ chối <em>ngay ở cửa</em>, trước khi hệ thống đọc một dòng nào. Ba câu trên
+        nói đúng ba chuyện khác nhau: sai loại tệp (thường là <code>.xls</code> cũ hoặc
+        <code>.csv</code> đổi tên thành <code>.xlsx</code>), tệp nặng quá, và tệp không phải
+        mẫu của hệ thống. Còn vài câu nữa cùng loại: <em>“Tệp hỏng, không mở được…”</em>,
+        <em>“Tệp thiếu một cột bắt buộc của mẫu.”</em>, <em>“Tệp quá nhiều dòng (trần
+        5.000).”</em></dd>
+      <dt>Làm gì tiếp</dt>
+      <dd>Mỗi câu đã nói sẵn cách chữa — làm theo đúng câu đang hiện. Chắc ăn nhất là
+        <span class="nut">Lấy mẫu Excel của chi tôi</span> một lần nữa, chép nội dung sang mẫu
+        mới, rồi tải lên lại.</dd>
+      <dt>Vì sao ghi vào đây</dt>
+      <dd><strong>Trước bản sửa này, cả sáu câu ấy đều không hiện ra.</strong> Chọn nhầm tệp
+        thì màn hình chỉ nói <em>“Không thực hiện được. Thử lại sau ít phút.”</em> — một câu
+        nghe như máy chủ hỏng, cho một việc chỉ là chọn nhầm tệp. Đã có người ngồi đợi cả buổi.
+        Nay nó nói thẳng tệp sai ở chỗ nào.</dd>
+    </dl>
+  </div>
+
+  <div class="muc">
+    <p class="cau">“Không thực hiện được. Thử lại sau ít phút.”</p>
+    <dl>
+      <dt>Nghĩa là gì</dt>
+      <dd>Đây là câu <strong>cuối cùng</strong> hệ thống dùng khi không còn câu nào đúng hơn —
+        nghĩa là một trục trặc thật, không phải ông/bà gõ sai. Nay nó <em>hiếm</em>: những thứ
+        do gõ sai hoặc chọn nhầm tệp đều đã có câu riêng (xem mục ngay trên).</dd>
+      <dt>Làm gì tiếp</dt>
+      <dd>Đợi vài phút rồi bấm lại thật. Vẫn vậy thì báo quản trị hệ thống, nói rõ ông/bà đang
+        ở màn nào và vừa bấm nút gì. <strong>Tệp và lô nhập của ông/bà không mất</strong> —
+        chúng nằm ở khu vực chờ trên máy chủ.</dd>
+    </dl>
+  </div>
+
+  <div class="muc">
     <p class="cau">“Mã cha hoặc mã mẹ không tồn tại”</p>
     <dl>
       <dt>Nghĩa là gì</dt>
@@ -1816,7 +2416,11 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
       <dt>Nghĩa là gì</dt>
       <dd>Trục trặc giữa máy của ông/bà và hệ thống, không phải do ông/bà làm sai.</dd>
       <dt>Làm gì tiếp</dt>
-      <dd>Kiểm tra kết nối mạng rồi bấm <span class="nut">Thử lại</span>. Không có gì bị mất.</dd>
+      <dd>Kiểm tra kết nối mạng rồi bấm <span class="nut">Thử lại</span>. Không có gì bị mất.
+        <br><strong>Nay hai câu này đáng tin hơn trước.</strong> Trước bản sửa, chúng còn được
+        dùng cho cả những lỗi <em>gõ sai</em> — nên có người bấm thử lại mãi một thứ sẽ không
+        bao giờ tự hết. Nay câu nào nói “đường truyền” thì đúng là đường truyền: thử lại là
+        cách chữa thật.</dd>
     </dl>
   </div>
 
@@ -1951,12 +2555,64 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
 
 <p>
   <strong>Ai nhìn thấy chính cái bảng cài đặt này?</strong> Chỉ ông/bà và
-  <strong>quản trị hệ thống</strong> — người ấy <em>xem được</em> mức ông/bà đã chọn (để hỗ
-  trợ khi có trục trặc) nhưng <strong>không đổi được</strong>. Sáu công tắc ấy chỉ chính
-  ông/bà gạt được.
+  <strong>quản trị hệ thống</strong> — người vận hành phần mềm, đứng ngoài dòng họ (mục
+  <a href="#m1">1</a>). Người ấy xem được mức ông/bà đã chọn, để gỡ rối khi có trục trặc.
   <br>Hội đồng Tộc biểu <em>không</em> xem được bảng này; các bác vẫn đọc được nội dung các
   mục (như đã nói ở trên), nhưng không thấy ông/bà đã đặt mức nào.
 </p>
+
+<div class="khoi canh-bao">
+  <p class="nhan">Đính chính: ai gạt được sáu công tắc này</p>
+  <p>
+    Bản trước của tài liệu này viết rằng quản trị hệ thống <em>“xem được nhưng không đổi
+    được”</em>. <strong>Câu ấy sai, và đây là đính chính.</strong> Sự thật:
+    <strong>hai</strong> người gạt được sáu công tắc — <strong>chính ông/bà</strong>, và
+    <strong>quản trị hệ thống</strong> khi làm thay mặt ông/bà.
+  </p>
+  <p>
+    Lối ấy có để phục vụ những cụ không tự thao tác được trên máy: cụ nói ra ý mình, người vận
+    hành gạt hộ. Nhưng nó cũng nghĩa là: <strong>nếu một hôm ông/bà thấy mức chia sẻ của mình
+    khác với lúc mình đặt, đó không hẳn là máy lỗi</strong> — có thể đã có người gạt hộ. Xin
+    hỏi lại Hội đồng Tộc biểu, và gạt lại cho đúng ý mình; quyền cuối cùng vẫn là của ông/bà.
+  </p>
+  <p class="phu">
+    <strong>Hội đồng Tộc biểu và Trưởng chi thì không gạt được</strong> — quyền công bố dữ liệu
+    của một người đang sống không phải là việc họ. Mọi lần đổi đều được ghi vào nhật ký kèm tên
+    người đổi, nên tra lại được ai đã làm và lúc nào.
+  </p>
+</div>
+
+<div class="khoi">
+  <p class="nhan">Quy ước: khi nào quản trị hệ thống được gạt hộ</p>
+  <p>
+    Máy <em>cho phép</em> người vận hành gạt sáu công tắc thay mặt ông/bà. Việc ấy được phép
+    tới đâu thì <strong>không phải máy quyết, mà là quy ước của dòng họ</strong>. Quy ước gồm
+    ba vế, và cả ba đều bắt buộc:
+  </p>
+  <ol>
+    <li>
+      <strong>Chỉ làm theo yêu cầu của chính chủ.</strong> Người vận hành
+      <em>không bao giờ tự ý</em> đổi mức chia sẻ của ai. Cụ nào không thao tác được trên máy
+      thì nói ra ý mình, người ấy gạt hộ — <strong>chỉ vậy, không hơn</strong>. Không có lý do
+      nào khác là chính đáng: không phải “cho tiện việc họ”, không phải “để danh bạ đỡ trống”.
+    </li>
+    <li>
+      <strong>Mọi lần đổi đều vào nhật ký, kèm tên người đổi.</strong> Việc này
+      <em>máy đã làm sẵn</em> và không tắt đi được — không phải một lời hứa, mà là cách hệ
+      thống đang chạy.
+    </li>
+    <li>
+      <strong>Hội đồng Tộc biểu được biết.</strong> Người vận hành báo lại cho Hội đồng mỗi
+      lần gạt hộ. Hội đồng <em>không</em> gạt được, nhưng phải biết việc ấy đã xảy ra — đó là
+      cách dòng họ trông chừng một quyền mà mình không tự cầm.
+    </li>
+  </ol>
+  <p class="phu">
+    <strong>Quy ước này do chủ dự án chốt.</strong> <em>Câu chữ chính thức thì còn chờ Hội đồng
+    Tộc biểu phê chuẩn</em> — khi có, đoạn này sẽ thay bằng đúng lời văn ấy. Nội dung ba vế thì
+    đã quyết và đang áp dụng từ hôm nay.
+  </p>
+</div>
 
 <p class="phu">
   Mục nào ông/bà chưa điền thì chưa có gì để chia sẻ; màn hình ghi rõ
@@ -1980,6 +2636,12 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
   ảnh) mà <strong>giữ lại cái ô trong phả</strong>, để cây không gãy. Xin liên hệ Hội đồng Tộc
   biểu để yêu cầu việc này.
 </p>
+<p class="phu">
+  Đây là <strong>quyền của ông/bà theo pháp luật</strong>, không phải một ân huệ xin được hay
+  không. Hội đồng chần chừ hoặc không trả lời thì xin gọi thẳng
+  <strong>người chịu trách nhiệm về dữ liệu</strong> — tên và số máy ở khung ghi tại mục
+  <a href="#m1">1</a>. Người ấy là người phải trả lời ông/bà.
+</p>
 
 <a class="len" href="#mucluc">↑ Về mục lục</a>
 
@@ -1993,21 +2655,30 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
 </p>
 
 <div class="khoi chot">
-  <p class="nhan">Bốn việc đã rời khỏi danh sách này (cập nhật 22/09/2026)</p>
+  <p class="nhan">Đã rời khỏi danh sách này (cập nhật 26/09/2026)</p>
   <p>
-    Bản trước của tài liệu liệt kê bảy việc chưa làm được. <strong>Bốn trong số đó nay đã làm
-    được</strong> và đã chuyển thành hướng dẫn thật: bật chia sẻ vinh danh (mục 5.3);
-    vào Bài viết · Vinh danh · Quản lý trên máy tính (mục 3.1); lối vào nhập liệu Excel
-    (mục 7); và lối vào trang đăng ký (mục 2.2). Xin đọc các mục ấy thay vì tìm ở đây.
+    <strong>Cấp lại mật khẩu nay có màn hình riêng.</strong> Bản 3 còn ghi ở đây “chưa có màn hình
+    riêng, phải nhờ quản trị hệ thống”; nay Trưởng chi tự bấm được ở ô thứ sáu của trang
+    <span class="nut">Quản lý dòng họ</span> — xem mục <a href="#m6">6.9</a>.
+  </p>
+  <p class="phu">Cập nhật 23/09/2026:</p>
+  <p>
+    <strong>Việc cấp lại mật khẩu cho tài khoản đăng ký bằng số điện thoại đã rời khỏi đây.</strong>
+    Bản trước ghi “chưa dùng được, phải gọi Trưởng chi”; nay Trưởng chi và Hội đồng
+    <em>thật sự</em> cấp lại được. Xin đọc mục <a href="#m6">6.9</a>, và phần cảnh báo ở
+    <a href="#m2">2.2</a>.
+  </p>
+  <p class="phu">
+    Trước đó (bản 2) đã rời khỏi danh sách: bật chia sẻ vinh danh (mục 5.3); vào Bài viết ·
+    Vinh danh · Quản lý trên máy tính (mục 3.1); lối vào nhập liệu Excel (mục 7); lối vào
+    trang đăng ký (mục 2.2).
   </p>
 </div>
 
 <ul>
   <li>
-    <strong>“Quên mật khẩu” chưa dùng được cho tài khoản đăng ký bằng số điện thoại.</strong>
-    Hệ thống gửi liên kết đặt lại qua thư điện tử; tài khoản không có địa chỉ thư thì không
-    nhận được. Hôm nay phải <strong>gọi Trưởng chi</strong> để được cấp lại liên kết hoặc một
-    mật khẩu tạm (mục 2.2). Lối tự phục vụ <em>đang được làm, chưa dùng được</em>.
+    <strong>Ông/bà chưa tự xin lại mật khẩu được nếu đăng ký bằng số điện thoại.</strong>
+    Vẫn phải qua một người khác — Trưởng chi hoặc Hội đồng. Lối tự phục vụ chưa có.
   </li>
   <li>
     <strong>Lịch chỉ có việc của dòng họ.</strong> Chưa ghi được việc riêng của cá nhân vào lịch.
@@ -2028,7 +2699,7 @@ trong Hội đồng hoặc chi/ngành xem xét.</p>
 
 <p class="chan">
   Tài liệu 08 · Hướng dẫn sử dụng cho người dùng · viết ngày 22/09/2026 ·
-  <strong>cập nhật ngày 22/09/2026 (bản 2)</strong>.<br>
+  <strong>cập nhật ngày 26/09/2026 (bản 4)</strong>, sau đợt bấm thử thật 24–26/09/2026.<br>
   Mọi câu chữ trong tài liệu này chép theo đúng chữ đang hiện trên màn hình và theo mã nguồn
   đang chạy. Chức năng nào chưa có thì đã ghi thẳng ở mục 10 thay vì mô tả như đã có.<br>
   Tệp này mở được cả khi không có Internet, và in ra giấy được.

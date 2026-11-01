@@ -277,6 +277,9 @@ export function useRevalidateBatch(batchId: string) {
   return useMutation<ImportBatch, ApiError, void>({
     mutationFn: () => dataImportApi.revalidate(batchId),
     onSuccess: (batch) => {
+      // Bỏ kết cục của lần ghi TRƯỚC (nếu có, ví dụ một lần FAILED rồi sửa tệp):
+      // để lại thì màn đọc ngay "FAILED" cũ và thôi theo dõi lần ghi mới.
+      queryClient.removeQueries({ queryKey: importKeys.commitProgress(batchId), exact: true });
       queryClient.setQueryData(importKeys.batch(batchId), batch);
       void queryClient.invalidateQueries({ queryKey: ["data-import", "batch", batchId] });
     },
@@ -288,6 +291,9 @@ export function useCommitBatch(batchId: string) {
   return useMutation<ImportBatch, ApiError, void>({
     mutationFn: () => dataImportApi.commit(batchId),
     onSuccess: (batch) => {
+      // Bỏ kết cục của lần ghi TRƯỚC (nếu có, ví dụ một lần FAILED rồi sửa tệp):
+      // để lại thì màn đọc ngay "FAILED" cũ và thôi theo dõi lần ghi mới.
+      queryClient.removeQueries({ queryKey: importKeys.commitProgress(batchId), exact: true });
       queryClient.setQueryData(importKeys.batch(batchId), batch);
       // Cây phả hệ vừa đổi thật — đây là lần duy nhất trong cả đường ống điều
       // đó đúng.
@@ -334,6 +340,9 @@ export function useAcknowledgeWarnings(batchId: string) {
   return useMutation<ImportBatch, ApiError, void>({
     mutationFn: () => dataImportApi.acknowledgeWarnings(batchId),
     onSuccess: (batch) => {
+      // Bỏ kết cục của lần ghi TRƯỚC (nếu có, ví dụ một lần FAILED rồi sửa tệp):
+      // để lại thì màn đọc ngay "FAILED" cũ và thôi theo dõi lần ghi mới.
+      queryClient.removeQueries({ queryKey: importKeys.commitProgress(batchId), exact: true });
       queryClient.setQueryData(importKeys.batch(batchId), batch);
     },
   });

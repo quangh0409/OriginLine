@@ -11,15 +11,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.giapha.dataimport.domain.BatchStatus;
 import vn.giapha.dataimport.domain.DuplicateDecision;
 import vn.giapha.dataimport.domain.DuplicateMergePlan;
 import vn.giapha.dataimport.domain.DuplicatePair;
 import vn.giapha.dataimport.domain.ImportBatch;
+import vn.giapha.dataimport.domain.ImportIssue;
 import vn.giapha.dataimport.domain.PersonRow;
 import vn.giapha.dataimport.domain.PlannedAction;
 import vn.giapha.dataimport.domain.port.DuplicatePairRepository;
 import vn.giapha.dataimport.domain.port.ExternalRefPort;
 import vn.giapha.dataimport.domain.port.ImportBatchRepository;
+import vn.giapha.dataimport.domain.port.ImportIssueRepository;
 import vn.giapha.dataimport.domain.port.ImportRowRepository;
 import vn.giapha.shared.exception.NotFoundException;
 
@@ -36,7 +39,7 @@ import vn.giapha.shared.exception.NotFoundException;
  * <ol>
  *   <li><b>Ghi lời khai</b>: quyết gì, ai quyết, lúc nào. Đây là thao tác có hệ quả <b>vĩnh
  *       viễn</b> lên phả — "gộp" làm một dòng biến mất hoặc làm một hồ sơ đã có bị viết đè.</li>
- *   <li><b>Tính lại kết quả đối soát ngay</b>. Không làm bước này thì màn xem trước vẫn hiện
+ *   <li><b>Tính lại kết quả đối soát — và lượt soát trước khi ghi — ngay</b>. Không làm bước này thì màn xem trước vẫn hiện
  *       "sẽ tạo 400 người" sau khi người ta vừa gộp ba mươi dòng, và con số ấy là một lời nói dối
  *       đúng vào lúc người dùng đang cân nhắc có bấm ghi hay không.</li>
  * </ol>
@@ -56,13 +59,18 @@ public class DecideDuplicateService {
     private final ImportRowRepository rows;
     private final DuplicatePairRepository pairs;
     private final ExternalRefPort externalRefs;
+    private final ImportIssueRepository issues;
+    private final ImportPreflight preflight;
 
     public DecideDuplicateService(ImportBatchRepository batches, ImportRowRepository rows,
-                                  DuplicatePairRepository pairs, ExternalRefPort externalRefs) {
+                                  DuplicatePairRepository pairs, ExternalRefPort externalRefs,
+                                  ImportIssueRepository issues, ImportPreflight preflight) {
         this.batches = batches;
         this.rows = rows;
         this.pairs = pairs;
         this.externalRefs = externalRefs;
+        this.issues = issues;
+        this.preflight = preflight;
     }
 
     /**
@@ -89,13 +97,13 @@ public class DecideDuplicateService {
             // dau thoi gian khong co chu thi nhat ky kiem toan chi noi duoc "luc 21:14 co ai do
             // gop hai cu lam mot" — cau vo dung dung vao luc can no nhat.
             throw new IllegalArgumentException(
-                    "Quyet dinh nghi trung phai co chu: thieu app_user cua nguoi bam");
+                    "Quyết định nghi trùng phải có chủ: thiếu app_user của người bấm");
         }
         ImportBatch batch = batches.byId(batchId)
                 .orElseThrow(() -> NotFoundException.of("ImportBatch", batchId));
         if (batch.status().daChot()) {
-            throw new IllegalStateException("Lo " + batchId + " da o trang thai " + batch.status()
-                    + "; khong con gi de quyet");
+            throw new IllegalStateException("Lô " + batchId + " đã ở trạng thái " + batch.status()
+                    + "; không còn gì để quyết");
         }
         DuplicatePair cap = pairs.byId(pairId)
                 .orElseThrow(() -> NotFoundException.of("ImportDuplicatePair", pairId));
@@ -142,12 +150,73 @@ public class DecideDuplicateService {
                     personId == null ? PlannedAction.CREATE : PlannedAction.UPDATE));
         }
 
-        List<PersonRow> sau = DuplicateMergePlan.cua(pairs.byBatch(batch.id()), goc).apLenDoiSoat(goc);
+        DuplicateMergePlan keHoach = DuplicateMergePlan.cua(pairs.byBatch(batch.id()), goc);
+        List<PersonRow> sau = keHoach.apLenDoiSoat(goc);
         rows.updateResolutions(batch.id(), sau);
-
         int seTao = (int) sau.stream().filter(r -> r.plannedAction() == PlannedAction.CREATE).count();
-        batches.updateCounters(batch.id(), batch.personRowCount(), batch.marriageRowCount(),
-                batch.blockingCount(), batch.warningCount(), seTao, sau.size() - seTao,
-                batch.warningsDigest());
+
+        if (batch.status() != BatchStatus.VALIDATED && batch.status() != BatchStatus.FAILED) {
+            // Lo chua kiem xong: chua co danh sach loi nao de soat lai. Lan kiem toi se soat.
+            batches.updateCounters(batch.id(), batch.personRowCount(), batch.marriageRowCount(),
+                    batch.blockingCount(), batch.warningCount(), seTao, sau.size() - seTao,
+                    batch.warningsDigest());
+            return;
+        }
+        soatLai(batch, keHoach, sau, seTao);
+    }
+
+    /**
+     * Chạy lại lượt soát trước khi ghi với <b>kế hoạch gộp mới</b>, rồi cập nhật danh sách lỗi,
+     * các con số và trạng thái của lô.
+     *
+     * <h2>Vì sao một quyết định nghi trùng phải chạy lại lượt soát</h2>
+     * Lượt soát ({@link ImportPreflight}) chạy trên tập dòng <b>sau khi gộp</b> — đúng tập bước ghi
+     * sẽ thấy. Quyết định đổi thì tập ấy đổi, theo cả hai chiều:
+     * <ul>
+     *   <li><b>Gỡ được lỗi</b>: một dòng chép trùng không có Mã cha (nên bị coi là dâu/rể có khai
+     *       Đời) biến mất khi được gộp. Không soát lại thì lô vẫn bị chặn vì một điều không còn
+     *       đúng, và người nhập phải tự đoán ra là cần bấm "kiểm lại".</li>
+     *   <li><b>Sinh ra lỗi</b>: một nhóm gộp dính tới hai hồ sơ khác nhau trong phả
+     *       ({@code IMP_MERGE_NOT_APPLICABLE}), hoặc một phép gộp tạo vòng lặp. Không soát lại thì
+     *       nút ghi mở, và lô chết ở bước ghi — đúng cái lỗi NT-TC-15 dưới một mã khác.</li>
+     * </ul>
+     *
+     * <h2>Vì sao không chạy lại cả bộ luật</h2>
+     * Bộ luật chạy trên dữ liệu <b>thô</b> của tệp, thứ một quyết định không đổi được. Chỉ sáu mã
+     * của lượt soát phụ thuộc vào quyết định, và {@link ImportPreflight#ghepVao} thay đúng sáu mã
+     * ấy, giữ nguyên phần còn lại.
+     *
+     * <h2>Trạng thái</h2>
+     * Còn lỗi chặn → {@code FAILED}. Hết lỗi chặn mà lô đang {@code FAILED} vì lỗi chặn → trở lại
+     * {@code VALIDATED}: mọi lỗi còn lại sau phép ghép đều của lượt soát, nên đó đúng là kết quả
+     * một lần kiểm lại sẽ cho. Lô {@code FAILED} với 0 lỗi chặn (bước ghi hỏng giữa chừng) thì để
+     * nguyên — cái hỏng ấy không nằm trong danh sách lỗi, và một quyết định nghi trùng không phải
+     * là bằng chứng nó đã hết.
+     */
+    private void soatLai(ImportBatch batch, DuplicateMergePlan keHoach, List<PersonRow> sau,
+                         int seTao) {
+        UUID batchId = batch.id();
+        List<ImportIssue> cu = issues.byBatch(batchId);
+        List<ImportIssue> moi = preflight.ghepVao(cu, batch.branchId(), keHoach,
+                keHoach.apDung(sau, rows.marriageRows(batchId)));
+        int loiChan = (int) moi.stream().filter(ImportIssue::chan).count();
+        if (!moi.equals(cu)) {
+            // Chi ghi lai khi co doi: moi lan ghi la mot bo khoa import_issue moi, va danh sach
+            // nhay cho duoi tay nguoi dang doi chieu 40 cap la chuyen khong can thiet.
+            issues.replaceAll(batchId, moi);
+        }
+        batches.updateCounters(batchId, batch.personRowCount(), batch.marriageRowCount(),
+                loiChan, moi.size() - loiChan, seTao, sau.size() - seTao, WarningDigest.cua(moi));
+
+        if (loiChan > 0) {
+            batches.updateStatus(batchId, BatchStatus.FAILED,
+                    loiChan + " lỗi chặn cần sửa trước khi ghi");
+        } else if (batch.status() == BatchStatus.FAILED && batch.blockingCount() > 0) {
+            batches.updateStatus(batchId, BatchStatus.VALIDATED, null);
+        }
+        if (loiChan != batch.blockingCount()) {
+            log.info("Quyet dinh nghi trung doi so loi chan cua lo {}: {} -> {}", batchId,
+                    batch.blockingCount(), loiChan);
+        }
     }
 }

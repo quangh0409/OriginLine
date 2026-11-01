@@ -17,17 +17,17 @@ public enum OccurrenceAdjustment {
      *
      * <p>Đây đúng là tập quán: giỗ ghi ngày 30 mà năm ấy tháng thiếu thì làm ngày 29.</p>
      */
-    SHORT_MONTH("Nam nay thang thieu (khong co ngay 30), gio lui ve ngay 29"),
+    SHORT_MONTH("Năm nay tháng thiếu (không có ngày 30), giỗ lùi về ngày 29"),
 
     /**
      * Sự kiện chép vào <b>tháng nhuận</b> nhưng năm nay tháng ấy không nhuận — dùng tháng thường
      * cùng số. Tháng thường luôn đứng <i>trước</i> tháng nhuận nên vẫn giữ nguyên tắc "không giỗ
      * muộn".
      */
-    LEAP_MONTH_ABSENT("Nam nay khong nhuan thang nay, gio tinh theo thang thuong"),
+    LEAP_MONTH_ABSENT("Năm nay không nhuận tháng này, giỗ tính theo tháng thường"),
 
     /** Phải lùi thêm ngày mới quy đổi được — trường hợp hiếm, luôn kèm log cảnh báo. */
-    SHIFTED_EARLIER("Ngay am khong quy doi duoc, gio lui ve ngay gan nhat truoc do");
+    SHIFTED_EARLIER("Ngày âm không quy đổi được, giỗ lùi về ngày gần nhất trước đó");
 
     private final String note;
 

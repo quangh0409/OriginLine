@@ -80,8 +80,8 @@ public class ContentAccessGuard {
         if (caller.personId() == null) {
             log.info("Tu choi viet bai: app_user {} chua duoc gan nhan khau nao", caller.appUserId());
             throw new ForbiddenException(ContentProblemCodes.AUTHOR_NOT_IN_PHA,
-                    "Tai khoan chua duoc duyet vao pha nen chua dang bai duoc."
-                            + " Hay tu nhan minh tren pha do va cho Truong chi duyet.");
+                    "Tài khoản chưa được duyệt vào phả nên chưa đăng bài được."
+                            + " Hãy tự nhận mình trên phả đồ và chờ Trưởng chi duyệt.");
         }
         return caller.personId();
     }

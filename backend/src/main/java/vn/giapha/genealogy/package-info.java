@@ -56,6 +56,15 @@
  *       là dữ liệu rời khỏi hệ thống, không có bộ lọc thứ hai và không có đường thu hồi.</li>
  * </ul>
  *
+ * <h2>Named interface {@code "goc-dong-ho"} — chi gốc của dòng họ (V23)</h2>
+ *
+ * <p>Context {@code clan} ("Khởi tạo dòng họ") cần đúng một năng lực ghi: dựng / đổi tên / đổi
+ * nhãn chi gốc {@code DONG_HO}. Trước đó không có đường nào trong ứng dụng tạo được một chi, nên
+ * một dòng họ mới triển khai bằng màn hình kẹt ngay ở bước đầu. Đúng <b>hai kiểu</b> mang nhãn:
+ * {@code ClanRootService} (mặt tiền, tự kiểm vai {@code ADMIN}, chặn đổi nhãn khi phả đã có người)
+ * và {@code ClanRootView} (kiểu nguyên thuỷ). Không mở lối tạo chi con — đó là một quyết định
+ * riêng về phạm vi, không phải một phương thức thêm cho tiện.</p>
+ *
  * <p><b>Không kiểu {@code domain} nào được gắn nhãn — đây là ranh giới cứng.</b> Domain của context
  * này là POJO thuần: không một annotation Spring hay JPA nào, kể cả siêu dữ liệu chỉ có tác dụng
  * lúc dựng như {@code @NamedInterface}. {@code DomainPurityTest} kiểm điều đó và nó đúng — gắn

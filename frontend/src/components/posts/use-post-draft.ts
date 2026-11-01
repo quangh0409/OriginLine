@@ -34,6 +34,17 @@ export interface UsePostDraftOptions {
 
 const DEFAULT_INTERVAL_MS = 8_000;
 
+/**
+ * Giờ hiện ở dòng "Đã lưu nháp lúc …". Ưu tiên `updatedAt` của máy chủ, nhưng rơi về đồng hồ máy
+ * này khi phản hồi không mang nó: backend trước 24/09/2026 không đọc lại cột do CSDL đặt sau
+ * INSERT, và `PostDto` là NON_NULL — nên phản hồi `POST /posts` thiếu hẳn `updatedAt` và dòng xác
+ * nhận không bao giờ hiện. "Đã lưu" là điều người viết cần biết; giờ của máy họ là đủ đúng cho
+ * câu ấy, còn im lặng thì không.
+ */
+function savedAtOf(post: PostDto): string {
+  return post.updatedAt || new Date().toISOString();
+}
+
 function sameValues(a: PostDraftValues | null, b: PostDraftValues | null): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -88,12 +99,26 @@ export function usePostDraft({
   const latestValues = useRef<PostDraftValues | null>(null);
   const lastSavedValues = useRef<PostDraftValues | null>(null);
   const savingRef = useRef(false);
+  /** Lượt lưu đang bay — để lượt gọi sau CHỜ nó xong rồi lưu tiếp, không bỏ ngang. */
+  const inflightRef = useRef<Promise<boolean> | null>(null);
   const blockedRef = useRef(false);
   const postIdRef = useRef(postId);
   const etagRef = useRef(etag);
 
   postIdRef.current = postId;
   etagRef.current = etag;
+
+  /*
+   * ETag của một nháp MỞ LẠI tới SAU lượt render đầu — `usePost(id)` còn đang tải khi hook này
+   * dựng, nên `useState(initialEtag)` chụp đúng `null` và không bao giờ đổi nữa. Hậu quả đo được
+   * bằng trình duyệt thật (24/09/2026): mở một nháp từ "Bài của tôi", bấm "Gửi duyệt" ⇒
+   * `saveNow` thấy không có ETag ⇒ coi là xung đột ⇒ hiện "Bài đã được sửa ở nơi khác" và KHÔNG
+   * gửi gì cả. Mọi nháp mở lại đều không gửi duyệt được. Nhận ETag khi nó tới — nhưng chỉ khi hook
+   * chưa tự có ETag từ một lượt lưu của chính nó (ETag ấy mới hơn bản đọc về).
+   */
+  useEffect(() => {
+    if (initialEtag && !etagRef.current) setEtag(initialEtag);
+  }, [initialEtag]);
   blockedRef.current = status === "conflict" || status === "sessionExpired" || status === "forbidden";
 
   const isDirty = useCallback((values: PostDraftValues) => {
@@ -101,82 +126,119 @@ export function usePostDraft({
     return !sameValues(values, lastSavedValues.current);
   }, []);
 
+  /**
+   * Lưu ngay nội dung cho trước.
+   *
+   * <h2>Đang có một lượt lưu bay thì CHỜ, không trả `false`</h2>
+   * Bản trước trả `false` khi đang lưu — và lượt đang lưu gần như luôn có mặt đúng lúc người dùng
+   * bấm "Gửi duyệt": nhấn chuột vào nút làm ô nội dung mất tiêu điểm, `onBlur` khởi một lượt lưu,
+   * rồi `onClick` gọi lại hàm này, nhận `false`, và `handleSubmitForReview` lặng lẽ dừng. Cú bấm
+   * đầu tiên mất trắng. Nay lượt gọi sau chờ lượt trước xong rồi lưu nốt phần còn đổi (nếu có).
+   *
+   * <p>Vì các lượt lưu nối đuôi nhau có thể chạy TRƯỚC khi React kịp render lại, `postIdRef`/
+   * `etagRef` được ghi thẳng ngay khi có phản hồi — nếu chỉ chờ render thì lượt thứ hai thấy
+   * `postId` còn rỗng và TẠO THÊM một bản nháp trùng.</p>
+   */
   const saveNow = useCallback(
     async (values: PostDraftValues): Promise<boolean> => {
       latestValues.current = values;
       if (!enabled) return false;
-      if (savingRef.current) return false;
+      while (inflightRef.current) {
+        await inflightRef.current.catch(() => false);
+      }
       if (!isDirty(values)) return true;
+
+      // Chưa có bản ghi mà tiêu đề còn trống: KHÔNG gọi mạng. Tiêu đề là trường duy nhất hợp đồng
+      // bắt buộc ở lượt tạo nháp (`CreatePostRequest.required: [title]`) — gửi đi chỉ để nhận 400
+      // rồi hiện "Chưa lưu được nháp" cho một người mới gõ chữ đầu tiên vào ô nội dung.
+      if (!postIdRef.current && !values.title.trim()) return false;
 
       savingRef.current = true;
       setStatus("saving");
       setError(null);
-      try {
-        const currentId = postIdRef.current;
-        if (!currentId) {
-          const { data, etag: newEtag } = await postsApi.create({
-            title: values.title,
-            body: values.body,
-          });
-          setPostId(data.id);
+      const run = async (): Promise<boolean> => {
+        try {
+          const currentId = postIdRef.current;
+          if (!currentId) {
+            const { data, etag: newEtag } = await postsApi.create({
+              title: values.title,
+              body: values.body,
+            });
+            postIdRef.current = data.id;
+            etagRef.current = newEtag;
+            setPostId(data.id);
+            setEtag(newEtag);
+            lastSavedValues.current = values;
+            setLastSavedAt(savedAtOf(data));
+            setStatus("saved");
+            queryClient.setQueryData<PostSnapshot>(postKeys.detail(data.id), {
+              post: data,
+              etag: newEtag,
+            });
+            onCreated?.(data);
+            return true;
+          }
+
+          const currentEtag = etagRef.current;
+          if (!currentEtag) {
+            // Không có ETag để làm `If-Match` — coi như xung đột, không đoán liều.
+            setStatus("conflict");
+            return false;
+          }
+
+          const { data, etag: newEtag } = await postsApi.update(
+            currentId,
+            {
+              title: values.title,
+              body: values.body,
+            },
+            currentEtag
+          );
+          etagRef.current = newEtag;
           setEtag(newEtag);
           lastSavedValues.current = values;
-          setLastSavedAt(data.updatedAt);
+          setLastSavedAt(savedAtOf(data));
           setStatus("saved");
-          queryClient.setQueryData<PostSnapshot>(postKeys.detail(data.id), {
+          queryClient.setQueryData<PostSnapshot>(postKeys.detail(currentId), {
             post: data,
             etag: newEtag,
           });
-          onCreated?.(data);
           return true;
-        }
-
-        const currentEtag = etagRef.current;
-        if (!currentEtag) {
-          // Không có ETag để làm `If-Match` — coi như xung đột, không đoán liều.
-          setStatus("conflict");
-          return false;
-        }
-
-        const { data, etag: newEtag } = await postsApi.update(
-          currentId,
-          {
-            title: values.title,
-            body: values.body,
-          },
-          currentEtag
-        );
-        setEtag(newEtag);
-        lastSavedValues.current = values;
-        setLastSavedAt(data.updatedAt);
-        setStatus("saved");
-        queryClient.setQueryData<PostSnapshot>(postKeys.detail(currentId), {
-          post: data,
-          etag: newEtag,
-        });
-        return true;
-      } catch (caught) {
-        if (caught instanceof ApiError) {
-          setError(caught);
-          if (caught.code === "OPTIMISTIC_LOCK_CONFLICT" || caught.code === "PRECONDITION_REQUIRED") {
-            setStatus("conflict");
-          } else if (caught.code === "UNAUTHENTICATED") {
-            setStatus("sessionExpired");
-          } else if (caught.code === "FORBIDDEN" || caught.code === "BRANCH_SCOPE_VIOLATION") {
-            setStatus("forbidden");
+        } catch (caught) {
+          if (caught instanceof ApiError) {
+            setError(caught);
+            if (caught.code === "OPTIMISTIC_LOCK_CONFLICT" || caught.code === "PRECONDITION_REQUIRED") {
+              setStatus("conflict");
+            } else if (caught.code === "UNAUTHENTICATED") {
+              setStatus("sessionExpired");
+            } else if (caught.code === "FORBIDDEN" || caught.code === "BRANCH_SCOPE_VIOLATION") {
+              setStatus("forbidden");
+            } else {
+              setStatus("error");
+            }
           } else {
             setStatus("error");
           }
-        } else {
-          setStatus("error");
+          return false;
+        } finally {
+          savingRef.current = false;
         }
-        return false;
-      } finally {
-        savingRef.current = false;
-      }
+      };
+      const pending = run();
+      inflightRef.current = pending;
+      // Dọn SAU khi đã gán — `run()` có nhánh trả về đồng bộ (thiếu ETag); dọn trong `finally` của
+      // nó sẽ chạy TRƯỚC phép gán trên và để lại một promise đã xong mãi trong ref, khiến vòng
+      // `while` ở đầu hàm quay vô tận.
+      void pending.finally(() => {
+        if (inflightRef.current === pending) inflightRef.current = null;
+      });
+      return pending;
     },
     [enabled, isDirty, onCreated, queryClient]
   );
+
+  /** Khoá bài hiện tại, đọc thẳng từ ref — đúng ngay sau `await saveNow(...)`, trước lượt render. */
+  const currentPostId = useCallback((): string | null => postIdRef.current, []);
 
   /** Gọi ở mỗi lần người dùng gõ — chỉ cập nhật giá trị mới nhất cho lượt đếm giờ kế tiếp, không lưu ngay. */
   const notifyChange = useCallback((values: PostDraftValues) => {
@@ -225,6 +287,7 @@ export function usePostDraft({
     error,
     lastSavedAt,
     saveNow,
+    currentPostId,
     notifyChange,
     reloadFromServer,
     retryAfterSessionRestored,

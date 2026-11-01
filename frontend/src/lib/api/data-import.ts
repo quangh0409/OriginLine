@@ -99,12 +99,23 @@ export type ImportSheet = "NHAN_KHAU" | "HON_PHOI" | "LO";
 export type ImportPlannedAction = "CREATE" | "UPDATE" | "SKIP";
 
 /**
- * Mười sáu mã **chặn**: mâu thuẫn nội tại của dữ liệu — chắc chắn sai, và chỉ
- * ra được sai ở đâu.
+ * Hai mươi mốt mã **chặn**: mười lăm của bộ luật (mâu thuẫn nội tại của tệp —
+ * chắc chắn sai, và chỉ ra được sai ở đâu) cộng sáu của **lượt soát trước khi
+ * ghi**.
  *
- * `IMP_MERGE_NOT_APPLICABLE` là mã duy nhất ở đây **không** sinh ra lúc đọc
- * tệp: nó sinh ra lúc người đối chiếu bấm "hợp nhất" trên một nhóm dính tới
- * **hai người khác nhau đã có trong phả**. Xem {@link ImportDuplicateDecision}.
+ * <h2>Sáu mã của lượt soát trước khi ghi</h2>
+ * `IMP_UNDECIDED_INLAW_DOI` · `IMP_UNDECIDED_ADOPTION` ·
+ * `IMP_UNDECIDED_LIFE_STATUS` · `IMP_COMMIT_CYCLE` · `IMP_COMMIT_REF_NOT_FOUND`
+ * · `IMP_MERGE_NOT_APPLICABLE`. Máy chủ chạy lượt ấy ở **cuối bước kiểm** và
+ * **sau mỗi quyết định nghi trùng**, rồi chạy lại ngay trước khi ghi làm lưới
+ * thứ hai. Với giao diện chúng là lỗi chặn như mọi lỗi chặn khác: về qua
+ * `GET /issues`, giữ `canApprove = false`. Trước 24/09 (NT-TC-15) lượt ấy chỉ
+ * chạy lúc ghi, nên màn đối soát báo "không còn lỗi phải sửa" cho một lô mà
+ * bước ghi sẽ từ chối — đừng dựng lại giả định ấy ở client.
+ *
+ * `IMP_MERGE_NOT_APPLICABLE` là mã duy nhất **không** thể sinh ra lúc đọc tệp:
+ * nó sinh ra lúc người đối chiếu bấm "hợp nhất" trên một nhóm dính tới **hai
+ * người khác nhau đã có trong phả**. Xem {@link ImportDuplicateDecision}.
  */
 export type ImportBlockingCode =
   | "IMP_PARENT_NOT_FOUND"
@@ -122,7 +133,12 @@ export type ImportBlockingCode =
   | "IMP_GENERATION_MISMATCH"
   | "IMP_SPOUSE_ORDER_CONFLICT"
   | "IMP_MASS_CREATE_GUARD"
-  | "IMP_MERGE_NOT_APPLICABLE";
+  | "IMP_MERGE_NOT_APPLICABLE"
+  | "IMP_UNDECIDED_INLAW_DOI"
+  | "IMP_UNDECIDED_ADOPTION"
+  | "IMP_UNDECIDED_LIFE_STATUS"
+  | "IMP_COMMIT_CYCLE"
+  | "IMP_COMMIT_REF_NOT_FOUND";
 
 /**
  * Mười một mã **cảnh báo**: nghi ngờ — máy không đủ căn cứ, chỉ người mở sổ ra

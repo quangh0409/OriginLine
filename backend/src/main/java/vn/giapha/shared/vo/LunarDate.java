@@ -21,10 +21,10 @@ public record LunarDate(int year, int month, int day, boolean leapMonth) impleme
 
     public LunarDate {
         if (month < 1 || month > 12) {
-            throw new IllegalArgumentException("Thang am lich phai trong khoang 1-12, nhan duoc: " + month);
+            throw new IllegalArgumentException("Tháng âm lịch phải trong khoảng 1-12, nhận được: " + month);
         }
         if (day < 1 || day > 30) {
-            throw new IllegalArgumentException("Ngay am lich phai trong khoang 1-30, nhan duoc: " + day);
+            throw new IllegalArgumentException("Ngày âm lịch phải trong khoảng 1-30, nhận được: " + day);
         }
     }
 

@@ -97,9 +97,10 @@ class AppUserTest {
             AppUser user = AppUser.register(UUID.randomUUID(), "sub-1", null, null);
             user.linkPerson(UUID.randomUUID());
 
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
             assertThatThrownBy(() -> user.linkPerson(UUID.randomUUID()))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("da duoc ghep");
+                    .hasMessageContaining("đã được ghép");
         }
 
         @Test

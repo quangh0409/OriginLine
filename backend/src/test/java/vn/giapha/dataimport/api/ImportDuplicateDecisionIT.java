@@ -210,13 +210,25 @@ class ImportDuplicateDecisionIT extends AbstractIntegrationTest {
         JsonNode lo = taiLen(tepCoHaiDongTrungNhau(), "so-chep-hai-lan.xlsx");
         UUID batchId = UUID.fromString(lo.get("id").asText());
 
+        // Truoc khi quyet, dong chep trung AT-02-900 (khong ma cha, co vo, khai Doi 2) trong y het
+        // mot dau/re co khai Doi — va buoc ghi se chan dung nhu vay neu no vao pha rieng. Luot soat
+        // truoc khi ghi chay ngay o buoc kiem nen loi hien TU DAU, khong doi toi luc bam ghi.
+        assertThat(lo.get("status").asText()).isEqualTo("FAILED");
+        assertThat(maLoiChan(batchId)).containsExactly("IMP_UNDECIDED_INLAW_DOI");
+
         JsonNode cap = capDuyNhat(batchId);
         assertThat(cap.get("existing").get("source").asText()).isEqualTo("FILE");
         // Hai ben deu la thu nguoi nhap vua go nen khong co gi de giau.
         assertThat(cap.get("evidence")).isNotEmpty();
 
         doc(post(BASE + "/batches/" + batchId + "/acknowledge-warnings"), 200);
-        quyet(batchId, UUID.fromString(cap.get("id").asText()), "MERGED", null);
+        JsonNode sauGop = quyet(batchId, UUID.fromString(cap.get("id").asText()), "MERGED", null);
+        // Gop thi dong ay bien mat khoi tap se ghi, va loi chan phai tu go — ngay trong phan hoi
+        // cua quyet dinh, khong bat nguoi nhap tu doan ra la phai bam "kiem lai".
+        assertThat(sauGop.get("batch").get("blockingCount").asInt()).isZero();
+        assertThat(sauGop.get("batch").get("status").asText()).isEqualTo("VALIDATED");
+        assertThat(sauGop.get("batch").get("canApprove").asBoolean()).isTrue();
+        assertThat(maLoiChan(batchId)).isEmpty();
         doc(post(BASE + "/batches/" + batchId + "/commit"), 202);
         assertThat(doiGhiXong(batchId).get("status").asText()).isEqualTo("COMMITTED");
 
@@ -297,6 +309,34 @@ class ImportDuplicateDecisionIT extends AbstractIntegrationTest {
                 .isNotEqualTo(personCua("AT-02-001"));
     }
 
+    /**
+     * Chiều ngược của ca gộp: <b>để riêng</b> một dòng chép trùng không có mã cha thì nó vào phả
+     * như một dâu/rể có khai Đời, và bước ghi sẽ chặn. Lỗi ấy phải còn nguyên ở màn đối soát sau
+     * quyết định — trước 24/09 nó chỉ lộ ra sau khi lô đã nhận {@code 202} (NT-TC-15).
+     */
+    @Test
+    @DisplayName("Để riêng một dòng chép trùng không mã cha → lỗi chặn ở màn đối soát, không đợi lúc ghi")
+    void deRiengDongKhongMaChaThiLoiChanConNguyen() throws Exception {
+        JsonNode lo = taiLen(tepCoHaiDongTrungNhau(), "de-rieng-dong-khong-ma-cha.xlsx");
+        UUID batchId = UUID.fromString(lo.get("id").asText());
+
+        doc(post(BASE + "/batches/" + batchId + "/acknowledge-warnings"), 200);
+        JsonNode ketQua = quyet(batchId, UUID.fromString(capDuyNhat(batchId).get("id").asText()),
+                "DISTINCT", null);
+
+        assertThat(ketQua.get("batch").get("status").asText()).isEqualTo("FAILED");
+        assertThat(ketQua.get("batch").get("blockingCount").asInt()).isEqualTo(1);
+        assertThat(ketQua.get("batch").get("canApprove").asBoolean()).isFalse();
+        JsonNode loi = list(doc(get(BASE + "/batches/" + batchId + "/issues?severity=BLOCKING"),
+                200)).get(0);
+        assertThat(loi.get("code").asText()).isEqualTo("IMP_UNDECIDED_INLAW_DOI");
+        assertThat(loi.get("field").asText()).isEqualTo("Đời");
+        assertThat(loi.get("message").asText()).contains("xoá ô Đời ở dòng", "suy từ vợ/chồng");
+        assertThat(doc(post(BASE + "/batches/" + batchId + "/commit"), 422).get("code").asText())
+                .isEqualTo("IMP_BLOCKING_ISSUES_PRESENT");
+        assertThat(countRows("person")).isZero();
+    }
+
     // =====================================================================================
     // 4. "Hoãn" không phải "đã quyết"
     // =====================================================================================
@@ -304,7 +344,7 @@ class ImportDuplicateDecisionIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("Hoãn vẫn chặn cổng duyệt — nếu không, nó thành nút 'cho tôi qua'")
     void hoanVanChan() throws Exception {
-        JsonNode lo = taiLen(tepCoHaiDongTrungNhau(), "chua-chac.xlsx");
+        JsonNode lo = taiLen(tepHaiDongTrungNhauCungCha(), "chua-chac.xlsx");
         UUID batchId = UUID.fromString(lo.get("id").asText());
 
         doc(post(BASE + "/batches/" + batchId + "/acknowledge-warnings"), 200);
@@ -338,7 +378,7 @@ class ImportDuplicateDecisionIT extends AbstractIntegrationTest {
     @Test
     @DisplayName("Kiểm lại sinh cặp MỚI: quyết định cũ còn nguyên, lô vẫn bị chặn vì cặp mới")
     void kiemLaiSinhCapMoi_quyetDinhCuVanCon() throws Exception {
-        JsonNode lo = taiLen(tepCoHaiDongTrungNhau(), "lan-mot.xlsx");
+        JsonNode lo = taiLen(tepHaiDongTrungNhauCungCha(), "lan-mot.xlsx");
         UUID batchId = UUID.fromString(lo.get("id").asText());
 
         JsonNode capCu = capDuyNhat(batchId);
@@ -518,6 +558,12 @@ class ImportDuplicateDecisionIT extends AbstractIntegrationTest {
                 .nhanKhau("AT-02-900", "Nguyễn Văn Hai", "", "Nam", "2", "AT-01-001", "", "",
                         "Không", "1910", "12/4/1975")
                 .build();
+    }
+
+    /** Mã các lỗi chặn đang lưu của lô, đã sắp — đọc qua HTTP như màn đối soát đọc. */
+    private List<String> maLoiChan(UUID batchId) throws Exception {
+        return list(doc(get(BASE + "/batches/" + batchId + "/issues?severity=BLOCKING"), 200))
+                .stream().map(i -> i.get("code").asText()).sorted().toList();
     }
 
     /** Cặp duy nhất của lô — mọi ca ở đây cố ý dựng đúng một cặp để phép khẳng định đọc được. */

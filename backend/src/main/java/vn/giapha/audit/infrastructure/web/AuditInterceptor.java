@@ -20,8 +20,10 @@ import vn.giapha.audit.domain.RequestFingerprint;
  *
  * <p><b>Cảnh báo tin cậy:</b> hai header đó do client gửi lên và <i>giả được</i>. Ở đây chúng chỉ
  * phục vụ truy vết, không bao giờ được dùng để ra quyết định phân quyền. Khi triển khai thật, proxy
- * phải ghi đè chúng, và {@code server.forward-headers-strategy=framework} trong
- * {@code application.yml} đã bật sẵn cơ chế chuẩn của Spring cho phần scheme/host.</p>
+ * phải ghi đè chúng, và {@code server.forward-headers-strategy=native} trong
+ * {@code application.yml} (Tomcat {@code RemoteIpValve}, chỉ tin proxy nội bộ) lo phần
+ * scheme/host/địa chỉ. Trước 24/09 dòng ấy là {@code framework} — tin header của mọi request,
+ * nên đã phải đổi (lý do đầy đủ ở chính {@code application.yml}).</p>
  *
  * <h2>{@code request_id} nối audit với log</h2>
  * Nếu client gửi {@code X-Request-Id} thì tôn trọng, không thì sinh một UUID. Giá trị được đặt vào

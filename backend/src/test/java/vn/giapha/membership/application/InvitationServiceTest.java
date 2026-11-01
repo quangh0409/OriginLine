@@ -169,9 +169,10 @@ class InvitationServiceTest {
             UUID cuOng = clan.invitees.deceased(clan.personIn(clan.chiGiapId), "Nguyễn Văn Cả");
             TestSecurity.loginAs("sub-bon", "BRANCH_HEAD");
 
+            // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
             assertThatThrownBy(() -> invitations.issue(new IssueInvitationCommand(cuOng)))
                     .isInstanceOf(DomainException.class)
-                    .hasMessageContaining("da khuat");
+                    .hasMessageContaining("đã khuất");
         }
 
         @Test
@@ -182,7 +183,7 @@ class InvitationServiceTest {
 
             assertThatThrownBy(() -> invitations.issue(new IssueInvitationCommand(daXoa)))
                     .isInstanceOf(DomainException.class)
-                    .hasMessageContaining("xoa khoi pha");
+                    .hasMessageContaining("xoá khỏi phả");
         }
 
         @Test

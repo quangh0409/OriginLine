@@ -90,19 +90,19 @@ public final class MediaAsset {
                         String alt, Instant now) {
         if (status != MediaStatus.PENDING) {
             throw new IllegalStateException(
-                    "Chi xac nhan duoc phieu dang o PENDING; phieu nay dang o " + status);
+                    "Chỉ xác nhận được phiếu đang ở PENDING; phiếu này đang ở " + status);
         }
         if (kind == MediaKind.IMAGE) {
             String trimmed = alt == null ? "" : alt.strip();
             if (trimmed.isEmpty()) {
                 throw new IllegalArgumentException(
-                        "Anh bat buoc phai co chu thay anh (alt) — WCAG 2.2 AA tieu chi 1.1.1."
-                                + " Nguoi dung trinh doc man hinh khong co cach nao khac de biet"
-                                + " trong anh co gi.");
+                        "Ảnh bắt buộc phải có chữ thay ảnh (alt) — WCAG 2.2 AA tiêu chí 1.1.1."
+                                + " Người dùng trình đọc màn hình không có cách nào khác để biết"
+                                + " trong ảnh có gì.");
             }
             if (trimmed.length() > MediaLimits.MAX_ALT_LENGTH) {
-                throw new IllegalArgumentException("Chu thay anh toi da "
-                        + MediaLimits.MAX_ALT_LENGTH + " ky tu; mo ta dai thuoc ve than bai.");
+                throw new IllegalArgumentException("Chữ thay ảnh tối đa "
+                        + MediaLimits.MAX_ALT_LENGTH + " ký tự; mô tả dài thuộc về thân bài.");
             }
             this.altText = trimmed;
             this.durationMs = null;

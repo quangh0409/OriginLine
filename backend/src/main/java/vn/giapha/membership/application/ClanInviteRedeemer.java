@@ -103,7 +103,7 @@ public class ClanInviteRedeemer {
         // toi Keycloak, va trong khoang do Hoi dong co the vua thu hoi ma.
         ClanInviteCode code = codes.byId(codeId)
                 .orElseThrow(() -> new vn.giapha.shared.exception.NotFoundException(
-                        MembershipProblemCodes.NOT_FOUND, "Khong tim thay ma moi khop ma nay"));
+                        MembershipProblemCodes.NOT_FOUND, "Không tìm thấy mã mời khớp mã này"));
         ClanInviteUsability usability = code.usabilityAt(now);
         if (!usability.isUsable()) {
             throw new ClanInviteNotUsableException(usability);

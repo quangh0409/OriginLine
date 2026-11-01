@@ -73,9 +73,11 @@ final class ContextChoPhep {
             Map.entry("IMP_SPOUSE_ORDER_CONFLICT", Set.of("maChong", "bac", "cacVo", "cacDong")),
             Map.entry("IMP_MASS_CREATE_GUARD", Set.of("soTao", "tongDong", "tiLe", "nguong")),
 
-            // --- Loi chan phat sinh o buoc ghi ---
+            // --- Loi chan cua luot soat truoc khi ghi (chay o buoc kiem VA buoc ghi) ---
             Map.entry("IMP_COMMIT_CYCLE", Set.of("ma")),
-            Map.entry("IMP_COMMIT_REF_NOT_FOUND", Set.of("ma")),
+            // "ma" la khoa cu (dong luu truoc khi luot soat chay o buoc kiem); "maKhongTimThay" va
+            // goiY la khoa hien hanh — deu la thu nguoi nhap vua go, khong doc gi tu pha.
+            Map.entry("IMP_COMMIT_REF_NOT_FOUND", Set.of("ma", "maKhongTimThay", GOI_Y)),
             Map.entry("IMP_UNDECIDED_INLAW_DOI", Set.of("externalCode", "doiDaKhai")),
             Map.entry("IMP_UNDECIDED_ADOPTION", Set.of("externalCode", "fatherCode", "motherCode")),
             Map.entry("IMP_UNDECIDED_LIFE_STATUS", Set.of("externalCode")),

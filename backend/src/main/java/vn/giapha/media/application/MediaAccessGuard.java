@@ -111,7 +111,7 @@ public class MediaAccessGuard {
             log.info("Tu choi gan/go tep tren {} {} — nguoi goi khong co quyen ghi tren ban ghi ay",
                     ownerType, ownerId);
             throw new ForbiddenException(MediaProblemCodes.FORBIDDEN,
-                    "Ban khong co quyen thay doi tep dinh kem cua ban ghi nay.");
+                    "Bạn không có quyền thay đổi tệp đính kèm của bản ghi này.");
         }
     }
 

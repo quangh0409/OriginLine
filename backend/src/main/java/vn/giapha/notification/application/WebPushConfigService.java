@@ -54,19 +54,19 @@ public class WebPushConfigService {
 
     private static String tomTat(WebPushConfigStatus status) {
         if (status.ready()) {
-            return "Web Push da san sang: cap khoa VAPID hop le va dung mot cap.";
+            return "Web Push đã sẵn sàng: cặp khoá VAPID hợp lệ và đúng một cặp.";
         }
         if (!status.enabled()) {
-            return "Web Push dang bi TAT bang tay (giapha.webpush.enabled=false).";
+            return "Web Push đang bị TẮT bằng tay (giapha.webpush.enabled=false).";
         }
         if (!status.publicKeySet() && !status.privateKeySet()) {
-            return "Chua cau hinh khoa VAPID nen kenh Web Push dang tat."
-                    + " Thong bao trong ung dung khong bi anh huong.";
+            return "Chưa cấu hình khoá VAPID nên kênh Web Push đang tắt."
+                    + " Thông báo trong ứng dụng không bị ảnh hưởng.";
         }
-        return "Cau hinh VAPID thieu mot nua: "
-                + (status.publicKeySet() ? "co khoa cong khai, thieu khoa rieng"
-                                         : "co khoa rieng, thieu khoa cong khai")
-                + ". Thieu mot nua thi khong ky duoc JWT VAPID va kenh van tat.";
+        return "Cấu hình VAPID thiếu một nửa: "
+                + (status.publicKeySet() ? "có khoá công khai, thiếu khoá riêng"
+                                         : "có khoá riêng, thiếu khoá công khai")
+                + ". Thiếu một nửa thì không ký được JWT VAPID và kênh vẫn tắt.";
     }
 
     /**
@@ -83,14 +83,14 @@ public class WebPushConfigService {
         }
         List<String> buoc = new ArrayList<>(4);
         if (!status.enabled()) {
-            buoc.add("Bo giapha.webpush.enabled=false (hoac dat lai thanh true) roi khoi dong lai backend.");
+            buoc.add("Bỏ giapha.webpush.enabled=false (hoặc đặt lại thành true) rồi khởi động lại backend.");
             return List.copyOf(buoc);
         }
-        buoc.add("Sinh cap khoa VAPID bang chinh cong cu cua du an: " + LENH_SINH_KHOA);
-        buoc.add("Dat hai bien moi truong GIAPHA_WEBPUSH_PUBLIC_KEY va GIAPHA_WEBPUSH_PRIVATE_KEY"
-                + " cho tien trinh backend. KHONG ghi vao application.yml, KHONG commit:"
-                + " khoa rieng lot vao lich su Git la lot vinh vien.");
-        buoc.add("Khoi dong lai backend - khoa chi duoc doc va tu kiem mot lan luc khoi dong.");
+        buoc.add("Sinh cặp khoá VAPID bằng chính công cụ của dự án: " + LENH_SINH_KHOA);
+        buoc.add("Đặt hai biến môi trường GIAPHA_WEBPUSH_PUBLIC_KEY và GIAPHA_WEBPUSH_PRIVATE_KEY"
+                + " cho tiến trình backend. KHÔNG ghi vào application.yml, KHÔNG commit:"
+                + " khoá riêng lọt vào lịch sử Git là lọt vĩnh viễn.");
+        buoc.add("Khởi động lại backend - khoá chỉ được đọc và tự kiểm một lần lúc khởi động.");
         buoc.add("Goi lai GET /api/v1/admin/notifications/webpush de xac nhan ready=true,"
                 + " roi bat lai cong tac trong muc Cai dat.");
         return List.copyOf(buoc);

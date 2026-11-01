@@ -1,101 +1,94 @@
-import { apiFetch, apiFetchWithMeta, type ApiResult } from "./http";
+import { apiFetch } from "./http";
 
 /**
  * Lớp API cho **ảnh và video đính kèm bài viết**, cộng luồng **báo gỡ**
- * (`/api/v1/media/**`, một nhóm riêng — KHÔNG lồng dưới `/posts/{id}` như bản
- * nháp đầu của tệp này từng đoán) — `postsApi` gọi `PostDto.media` để đọc,
- * tệp này lo phần **ghi** (tải lên/xoá) và phần **báo cáo/duyệt gỡ**.
+ * (`/api/v1/media/**`, một nhóm riêng — KHÔNG lồng dưới `/posts/{id}`) —
+ * `postsApi` gọi `PostDto.media` để đọc, tệp này lo phần **ghi** (tải
+ * lên/gắn/gỡ) và phần **báo cáo/duyệt gỡ**.
  *
- * <h2>Đồng bộ đợt hai — backend media đã xong, bốn chỗ đã sửa lại</h2>
+ * <h2>Đồng bộ đợt ba — hình dạng THẬT của backend media, không còn suy đoán</h2>
+ * Bản trước của tệp này (và của mock) tưởng tượng ra một hợp đồng lồng
+ * (`{image:{maxBytes,mimeTypes}, video:{...}}`) và bốn điểm cuối
+ * (`requestUpload`/`confirmUpload`/`reorder`/`updateAlt` dưới
+ * `/posts/{id}/media/**`) trong lúc backend còn đang dựng song song — đúng
+ * cái bẫy đã lặp lại **sáu lần** ở dự án này ("mock giả lập một API dễ hơn/
+ * khác hình dạng hơn API thật"). Backend thật và
+ * `contracts/openapi.yaml` (`MediaPolicyDto` v.v.) đã chốt một hợp đồng
+ * **PHẲNG**, và chỉ có BỐN điểm cuối ghi, không tám:
  * <ol>
- *   <li><b>Trần dung lượng/định dạng đọc từ {@link mediaApi.policy}</b>, không
- *       còn là hằng số phía FE. Xem javadoc {@link MediaPolicy}.</li>
- *   <li><b>`GET /posts?mine=true`</b> lọc trong SQL — xem
- *       `src/components/posts/use-my-posts.ts`.</li>
- *   <li><b>Báo gỡ chuyển hẳn sang `/api/v1/media/{mediaId}/reports`</b>, không
- *       còn qua `postId`: một tệp chỉ có một khoá thật (`mediaId`), và người
- *       báo cáo không cần biết/không quan tâm bài nào — họ đang báo TỆP.</li>
- *   <li><b>Có màn duyệt báo cáo</b> — {@link mediaApi.listReports},
- *       {@link mediaApi.takedownReport}, {@link mediaApi.dismissReport}; xem
- *       `src/components/posts/media/media-report-queue-screen.tsx`.</li>
+ *   <li><b>`GET /media/policy`</b> — trần phẳng, không còn `image`/`video` lồng.</li>
+ *   <li><b>`POST /media/upload-tickets` {@code {kind, sizeBytes}}</b> — KHÔNG
+ *       còn nhận `fileName`/`contentType` (loại thật do chữ ký byte quyết ở
+ *       bước xác nhận), KHÔNG còn cần `postId` (một tệp tồn tại độc lập với
+ *       bài cho tới khi được gắn — xem mục 4).</li>
+ *   <li><b>`POST /media/{mediaId}/confirm` {@code {alt}}</b> — trả một
+ *       {@link MediaAsset} trần trụi (không phải cả bài viết); tệp CHƯA
+ *       thuộc về bài nào ở bước này.</li>
+ *   <li><b>`PUT /posts/{postId}/media` {@code {mediaIds}}</b> — của
+ *       `content`, không phải `media`. Đặt <b>cả danh sách</b>, đúng thứ tự;
+ *       không có lệnh "thêm một tệp"/"sắp lại"/"sửa alt" riêng — ba việc đó
+ *       (gắn tệp mới, sắp lại, gỡ) đều đi qua CHÍNH điểm cuối này với một
+ *       danh sách `mediaIds` khác nhau. Xem `postsApi.setMedia` ở
+ *       `src/lib/api/posts.ts`.</li>
  * </ol>
  *
- * <h2>Ba bước tải lên vẫn giữ nguyên</h2>
- * Xin URL đã ký → `PUT` thẳng lên kho (KHÔNG qua backend) → gọi backend xác
- * nhận. `PostDto.media` vẫn là một danh sách có thứ tự, không "ảnh bìa" riêng.
+ * <h2>Hệ quả: KHÔNG có lối sửa `alt` sau khi đã gắn</h2>
+ * `AttachMediaRequest` chỉ nhận `mediaIds` — không có trường nào mang `alt`.
+ * `alt` chỉ đặt được đúng MỘT LẦN, ở bước xác nhận (bước 3), và gọi lại
+ * `confirm` cho cùng một `mediaId` để "sửa" alt bị chặn bởi
+ * `409 MEDIA_TICKET_CLOSED` (phiếu đã xử lý rồi). Bản trước của
+ * `MediaPicker` cho sửa `alt` của một ảnh ĐÃ gắn — tính năng đó không có chỗ
+ * đứng thật ở backend nên đã bị bỏ, không phải bị quên.
  *
- * <h2>Vẫn còn phần CHƯA có trong `contracts/openapi.yaml`</h2>
- * Tên endpoint/trường ở tệp này khớp với những gì backend media vừa công bố
- * (không còn là suy đoán của FE cho phần chính sách/báo gỡ), nhưng hợp đồng
- * OpenAPI chính thức vẫn chưa cập nhật — đối chiếu lại khi nó xuất hiện, đừng
- * coi một chỗ lệch nhỏ là lỗi ở đây (cùng quy ước với `src/lib/api/posts.ts`).
+ * <h2>Ba bước tải lên vẫn giữ đúng HÌNH DẠNG, khác về chi tiết</h2>
+ * Xin phiếu (không cần `postId`/`contentType`) → `PUT` thẳng lên kho (không
+ * cần header nào — xem {@link putToStorage}) → xác nhận (trả một tệp, không
+ * phải cả bài) → **gắn vào bài** bằng danh sách đầy đủ qua `postsApi.setMedia`
+ * (bước MỚI, trước đây bị nhầm là một phần của "xác nhận").
  */
 
 export type MediaKind = "IMAGE" | "VIDEO";
 
-/** Một tệp đã gắn vào bài — phần tử của `PostDto.media`, có thứ tự. */
-export interface PostMediaItem {
-  id: string;
-  kind: MediaKind;
-  /**
-   * URL đã ký để **đọc** (khác URL đã ký để tải lên) — hạn dùng theo
-   * {@link MediaPolicy.readUrlExpiresInSeconds}. Nếu hết hạn khi đang xem
-   * (video dài, hoặc tab bỏ mở qua đêm), tải lại bài để lấy URL mới; đừng lưu
-   * URL này lâu hơn phiên xem hiện tại.
-   */
-  url: string;
-  /** Bắt buộc có với `IMAGE`. Luôn `null` với `VIDEO` — video không có "chữ thay thế". */
-  alt: string | null;
-  /** Vị trí 0-based trong album — trùng thứ tự trong mảng nhưng tường minh để sắp xếp lại. */
-  order: number;
-  /** Để đặt trước khung, tránh trang nhảy khi tệp tải xong. Vắng mặt nếu trình duyệt không đọc được. */
-  width?: number | null;
-  height?: number | null;
-  createdAt: string;
-}
-
-// ============================================================================
-// Chính sách — GET /api/v1/media/policy
-// ============================================================================
-
-export interface MediaKindPolicy {
-  maxBytes: number;
-  mimeTypes: string[];
-}
-
 /**
- * `GET /api/v1/media/policy` — cùng tiền lệ `GET /import/duplicate-policy`:
- * ngưỡng do MÁY CHỦ công bố, client không ghi cứng con số nào.
- *
- * <h2>`video.maxBytes` là ngân sách TẢI VỀ, không phải ngân sách tải lên</h2>
- * Không chuyển mã nghĩa là mỗi byte tải lên sẽ được **mọi người đọc bài tải
- * xuống** — kể cả bà con ở xa đang dùng dữ liệu di động. Trần thấp hơn trực
- * giác "video thì phải nặng hơn ảnh nhiều" là có chủ đích.
- *
- * <h2>`video.maxDurationSeconds` chặn THỂ LOẠI, không chặn băng thông</h2>
- * Thiếu trần này thì một bản ghi hình lễ giỗ 40 phút nén mạnh vẫn lọt qua
- * trần dung lượng, và trang chủ dòng họ biến thành chỗ lưu video — thứ đợt
- * này cố ý không dựng. Máy chủ đọc thời lượng thật từ phần đầu tệp và **từ
- * chối khi không đọc được** (tệp hỏng/tráo đổi) — client kiểm trước bằng
- * {@link readMediaMeta} để không bắt người dùng chờ hết thanh tiến trình rồi
- * mới bị từ chối.
+ * Chính sách tải tệp — `GET /api/v1/media/policy`. Hình dạng **phẳng**, đúng
+ * `MediaPolicyDto` (`contracts/openapi.yaml` ~12076): không có `image`/`video`
+ * lồng nhau như bản đoán trước đây. Đọc chính sách này thay vì giữ hằng số
+ * riêng — cùng tiền lệ `GET /import/duplicate-policy`.
  */
 export interface MediaPolicy {
-  image: MediaKindPolicy;
-  video: MediaKindPolicy & { maxDurationSeconds: number };
-  /** Số tệp tối đa một bài mang theo. */
-  maxAttachmentsPerPost: number;
-  /** Hạn dùng của URL `PUT` (xin ở bước 1) — hết hạn thì phải xin URL mới, không thử `PUT` lại URL cũ. */
-  uploadUrlExpiresInSeconds: number;
-  /** Hạn dùng của URL đọc gắn trong {@link PostMediaItem.url}. */
-  readUrlExpiresInSeconds: number;
+  /** 8 MiB (8388608) — trần dung lượng ẢNH. */
+  maxImageBytes: number;
+  /**
+   * 100 MiB (104857600) — trần dung lượng VIDEO. Đây là một **ngân sách tải
+   * xuống**, không phải ngân sách tải lên: không chuyển mã, nên mỗi byte tải
+   * lên sẽ được tải xuống nguyên vẹn bởi mọi người đọc bài.
+   */
+  maxVideoBytes: number;
+  /** 120 giây — trần THỂ LOẠI, khác trần dung lượng (bắt băng thông). */
+  maxVideoDurationSeconds: number;
+  /** 12 — một bài viết, không phải một an-bum. */
+  maxMediaPerPost: number;
+  /** 300 ký tự — trần độ dài chữ thay ảnh (`alt`), ép tới `ck_media_alt_required` ở CSDL. */
+  maxAltLength: number;
+  /** Gợi ý cho ô chọn tệp (`accept`) — KHÔNG phải phép kiểm; phép kiểm thật là chữ ký byte. */
+  imageContentTypes: string[];
+  videoContentTypes: string[];
+  /** 900 (15 phút) — hạn của `uploadUrl`. */
+  uploadUrlTtlSeconds: number;
+  /** 600 (10 phút) — hạn của URL đọc. */
+  viewUrlTtlSeconds: number;
 }
 
 // ============================================================================
 // Từ chối theo TÊN — HEIC/GIF/MOV/MKV, kèm cách sửa
 // ============================================================================
 
-export type MediaRejectReason = "TYPE" | "SIZE" | "COUNT" | "DURATION" | "NAMED_FORMAT";
+/**
+ * `SERVER` — máy chủ từ chối dứt khoát sau khi đọc chữ ký byte (`MEDIA_BAD_SIGNATURE`); câu hiện ra
+ * là `detail` của máy chủ, vì chỉ nó biết tệp thật là gì. Xem `terminalRejection` ở
+ * `use-media-upload-queue.ts`.
+ */
+export type MediaRejectReason = "TYPE" | "SIZE" | "COUNT" | "DURATION" | "NAMED_FORMAT" | "SERVER";
 
 /**
  * Bốn định dạng máy chủ từ chối THEO TÊN tệp (đuôi/MIME), mỗi cái kèm một
@@ -111,7 +104,8 @@ export type MediaRejectReason = "TYPE" | "SIZE" | "COUNT" | "DURATION" | "NAMED_
  * Nhận diện qua ĐUÔI TỆP (không phải MIME): trình duyệt thường báo MIME rỗng
  * hoặc sai cho các định dạng này (`.heic` hay về `""` hoặc
  * `"application/octet-stream"` tuỳ hệ điều hành), nên đuôi tệp là tín hiệu
- * đáng tin duy nhất phía client.
+ * đáng tin duy nhất phía client. Cùng bốn định dạng backend từ chối bằng chữ
+ * ký byte ở `MediaKind` — hai nơi khớp nhau vì cùng một quyết định sản phẩm.
  */
 const NAMED_REJECTIONS: Array<{ extensions: string[]; kind: MediaKind; messageKey: string }> = [
   { extensions: [".heic", ".heif"], kind: "IMAGE", messageKey: "heic" },
@@ -144,8 +138,8 @@ export type MediaValidationResult =
 
 /** Suy loại tệp từ MIME theo chính sách máy chủ — không suy từ đuôi tệp (trừ bốn định dạng bị từ chối theo tên ở trên). */
 export function inferMediaKind(file: File, policy: MediaPolicy): MediaKind | null {
-  if (policy.image.mimeTypes.includes(file.type)) return "IMAGE";
-  if (policy.video.mimeTypes.includes(file.type)) return "VIDEO";
+  if (policy.imageContentTypes.includes(file.type)) return "IMAGE";
+  if (policy.videoContentTypes.includes(file.type)) return "VIDEO";
   return null;
 }
 
@@ -159,15 +153,15 @@ export function inferMediaKind(file: File, policy: MediaPolicy): MediaKind | nul
  * Đếm số lượng trước (rẻ nhất), rồi kiểu-theo-tên (HEIC/GIF/MOV/MKV — câu báo
  * lỗi cụ thể nhất, đáng ưu tiên hơn một câu "định dạng không hỗ trợ" chung
  * chung nếu tệp rơi vào cả hai), rồi MIME, rồi dung lượng. Thời lượng video
- * KHÔNG kiểm ở đây — nó cần đọc tệp (bất đồng bộ), xem {@link readMediaMeta}
- * và gọi riêng sau khi hàm này trả `ok`.
+ * KHÔNG kiểm ở đây — nó cần đọc tệp (bất đồng bộ), xem
+ * {@link readVideoDurationSeconds} và gọi riêng sau khi hàm này trả `ok`.
  */
 export function validateMediaFile(
   file: File,
   currentCount: number,
   policy: MediaPolicy
 ): MediaValidationResult {
-  if (currentCount >= policy.maxAttachmentsPerPost) {
+  if (currentCount >= policy.maxMediaPerPost) {
     return { ok: false, kind: null, reason: "COUNT" };
   }
   const namedKey = namedRejectionKey(file.name);
@@ -179,23 +173,19 @@ export function validateMediaFile(
   if (!kind) {
     return { ok: false, kind: null, reason: "TYPE" };
   }
-  if (file.size > policy[kind === "IMAGE" ? "image" : "video"].maxBytes) {
+  const maxBytes = kind === "IMAGE" ? policy.maxImageBytes : policy.maxVideoBytes;
+  if (file.size > maxBytes) {
     return { ok: false, kind, reason: "SIZE" };
   }
   return { ok: true, kind };
 }
 
-export interface MediaMeta {
-  width: number;
-  height: number;
-  /** Chỉ có với `VIDEO`. */
-  durationSeconds?: number;
-}
-
 /**
- * Đọc kích thước thật (và, cho video, thời lượng) trước khi tải lên — để
- * {@link mediaApi.confirmUpload} gửi kèm kích thước, và để chặn video quá
- * {@link MediaPolicy.video.maxDurationSeconds} TRƯỚC KHI gọi mạng.
+ * Đọc thời lượng THẬT của một video từ chính trình duyệt, trước khi tải lên
+ * — để chặn video quá {@link MediaPolicy.maxVideoDurationSeconds} TRƯỚC KHI
+ * gọi mạng. Chỉ có ý nghĩa với VIDEO: ảnh không có gì để đọc trước (kích
+ * thước ảnh không còn là một trường máy chủ chấp nhận — `MediaAssetDto`
+ * không mang `width`/`height`, nên không còn lý do đọc chúng ở client).
  *
  * <h2>Vì sao phải kiểm thời lượng ở client</h2>
  * Máy chủ đọc thời lượng thật từ phần đầu tệp khi xác nhận, và **từ chối khi
@@ -203,23 +193,17 @@ export interface MediaMeta {
  * tiến trình của một video 200MB rồi mới biết nó bị từ chối vì dài 3 phút.
  *
  * <h2>Có hạn chờ — KHÔNG bao giờ treo cả lượt tải lên vì một tệp</h2>
- * `img.onload`/`video.onloadedmetadata` không đảm bảo luôn bắn (tệp ảnh hỏng
- * phần đầu nhưng đọc dung lượng vẫn đúng, hoặc môi trường không giải mã được
- * — kể cả jsdom trong bộ kiểm, nơi không có gì giải mã `blob:` cả). Hết hạn
- * thì trả `null` — với ẢNH nghĩa là bỏ qua kích thước (tuỳ chọn); với VIDEO
- * nghĩa là **không kiểm được thời lượng ở client**, và lượt tải lên vẫn đi
- * tiếp — máy chủ là chốt chặn thật sự, client chỉ tránh một lượt chờ vô ích
- * khi có thể.
+ * `video.onloadedmetadata` không đảm bảo luôn bắn (tệp hỏng phần đầu, hoặc
+ * môi trường không giải mã được — kể cả jsdom trong bộ kiểm, nơi không có gì
+ * giải mã `blob:` cả). Hết hạn hoặc lỗi thì trả `null` — nghĩa là "không kiểm
+ * được thời lượng ở client", và lượt tải lên vẫn đi tiếp: máy chủ là chốt
+ * chặn thật sự, client chỉ tránh một lượt chờ vô ích khi có thể.
  */
-export function readMediaMeta(
-  file: File,
-  kind: MediaKind,
-  timeoutMs = 1200
-): Promise<MediaMeta | null> {
+export function readVideoDurationSeconds(file: File, timeoutMs = 1200): Promise<number | null> {
   return new Promise((resolve) => {
     let settled = false;
     const objectUrl = URL.createObjectURL(file);
-    const finish = (value: MediaMeta | null) => {
+    const finish = (value: number | null) => {
       if (settled) return;
       settled = true;
       URL.revokeObjectURL(objectUrl);
@@ -227,28 +211,11 @@ export function readMediaMeta(
     };
     const timer = setTimeout(() => finish(null), timeoutMs);
 
-    if (kind === "IMAGE") {
-      const img = new Image();
-      img.onload = () => {
-        clearTimeout(timer);
-        finish({ width: img.naturalWidth, height: img.naturalHeight });
-      };
-      img.onerror = () => {
-        clearTimeout(timer);
-        finish(null);
-      };
-      img.src = objectUrl;
-      return;
-    }
     const video = document.createElement("video");
     video.preload = "metadata";
     video.onloadedmetadata = () => {
       clearTimeout(timer);
-      finish({
-        width: video.videoWidth,
-        height: video.videoHeight,
-        durationSeconds: Number.isFinite(video.duration) ? video.duration : undefined,
-      });
+      finish(Number.isFinite(video.duration) ? video.duration : null);
     };
     video.onerror = () => {
       clearTimeout(timer);
@@ -262,15 +229,21 @@ export function readMediaMeta(
 // Vận chuyển — tải lên
 // ============================================================================
 
-export interface RequestUploadResult {
-  uploadId: string;
-  /** Khoá đối tượng trên kho — chỉ để ghi log/đối soát, giao diện không tự dựng URL từ nó. */
-  key: string;
-  /** URL đã ký, `PUT` thẳng lên đây — KHÔNG đi qua backend. */
+/** Trả lời của `POST /api/v1/media/upload-tickets` — bước 1/3. */
+export interface UploadTicket {
+  /** URL `PUT` đã ký, hạn 15 phút. Client tải tệp THẲNG lên kho, không qua backend. */
   uploadUrl: string;
-  /** Header bắt buộc phải gửi kèm lượt `PUT` (tối thiểu `Content-Type`). */
-  uploadHeaders: Record<string, string>;
+  /** Khoá của phiếu — dùng cho bước xác nhận và (sau khi xác nhận) để gắn vào bài. */
+  mediaId: string;
+  /** Khoá đối tượng trên kho — chỉ để đối chiếu khi truy sự cố, luồng thường không cần. */
+  mediaKey: string;
   expiresAt: string;
+  /** Trần dung lượng áp cho loại tệp này — 8 MiB ảnh, 100 MiB video. */
+  maxBytes: number;
+  /** 120 giây với video, `null` với ảnh. */
+  maxDurationSeconds: number | null;
+  /** Gợi ý `accept` — không phải phép kiểm. */
+  acceptedContentTypes: string[];
 }
 
 export interface UploadProgressEvent {
@@ -282,20 +255,25 @@ export interface UploadProgressEvent {
  * `PUT` thân tệp thẳng lên kho, bằng `XMLHttpRequest` — không phải `fetch` —
  * vì đây là cách DUY NHẤT có sự kiện tiến trình tải **lên** trên trình duyệt.
  * `fetch` chỉ báo được tiến trình tải VỀ.
+ *
+ * <h2>KHÔNG gửi header nào</h2>
+ * URL đã ký của MinIO ở đây không đưa header nào vào chữ ký (xem
+ * `MinioObjectStorageAdapter.presign` — không có `extraSignedHeaders`), và
+ * hợp đồng nói rõ: "Gửi đúng một yêu cầu PUT với thân là nội dung tệp".
+ * Trình duyệt tự thêm `Content-Type` từ `file.type` khi gửi một `Blob`/`File`
+ * làm thân — đó không phải điều bắt buộc, chỉ là hành vi mặc định của XHR, và
+ * kho không kiểm nó (loại thật được backend dò lại bằng chữ ký byte ở bước
+ * xác nhận).
  */
 export function putToStorage(
   uploadUrl: string,
   file: File,
-  headers: Record<string, string>,
   onProgress?: (event: UploadProgressEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", uploadUrl, true);
-    for (const [key, value] of Object.entries(headers)) {
-      xhr.setRequestHeader(key, value);
-    }
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable) return;
       onProgress?.({ loaded: event.loaded, total: event.total });
@@ -321,23 +299,35 @@ export function putToStorage(
   });
 }
 
-export interface ConfirmUploadInput {
-  uploadId: string;
-  /** Bắt buộc khi `kind === "IMAGE"`. Bỏ qua với `VIDEO`. */
-  alt?: string;
-  width?: number;
-  height?: number;
-  /**
-   * Chỉ có ý nghĩa với `VIDEO` — thời lượng đọc được ở client, gửi kèm để
-   * server đối chiếu nhanh. KHÔNG thay thế phép đọc thật của server (từ phần
-   * đầu tệp) — server vẫn là chốt chặn cuối, đây chỉ giúp trả lỗi sớm hơn khi
-   * hai bên đã thống nhất; vắng mặt nghĩa là client không đọc được (jsdom,
-   * tệp hỏng…), server tự đọc lấy.
-   */
-  durationSeconds?: number;
+/**
+ * Một tệp media trần trụi — trả lời của `POST /api/v1/media/{id}/confirm`
+ * (`MediaAssetDto`). **Chưa** thuộc về bài nào ở bước này: `position` luôn
+ * `0` và `url` luôn `null` (tệp chưa gắn vào bản ghi nào để mà ký URL đọc).
+ * Gắn vào bài là một lệnh RIÊNG — xem `postsApi.setMedia`.
+ */
+export interface MediaAsset {
+  id: string;
+  kind: MediaKind;
+  /** Kiểu MIME do backend dò bằng chữ ký byte — không phải `file.type` client gửi. */
+  contentType: string;
+  sizeBytes: number;
+  /** Chỉ có với VIDEO, đọc từ header container. `null` với ảnh. */
+  durationMs: number | null;
+  /** Bắt buộc khác `null`/rỗng với ẢNH — ép tới tận CSDL, không bao giờ cần nhánh dự phòng ở đây. */
+  alt: string | null;
+  position: number;
+  url: string | null;
 }
 
-const postMediaBase = (postId: string) => `/api/v1/posts/${postId}/media`;
+/**
+ * Một tệp đã GẮN vào bài — phần tử của `PostDto.media`, có thứ tự
+ * (`PostMediaDto`, `allOf: [MediaAssetDto]` cộng `url` bắt buộc). Cùng hình
+ * dạng với {@link MediaAsset}, chỉ khác `url` LUÔN có mặt: mỗi lần đọc bài là
+ * một lần máy chủ ký lại URL đọc.
+ */
+export interface PostMediaItem extends Omit<MediaAsset, "url"> {
+  url: string;
+}
 
 // ============================================================================
 // Báo gỡ — /api/v1/media/{mediaId}/reports (KHÔNG lồng dưới /posts/{id})
@@ -355,19 +345,35 @@ export interface CreateMediaReportInput {
   note?: string;
 }
 
+export type MediaReportStatus = "OPEN" | "ACTIONED" | "DISMISSED";
+
+/**
+ * `MediaReportDto` trên dây — ĐÚNG từng trường của `contracts/openapi.yaml`
+ * (`MediaReportDto`) và `MediaDtos.MediaReportDto` phía backend.
+ *
+ * <h2>Không có `postId`/`postTitle`/`reporterDisplayName` — và đó là sửa, không phải thiếu</h2>
+ * Bản trước của kiểu này (và của mock) bịa ba trường ấy; máy chủ thật không bao giờ gửi chúng,
+ * nên trên hệ thống thật màn duyệt báo cáo hiện một đường dẫn `/bai-viet/undefined` với nhãn
+ * rỗng. Một báo cáo gắn với TỆP (một tệp có thể là ảnh chân dung, không chỉ ảnh bài viết), và tên
+ * người báo là dữ liệu của một người còn sống — hợp đồng cố ý chỉ đưa khoá tài khoản `reportedBy`.
+ * Người duyệt quyết dựa trên chính tấm ảnh (`mediaUrl`), lý do và lời mô tả.
+ */
 export interface MediaReportDto {
   id: string;
   mediaId: string;
-  /** URL đã ký để ĐỌC, cho người duyệt xem đúng thứ đang bị báo — không phải khoá kho. */
-  mediaUrl: string;
   mediaKind: MediaKind;
-  postId: string;
-  postTitle: string;
+  /** URL đã ký để ĐỌC, cho người duyệt xem đúng thứ đang bị báo. `null` sau khi tệp đã bị gỡ. */
+  mediaUrl: string | null;
   reason: MediaReportReason;
   note: string | null;
-  /** `null` khi người báo cáo không được thấy (đã xoá mềm) hoặc báo cáo ẩn danh theo chính sách. */
-  reporterDisplayName: string | null;
+  /** Khoá tài khoản (`app_user.id`) của người báo — không phải tên, không để hiển thị. */
+  reportedBy: string;
+  status: MediaReportStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  resolutionNote: string | null;
   createdAt: string;
+  version: number;
 }
 
 export interface TakedownOrDismissInput {
@@ -378,55 +384,27 @@ export const mediaApi = {
   /** Ngưỡng dung lượng/định dạng/thời lượng — máy chủ công bố, xem {@link MediaPolicy}. */
   policy: () => apiFetch<MediaPolicy>(`/api/v1/media/policy`),
 
-  /** Bước 1 — xin URL đã ký. Máy chủ kiểm lại `kind`/`contentType`/`sizeBytes` — client chặn trước không thay thế phép kiểm này. */
-  requestUpload: (postId: string, input: { kind: MediaKind; fileName: string; contentType: string; sizeBytes: number }) =>
-    apiFetch<RequestUploadResult>(`${postMediaBase(postId)}/uploads`, { method: "POST", body: input }),
+  /**
+   * Bước 1/3 — xin một URL `PUT` đã ký. KHÔNG cần `postId`: một tệp tồn tại
+   * độc lập với bài cho tới khi được gắn bằng `postsApi.setMedia`; tệp xin
+   * xong mà không bao giờ gắn vào đâu sẽ bị dọn bởi đường gom rác mồ côi sau
+   * (`POST /admin/media/gc`), không phải trách nhiệm của client.
+   */
+  requestUploadTicket: (input: { kind: MediaKind; sizeBytes: number }) =>
+    apiFetch<UploadTicket>(`/api/v1/media/upload-tickets`, { method: "POST", body: input }),
 
-  /** Bước 2 — xem {@link putToStorage}. Cố ý tách khỏi object này vì nó KHÔNG gọi `API_BASE_URL`. */
+  /** Bước 2/3 — xem {@link putToStorage}. Tách khỏi object này vì nó KHÔNG gọi `API_BASE_URL`. */
   putToStorage,
 
   /**
-   * Bước 3 — xác nhận. Trả cả bài (danh sách `media` đã có phần tử mới, đã
-   * sắp thứ tự) **cộng `ETag` mới** — cùng quy ước với `postsApi.update`, vì
-   * gắn một tệp cũng đổi `version` của bài, nên lượt `PATCH` thân bài kế tiếp
-   * cần `If-Match` mới, không phải cái đã lấy trước khi có tệp này.
-   *
-   * Máy chủ đọc thời lượng thật từ phần đầu tệp video ở bước này và **từ chối
-   * khi không đọc được** (`422`) — client đã kiểm trước bằng
-   * {@link readMediaMeta}, nhưng đây mới là chốt chặn thật.
+   * Bước 3/3 — xác nhận. Trả một {@link MediaAsset} TRẦN TRỤI, không phải cả
+   * bài viết (khác hẳn suy đoán trước đây) — tệp chưa gắn vào đâu ở bước
+   * này. `alt` bắt buộc với ảnh; thiếu thì máy chủ trả `422 VALIDATION_FAILED`
+   * và **không xoá tệp** — gọi lại đúng điểm cuối này kèm `alt` là đủ, không
+   * phải tải lại từ đầu.
    */
-  confirmUpload: (postId: string, input: ConfirmUploadInput): Promise<ApiResult<PostDtoWithMedia>> =>
-    apiFetchWithMeta<PostDtoWithMedia>(`${postMediaBase(postId)}/uploads/${input.uploadId}/confirm`, {
-      method: "POST",
-      body: {
-        alt: input.alt,
-        width: input.width,
-        height: input.height,
-        durationSeconds: input.durationSeconds,
-      },
-    }),
-
-  /** Sắp lại thứ tự — gửi toàn bộ danh sách id theo thứ tự mong muốn. Cũng đổi `version`, xem {@link confirmUpload}. */
-  reorder: (postId: string, orderedMediaIds: string[]): Promise<ApiResult<PostDtoWithMedia>> =>
-    apiFetchWithMeta<PostDtoWithMedia>(`${postMediaBase(postId)}/order`, {
-      method: "PATCH",
-      body: { order: orderedMediaIds },
-    }),
-
-  /** Sửa `alt` sau khi đã gắn — ca "gõ vội, quên chưa tả đúng". */
-  updateAlt: (postId: string, mediaId: string, alt: string): Promise<ApiResult<PostDtoWithMedia>> =>
-    apiFetchWithMeta<PostDtoWithMedia>(`${postMediaBase(postId)}/${mediaId}`, {
-      method: "PATCH",
-      body: { alt },
-    }),
-
-  /**
-   * Gỡ một tệp khỏi bài đang soạn. Cùng cổng quyền với sửa thân bài — chỉ tác
-   * giả, chỉ khi bài còn `DRAFT`. Đây là "xoá lúc soạn", KHÁC với
-   * {@link mediaApi.report} ("báo gỡ" trên một bài đã đăng).
-   */
-  remove: (postId: string, mediaId: string): Promise<ApiResult<PostDtoWithMedia>> =>
-    apiFetchWithMeta<PostDtoWithMedia>(`${postMediaBase(postId)}/${mediaId}`, { method: "DELETE" }),
+  confirmUpload: (mediaId: string, alt?: string) =>
+    apiFetch<MediaAsset>(`/api/v1/media/${mediaId}/confirm`, { method: "POST", body: { alt } }),
 
   /**
    * Báo một tệp đính kèm cần được gỡ (ảnh đăng nhầm, ảnh của người khác, v.v).
@@ -436,12 +414,10 @@ export const mediaApi = {
    * *biết* để xử lý.
    *
    * <b>Một người chỉ mở được MỘT báo cáo đang treo cho mỗi tệp</b> — gọi lại
-   * trong lúc báo cáo trước còn `PENDING` nhận lỗi (client hiện thông điệp
-   * chung qua {@link describeError}, không có mã riêng vì đây là ràng buộc dữ
-   * liệu, không phải một loại lỗi nghiệp vụ mới).
+   * trong lúc báo cáo trước còn `OPEN` nhận `409 REPORT_DUPLICATE`.
    */
   report: (mediaId: string, input: CreateMediaReportInput) =>
-    apiFetch<{ id: string }>(`/api/v1/media/${mediaId}/reports`, { method: "POST", body: input }),
+    apiFetch<MediaReportDto>(`/api/v1/media/${mediaId}/reports`, { method: "POST", body: input }),
 
   /**
    * Hàng chờ duyệt báo cáo — phạm vi chi của người gọi, mới nhất trước. Mỗi
@@ -456,20 +432,9 @@ export const mediaApi = {
    * khi người duyệt bấm, không phải sau.
    */
   takedownReport: (reportId: string, input: TakedownOrDismissInput = {}) =>
-    apiFetch<{ id: string }>(`/api/v1/media/reports/${reportId}/takedown`, { method: "POST", body: input }),
+    apiFetch<MediaReportDto>(`/api/v1/media/reports/${reportId}/takedown`, { method: "POST", body: input }),
 
   /** Bỏ qua báo cáo — tệp ở lại nguyên trạng. */
   dismissReport: (reportId: string, input: TakedownOrDismissInput = {}) =>
-    apiFetch<{ id: string }>(`/api/v1/media/reports/${reportId}/dismiss`, { method: "POST", body: input }),
+    apiFetch<MediaReportDto>(`/api/v1/media/reports/${reportId}/dismiss`, { method: "POST", body: input }),
 };
-
-/**
- * `PostDto` mở rộng — khai lại tối thiểu ở đây để tránh vòng import với
- * `posts.ts` (nơi `PostDto` thật được định nghĩa và đã có trường `media`).
- */
-interface PostDtoWithMedia {
-  id: string;
-  media: PostMediaItem[];
-  version: number;
-  [key: string]: unknown;
-}

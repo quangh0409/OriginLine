@@ -124,7 +124,13 @@ export function PersonProfileHeader({
         {showEditAction && person.meta.canEdit && (
           // `inline-flex` — xem chú thích ở person-profile.tsx: <a> bọc <Button>
           // mặc định là `display: inline`, nên vùng chạm tụt về 20px dù nút đã 44px.
-          <Link href={`/persons/${person.id}/edit`} className="inline-flex">
+          // `aria-label`: trên điện thoại chữ "Sửa hồ sơ" bị ẩn (`hidden sm:inline`), chỉ còn biểu
+          // tượng cây bút — không có nhãn thì trình đọc màn hình đọc ra một liên kết không tên.
+          <Link
+            href={`/persons/${person.id}/edit`}
+            className="inline-flex"
+            aria-label={t("edit")}
+          >
             <Button icon={<EditOutlined />} size="small">
               <span className="hidden sm:inline">{t("edit")}</span>
             </Button>

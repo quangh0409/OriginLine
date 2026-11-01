@@ -24,6 +24,7 @@ import vn.giapha.membership.application.MemberScopeView;
 import vn.giapha.shared.exception.DomainException;
 import vn.giapha.shared.exception.ForbiddenException;
 import vn.giapha.shared.exception.NotFoundException;
+import vn.giapha.shared.security.CurrentUserProvider;
 import vn.giapha.shared.vo.BranchPath;
 
 /**
@@ -219,6 +220,9 @@ public class HonourService {
      */
     @Transactional(readOnly = true)
     public ContentPage<HonourView> search(HonourQuery query) {
+        if (isGuest()) {
+            return searchForGuest(query);
+        }
         MemberScopeView caller = access.requireProvisioned();
         int size = clamp(query.size());
         int page = Math.max(query.page(), 0);
@@ -235,6 +239,9 @@ public class HonourService {
     /** Một bản ghi. Không được phép xem ⇒ {@code 404}, không phải {@code 403}. */
     @Transactional(readOnly = true)
     public HonourView byId(UUID honourId) {
+        if (isGuest()) {
+            return byIdForGuest(honourId);
+        }
         MemberScopeView caller = access.requireProvisioned();
         Honour honour = load(honourId);
         if (honour.isDeleted()) {
@@ -263,6 +270,78 @@ public class HonourService {
     }
 
     // =====================================================================================
+    // Khách — quyết định của chủ dự án ngày 26/09/2026
+    // =====================================================================================
+
+    /**
+     * <b>Khách chỉ thấy vinh danh đã duyệt của người đã khuất.</b>
+     *
+     * <p>Trước quyết định này, mọi lối đọc ở đây đòi tài khoản ({@code requireProvisioned}), và
+     * khối "Vinh danh" trên trang chủ của Khách là một ô "hãy đăng nhập". Lý do mở: vinh danh các
+     * cụ là phần dòng họ muốn khoe nhất với con cháu ở xa chưa có tài khoản, và người đã khuất là dữ
+     * liệu công khai (BA v2 §10). Lý do bên thua (giữ đóng) vẫn đúng một nửa và được giữ nguyên ở
+     * đây: <b>người còn sống thì không</b> — kể cả khi chính họ đã mở nhóm {@code honour} cho
+     * {@code CLAN}, vì "cả họ" là những người đã được xác nhận trong họ, không phải người lạ cầm
+     * đường dẫn.</p>
+     *
+     * <p>Ba lớp chặn, cố ý chồng lên nhau: SQL chỉ nạp {@code PUBLISHED} × {@code is_alive = FALSE};
+     * {@code genealogy} lọc theo vai Khách (người sống vắng mặt); và {@link PersonLens#deceased}
+     * kiểm lại lần cuối. Mất một lớp vẫn không lộ.</p>
+     *
+     * <p>Phân biệt Khách bằng "không có token", không bằng {@code appUserId == null}: một người đã
+     * đăng nhập nhưng tài khoản chưa được lập ({@code unlinked}) vẫn đi lối thành viên và nhận
+     * {@code 403} như trước — đó là tín hiệu "tài khoản của anh có vấn đề", không nên bị nuốt thành
+     * một trang chủ Khách trông như bình thường.</p>
+     */
+    private ContentPage<HonourView> searchForGuest(HonourQuery query) {
+        int size = clamp(query.size());
+        int page = Math.max(query.page(), 0);
+        if (query.status() != null && query.status() != ContentStatus.PUBLISHED) {
+            // Khach hoi hang doi duyet: tra trang rong, khong 403 — 403 xac nhan hang doi ton tai.
+            return new ContentPage<>(List.of(), page, size, 0L);
+        }
+        List<Honour> rows = honours.searchPublishedOfDeceased(query.personId(), query.kind(),
+                query.branchId(), size, page * size);
+        long total = honours.countPublishedOfDeceased(query.personId(), query.kind(),
+                query.branchId());
+        if (rows.isEmpty()) {
+            return new ContentPage<>(List.of(), page, size, total);
+        }
+        PersonLens lens = persons.load(rows.stream().map(Honour::personId).toList());
+        List<HonourView> views = new ArrayList<>(rows.size());
+        for (Honour honour : rows) {
+            if (lens.deceased(honour.personId())) {
+                views.add(guestView(honour, lens));
+            }
+        }
+        return new ContentPage<>(views, page, size, total);
+    }
+
+    /** Một bản ghi cho Khách. Mọi ca không được xem đều {@code 404}, cùng lý do với lối thành viên. */
+    private HonourView byIdForGuest(UUID honourId) {
+        Honour honour = load(honourId);
+        if (honour.isDeleted() || honour.status() != ContentStatus.PUBLISHED) {
+            throw NotFoundException.of(ENTITY, honourId);
+        }
+        PersonLens lens = persons.loadOne(honour.personId());
+        if (!lens.deceased(honour.personId())) {
+            log.debug("Khach xem vinh danh {} cua nguoi khong duoc cong bo -> tra 404", honourId);
+            throw NotFoundException.of(ENTITY, honourId);
+        }
+        return guestView(honour, lens);
+    }
+
+    private HonourView guestView(Honour honour, PersonLens lens) {
+        UUID branchId = access.branchIdOfPerson(honour.personId());
+        return HonourView.forGuest(honour, lens.displayName(honour.personId()), branchId,
+                access.branchName(branchId));
+    }
+
+    private static boolean isGuest() {
+        return CurrentUserProvider.current().isEmpty();
+    }
+
+    // =====================================================================================
     // Nội bộ
     // =====================================================================================
 
@@ -284,7 +363,7 @@ public class HonourService {
     private void requireSubjectExists(UUID personId) {
         if (personId == null || !persons.loadOne(personId).visible(personId)) {
             throw new DomainException(ContentProblemCodes.VALIDATION_FAILED,
-                    "Khong tim thay nhan khau duoc vinh danh");
+                    "Không tìm thấy nhân khẩu được vinh danh");
         }
     }
 
@@ -379,18 +458,22 @@ public class HonourService {
     private void requireVersion(Honour honour, Long expectedVersion) {
         if (expectedVersion == null) {
             throw new ContentPreconditionException(
-                    "Thieu phien ban ky vong; hay lay ETag tu lan doc gan nhat truoc khi sua");
+                    "Thiếu phiên bản kỳ vọng; hãy lấy ETag từ lần đọc gần nhất trước khi sửa");
         }
         if (honour.version() != expectedVersion) {
             throw new ContentConflictException(ContentProblemCodes.OPTIMISTIC_LOCK_CONFLICT,
-                    "Vinh danh da bi nguoi khac sua (phien ban " + honour.version()
-                            + ", ban gui " + expectedVersion + "); hay tai lai roi thu lai");
+                    "Vinh danh đã bị người khác sửa (phiên bản " + honour.version()
+                            + ", bản gửi " + expectedVersion + "); hãy tải lại rồi thử lại");
         }
     }
 
     private DomainException selfReviewOrClosed(IllegalStateException ex) {
         String message = ex.getMessage() == null ? "" : ex.getMessage();
-        if (message.contains("tu duyet")) {
+        // Khop CHU trong thong diep cua domain ("Khong duoc tu duyet ..."), nen doi cau chu ben
+        // Honour/Post thi phai doi ca o day. Tu 26/09/2026 thong diep co dau (no di thang ra
+        // `detail`); ban khong dau "tu duyet" van duoc nhan de mot thong diep cu con sot o dau do
+        // khong am tham roi sang nhanh 409 — hai ma loi dan nguoi dung toi hai viec khac nhau.
+        if (message.contains("tự duyệt") || message.contains("tu duyet")) {
             return new ForbiddenException(ContentProblemCodes.SELF_REVIEW_FORBIDDEN, message);
         }
         return new ContentConflictException(ContentProblemCodes.CONTENT_CLOSED, message, ex);

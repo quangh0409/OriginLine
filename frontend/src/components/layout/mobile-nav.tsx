@@ -11,6 +11,7 @@ import {
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useUnreadCount } from "@/hooks/use-notifications";
+import { useMe } from "@/hooks/use-me";
 import { colorVars } from "@/styles/tokens";
 
 const ITEMS = [
@@ -34,7 +35,12 @@ const ITEMS = [
 export function MobileNav() {
   const t = useTranslations("nav");
   const pathname = usePathname();
-  const unreadCount = useUnreadCount();
+  const { data: me } = useMe();
+  // Chỉ tài khoản đã gắn vào phả mới có hộp thư (khách: 401, chờ duyệt: 403
+  // ACCOUNT_NOT_LINKED). Huy hiệu tự hỏi máy chủ mỗi phút, nên nó chỉ được DỰNG
+  // khi có hộp thư để hỏi — xem <UnreadBadge>. Ô "Thông báo" thì luôn ở đó:
+  // thanh tab đáy có đúng năm ô ở mọi vai (NT-LOIVAO-02).
+  const hasInbox = Boolean(me?.appUserId) && me?.linkedToTree === true;
 
   return (
     <nav
@@ -47,8 +53,7 @@ export function MobileNav() {
       }}
     >
       {ITEMS.map((item) => {
-        const active =
-          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         return (
           <Link
             key={item.key}
@@ -61,10 +66,8 @@ export function MobileNav() {
             style={{ color: active ? colorVars.primary : colorVars.textMuted }}
           >
             <span className="text-dan" aria-hidden>
-              {item.key === "notifications" ? (
-                <Badge count={unreadCount} size="small" offset={[2, -2]}>
-                  <span style={{ color: "inherit" }}>{item.icon}</span>
-                </Badge>
+              {item.key === "notifications" && hasInbox ? (
+                <UnreadBadge>{item.icon}</UnreadBadge>
               ) : (
                 item.icon
               )}
@@ -82,5 +85,18 @@ export function MobileNav() {
         );
       })}
     </nav>
+  );
+}
+
+/**
+ * Tách riêng để `useUnreadCount()` — và lượt hỏi định kỳ của nó — chỉ chạy khi
+ * thành phần này được dựng, tức khi người xem thật sự có hộp thư.
+ */
+function UnreadBadge({ children }: { children: React.ReactNode }) {
+  const unreadCount = useUnreadCount();
+  return (
+    <Badge count={unreadCount} size="small" offset={[2, -2]}>
+      <span style={{ color: "inherit" }}>{children}</span>
+    </Badge>
   );
 }

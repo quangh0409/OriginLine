@@ -66,7 +66,7 @@ public class PersonSearchService {
         CallerContext caller = privacy.caller();
         if (query.includeDeleted() && !caller.role().isClanWide()) {
             throw new ForbiddenException(GenealogyProblemCodes.FORBIDDEN,
-                    "Chi Hoi dong Toc bieu hoac Quan tri he thong duoc tim trong ban ghi da xoa mem");
+                    "Chỉ Hội đồng Tộc biểu hoặc Quản trị hệ thống được tìm trong bản ghi đã xoá mềm");
         }
 
         PersonSearchPort.SearchFilter filter = new PersonSearchPort.SearchFilter(

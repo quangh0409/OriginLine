@@ -61,7 +61,7 @@ public class ImportScopeGuard {
         MemberScopeView caller = caller();
         if (caller.isGuest() || caller.appUserId() == null) {
             throw new ForbiddenException(ImportProblemCodes.ACCOUNT_NOT_PROVISIONED,
-                    "Tai khoan chua duoc khoi tao trong he thong, hay dang nhap lai");
+                    "Tài khoản chưa được khởi tạo trong hệ thống, hãy đăng nhập lại");
         }
         return caller;
     }
@@ -104,10 +104,10 @@ public class ImportScopeGuard {
     private ForbiddenException scopeViolation(MemberScopeView caller) {
         if (BRANCH_HEAD.equals(caller.role())) {
             return new ForbiddenException(ImportProblemCodes.BRANCH_SCOPE_VIOLATION,
-                    "Tai khoan khong co quyen nhap lieu tren pham vi chi/nganh cua lo nay");
+                    "Tài khoản không có quyền nhập liệu trên phạm vi chi/ngành của lô này");
         }
         return new ForbiddenException(ImportProblemCodes.FORBIDDEN,
-                "Chi Truong chi (trong pham vi duoc giao), Hoi dong Toc bieu hoac Quan tri he thong"
-                        + " duoc nhap lieu hang loat");
+                "Chỉ Trưởng chi (trong phạm vi được giao), Hội đồng Tộc biểu hoặc Quản trị hệ thống"
+                        + " được nhập liệu hàng loạt");
     }
 }

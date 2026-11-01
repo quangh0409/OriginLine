@@ -199,7 +199,11 @@ public class ClanInviteController {
      * gửi lên thì client cũng bịa được, và tin nó nghĩa là ai cũng bỏ qua được giới hạn bằng một
      * header — ở đây hậu quả nặng hơn luồng mã cá nhân, vì mã dòng họ <b>sống suốt hạn</b> chứ
      * không chết sau một lần dùng. Khi hệ thống chạy sau reverse proxy thật, chỗ đúng để dịch
-     * header ấy là {@code ForwardedHeaderFilter} / {@code server.forward-headers-strategy}.</p>
+     * header ấy là {@code server.forward-headers-strategy: native} — {@code RemoteIpValve} của
+     * Tomcat, chỉ tin header từ proxy trong {@code server.tomcat.remoteip.internal-proxies}.
+     * <b>Không</b> phải {@code framework}: {@code ForwardedHeaderFilter} tin header của mọi
+     * request, và với nó một dòng {@code X-Forwarded-For} bịa ra đã lách được chính bộ đếm này
+     * (đo trên hệ chạy thật 24/09 — xem {@code ForwardedHeaderTrustIT}).</p>
      */
     private static String clientIdOf(HttpServletRequest request) {
         return request == null ? null : request.getRemoteAddr();

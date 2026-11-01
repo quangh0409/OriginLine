@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert, Button, Empty, Skeleton, Space } from "antd";
-import { ApartmentOutlined, TeamOutlined } from "@ant-design/icons";
+import { ApartmentOutlined, ProfileOutlined, TeamOutlined } from "@ant-design/icons";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { usePerson } from "@/hooks/use-person";
@@ -15,6 +15,7 @@ import { PersonOriginFacts } from "./person-origin-facts";
 import { PersonProfileHeader } from "./person-profile-header";
 import { PersonRelations } from "./person-relations";
 import { PrivacyTierNotice } from "@/components/privacy/privacy-tier-notice";
+import { CorrectionRequestEntry } from "@/components/correction/correction-request-entry";
 import { PrivacySharingCard } from "./privacy-sharing-card";
 
 export interface PersonProfileProps {
@@ -77,6 +78,14 @@ export function PersonProfile({ personId, compact = false }: PersonProfileProps)
 
       <PrivacyTierNotice isAlive={person.isAlive} meta={person.meta} />
 
+      {/* Lối "Đề nghị đính chính" cho người KHÔNG sửa thẳng được hồ sơ này — tự ẩn theo
+          `meta.canRequestCorrection` của máy chủ. Trước 24/09 thành phần này chỉ được thả vào màn
+          SỬA (chỉ người sửa được mới tới) và trang `/persons/{id}/correction` (không liên kết nào
+          dẫn tới) — tức đúng người cần nó không bao giờ thấy nó (NT-TV-07, bấm thật). Đặt ngay dưới
+          phần đầu hồ sơ, ở cả trang lẫn ngăn trên phả đồ: hộp thoại mở tại chỗ, không đổi tuyến,
+          nên ngăn không mất canvas. */}
+      <CorrectionRequestEntry person={person} />
+
       <PersonNameLayers person={person} />
       <PersonLifeDates person={person} />
       <PersonOriginFacts person={person} />
@@ -106,6 +115,16 @@ export function PersonProfile({ personId, compact = false }: PersonProfileProps)
         {/* `to=`, KHÔNG phải `from=`. Mở từ hồ sơ bác Đức thì câu người dùng muốn hỏi là
             "TÔI gọi bác Đức là gì?" — bác Đức là ĐÍCH. Dùng `from=` làm sản phẩm hỏi ngược
             180°: "bác Đức gọi ai là gì?", một câu chẳng ai cần. */}
+        {/* Trong ngăn trên phả đồ, phần đầu hồ sơ cố ý không có nút "Sửa hồ sơ" (đổi tuyến là mất
+            canvas). Nhưng không có lối nào khác ra trang đầy đủ thì chính chủ đứng trên phả đồ
+            không có cách nào tới nút sửa — nên ngăn mở một lối ra, người dùng tự chọn rời canvas. */}
+        {compact && (
+          <Link href={`/persons/${person.id}`} className="inline-flex">
+            <Button icon={<ProfileOutlined />} size="small">
+              {t("openFullPage")}
+            </Button>
+          </Link>
+        )}
         <Link href={`/kinship?to=${person.id}`} className="inline-flex">
           <Button icon={<TeamOutlined />} size={compact ? "small" : "middle"}>
             {t("lookupKinship")}

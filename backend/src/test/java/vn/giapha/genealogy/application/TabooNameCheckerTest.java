@@ -53,10 +53,11 @@ class TabooNameCheckerTest {
                     assertThat(conflict.ancestorGeneration()).isEqualTo(3);
                     assertThat(conflict.matchedNameType()).isEqualTo(NameType.HUY);
                 });
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThat(ex.getMessage())
                 .as("hop thoai phai liet ke du 'cu nao, doi thu may, trung ten huy nao'")
                 .contains("Nguyễn Văn Tuân")
-                .contains("doi thu 3");
+                .contains("đời thứ 3");
     }
 
     @Test

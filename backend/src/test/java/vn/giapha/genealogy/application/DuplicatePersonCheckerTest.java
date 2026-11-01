@@ -32,9 +32,10 @@ class DuplicatePersonCheckerTest {
     void nemKhiChuaXacNhan() {
         UUID cuId = port.them(NguoiGia.ten("Nguyễn Văn Tuấn").doi(5).chi(CHI_GIAP).namSinh(1920));
 
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> checker.check(probeTuan(1920), false))
                 .isInstanceOf(DuplicatePersonSuspectedException.class)
-                .hasMessageContaining("Nghi trung")
+                .hasMessageContaining("Nghi trùng")
                 .extracting(ex -> ((DuplicatePersonSuspectedException) ex).getCode())
                 .isEqualTo(GenealogyProblemCodes.DUPLICATE_PERSON_SUSPECTED);
 

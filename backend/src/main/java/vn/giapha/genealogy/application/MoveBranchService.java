@@ -61,10 +61,10 @@ public class MoveBranchService {
         CallerContext caller = privacy.caller();
         Person person = persons.byId(PersonId.of(cmd.personId())).orElseThrow(() -> new NotFoundException(
                 GenealogyProblemCodes.NOT_FOUND,
-                "Khong tim thay nhan khau voi dinh danh " + cmd.personId()));
+                "Không tìm thấy nhân khẩu với định danh " + cmd.personId()));
         Branch target = branches.byId(cmd.targetBranchId()).orElseThrow(() -> new NotFoundException(
                 GenealogyProblemCodes.NOT_FOUND,
-                "Khong tim thay chi/nganh voi dinh danh " + cmd.targetBranchId()));
+                "Không tìm thấy chi/ngành với định danh " + cmd.targetBranchId()));
 
         BranchDirectory dir = BranchDirectory.load(branches,
                 Arrays.asList(person.primaryBranchId(), target.id()));

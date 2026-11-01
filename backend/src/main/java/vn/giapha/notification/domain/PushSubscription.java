@@ -50,7 +50,7 @@ public record PushSubscription(UUID id,
         // xử lý đúng: xoá bản ghi chết, không thử lại.
         if (uri.getScheme() == null || uri.getHost() == null) {
             throw new IllegalArgumentException(
-                    "Endpoint Web Push phai la URL tuyet doi (scheme://host), nhan duoc: " + endpoint);
+                    "Endpoint Web Push phải là URL tuyệt đối (scheme://host), nhận được: " + endpoint);
         }
         StringBuilder audience = new StringBuilder(uri.getScheme()).append("://").append(uri.getHost());
         if (uri.getPort() > 0) {

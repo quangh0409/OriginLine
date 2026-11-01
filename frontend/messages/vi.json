@@ -23,7 +23,8 @@
     "primary": "Điều hướng chính",
     "settings": "Cài đặt",
     "more": "Thêm",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "systemAdmin": "Quản trị hệ thống"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -123,6 +124,7 @@
       "doneNextNote": "Chưa duyệt thì vẫn xem được phả đồ — phải nhìn thấy phả mới tự nhận mình được.",
       "doneNextCta": "Tôi là ai trong phả",
       "donePasswordPhoneRecovery": "Ông/bà đăng ký bằng số điện thoại, nên xin nhớ kỹ mật khẩu vừa đặt: hệ thống gửi liên kết đặt lại mật khẩu qua thư điện tử, mà tài khoản này thì không có địa chỉ thư. Nếu quên, xin gọi cho Trưởng chi của mình — Trưởng chi mở lại được.",
+      "donePasswordEmailVerify": "Lần đầu đăng nhập, dòng họ sẽ gửi một lá thư tới địa chỉ ông/bà vừa khai và xin ông/bà xác nhận. Xin mở thư ấy, bấm liên kết bên trong, là vào được — đó là để chắc địa chỉ này đúng là của ông/bà, không phải mật khẩu có vấn đề.",
       "signInThenCode": "Đăng nhập rồi nhập lại mã",
       "doneAlreadySignedInTitle": "Ông/bà đang đăng nhập sẵn — không cần đặt mật khẩu",
       "doneAlreadySignedInBody": "Ông/bà nhập mã trong lúc đã đăng nhập, nên hệ thống mở cửa vào phả cho chính tài khoản đang dùng, chứ không lập thêm một tài khoản thứ hai. Cũng vì thế không có liên kết đặt mật khẩu: ông/bà đã có cách đăng nhập rồi. Lần sau cứ vào như thường lệ."
@@ -228,7 +230,7 @@
       "pageTitle": "Đặt mật khẩu",
       "pageDescription": "Trang đặt mật khẩu lần đầu cho tài khoản vừa nhận lời mời vào phả.",
       "title": "Đặt mật khẩu cho tài khoản của ông/bà",
-      "intro": "Tài khoản đã lập xong và đã nối với hồ sơ trong phả. Còn đúng một việc nữa: chọn một mật khẩu, để từ mai ông/bà tự đăng nhập được.",
+      "intro": "Còn đúng một việc nữa: chọn một mật khẩu, để từ nay ông/bà tự đăng nhập được.",
       "oneTimeNote": "Liên kết này dùng được một lần và hết hạn sau ba mươi phút. Quá giờ thì xin lại được ngay, không mất gì cả.",
       "passwordLabel": "Mật khẩu mới",
       "confirmLabel": "Gõ lại mật khẩu mới",
@@ -258,21 +260,21 @@
         }
       },
       "doneTitle": "Xong rồi — mật khẩu đã đặt",
-      "doneBody": "Từ nay ông/bà đăng nhập bằng mật khẩu vừa chọn. Hồ sơ trong phả đã nối sẵn với tài khoản này, không phải chờ ai duyệt.",
+      "doneBody": "Từ nay ông/bà đăng nhập bằng mật khẩu vừa chọn.",
       "doneWhatsThere": "Đăng nhập xong, ông/bà xem được:",
-      "doneItem1": "phả đồ dòng họ, cả những người đang sống trong chi mình",
-      "doneItem2": "danh xưng — gọi ai là gì cho đúng",
-      "doneItem3": "nhắc ngày giỗ của chi mình, theo ngày âm",
+      "doneItem1": "phả đồ dòng họ, từ Thuỷ tổ trở xuống",
+      "doneItem2": "hồ sơ các cụ đã khuất, cùng ngày giỗ theo ngày âm",
+      "doneItem3": "bài viết, vinh danh và lịch việc họ",
       "doneCta": "Đăng nhập, xem phả đồ",
       "expiredTitle": "Liên kết đặt mật khẩu không còn dùng được",
-      "expiredAccountSafe": "Tài khoản của ông/bà vẫn còn nguyên và vẫn nối với hồ sơ trong phả. Thứ hết hạn chỉ là cái liên kết này — ông/bà không phải xin lại mã mời và không phải làm lại từ đầu.",
-      "expiredBody": "Liên kết chỉ mở được trong ba mươi phút kể từ lúc nhận lời mời, và chỉ dùng được một lần — để một tin nhắn chuyển tiếp nhầm không mở được tài khoản của ông/bà.",
-      "expiredNext": "Xin gọi cho người đã mời ông/bà. Người ấy đặt cho ông/bà một mật khẩu tạm và đọc qua điện thoại; ngay lần đăng nhập đầu, hệ thống sẽ mời ông/bà đổi lại tại chỗ.",
+      "expiredAccountSafe": "Tài khoản của ông/bà vẫn còn nguyên. Thứ hết hạn chỉ là cái liên kết này — ông/bà không phải làm lại từ đầu.",
+      "expiredBody": "Liên kết chỉ mở được trong ba mươi phút kể từ lúc được cấp, và chỉ dùng được một lần — để một tin nhắn chuyển tiếp nhầm không mở được tài khoản của ông/bà.",
+      "expiredNext": "Xin gọi cho người đã cấp liên kết này cho ông/bà — người mời, hoặc Trưởng chi của mình. Họ cấp lại được một liên kết mới, dùng một lần và có hạn ba mươi phút, để chính ông/bà tự đặt mật khẩu — không ai đặt hộ, và không ai đọc mật khẩu qua điện thoại cả.",
       "expiredAlreadySetCta": "Tôi đã đặt mật khẩu rồi — đăng nhập",
       "expiredAlreadySetHint": "Nếu ông/bà đã bấm liên kết này một lần trước đó và đặt xong, thì mật khẩu ấy vẫn dùng được: chỉ cần đăng nhập.",
       "noLinkTitle": "Tài khoản của ông/bà đã có mật khẩu rồi",
       "noLinkBody": "Trang này chỉ dùng đúng một lần, lúc tài khoản mới lập. Hệ thống cố ý không mở nó cho một tài khoản đã có mật khẩu — nếu mở, người khác cầm được một mã mời sẽ đổi được mật khẩu của ông/bà.",
-      "noLinkNext": "Xin bấm “Đăng nhập” và dùng mật khẩu ông/bà vẫn dùng. Nếu quên mật khẩu, gọi cho người đã mời ông/bà để xin đặt lại.",
+      "noLinkNext": "Xin bấm “Đăng nhập” và dùng mật khẩu ông/bà vẫn dùng. Nếu quên: tài khoản có địa chỉ thư thì tự bấm “Quên mật khẩu” ngay ở màn đăng nhập; tài khoản chỉ có số điện thoại thì nhờ Trưởng chi của mình cấp lại một liên kết mới.",
       "noLinkCta": "Đăng nhập"
     },
     "accountState": {
@@ -311,8 +313,13 @@
     "subheading": "Nơi lưu giữ cội nguồn, kết nối con cháu khắp bốn phương",
     "pendingNotice": {
       "title": "Hồ sơ của ông/bà đang chờ duyệt",
-      "body": "Trong lúc chờ Trưởng chi hoặc Hội đồng Tộc biểu xem xét, ông/bà đã xem được cây phả đồ ở mức tên và đời, cùng hồ sơ các cụ đã khuất. Bài viết và vinh danh dưới đây ai cũng xem được như nhau.",
+      "body": "Trong lúc chờ Trưởng chi hoặc Hội đồng Tộc biểu xem xét, ông/bà đã xem được cây phả đồ ở mức tên và đời, cùng hồ sơ các cụ đã khuất. Bài viết, vinh danh và việc họ dưới đây thì mọi tài khoản của dòng họ đều xem được như nhau.",
       "link": "Xem trạng thái đơn của tôi"
+    },
+    "uninitializedNotice": {
+      "title": "Dòng họ chưa được khởi tạo",
+      "body": "Chưa có hồ sơ dòng họ nào trong hệ thống. Hãy vào Khởi tạo dòng họ để nhập tên, gốc phả, Hội đồng đầu tiên và bắt đầu nhập phả.",
+      "link": "Khởi tạo dòng họ"
     },
     "quickLinks": {
       "tree": {
@@ -343,6 +350,11 @@
       "title": "Việc họ sắp tới",
       "viewAll": "Xem tất cả",
       "empty": "Chưa có việc họ nào sắp tới."
+    },
+    "loadError": "Chưa tải được phần này. Xin tải lại trang sau ít phút.",
+    "membersOnly": {
+      "body": "Phần này hiện chỉ mở cho bà con đã đăng nhập bằng tài khoản dòng họ. Phả đồ và hồ sơ các cụ đã khuất thì ông/bà xem được ngay, không cần tài khoản.",
+      "login": "Đăng nhập để xem"
     }
   },
   "posts": {
@@ -463,6 +475,9 @@
       "draftsEmpty": "Chưa có nháp nào đang viết dở.",
       "othersTitle": "Đã gửi đi ({n})",
       "othersEmpty": "Chưa gửi bài nào để duyệt.",
+      "submittedTitle": "Đã gửi bài đi duyệt",
+      "submittedBody": "Bài «{title}» đang chờ Trưởng chi hoặc Hội đồng Tộc biểu xem xét. Khi được duyệt, bài sẽ lên mục Bài viết dòng họ; nếu bị trả lại để sửa, bài sẽ quay về mục Nháp kèm lý do.",
+      "submittedBodyNoTitle": "Bài vừa gửi đang chờ Trưởng chi hoặc Hội đồng Tộc biểu xem xét. Khi được duyệt, bài sẽ lên mục Bài viết dòng họ; nếu bị trả lại để sửa, bài sẽ quay về mục Nháp kèm lý do.",
       "prevPage": "Trang trước",
       "nextPage": "Trang sau",
       "pageOf": "Trang {page}/{total}"
@@ -556,6 +571,7 @@
         "loadFailed": "Chưa tải được hàng chờ duyệt. Xin thử lại.",
         "forbidden": "Ông/bà không có quyền xử lý báo cáo này.",
         "alreadyHandled": "Báo cáo này đã được xử lý ở nơi khác.",
+        "selfReview": "Ông/bà là người gửi báo cáo này nên không tự xử được — nhờ một người duyệt khác trong phạm vi chi/ngành xem giúp.",
         "actionFailed": "Chưa thực hiện được. Xin thử lại."
       }
     }
@@ -588,6 +604,10 @@
       "anyBranch": "Mọi chi"
     },
     "proposeAction": "Đề nghị vinh danh",
+    "submitted": {
+      "title": "Đã gửi đề nghị vinh danh",
+      "body": "«{title}» đang nằm ở mục Đang chờ duyệt cho tới khi Trưởng chi hoặc Hội đồng Tộc biểu xem xét."
+    },
     "empty": "Chưa có vinh danh nào.",
     "errors": {
       "loadFailed": "Chưa tải được danh sách vinh danh. Xin thử lại."
@@ -641,6 +661,8 @@
     "markRead": "Đánh dấu đã đọc",
     "unread": "{count} chưa đọc",
     "loadError": "Không tải được thông báo",
+    "signInRequired": "Cần đăng nhập để xem thông báo",
+    "signInRequiredHint": "Hộp thư nhắc giỗ là của riêng từng người trong họ, nên chỉ mở sau khi đăng nhập bằng tài khoản dòng họ.",
     "accountNotLinked": "Tài khoản của bạn chưa được ghép với nhân khẩu nào trong gia phả.",
     "accountNotLinkedHint": "Vì vậy hộp thư còn trống. Xin liên hệ Hội đồng Tộc biểu hoặc Trưởng chi của bạn để ghép tài khoản với hồ sơ; sau đó bạn sẽ nhận được nhắc giỗ của chi/nhánh mình.",
     "pageSubtitle": "Mọi lời nhắc giỗ đều tới đây trước tiên.",
@@ -800,6 +822,7 @@
     "biography": "Tiểu sử & ghi chép",
     "edit": "Sửa hồ sơ",
     "viewOnTree": "Xem trên cây phả đồ",
+    "openFullPage": "Mở trang hồ sơ đầy đủ",
     "lookupKinship": "Tra danh xưng với người này",
     "notFound": "Không tìm thấy nhân khẩu này.",
     "loadError": "Không tải được hồ sơ. Vui lòng thử lại.",
@@ -952,7 +975,7 @@
     "subtitle": "Chọn hai người trong dòng họ để biết cách xưng hô cho đúng phép.",
     "guest": {
       "title": "Cần đăng nhập để tra danh xưng",
-      "body": "Tra danh xưng phải đối chiếu tới hồ sơ người trong họ, kể cả người còn sống, nên chỉ thành viên đã đăng nhập mới tra được. Việc này khác quyền đọc phả đồ — phả đồ vẫn mở cho khách ở mức đời và quan hệ, còn tra danh xưng thì cần một tài khoản dòng họ.",
+      "body": "Tra danh xưng phải đối chiếu tới hồ sơ người trong họ, kể cả người còn sống, nên chỉ thành viên đã đăng nhập mới tra được. Việc này khác phả đồ công khai — ở đó khách chỉ thấy các cụ đã khuất, không thấy người còn sống nào — còn tra danh xưng thì cần một tài khoản dòng họ.",
       "viewTree": "Xem phả đồ (không cần tài khoản)"
     },
     "fromLabel": "Người xưng hô (tôi là…)",
@@ -1450,6 +1473,7 @@
   "correction": {
     "title": "Yêu cầu đính chính",
     "subtitle": "Nơi thành viên báo chỗ ghi sai và Trưởng chi, Hội đồng Tộc biểu xem xét.",
+    "notLinkedAction": "Xem trạng thái đơn nhận mình trong phả",
     "nav": {
       "label": "Yêu cầu đính chính",
       "labelWithCount": "Yêu cầu đính chính — {count} yêu cầu chờ duyệt",
@@ -1651,7 +1675,7 @@
         "title": "Bốn điều cần biết trước khi điền",
         "sheets": {
           "title": "Tệp có năm trang",
-          "body": "Hướng dẫn · Nhân khẩu · Hôn phối · Danh mục · Đã có. Mở tệp ra là thấy trang Hướng dẫn trước tiên — đọc trang đó trước khi gõ dòng nào."
+          "body": "Hướng dẫn · Nhân khẩu · Hôn phối · Ví dụ · Danh mục (trang cuối bị ẩn — nó là nguồn của các ô chọn, đừng xoá). Mở tệp ra là thấy trang Hướng dẫn trước tiên — đọc trang đó trước khi gõ dòng nào."
         },
         "code": {
           "title": "Cột Mã là thứ quan trọng nhất",
@@ -1667,8 +1691,8 @@
         }
       },
       "example": {
-        "title": "Xoá các dòng ví dụ trước khi nộp",
-        "body": "Trang Nhân khẩu có sẵn một gia đình ba đời làm mẫu, tô nền khác. Xoá hết các dòng đó rồi hãy tải lên."
+        "title": "Dòng mẫu nằm ở trang Ví dụ riêng — không phải xoá gì",
+        "body": "Trang Ví dụ có vài dòng mẫu để nhìn cách gõ. Hệ thống không đọc trang ấy khi tải lên, nên quên xoá cũng không ai bị thêm vào phả. Đừng chép nguyên dòng mẫu sang trang Nhân khẩu — mã trong đó là mã giả."
       },
       "next": "Điền xong rồi? Tải tệp lên",
       "kind": {
@@ -1951,7 +1975,12 @@
       "IMP_UNKNOWN_PLACE_CODE": "Mã tỉnh/quốc gia không có trong danh mục",
       "IMP_MISSING_PLACE_CODE": "Có nguyên quán nhưng thiếu mã tỉnh",
       "IMP_HEIR_TARGET_NOT_FOUND": "Không tìm thấy người được kế tự",
-      "IMP_MERGE_NOT_APPLICABLE": "Không hợp nhất được vào hai người đã có trong phả"
+      "IMP_MERGE_NOT_APPLICABLE": "Không hợp nhất được vào hai người đã có trong phả",
+      "IMP_UNDECIDED_INLAW_DOI": "Dâu/rể không khai Đời — xoá ô Đời",
+      "IMP_UNDECIDED_ADOPTION": "Con nuôi trong họ — chờ Hội đồng Tộc biểu chốt",
+      "IMP_UNDECIDED_LIFE_STATUS": "Không rõ còn sống hay đã mất",
+      "IMP_COMMIT_CYCLE": "Không sắp được thứ tự ghi — còn vòng lặp",
+      "IMP_COMMIT_REF_NOT_FOUND": "Mã hôn phối hoặc mã kế tự không tìm thấy"
     },
     "evidence": {
       "DEATH_LUNAR": "Ngày giỗ",
@@ -2367,6 +2396,7 @@
       "personLabel": "Mời ai?",
       "personPlaceholder": "Gõ tên để tìm trong phả",
       "personRequired": "Xin chọn người được mời.",
+      "reissueWarning": "Người này đã có một lời mời đang mở, còn dùng được tới {at}. Phát lời mời mới sẽ làm mã cũ mất tác dụng ngay — chỉ phát lại nếu cụ đã làm mất mã cũ.",
       "scopeHint": "Ông/bà chỉ phát được lời mời cho người trong chi mình được giao.",
       "ttlLabel": "Hạn dùng (ngày)",
       "noteLabel": "Ghi chú cho mình (không bắt buộc)",
@@ -2398,7 +2428,173 @@
         "NEEDS_ACCOUNT": "Xin đăng nhập lại rồi thử lần nữa.",
         "ACCOUNT_ALREADY_LINKED": "Tài khoản này đã gắn với một hồ sơ khác trong phả.",
         "PERSON_ALREADY_LINKED": "Người này đã có tài khoản rồi, nên không phát thêm lời mời được."
+      },
+      "issueErrors": {
+        "BRANCH_SCOPE": "Người này thuộc chi khác, ngoài phạm vi ông/bà được giao. Xin nhờ Trưởng chi của chi ấy hoặc Hội đồng Tộc biểu phát lời mời.",
+        "NOT_INVITABLE": "Không phát lời mời cho người này được: người đã khuất, hoặc hồ sơ đã bị gỡ khỏi phả. Xin kiểm lại đúng người trước khi phát.",
+        "PERSON_ALREADY_LINKED": "Người này đã có tài khoản rồi, nên không phát thêm lời mời được. Nếu cụ quên mật khẩu, xin dùng mục “Cấp lại liên kết đặt mật khẩu”.",
+        "FORBIDDEN": "Ông/bà không có quyền phát lời mời cho người này.",
+        "NOT_FOUND": "Không tìm thấy người này trong phả nữa. Xin tải lại trang rồi chọn lại.",
+        "RATE_LIMITED": "Thao tác quá nhanh. Xin chờ một lát rồi thử lại.",
+        "NEEDS_ACCOUNT": "Xin đăng nhập lại rồi thử lần nữa.",
+        "UNAVAILABLE": "Chưa nối được với máy chủ. Xin thử lại."
       }
+    },
+    "scopedPicker": {
+      "empty": "Không thấy ai còn sống trong phạm vi của ông/bà khớp tên này.",
+      "hiddenOutside": "{n, plural, other {# người}} khớp tên ở chi khác không hiện ở đây — ông/bà chỉ chọn được người trong chi mình được giao.",
+      "chosen": "Đã chọn: {name} — {detail}"
+    },
+    "passwordReset": {
+      "title": "Cấp lại liên kết đặt mật khẩu",
+      "lead": "Dành cho người đã có tài khoản trong dòng họ nhưng quên mật khẩu và không có địa chỉ thư để tự lấy lại. Chọn đúng người trong chi mình rồi cấp một liên kết — người ấy tự đặt mật khẩu mới, ông/bà không đặt hộ và không xem được mật khẩu ấy.",
+      "issueTitle": "Cấp một liên kết mới",
+      "personLabel": "Ai quên mật khẩu?",
+      "personPlaceholder": "Gõ tên để tìm trong phả",
+      "personRequired": "Xin chọn người quên mật khẩu.",
+      "scopeHint": "Ông/bà chỉ cấp được cho người trong chi mình được giao, và không tự cấp cho chính mình.",
+      "noteLabel": "Ghi chú cho mình (không bắt buộc)",
+      "notePlaceholder": "Ví dụ: cụ gọi điện sáng nay, không nhớ mật khẩu cũ.",
+      "issue": "Cấp liên kết",
+      "powerWarningTitle": "Đây là một quyền lực thật, không phải một tiện ích",
+      "powerWarningBody": "Ai cầm liên kết này trong nửa giờ tới là đặt được mật khẩu của người kia. Chỉ cấp khi chính người ấy nhờ, và đưa liên kết tận tay hoặc nhắn riêng — đừng dán vào nhóm chung. Hệ thống sẽ báo ngay cho chính chủ khi ông/bà cấp, nên đây không phải một việc âm thầm.",
+      "issuedTitle": "Đã cấp — liên kết chỉ hiện đúng lần này",
+      "linkFor": "Liên kết dành cho {name}",
+      "linkHint": "Nếu cấp lại lần nữa, liên kết này mất tác dụng ngay — hai liên kết không được phép cùng mở một tài khoản.",
+      "expiresAt": "Có hiệu lực tới {at}. Quá giờ thì vô dụng, và ông/bà cấp lại được ngay, không mất gì.",
+      "selfNotified": "Chính chủ đã được báo về lượt cấp này, ngay lúc ông/bà bấm “Cấp liên kết”.",
+      "errors": {
+        "noIssueRight": "Chỉ Trưởng chi và Hội đồng Tộc biểu mới cấp lại được liên kết đặt mật khẩu.",
+        "noScope": "Ông/bà chưa được Hội đồng Tộc biểu giao chi hay ngành nào, nên chưa cấp lại được cho ai. Xin liên hệ Hội đồng để được phân công.",
+        "BRANCH_SCOPE": "Người này thuộc chi khác, ngoài phạm vi ông/bà được giao. Xin nhờ Trưởng chi của chi ấy hoặc Hội đồng Tộc biểu.",
+        "SELF": "Không tự cấp cho chính mình được. Nếu ông/bà quên mật khẩu của chính mình, xin bấm “Quên mật khẩu” ở màn đăng nhập, hoặc nhờ một Trưởng chi hay Hội đồng khác cấp giúp.",
+        "HAS_EMAIL": "Người này đã có địa chỉ thư nên tự lấy lại mật khẩu được, không cần ông/bà cấp. Xin bảo họ tự bấm “Quên mật khẩu” ở màn đăng nhập để nhận thư.",
+        "NOT_READY": "Chưa cấp lại được cho người này lúc này — có thể vì họ chưa có tài khoản (hãy phát lời mời thay vì cấp lại mật khẩu), tài khoản đang tạm khoá, hoặc tài khoản không còn tồn tại. Xin báo Quản trị hệ thống nếu không rõ vì sao.",
+        "NOT_FOUND": "Không tìm thấy người này trong phả nữa. Xin tải lại trang rồi chọn lại.",
+        "RATE_LIMITED": "Ông/bà vừa cấp nhiều liên kết liên tiếp trong một giờ. Xin chờ rồi thử lại.",
+        "PROVIDER_DOWN": "Chưa nối được với hệ thống tài khoản. Đây là trục trặc phía máy chủ; xin thử lại sau ít phút.",
+        "UNAVAILABLE": "Chưa nối được với máy chủ. Xin thử lại."
+      }
+    }
+  },
+  "clanSetup": {
+    "pageTitle": "Khởi tạo dòng họ",
+    "pageSubtitle": "Năm bước để đưa một dòng họ mới vào hệ thống — làm một lần, theo đúng thứ tự hoặc quay lại sửa bất cứ lúc nào.",
+    "gate": {
+      "forbidden": "Chỉ Quản trị hệ thống mới vào được màn này."
+    },
+    "steps": {
+      "legend": "Tiến độ khởi tạo dòng họ",
+      "doneLabel": "Đã xong",
+      "current": "Đang ở bước này",
+      "pending": "Chưa tới",
+      "profile": { "name": "Hồ sơ dòng họ" },
+      "council": { "name": "Hội đồng đầu tiên" },
+      "import": { "name": "Nhập phả từ Excel" },
+      "invite": { "name": "Phát mã mời" },
+      "done": { "name": "Sẵn sàng" }
+    },
+    "profileStep": {
+      "lead": "Tên dòng họ, gốc phả, vùng miền và từ đường — nền tảng mà mọi thứ khác (Hội đồng, danh xưng, phả đồ) dựa vào.",
+      "loadFailed": "Không tải được hồ sơ dòng họ. Xin thử lại.",
+      "nameLabel": "Tên dòng họ",
+      "namePlaceholder": "Ví dụ: Họ Nguyễn Đình",
+      "shortNameLabel": "Tên gọi tắt",
+      "shortNamePlaceholder": "Ví dụ: Họ Nguyễn Đình",
+      "rootBranchLabel": "Gốc phả (ltree)",
+      "rootBranchHint": "Tự gợi ý từ tên dòng họ — có thể sửa, nhưng chỉ trước khi có nhân khẩu đầu tiên trong phả.",
+      "rootBranchLockedHint": "Đã có {count} nhân khẩu trong phả — gốc phả khoá vĩnh viễn, không sửa được nữa. Đổi gốc lúc này sẽ đổi phạm vi của mọi Trưởng chi cùng lúc.",
+      "regionLabel": "Vùng miền",
+      "regionHint": "Chọn bộ luật danh xưng mặc định theo vùng (Bắc/Trung/Nam). Hội đồng Tộc biểu sửa lại được sau, khi hệ thống đã chạy.",
+      "regionOptions": { "BAC": "Bắc", "TRUNG": "Trung", "NAM": "Nam" },
+      "ancestralHallNameLabel": "Tên từ đường",
+      "ancestralHallAddressLabel": "Địa chỉ từ đường",
+      "ancestorNameLabel": "Thuỷ tổ",
+      "gioToLabel": "Ngày giỗ tổ (âm lịch)",
+      "gioToDayLabel": "Ngày",
+      "gioToMonthLabel": "Tháng",
+      "foundedNoteLabel": "Ghi chú lập họ",
+      "save": "Lưu hồ sơ",
+      "saved": "Đã lưu hồ sơ dòng họ.",
+      "errors": {
+        "ROOT_LOCKED": "Gốc phả đã khoá vì dòng họ đã có nhân khẩu. Tải lại trang rồi sửa các trường khác.",
+        "VERSION_CONFLICT": "Một người khác vừa sửa hồ sơ này. Tải lại trang rồi sửa lại.",
+        "MISSING_ETAG": "Thiếu phiên bản hồ sơ để đối chiếu. Tải lại trang rồi thử lại.",
+        "VALIDATION": "Một số trường chưa hợp lệ — xem chi tiết bên dưới.",
+        "FORBIDDEN": "Ông/bà không có quyền sửa hồ sơ dòng họ.",
+        "UNAVAILABLE": "Không lưu được lúc này. Xin thử lại sau."
+      },
+      "validation": {
+        "nameRequired": "Nhập tên dòng họ.",
+        "nameTooLong": "Tên dòng họ tối đa 120 ký tự.",
+        "rootBranchRequired": "Nhập gốc phả.",
+        "rootBranchInvalid": "Gốc phả chỉ gồm chữ thường, số và dấu gạch dưới, phân đoạn bằng dấu chấm — ví dụ ho_nguyen_dinh.",
+        "regionRequired": "Chọn một vùng miền.",
+        "foundedNoteTooLong": "Ghi chú lập họ tối đa 2000 ký tự.",
+        "lunarDayRange": "Ngày âm từ 1 đến 30.",
+        "lunarMonthRange": "Tháng âm từ 1 đến 12.",
+        "ancestralHallNameRequired": "Nhập tên từ đường trước khi ghi địa chỉ."
+      }
+    },
+    "councilStep": {
+      "title": "Hội đồng đầu tiên",
+      "lead": "Tạo tài khoản đầu tiên cho Hội đồng Tộc biểu. Người này đăng nhập bằng số điện thoại hoặc email, và có toàn quyền trên cổng thông tin dòng họ.",
+      "existingCount": "Hiện có {count, plural, other {# tài khoản Hội đồng}}.",
+      "displayNameLabel": "Họ và tên",
+      "loginIdLabel": "Số điện thoại hoặc email đăng nhập",
+      "attachPersonToggle": "Gắn với một nhân khẩu đã có trong phả",
+      "personLabel": "Nhân khẩu",
+      "personPlaceholder": "Tìm theo tên…",
+      "submit": "Tạo tài khoản Hội đồng",
+      "powerWarningTitle": "Đây là một quyền lực thật",
+      "powerWarningBody": "Ông/bà sẽ nhìn thấy liên kết đặt mật khẩu của người này. Trong 30 phút, ai cầm liên kết ấy đặt được mật khẩu cho tài khoản Hội đồng vừa tạo — đưa tận tay hoặc nhắn riêng, đừng đăng công khai.",
+      "issuedTitle": "Đã tạo tài khoản Hội đồng",
+      "linkHint": "Đưa liên kết này cho đúng người, qua kênh riêng (Zalo, gặp trực tiếp) — không đăng công khai.",
+      "expiresAt": "Liên kết có hiệu lực tới {at}.",
+      "createAnother": "Tạo tài khoản khác",
+      "errors": {
+        "IDENTITY_TAKEN": "Số điện thoại/email này đã có tài khoản trong hệ thống.",
+        "PERSON_TAKEN": "Nhân khẩu vừa chọn đã có tài khoản khác. Hãy cấp vai Hội đồng cho tài khoản sẵn có ở màn Phân quyền, hoặc chọn một nhân khẩu khác.",
+        "PERSON_NOT_FOUND": "Không còn tìm thấy nhân khẩu vừa chọn. Xin chọn lại.",
+        "VALIDATION": "Một số trường chưa hợp lệ.",
+        "FORBIDDEN": "Ông/bà không có quyền tạo tài khoản Hội đồng.",
+        "UNAVAILABLE": "Không tạo được lúc này. Xin thử lại sau."
+      },
+      "validation": {
+        "displayNameRequired": "Nhập họ và tên.",
+        "loginIdRequired": "Nhập số điện thoại hoặc email."
+      }
+    },
+    "importStep": {
+      "title": "Nhập phả từ Excel",
+      "lead": "Đưa cả dòng họ vào phả bằng tệp Excel theo mẫu — không nhập tay từng người. Đường ống này đã có sẵn: đọc tệp, dò trùng và kỵ húy, rồi ghi một lần duy nhất.",
+      "countFailed": "Không đếm được số nhân khẩu hiện có.",
+      "countLine": "Hiện có {persons} nhân khẩu trong {branches} chi/ngành.",
+      "action": "Sang màn nhập liệu"
+    },
+    "inviteStep": {
+      "title": "Phát mã mời",
+      "lead": "Mã mời đưa các thành viên còn lại của dòng họ vào hệ thống, tự lập tài khoản mà không cần Hội đồng tạo cho từng người.",
+      "countFailed": "Không đếm được số mã mời đang hoạt động.",
+      "countLine": "{count, plural, other {# mã mời đang hoạt động}}.",
+      "action": "Sang màn phát mã"
+    },
+    "readyStep": {
+      "title": "Sẵn sàng",
+      "summaryProfileLabel": "Hồ sơ dòng họ",
+      "summaryCouncilLabel": "Tài khoản Hội đồng",
+      "summaryPersonsLabel": "Nhân khẩu",
+      "summaryBranchesLabel": "Chi/ngành",
+      "summaryInvitesLabel": "Mã mời đang hoạt động",
+      "pendingCouncilTitle": "Việc còn nợ Hội đồng Tộc biểu",
+      "pendingCouncilIntro": "Hệ thống dùng được ngay hôm nay, nhưng Hội đồng Tộc biểu chưa ra phán quyết cho những việc sau. Mục đầu tiên phải chốt TRƯỚC khi nhập dữ liệu một dòng họ thật — đổi luật sau khi hàng nghìn người đã vào phả không còn là một lượt sửa mã.",
+      "pendingCouncil": {
+        "divorceDeletion": "Quyền xoá dữ liệu của con dâu/con rể sau khi ly hôn.",
+        "badgeColours": "Màu huy hiệu Dâu/Rể trên phả đồ.",
+        "privatePhone": "Hội đồng có được đọc số điện thoại ở mức riêng tư (PRIVATE) của một người hay không.",
+        "hanNomVisibility": "Tên Hán-Nôm của người còn sống có tiếp tục hiển thị hay không (hiện đang hiển thị)."
+      },
+      "openHome": "Mở trang chủ"
     }
   }
 }

@@ -64,7 +64,7 @@ public class MediaReportController {
         ReportReason reason = ReportReason.of(body.reason());
         if (reason == null) {
             throw new DomainException(MediaProblemCodes.VALIDATION_FAILED,
-                    "Ly do khong hop le. Nhan mot trong: RIENG_TU, SAI_NGUOI, KHONG_PHU_HOP,"
+                    "Lý do không hợp lệ. Nhận một trong: RIENG_TU, SAI_NGUOI, KHONG_PHU_HOP,"
                             + " BAN_QUYEN, KHAC.");
         }
         MediaReportView view = reports.report(mediaId, reason, body.note());

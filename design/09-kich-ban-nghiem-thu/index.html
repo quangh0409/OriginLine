@@ -202,11 +202,80 @@
       <code>/tree</code> từ trang chủ sẽ cho một kết quả khác hẳn với mở thẳng
       <code>/tree</code> ở một lượt tải mới.</li>
   </ul>
-  <p style="margin-bottom:0">
+  <p>
     <strong>Một chốt về câu chữ:</strong> mọi câu trích trong tài liệu này đã đối chiếu lại với
     <code>frontend/messages/vi.json</code> <em>hôm nay</em>. Chỗ nào trước đây viết “thấy thông
     báo phù hợp” hoặc trích sai một chữ đều đã thay bằng câu nguyên văn — một kết quả mong đợi
     không chấm được thì không phải kết quả mong đợi.
+  </p>
+  <p style="margin-bottom:0">
+    <strong>Đợt rà thứ hai, cùng ngày 23/09 — sản phẩm vừa đi thêm một đợt sửa lớn kể từ lượt rà ở
+    trên.</strong> Năm mảng đã đối chiếu lại với mã đang chạy: (1) <code>ACCOUNT_NOT_PROVISIONED</code>
+    nay <strong>luôn</strong> là <code>403</code> — đã xoá phần ghi chú "còn trả 409" ở phần F, vì
+    nó không còn đúng; (2) sáu lớp lỗi client (thân JSON hỏng, thiếu <code>Content-Type</code>,
+    tham số sai kiểu, thiếu tham số bắt buộc, <code>Accept</code> không phục vụ được, sai HTTP
+    method) từng hồi quy thành <code>500</code> rồi được thu hồi trong cùng ngày — thêm
+    <a href="#NT-TC-16">NT-TC-16</a> (màn Excel, hậu quả nặng nhất) và
+    <a href="#NT-ADMIN-04">NT-ADMIN-04</a> (năm lớp còn lại); (3) tính năng <strong>cấp lại mật
+    khẩu</strong> hoàn toàn mới cho tài khoản đăng ký bằng số điện thoại — thêm
+    <a href="#NT-TC-17">NT-TC-17</a>, <a href="#NT-TC-18">NT-TC-18</a>,
+    <a href="#NT-HD-08">NT-HD-08</a>; (4) ô lọc <strong>"Chi / Ngành"</strong> — thiếu resolver nên
+    trước đây <strong>không bao giờ tải được</strong> ở bất kỳ màn nào dùng nó (Tìm kiếm, Sự kiện,
+    form tạo sự kiện, Vinh danh) — thêm <a href="#NT-TV-18">NT-TV-18</a> và chú thích lại
+    <a href="#NT-TV-08">NT-TV-08</a>/<a href="#NT-TC-13">NT-TC-13</a>; (5) màn duyệt báo gỡ ảnh
+    (<a href="#NT-TC-11">NT-TC-11</a>) đã kiểm lại — câu cảnh báo "xoá tệp NGAY LẬP TỨC, không ân
+    hạn, không hoàn tác" đã khớp đúng <code>vi.json</code> hôm nay, không cần sửa. 69 kịch bản (17
+    ca biên) trước đợt này → <strong>75 kịch bản (23 ca biên)</strong> sau.
+  </p>
+</div>
+
+<div class="khung">
+  <p class="nhan">Rà lại sau đợt bấm thật bằng trình duyệt, 24–26/09/2026 — đọc trước khi bấm</p>
+  <p>
+    Lần này không phải rà <em>mã</em> mà là <strong>bấm thật</strong>: người nghiệm thu đi từng
+    kịch bản trên trình duyệt, với backend và Keycloak thật. Đợt ấy tìm ra những chỗ tài liệu tả
+    đúng ý nhưng sai hành vi, và những chỗ sản phẩm sai mà tài liệu không có ca nào để bắt. Cả hai
+    loại đã sửa; mỗi chỗ có một khối viền màu mang nhãn <strong>26/09</strong>.
+  </p>
+  <p><strong>Sửa cho khớp hành vi đã đo</strong> (15 chỗ):
+    <a href="#NT-TC-01">NT-TC-01</a> và <a href="#NT-ADMIN-01">NT-ADMIN-01</a> (năm ô thành sáu) ·
+    <a href="#NT-TC-17">NT-TC-17</a> (cấp lại mật khẩu nay có màn hình) ·
+    <a href="#NT-TC-15">NT-TC-15</a> (dòng ví dụ, trang Hướng dẫn, theo dõi tới kết cục) ·
+    <a href="#NT-KHACH-01">NT-KHACH-01</a> (khách không đọc bài viết — <strong>quyết định đã
+    đảo</strong>) · <a href="#NT-KHACH-05">NT-KHACH-05</a> · <a href="#NT-MOI-03">NT-MOI-03</a> ·
+    <a href="#NT-MOI-07">NT-MOI-07</a> · <a href="#NT-TV-02">NT-TV-02</a> ·
+    <a href="#NT-TV-10">NT-TV-10</a> · <a href="#NT-TV-13">NT-TV-13</a> ·
+    <a href="#NT-TV-14">NT-TV-14</a> · <a href="#NT-TV-16">NT-TV-16</a> ·
+    <a href="#NT-TV-17">NT-TV-17</a> · <a href="#NT-TV-18">NT-TV-18</a> ·
+    <a href="#NT-TC-08">NT-TC-08</a> (nút "Sửa nhẹ rồi đăng" đã ẩn — <strong>chờ BA quyết</strong>;
+    <em>đã quyết cùng ngày, xem khung dưới</em>).</p>
+  <p style="margin-bottom:0"><strong>Bốn kịch bản mới:</strong>
+    <a href="#NT-MOI-15">NT-MOI-15</a> (tài khoản chờ duyệt không đọc được Tầng 3 — ca biên bảo
+    mật, <em>trước bản vá 26/09 lộ đủ Tầng 3</em>) ·
+    <a href="#NT-ADMIN-05">NT-ADMIN-05</a> (giới hạn tần suất không lách được bằng
+    <code>X-Forwarded-For</code> — ca biên) ·
+    <a href="#NT-KHACH-09">NT-KHACH-09</a> (chuông thông báo không hỏi máy chủ khi chắc chắn bị từ
+    chối) · <a href="#NT-HD-09">NT-HD-09</a> (lý do đóng đơn tranh chấp có dấu, nói việc cần làm).
+    75 kịch bản (23 ca biên) trước đợt này → <strong>79 kịch bản (25 ca biên)</strong> sau.</p>
+</div>
+
+<div class="khung khung-canhbao">
+  <p class="nhan">Hai quyết định của chủ dự án, 26/09/2026 — sửa hai kịch bản, không thêm kịch bản</p>
+  <ul style="margin:0 0 8px">
+    <li><strong>Khách đọc được Việc họ và Vinh danh — chỉ phần của người đã khuất.</strong> Bài viết vẫn
+      đòi đăng nhập. <a href="#NT-KHACH-01">NT-KHACH-01</a> viết lại: khối "cần đăng nhập" chỉ còn ở
+      <em>Bài mới</em>. Quyết định này đảo một nửa quyết định đã ghi trong chính kịch bản ấy sáng cùng
+      ngày; cả hai khối lịch sử được giữ.</li>
+    <li><strong>Bỏ hẳn "Sửa nhẹ rồi đăng".</strong> Người duyệt chỉ Duyệt hoặc Trả lại kèm lý do.
+      <a href="#NT-TC-08">NT-TC-08</a> bỏ nhánh ấy và thêm bước trả lại, để tên kịch bản khớp việc nó kiểm.</li>
+  </ul>
+  <p style="margin:0">
+    <strong>Chấm cho đúng lúc này:</strong> tại lúc sửa tài liệu, lối khách của hai khối kia <em>mới làm
+    ở tầng ứng dụng</em> (<code>GuestEventPolicy</code>, <code>HonourService.searchForGuest</code>) —
+    <code>SecurityConfig</code> chưa mở <code>GET /api/v1/events</code> và <code>/honours</code> cho người
+    không có token, và <code>home-sections.tsx</code> vẫn bọc cả ba khối bằng khối mời đăng nhập. Bấm
+    NT-KHACH-01 trước khi hai bản vá ấy vào thì phải ghi <strong>KHÔNG ĐẠT</strong> ở hai khối Vinh danh và
+    Việc họ — và đó là chấm đúng, không phải tài liệu viết trước mã.
   </p>
 </div>
 
@@ -231,6 +300,7 @@
       <li><a href="#NT-KHACH-06">06 · Người còn sống không lọt vào kết quả tìm kiếm công khai</a></li>
       <li><a href="#NT-KHACH-07">07 · Mở liên kết mời cá nhân đã hỏng</a></li>
       <li><a href="#NT-KHACH-08">08 · Gõ mã mời dòng họ sai ở màn đăng ký</a></li>
+      <li><a href="#NT-KHACH-09">09 · Chuông thông báo không hỏi máy chủ khi chắc chắn bị từ chối</a></li>
     </ul>
   </div>
   <div class="toc-role">
@@ -250,6 +320,7 @@
       <li><a href="#NT-MOI-12">12 · Chưa duyệt thì chưa gửi đính chính được</a></li>
       <li><a href="#NT-MOI-13">13 · Gửi đơn lại sau khi bị từ chối — có giới hạn số lần <span class="chip chip-cabien">CA BIÊN</span></a></li>
       <li><a href="#NT-MOI-14">14 · Dựng ca hai người cùng nhận một nhân khẩu <span class="chip chip-cabien">CA BIÊN</span></a></li>
+      <li><a href="#NT-MOI-15">15 · Tài khoản chờ duyệt không đọc được Tầng 3 <span class="chip chip-cabien">CA BIÊN</span></a></li>
     </ul>
   </div>
 </div>
@@ -261,15 +332,17 @@ dễ theo trong lúc bấm).</p>
 <table class="bang-tongket">
   <tr><th>Vai</th><th>Số kịch bản</th><th>Trong đó là ca biên</th></tr>
   <tr><td><strong>Ø. Lối vào</strong> (bấm đầu tiên, cắt ngang mọi vai)</td><td>2</td><td>2</td></tr>
-  <tr><td>A. Khách chưa đăng nhập</td><td>8</td><td>1</td></tr>
-  <tr><td>B. Người mới đăng ký / tự nhận mình</td><td>14</td><td>5</td></tr>
-  <tr><td>C. Thành viên</td><td>17</td><td>4</td></tr>
-  <tr><td>D. Trưởng chi</td><td>15</td><td>4</td></tr>
-  <tr><td>E. Hội đồng Tộc biểu</td><td>7</td><td>0</td></tr>
+  <tr><td>A. Khách chưa đăng nhập</td><td>9</td><td>1</td></tr>
+  <tr><td>B. Người mới đăng ký / tự nhận mình</td><td>15</td><td>6</td></tr>
+  <tr><td>C. Thành viên</td><td>18</td><td>5</td></tr>
+  <tr><td>D. Trưởng chi</td><td>18</td><td>7</td></tr>
+  <tr><td>E. Hội đồng Tộc biểu</td><td>9</td><td>1</td></tr>
   <tr><td>F. Tài khoản chưa gắn phả (<code>chuaduyet</code>)</td><td>3</td><td>1</td></tr>
-  <tr><td>G. Admin kỹ thuật</td><td>3</td><td>0</td></tr>
-  <tr><th>Tổng</th><th>69</th><th>17</th></tr>
+  <tr><td>G. Admin kỹ thuật</td><td>5</td><td>2</td></tr>
+  <tr><th>Tổng</th><th>79</th><th>25</th></tr>
 </table>
+<p class="lien-quan">26/09: thêm NT-KHACH-09, NT-MOI-15 (ca biên), NT-HD-09, NT-ADMIN-05 (ca biên)
+— 75/23 thành 79/25.</p>
 
 <h2 id="ca-bien-chinh">Chỉ mục nhanh — các ca biên bắt buộc</h2>
 <table>
@@ -288,6 +361,12 @@ dễ theo trong lúc bấm).</p>
   <tr><td>Ngày giỗ không đổi được trên sự kiện</td><td><a href="#NT-TV-16">NT-TV-16</a></td></tr>
   <tr><td>Đăng ký bằng địa chỉ đã có tài khoản</td><td><a href="#NT-MOI-02">NT-MOI-02</a></td></tr>
   <tr><td>Sự kiện phạm vi một chi không lộ sang chi khác</td><td><a href="#NT-TC-13">NT-TC-13</a></td></tr>
+  <tr><td>Sáu lớp lỗi client từng trả 500, nay đúng mã (400/415/406/405)</td><td><a href="#NT-TC-16">NT-TC-16</a> (màn Excel) · <a href="#NT-ADMIN-04">NT-ADMIN-04</a> (năm lớp còn lại)</td></tr>
+  <tr><td>Cấp lại mật khẩu — trong chi thì được, liên kết chỉ dùng một lần, chính chủ được báo</td><td><a href="#NT-TC-17">NT-TC-17</a></td></tr>
+  <tr><td>Cấp lại mật khẩu — khác chi / tự cấp (kể cả Hội đồng) / đã có email đều bị chặn</td><td><a href="#NT-TC-18">NT-TC-18</a> · <a href="#NT-HD-08">NT-HD-08</a></td></tr>
+  <tr><td>Ô lọc Chi/Ngành nay tải được, bộ đếm đã qua lọc riêng tư (Hội đồng &gt; Thành viên)</td><td><a href="#NT-TV-18">NT-TV-18</a></td></tr>
+  <tr><td>Tài khoản đăng ký bằng mã dòng họ, chưa duyệt — chỉ thấy Tầng 1 của người sống, kể cả khi người ấy đặt "Cả họ xem"</td><td><a href="#NT-MOI-15">NT-MOI-15</a></td></tr>
+  <tr><td>Giới hạn tần suất dò mã không lách được bằng header <code>X-Forwarded-For</code></td><td><a href="#NT-ADMIN-05">NT-ADMIN-05</a></td></tr>
 </table>
 
 <h2 id="loi-vao">Ø. Lối vào — hai kịch bản bắt buộc bấm đầu tiên</h2>
@@ -455,31 +534,100 @@ dễ theo trong lúc bấm).</p>
 </p>
 
 <div class="kich-ban" id="NT-KHACH-01">
-<h3><span class="ma-so">NT-KHACH-01</span> — Trang chủ công khai đã có nội dung thật</h3>
+<h3><span class="ma-so">NT-KHACH-01</span> — Trang chủ công khai: Bài mới mời đăng nhập; Vinh danh và Việc họ chỉ hiện phần của người đã khuất</h3>
 <span class="nhan">Mục đích</span>
-<p class="mo-ta">Kiểm rằng trang chủ không còn là khung rỗng của sprint đầu — khách phải thấy bài
-viết, vinh danh và việc họ sắp tới ngay cả khi chưa đăng nhập, vì đây cũng là màn người mới đăng ký
-nhìn thấy trong lúc chờ duyệt.</p>
+<p class="mo-ta">Kiểm rằng trang chủ không còn là khung rỗng của sprint đầu, <strong>và</strong> rằng
+khách không đọc được thứ gì mang tên một người đang sống. Bài viết luôn mang tên tác giả — một người
+đang sống — nên với khách khối <em>Bài mới</em> phải <strong>nói thẳng là cần đăng nhập</strong>, không
+được hiện "Chưa có bài viết nào" (câu ấy là lời nói dối: bài có, chỉ là khách không được đọc). Còn giỗ
+và vinh danh của <strong>các cụ đã khuất</strong> là dữ liệu công khai của gia phả: khách phải
+<strong>thấy</strong> chúng — nhưng không thấy một dòng nào về người còn sống lọt vào cùng khối.</p>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — QUYẾT ĐỊNH ĐÃ ĐẢO: khách không còn đọc bài viết / vinh danh / việc họ</span>
+  <p>
+    <strong>Bản trước viết:</strong> "khách phải thấy bài viết, vinh danh và việc họ sắp tới ngay
+    cả khi chưa đăng nhập". Lý do của bản trước: BA v2 §3 liệt kê quyền của khách là "thông tin
+    công khai, <em>tin tức</em>", và trang chủ là màn người mới đăng ký nhìn thấy trong lúc chờ
+    duyệt — một trang chủ trống với khách trông như sản phẩm chưa làm xong.
+  </p>
+  <p>
+    <strong>Vì sao đảo:</strong> hợp đồng <code>contracts/openapi.yaml</code> chốt
+    <code>GET /posts</code> <strong>đòi token</strong>, vì mỗi bài mang tên tác giả — một người đang
+    sống — và BA v2 §10 cấm khách thấy bất cứ điều gì của người đang sống, kể cả tên. Hợp đồng thắng
+    (thứ tự ưu tiên: TDD → BA v2). Trước bản vá, khách thấy câu "Chưa có bài viết nào được
+    đăng." — chấm theo bản cũ sẽ ghi ĐẠT cho một màn hình đang nói sai.
+  </p>
+  <p style="margin-bottom:0">
+    <strong>Việc còn nợ ngoài tài liệu này:</strong> BA v2 §3 (chữ "khách: tin tức") phải sửa cho
+    khớp. Nếu Hội đồng muốn có tin tức công khai cho khách thì đó là một yêu cầu mới (bài ẩn tên
+    tác giả, hoặc chỉ bài về người đã khuất), không phải lý do để mở lại <code>/posts</code>.
+  </p>
+</div>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 (lần hai, cùng ngày) — CHỦ DỰ ÁN QUYẾT: Vinh danh và Việc họ của người đã khuất MỞ LẠI cho khách; Bài viết vẫn đóng</span>
+  <p>
+    <strong>Khối trên (bản sáng 26/09) viết:</strong> cả ba khối đều hiện khối mời đăng nhập. Lý do
+    của bản ấy — nay là bên thua ở hai khối — có thật: vinh danh mang tên người khai và người duyệt,
+    việc họ mang tên người tổ chức và chữ tự do có thể nhắc tên người sống; đóng hết là cách chắc
+    chắn nhất để không lộ ai, và không phải viết luật phân biệt nào.
+  </p>
+  <p>
+    <strong>Vì sao đổi:</strong> BA v2 §10 xếp vinh danh và ngày giỗ của <em>người đã khuất</em> vào
+    hàng "Công khai — kể cả Khách"; đóng chúng là đóng chặt hơn luật, và một cổng thông tin dòng họ
+    không cho người ngoài biết ngày giỗ Tổ thì mất một nửa lý do tồn tại. Rủi ro của bản sáng được xử
+    bằng luật chứ không bằng cách đóng: khách chỉ thấy sự kiện gắn với người đã khuất và lễ cúng tổ tiên
+    không gắn người (giỗ Tổ, tế lễ, tảo mộ); <strong>không</strong> thấy mừng thọ, sinh nhật, cưới hỏi,
+    họp họ, khánh thành (chữ tự do của chúng có thể nhắc người sống); vinh danh chỉ bản đã duyệt của
+    người đã khuất, không kèm tên người duyệt. Bài viết thì vẫn đóng, cùng lý do như khối trên. BA v2 §3
+    và §10 đã sửa theo (khối ghi ngày 26/09 trong tệp ấy).
+  </p>
+</div>
 <span class="nhan">Chuẩn bị</span>
-<p class="mo-ta">Không đăng nhập. Mở <code>http://localhost:3000</code>.</p>
+<p class="mo-ta">
+  Một lần trước buổi bấm, <strong>đăng nhập <code>hoidong</code></strong> và ghi lại bốn thứ (tạo nếu
+  dữ liệu mẫu chưa có — khai và duyệt vinh danh như <a href="#NT-TV-14">NT-TV-14</a>,
+  <a href="#NT-TV-15">NT-TV-15</a>, <a href="#NT-TC-10">NT-TC-10</a>; tạo việc họ như
+  <a href="#NT-HD-05">NT-HD-05</a>):
+  (a) <strong>một vinh danh đã duyệt của một cụ đã khuất</strong>;
+  (b) <strong>một vinh danh đã duyệt của một người còn sống</strong> đã bật công tắc vinh danh ở mức
+  <em>Cả họ xem</em> — đây là mồi nhử: nó hiện với thành viên, không được hiện với khách;
+  (c) <strong>một giỗ của một cụ đã khuất</strong> rơi trong 60 ngày tới;
+  (d) <strong>một việc "Họp họ"</strong> trong 60 ngày tới. Đăng xuất. Rồi mở
+  <code>http://localhost:3000</code> ở cửa sổ ẩn danh.
+</p>
 <span class="nhan">Các bước</span>
 <ol class="buoc">
   <li>Quan sát khối đầu trang: tiêu đề "Gia Phả Dòng Họ" và câu phụ đề.</li>
   <li>Cuộn xuống khối "Bài mới" ở nửa trái.</li>
-  <li>Cuộn xuống khối "Vinh danh" ở nửa phải.</li>
-  <li>Cuộn xuống khối "Việc họ sắp tới" ở dưới cùng.</li>
-  <li>Bấm "Xem tất cả" ở khối Bài mới.</li>
+  <li>Cuộn xuống khối "Vinh danh" ở nửa phải. Bấm "Xem tất cả" của khối ấy, xem trang
+    <code>/vinh-danh</code>, quay lại.</li>
+  <li>Cuộn xuống khối "Việc họ sắp tới" ở dưới cùng. Bấm "Xem tất cả", xem trang <code>/events</code>,
+    quay lại.</li>
+  <li>Gõ thẳng <code>/vi/bai-viet</code>.</li>
+  <li>Quay về trang chủ, bấm nút "Đăng nhập để xem" ở khối "Bài mới".</li>
 </ol>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
   <li>Không thấy banner "đang chờ duyệt" nào (banner ấy chỉ dành cho người đã có tài khoản).</li>
-  <li>Khối "Bài mới" hiện tối đa 4 bài đã đăng, hoặc câu "Chưa có bài viết nào được đăng." nếu
-    dữ liệu mẫu chưa có bài — <strong>không phải</strong> lỗi 401/403.</li>
-  <li>Khối "Vinh danh" hiện các mục đã duyệt (<code>PUBLISHED</code>) hoặc câu "Chưa có vinh danh
-    nào được ghi nhận." — không hiện mục nào đang chờ duyệt.</li>
-  <li>Khối "Việc họ sắp tới" hiện sự kiện trong 60 ngày tới hoặc câu rỗng tương ứng.</li>
-  <li>Bấm "Xem tất cả" mở đúng <code>/bai-viet</code>, không bị chuyển hướng về trang đăng nhập.</li>
+  <li>Khối <strong>"Bài mới"</strong> — và <strong>chỉ</strong> khối ấy — hiện khối mời, đúng câu:
+    "Phần này hiện chỉ mở cho bà con đã đăng nhập bằng tài khoản dòng họ. Phả đồ và hồ sơ các cụ đã
+    khuất thì ông/bà xem được ngay, không cần tài khoản." kèm nút <strong>"Đăng nhập để xem"</strong>.
+    Không thấy "Chưa có bài viết nào được đăng.", không thấy tiêu đề bài nào.</li>
+  <li>Khối <strong>"Vinh danh"</strong> hiện vinh danh (a), <strong>không</strong> hiện khối mời đăng
+    nhập. Thấy vinh danh (b) — của người còn sống — ở khối này hoặc ở <code>/vinh-danh</code> là
+    <strong>KHÔNG ĐẠT</strong>, dù người ấy đã bật "Cả họ xem": mức ấy mở cho người trong họ đã đăng nhập,
+    không mở cho khách. Không dòng nào ghi tên người duyệt.</li>
+  <li>Khối <strong>"Việc họ sắp tới"</strong> hiện giỗ (c), <strong>không</strong> hiện khối mời đăng
+    nhập, <strong>không</strong> hiện việc "Họp họ" (d). <code>/events</code> tuân cùng luật.</li>
+  <li><code>/vi/bai-viet</code> mời đăng nhập, không in "chưa có bài".</li>
+  <li>Không có dải đỏ báo lỗi, không có mã <code>401</code> in ra màn hình ở bất kỳ bước nào.</li>
+  <li>Bấm "Đăng nhập để xem" mở màn đăng nhập của Keycloak; đăng nhập <code>thanhvien</code> xong
+    quay về trang chủ thì khối Bài mới hiện nội dung thật (hoặc câu rỗng tương ứng nếu dữ liệu mẫu
+    chưa có), và khối Vinh danh nay có thêm (b).</li>
 </ul>
+<p class="lien-quan">Ghi chú cho người chấm: nếu một trong hai khối Vinh danh / Việc họ trống với khách,
+đó là <strong>KHÔNG ĐẠT</strong> — phần "Chuẩn bị" đã bảo đảm có (a) và (c); khối trống nghĩa là máy
+chủ chưa mở cho khách hoặc bộ lọc lọc quá tay. Ghi câu thật đã thấy vào ô ghi chú.</p>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -601,16 +749,28 @@ không giải thích gì.</p>
 <span class="nhan">Các bước</span>
 <ol class="buoc">
   <li>Mở trang chủ. Trên thanh đầu trang (máy tính), <strong>tìm xem có mục “Tra danh xưng”
-    không</strong>. Trên điện thoại thì mở nút "Thêm" và tìm trong đó.</li>
-  <li>Ở trang chủ, bấm ô lối tắt <strong>“Tra danh xưng”</strong> trong ba ô lối tắt.</li>
-  <li>Quan sát màn hình vừa mở. Tìm xem có ô chọn người nào không.</li>
+    không</strong>. Trên điện thoại thì mở nút "Thêm" và tìm trong đó. Nhìn luôn ba ô lối tắt ở
+    trang chủ.</li>
+  <li>Gõ thẳng <code>/kinship</code> vào thanh địa chỉ (đây là cách duy nhất khách còn tới được
+    màn này — một liên kết được chuyển tiếp, một dấu trang cũ). Quan sát màn hình vừa mở, tìm xem
+    có ô chọn người nào không.</li>
 </ol>
+<div class="sua">
+  <span class="nhan-sua">26/09 — bỏ bước "bấm ô lối tắt Tra danh xưng": ô ấy không còn hiện với khách</span>
+  <p style="margin-bottom:0">
+    Bản 22/09 viết "ô lối tắt ở trang chủ vẫn hiện cho mọi người, nên đó là đường duy nhất khách
+    tình cờ rơi vào màn này" — đúng ở thời điểm ấy. Sau đó ô lối tắt cũng đã ẩn với khách, đúng như
+    <a href="#NT-LOIVAO-01">NT-LOIVAO-01</a> đòi (thanh điều hướng và trang chủ phải nói cùng một
+    điều). Bấm thật 24–26/09: người nghiệm thu đi tìm ô ấy và không thấy — tức bước cũ tự mâu thuẫn
+    với NT-LOIVAO-01. Nay khách chỉ tới được <code>/kinship</code> bằng cách mở thẳng đường dẫn.
+  </p>
+</div>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
   <li><strong>Bước 1:</strong> thanh đầu trang <strong>không có</strong> mục "Tra danh xưng"; nút
-    "Thêm" trên điện thoại cũng không có. Khách chỉ thấy: Cây phả đồ · Tìm kiếm · Danh bạ họ ·
-    Sự kiện &amp; Giỗ · Bài viết dòng họ · Vinh danh.</li>
-  <li><strong>Bước 3:</strong> thấy đúng tiêu đề <strong>“Cần đăng nhập để tra danh xưng”</strong>
+    "Thêm" trên điện thoại cũng không có; ba ô lối tắt ở trang chủ cũng không có ô ấy. Khách chỉ
+    thấy: Cây phả đồ · Tìm kiếm · Danh bạ họ · Sự kiện &amp; Giỗ · Bài viết dòng họ · Vinh danh.</li>
+  <li><strong>Bước 2:</strong> thấy đúng tiêu đề <strong>“Cần đăng nhập để tra danh xưng”</strong>
     trên nền hổ phách (không phải dải đỏ báo lỗi — đây là luật chạy đúng, không phải sự cố).</li>
   <li>Kèm đúng câu: "Tra danh xưng phải đối chiếu tới hồ sơ người trong họ, kể cả người còn sống,
     nên chỉ thành viên đã đăng nhập mới tra được. Việc này khác quyền đọc phả đồ — phả đồ vẫn mở
@@ -728,6 +888,52 @@ phép tạo ra bất cứ thứ gì, để người dùng có thể thử lại 
 </div>
 </div>
 
+<div class="kich-ban" id="NT-KHACH-09">
+<h3><span class="ma-so">NT-KHACH-09</span> — Chuông thông báo không hỏi máy chủ khi chắc chắn bị từ chối</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">Chuông thông báo tự hỏi <code>/notifications</code> mỗi phút. Với khách (không có
+token) và với tài khoản chưa ghép phả (máy chủ luôn trả <code>403 ACCOUNT_NOT_LINKED</code>), câu trả
+lời đã biết trước là "không" — hỏi đi hỏi lại chỉ đổ đầy nhật ký máy chủ bằng lỗi 401/403 giả, làm
+nhiễu đúng tín hiệu mà người vận hành dùng để phát hiện dò quét thật. Và với khách, trang
+<code>/notifications</code> phải nói <em>vì sao</em> trống.</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Không đăng nhập, cửa sổ ẩn danh. Mở công cụ nhà phát triển, tab
+<strong>Network</strong>, lọc theo chữ <code>notifications</code>.</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Mở trang chủ, để yên <strong>ít nhất 2 phút</strong>, quan sát tab Network.</li>
+  <li>Mở <code>/notifications</code>. Đọc màn hình.</li>
+  <li>Đăng nhập <code>chuaduyet</code>/<code>giapha123</code> (tài khoản chưa ghép phả). Ở trang
+    chủ, lại để yên ít nhất 2 phút, quan sát tab Network.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Bước 1 (khách):</strong> <strong>không có</strong> lượt gọi nào tới
+    <code>/api/v1/notifications</code> (kể cả lượt đếm chưa đọc) trong 2 phút.</li>
+  <li><strong>Bước 2:</strong> thấy đúng câu <strong>"Cần đăng nhập để xem thông báo"</strong> —
+    không phải một danh sách trống, không phải dải đỏ báo lỗi.</li>
+  <li><strong>Bước 3 (<code>chuaduyet</code>):</strong> cũng <strong>không có</strong> lượt gọi
+    định kỳ nào tới <code>/api/v1/notifications</code>. Mở <code>/notifications</code> thì vẫn thấy
+    đúng câu giải thích ở <a href="#NT-CHUA-03">NT-CHUA-03</a>.</li>
+  <li>Đối chứng: đăng nhập <code>thanhvien</code>, chờ 2 phút — lượt gọi định kỳ
+    <strong>có</strong> xuất hiện (khoảng mỗi phút một lần). Không có đối chứng này thì bước 1 và 3
+    có thể "đạt" chỉ vì chuông hỏng hẳn.</li>
+</ul>
+<div class="sua">
+  <span class="nhan-sua">26/09 — kịch bản MỚI, từ đợt bấm thật</span>
+  <p style="margin-bottom:0">
+    Trước bản vá, chuông hỏi máy chủ mỗi phút với cả hai vai dù câu trả lời chắc chắn là từ
+    chối. Không kịch bản nào trước đây mở tab Network, nên không ca nào bắt được: màn hình trông
+    hoàn toàn bình thường.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
 <h2 id="b-moi">B. Người mới đăng ký / tự nhận mình trong phả</h2>
 <div class="khung">
   <p class="nhan">Chuẩn bị chung cho cả phần B</p>
@@ -822,8 +1028,29 @@ Users → thanhvien → Details). Có sẵn một mã mời dòng họ còn dùn
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
   <li>Thấy "Xong rồi — mật khẩu đã đặt" cùng ba gạch đầu dòng nói về những gì xem được sau khi đăng nhập.</li>
-  <li>Đăng nhập thành công, quay lại được ứng dụng ở trạng thái đã đăng nhập.</li>
+  <li><strong>Câu chữ trên màn đặt mật khẩu là câu trung tính</strong>, đúng cho cả ba luồng dùng
+    chung màn này — lời mời cá nhân, mã dòng họ, và liên kết cấp lại
+    (<a href="#NT-TC-17">NT-TC-17</a>). Không có câu nào giả định "ông/bà vừa nhận lời mời" hay
+    "ông/bà vừa lập tài khoản" khi người đọc thực ra đang đặt lại mật khẩu.</li>
+  <li><strong>Định danh là thư điện tử</strong> (như <code>nghiem-thu-01@vidu.local</code>): màn
+    "Xong" <strong>báo trước</strong> rằng lần đăng nhập đầu Keycloak sẽ đòi xác minh địa chỉ thư.
+    <strong>Định danh là số điện thoại</strong>: không có bước ấy, và màn "Xong" không được nhắc tới
+    nó.</li>
+  <li>Đăng nhập thành công, quay lại được ứng dụng ở trạng thái đã đăng nhập. Với định danh email
+    trong môi trường thử (<code>vidu.local</code> không nhận thư thật), bước xác minh thư có thể
+    chặn ở đây — đó là hành vi của Keycloak mà màn "Xong" đã báo trước, không phải lỗi của cổng;
+    ghi vào ô Ghi chú cách đã vượt qua (ví dụ đánh dấu "Email verified" trong Admin Console).</li>
 </ul>
+<div class="sua">
+  <span class="nhan-sua">26/09 — thêm hai điều kiện chấm, từ đợt bấm thật</span>
+  <p style="margin-bottom:0">
+    Bản trước chỉ chấm "đặt được, đăng nhập được". Bấm thật thì thấy màn này dùng chung cho ba
+    luồng mà câu chữ viết riêng cho một luồng, và người đăng ký bằng email bị Keycloak chặn đòi xác
+    minh thư mà không được báo trước — với người nghiệm thu, trông y như đăng nhập hỏng. Bản trước
+    không chấm hai điều ấy vì nó viết cho đúng một đường đi (mã dòng họ, ngay sau NT-MOI-01), và
+    lúc ấy luồng cấp lại mật khẩu chưa có màn hình nên chưa ai thấy màn này được dùng chung.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -929,11 +1156,28 @@ sẵn — chọn một nhân khẩu khác trong dữ liệu mẫu).</p>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
   <li>Chuyển tới <code>/nhan-dien/cho-duyet</code> và thấy trạng thái "Đang chờ duyệt".</li>
-  <li>Thấy dòng "Đơn đang nằm ở {Chi Bính}, chờ … xem và đối chiếu."</li>
+  <li>Thấy dòng "Đơn đang nằm ở {tên chi/ngành đích}, chờ … xem và đối chiếu." Tên đích là
+    <strong>ngành</strong> của người vừa chọn, ví dụ "Đơn đang nằm ở Ngành Thứ, chờ Trưởng chi xem
+    và đối chiếu." — không nhất thiết là "Chi Bính".</li>
   <li>Thấy danh sách "Trong lúc chờ, ông/bà xem được gì" liệt kê: xem phả đồ, xem hồ sơ các cụ đã
     khuất; và danh sách "chưa" gồm: chưa viết bài, chưa xem số điện thoại/địa chỉ/ngày sinh đầy đủ
     của người đang sống.</li>
 </ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — sửa câu mong đợi; và ghi nhận một điểm yếu: CẦN CẢI TIẾN</span>
+  <p>
+    Bản trước ghi "Đơn đang nằm ở {Chi Bính}", vì lúc viết giả định đơn đi tới cấp chi. Bấm thật
+    24–26/09: câu hiện <strong>tên ngành</strong> đích, ví dụ "Ngành Thứ". Chấm ĐẠT nếu thấy tên
+    ngành — đó là hành vi đang chạy.
+  </p>
+  <p style="margin-bottom:0">
+    <strong>Nhưng đây là điểm yếu thật, không phải chuyện câu chữ:</strong> bốn chi đều có "Ngành
+    Trưởng / Ngành Thứ / Ngành Út", nên "Ngành Thứ" một mình không cho người chờ biết đơn đang ở chi
+    nào, tức không biết gọi Trưởng chi nào khi chờ lâu. Cùng gốc với ô lọc ở
+    <a href="#NT-TV-18">NT-TV-18</a>, nơi đã chữa bằng tên đủ đường nhánh ("Chi Bính › Ngành Thứ").
+    <strong>Cần cải tiến</strong> — ghi vào ô Ghi chú, không chấm KHÔNG ĐẠT vì điểm này.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -1168,6 +1412,73 @@ gửi trước.</p>
 </div>
 </div>
 
+<div class="kich-ban" id="NT-MOI-15">
+<h3><span class="ma-so">NT-MOI-15</span> — Tài khoản chờ duyệt không đọc được Tầng 3, kể cả của người đặt "Cả họ xem" <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Mã dòng họ <strong>phát rộng</strong>: dán vào nhóm Zalo, chuyển tiếp, chụp màn hình. Nên
+  <strong>"cầm được mã" chưa phải là "là người trong họ"</strong> — bằng chứng duy nhất là bước
+  Trưởng chi duyệt đơn tự nhận. Một người đặt nhóm Liên hệ ở mức <strong>"Cả họ xem"</strong> đã
+  đồng ý cho <em>người trong họ</em> đọc số mình, không đồng ý cho bất kỳ ai nhặt được mã. Ca này
+  chấm đúng ranh giới ấy: tài khoản chờ duyệt chỉ được Tầng 1 — tên, đời, quan hệ lõi — đúng như
+  màn chờ duyệt đã hứa ở <a href="#NT-MOI-07">NT-MOI-07</a> ("chưa xem số điện thoại/địa chỉ/ngày
+  sinh đầy đủ của người đang sống").
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  (1) Một tài khoản <strong>đăng ký bằng mã dòng họ, đã gửi đơn, CHƯA được duyệt</strong> — dùng
+  tài khoản của <a href="#NT-MOI-07">NT-MOI-07</a> <em>trước khi</em> làm NT-TC-02, hoặc dựng một
+  tài khoản mới theo NT-MOI-01 + NT-MOI-03 + NT-MOI-07.
+  (2) Đăng nhập <code>thanhvien</code>, mở hồ sơ của mình, điền số điện thoại, địa chỉ đầy đủ và
+  ngày sinh nếu còn trống, rồi ở "Ai xem được gì về tôi" đặt ba nhóm <strong>Liên hệ</strong>,
+  <strong>Địa chỉ đầy đủ</strong>, <strong>Ngày sinh đầy đủ &amp; ảnh</strong> sang
+  <strong>"Cả họ xem"</strong>, bấm "Lưu mức chia sẻ". Ghi lại <code>personId</code> của
+  <code>thanhvien</code>.
+  <em>Làm xong ca này nhớ đặt lại nhóm Liên hệ về "Riêng tư" cho <a href="#NT-TV-05">NT-TV-05</a> /
+  <a href="#NT-HD-06">NT-HD-06</a>.</em>
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Đăng nhập tài khoản <strong>chờ duyệt</strong>. Mở <code>/persons/&lt;personId của
+    thanhvien&gt;</code> (hoặc tìm trên phả đồ rồi mở hồ sơ).</li>
+  <li>Đọc toàn bộ hồ sơ: tìm số điện thoại, địa chỉ, ngày sinh đầy đủ, ảnh.</li>
+  <li>Kiểm ở máy chủ, không chỉ ở giao diện: gọi <code>GET /api/v1/persons/&lt;personId&gt;</code>
+    bằng token của tài khoản chờ duyệt, đọc thân trả về.</li>
+  <li><strong>Đối chứng:</strong> đăng nhập <code>truongchi.at</code> (Chi Ất — <em>khác</em> chi
+    với <code>thanhvien</code>, để chắc rằng thứ mở ra là mức "Cả họ xem" chứ không phải quyền chi),
+    mở cùng hồ sơ ấy.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Bước 1–2:</strong> thấy tên, đời, và quan hệ lõi (cha mẹ, vợ chồng, con) của
+    <code>thanhvien</code>. <strong>Không</strong> thấy số điện thoại, thư điện tử, Zalo, địa chỉ đầy
+    đủ, ngày sinh đầy đủ hay ảnh — dù ba nhóm ấy đang đặt "Cả họ xem".</li>
+  <li><strong>Bước 3:</strong> thân trả về <strong>không chứa</strong> các trường liên hệ, địa chỉ,
+    ngày sinh đầy đủ — không phải chứa rồi để giao diện giấu đi. Chứa là <strong>KHÔNG ĐẠT</strong>,
+    mức <strong>chặn phát hành</strong>: bất kỳ ai cầm mã dòng họ đều gọi thẳng API được.</li>
+  <li><strong>Bước 4 (đối chứng):</strong> <code>truongchi.at</code> <strong>thấy</strong> số điện
+    thoại, địa chỉ và ngày sinh của <code>thanhvien</code>. Không có đối chứng này thì bước 1–3 có
+    thể "đạt" chỉ vì <code>thanhvien</code> chưa lưu được mức chia sẻ.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — kịch bản MỚI: trước bản vá 26/09 ca này LỘ ĐỦ TẦNG 3</span>
+  <p style="margin-bottom:0">
+    Bấm thật 24–26/09: tài khoản vừa đăng ký bằng mã dòng họ, chưa ai duyệt, mở hồ sơ một người đặt
+    "Cả họ xem" và đọc được đủ điện thoại, email, địa chỉ, ngày sinh. Bản đầu của
+    <code>PersonVisibility</code> viết mức <code>CLAN</code> là "mở cho mọi người không phải Khách",
+    với lập luận "không phải Khách thì là người trong họ" — đúng cho tới khi có mã mời dòng họ
+    (<code>V16</code>), sai kể từ đó. Nay <code>CLAN</code> và <code>BRANCH</code> chờ bước duyệt.
+    Không kịch bản nào trước đây đặt một tài khoản <em>chờ duyệt</em> trước một hồ sơ
+    <em>đã mở</em>; NT-MOI-07 chỉ đọc lời hứa trên màn chờ duyệt, không kiểm lời hứa ấy.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT (cả bốn bước)</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
 <h2 id="c-thanhvien">C. Thành viên (<code>thanhvien</code>)</h2>
 <div class="khung">
   <p class="nhan">Mục lục phần C</p>
@@ -1189,6 +1500,7 @@ gửi trước.</p>
     <li><a href="#NT-TV-15">15 · Vinh danh người còn sống — duyệt xong vẫn chỉ chính chủ thấy <span class="chip chip-cabien">CA BIÊN</span></a></li>
     <li><a href="#NT-TV-16">16 · Không đổi được ngày giỗ trên sự kiện <span class="chip chip-cabien">CA BIÊN</span></a></li>
     <li><a href="#NT-TV-17">17 · Trung tâm thông báo</a></li>
+    <li><a href="#NT-TV-18">18 · Ô lọc Chi/Ngành trên Tìm kiếm nay tải được, và bộ đếm đã qua lọc riêng tư <span class="chip chip-cabien">CA BIÊN</span></a></li>
   </ul>
 </div>
 
@@ -1229,12 +1541,29 @@ trí ban đầu.</p>
 <ol class="buoc">
   <li>Bấm nút "Về chỗ tôi".</li>
   <li>Gõ tên một người khác vào ô tìm trên canvas, chọn kết quả.</li>
+  <li><strong>Ca dâu/rể:</strong> <code>thanhvien</code> là <strong>con dâu, đời 7</strong> — vào phả
+    qua hôn phối, không qua huyết thống. Bấm lại "Về chỗ tôi", rồi đếm số người đang hiện trên
+    canvas và đọc dòng "Đang mở … từ cụ …" ở trên cùng.</li>
 </ol>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
   <li>Canvas cuộn/phóng về đúng ô của <code>thanhvien</code>, có tô đậm ("Tôi").</li>
   <li>Gõ tên xong, canvas nhảy tới đúng người vừa chọn, mở đường từ gốc xuống đó.</li>
+  <li><strong>Bước 3:</strong> phả đồ <strong>giữ nguyên tổ tiên nhà chồng</strong> — gốc vẫn là cụ
+    của dòng họ, ô của <code>thanhvien</code> nằm cạnh chồng ở đời 7, cùng các đời trên. Nếu phả đồ
+    đổi gốc sang chính <code>thanhvien</code> và chỉ còn lại <strong>2 nhân khẩu</strong> (cô và
+    chồng/con), đó là <strong>KHÔNG ĐẠT</strong>.</li>
 </ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — thêm bước 3: "Về chỗ tôi" từng làm mất cả nhà chồng của người dâu</span>
+  <p style="margin-bottom:0">
+    Bấm thật 24–26/09: với <code>thanhvien</code>, "Về chỗ tôi" dựng lại phả đồ lấy chính cô làm
+    gốc (cô không có cha mẹ trong phả, nên đi ngược lên thì dừng ngay ở cô), và canvas chỉ còn 2
+    nhân khẩu. Bản trước chỉ chấm "cuộn về đúng ô" — mà ô ấy <em>có</em> được tô đậm, nên ca này
+    vẫn xanh. Bản trước viết thế vì ngầm coi người dùng là con cháu huyết thống; dâu, rể là người
+    trong họ ngang hàng, và phả đồ của họ là phả đồ nhà chồng/vợ.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -1408,6 +1737,17 @@ không phải chính mình).</p>
   <li>Lọc theo Chi Bính vẫn hiện đủ giỗ cấp dòng họ ("Giỗ cấp dòng họ luôn hiện, dù bạn lọc theo chi
     nào."), nhưng ẩn giỗ riêng của các chi khác.</li>
 </ul>
+<div class="sua">
+  <span class="nhan-sua">23/09 — ô "Lọc theo chi/ngành" ở đây từng luôn rỗng, nay đã tải được</span>
+  <p style="margin-bottom:0">
+    Ô lọc này lấy dữ liệu từ cùng <code>Query.branches</code> chưa có resolver mà
+    <a href="#NT-TV-18">NT-TV-18</a> vừa vá — nghĩa là bước 3 của kịch bản này (<em>"Lọc 'Lọc theo
+    chi/ngành' về đúng Chi Bính"</em>) trước đây không bấm được: danh sách xổ xuống rỗng, không có
+    "Chi Bính" nào để chọn. Nếu bản cũ của tài liệu này từng đánh dấu ĐẠT cho bước ấy, đó là chấm
+    nhầm — không có gì để chọn thì không có gì để lọc. Đã kiểm riêng ở NT-TV-18, không cần dựng lại
+    phép kiểm này ở đây.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -1451,21 +1791,51 @@ công sức đã gõ.</p>
 <p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/bai-viet/moi</code>.</p>
 <span class="nhan">Các bước</span>
 <ol class="buoc">
-  <li>Gõ tiêu đề, ví dụ "Kiểm nghiệm thu — họp họ cuối năm".</li>
-  <li>Gõ vài câu ở ô nội dung.</li>
-  <li>Đợi vài giây không thao tác gì, quan sát góc màn hình.</li>
-  <li>Tải lại trang (F5) mà không bấm "Gửi duyệt".</li>
-  <li>Mở lại <code>/bai-viet/cua-toi</code>.</li>
-  <li>Mở lại bài nháp, bấm "Gửi duyệt".</li>
+  <li>Gõ tiêu đề, ví dụ "Kiểm nghiệm thu — họp họ cuối năm". <strong>Chưa gõ nội dung.</strong>
+    Bấm ra ngoài ô tiêu đề (rời ô). Quan sát góc màn hình và thanh địa chỉ.</li>
+  <li>Tải lại trang (F5) ngay, chưa gõ gì thêm.</li>
+  <li>Gõ vài câu ở ô nội dung. Đợi vài giây không thao tác gì.</li>
+  <li>Gắn một ảnh JPEG (điền chữ thay ảnh, bấm "Xong, gắn ảnh này vào bài"). Quan sát khối ảnh.</li>
+  <li><strong>Ca thân rỗng:</strong> ở một bài mới khác, chỉ gõ tiêu đề, rời ô, rồi bấm "Gửi duyệt"
+    khi thân còn rỗng.</li>
+  <li>Quay lại bài có nội dung, bấm "Gửi duyệt".</li>
 </ol>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
-  <li>Sau vài giây ngừng gõ, thấy "Đang lưu nháp…" rồi "Đã lưu nháp lúc {giờ}".</li>
-  <li>Sau khi tải lại trang, nội dung đã gõ <strong>không bị mất</strong> — mở lại đúng bài nháp ấy
-    vẫn còn tiêu đề và nội dung.</li>
-  <li>Mục "Nháp đang viết dở (1)" trên <code>/bai-viet/cua-toi</code> liệt kê đúng bài này.</li>
-  <li>Sau khi gửi duyệt, trạng thái đổi thành "Đang chờ duyệt" và bài chuyển sang mục "Đã gửi đi".</li>
+  <li><strong>Bước 1:</strong> vừa rời ô tiêu đề là <strong>đã có nháp</strong> — thấy
+    "Đã lưu nháp lúc {giờ}", <strong>thân rỗng vẫn lưu được</strong> ở trạng thái nháp. Thanh địa
+    chỉ đổi từ <code>/bai-viet/moi</code> sang <code>/bai-viet/{id}/sua</code>.</li>
+  <li><strong>Bước 2:</strong> F5 <strong>không mất bài</strong> — trang mở lại đúng bài ấy (vì địa
+    chỉ đã là <code>/bai-viet/{id}/sua</code>), còn nguyên tiêu đề. Nếu F5 đưa về một màn soạn
+    trống ở <code>/bai-viet/moi</code> là KHÔNG ĐẠT.</li>
+  <li><strong>Bước 3:</strong> sau vài giây ngừng gõ, thấy "Đang lưu nháp…" rồi "Đã lưu nháp lúc
+    {giờ}".</li>
+  <li><strong>Bước 4:</strong> ảnh gắn xong <strong>vẫn hiện trong bài</strong> (trong khối ảnh của
+    màn soạn), không biến mất sau lượt tự lưu kế tiếp.</li>
+  <li><strong>Bước 5:</strong> máy chủ từ chối <strong><code>422</code></strong> — luật "bài phải
+    có thân" áp ở lúc <strong>Gửi duyệt</strong>, không áp ở lúc lưu nháp. Màn hình phải báo lại
+    (không im lặng, không chuyển trang) — ghi câu thật đã thấy vào ô Ghi chú; nháp ấy vẫn còn
+    trong "Bài của tôi".</li>
+  <li><strong>Bước 6:</strong> gửi thành công thì <strong>chuyển sang
+    <code>/bai-viet/cua-toi</code></strong> với khối <strong>"Đã gửi bài đi duyệt"</strong>; bài nằm
+    ở mục "Đã gửi đi" với trạng thái "Đang chờ duyệt".</li>
 </ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — VIẾT LẠI theo hành vi mới; bản trước chấm một luồng đã đổi</span>
+  <p>
+    <strong>Bản trước viết:</strong> gõ tiêu đề <em>và</em> nội dung, chờ tự lưu, F5, rồi mở lại nháp
+    từ "Bài của tôi"; gửi duyệt xong thì "trạng thái đổi thành Đang chờ duyệt". Hai lý do của bản
+    trước: (1) hợp đồng lúc ấy đòi <strong>thân bài ngay từ bản nháp</strong>, nên không thể có nháp
+    khi mới gõ tiêu đề — phải gõ nội dung trước; (2) sau khi gửi, màn soạn <strong>im lặng</strong>
+    — ở nguyên chỗ, không chuyển trang, không xác nhận — nên kịch bản chỉ chấm được trạng thái.
+  </p>
+  <p style="margin-bottom:0">
+    Bấm thật 24–26/09 thấy ba hỏng hóc do chính hai điều ấy: người viết gõ tiêu đề, bấm F5 và mất
+    bài (địa chỉ vẫn là <code>/bai-viet/moi</code>); ảnh gắn vào bài mới biến mất; và bấm "Gửi
+    duyệt" xong không biết đã gửi hay chưa. Nay nháp có từ lượt rời ô tiêu đề đầu tiên, luật thân
+    bài dời sang lúc gửi, và gửi xong có chỗ đến rõ ràng.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -1561,7 +1931,24 @@ trước).</p>
   <li>Gửi lần đầu thành công: "Đã ghi nhận — người duyệt trong phạm vi chi sẽ xem lại."</li>
   <li>Gửi lần hai (cùng tệp, cùng người): "Ông/bà đã báo cáo tệp này và báo cáo đó đang chờ xử lý —
     chưa gửi thêm được nữa."</li>
+  <li><strong>Kiểm phía người nhận báo cáo</strong> (đăng nhập <code>truongchi</code>, mở
+    <code>/quan-ly/bao-cao-anh</code>): thẻ báo cáo vừa gửi hiện đúng những gì hợp đồng
+    <code>MediaReportDto</code> có — ảnh xem trước, loại tệp, lý do, ghi chú, thời điểm báo, trạng
+    thái. <strong>Không có liên kết nào trỏ tới <code>/bai-viet/undefined</code></strong> (di chuột
+    qua mọi liên kết trên thẻ, đọc địa chỉ ở góc dưới trình duyệt). Thẻ <strong>không</strong> hiện
+    tên bài viết hay tên người báo — hợp đồng không trả hai thứ ấy, nên thấy chúng mới là lạ.</li>
 </ul>
+<div class="sua">
+  <span class="nhan-sua">26/09 — thêm điều kiện chấm cho màn nhận báo cáo</span>
+  <p style="margin-bottom:0">
+    Bấm thật 24–26/09: thẻ báo cáo ở <code>/quan-ly/bao-cao-anh</code> có một liên kết dẫn tới
+    <code>/bai-viet/undefined</code>, vì thẻ đọc những trường không có trong
+    <code>MediaReportDto</code> — hợp đồng chỉ trả
+    <code>mediaId</code>, không trả mã bài, và <code>reportedBy</code> là khoá tài khoản chứ không
+    phải tên. Bản trước không chấm màn này vì nó thuộc NT-TC-11, và NT-TC-11 chỉ chấm hộp cảnh báo
+    gỡ tệp.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -1586,10 +1973,20 @@ trước).</p>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
   <li>Thấy dòng "Đề nghị vinh danh cho chính ông/bà" ở đầu biểu mẫu.</li>
-  <li>Gửi thành công, mục vừa gửi xuất hiện ở "Đang chờ duyệt" trên <code>/vinh-danh</code> (nếu
-    <code>thanhvien</code> có quyền xem hàng chờ của chính mình) hoặc biến mất khỏi biểu mẫu kèm
-    xác nhận đã gửi.</li>
+  <li>Gửi thành công thì hiện khối xác nhận <strong>"Đã gửi đề nghị vinh danh…"</strong>. Hộp thoại
+    đóng lại mà <strong>không</strong> có khối ấy là KHÔNG ĐẠT — người gửi không biết đề nghị đã đi
+    hay chưa.</li>
 </ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — chốt một kết quả duy nhất; bản trước chấp nhận cả "đóng im lặng"</span>
+  <p style="margin-bottom:0">
+    Bản trước cho hai kết quả đều ĐẠT: "xuất hiện ở hàng chờ (nếu có quyền xem)" <em>hoặc</em>
+    "biến mất khỏi biểu mẫu kèm xác nhận". Viết thế vì lúc ấy chưa ai biết màn hình làm gì sau khi
+    gửi. Bấm thật 24–26/09: hộp thoại đóng im lặng, không một lời xác nhận — người chấm theo vế
+    thứ hai rất dễ ghi ĐẠT chỉ vì "biểu mẫu đã biến mất". Nay có khối xác nhận, nên chỉ còn một
+    kết quả đúng.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -1719,7 +2116,21 @@ ngày giỗ phải sửa ở hồ sơ người đó, không sửa được từ 
 <span class="nhan">Chuẩn bị</span>
 <p class="mo-ta">Cần quyền sửa sự kiện — làm kịch bản này bằng <code>truongchi</code> thay vì
 <code>thanhvien</code> (Thành viên thường không có nút sửa sự kiện — xem NT-TC-14 để kiểm việc đó
-riêng). Mở <code>/events</code>, tìm một sự kiện loại "Giỗ thường" gắn với một người cụ thể.</p>
+riêng). Mở <code>/events</code>, tìm một sự kiện loại "Giỗ thường" gắn với một người cụ thể
+<strong>thuộc Chi Bính</strong> — tức <em>trong</em> phạm vi của <code>truongchi</code>. Nếu chưa có
+giỗ nào như vậy, tạo trước một giỗ thường ở <code>/events/new</code> cho một cụ đã khuất thuộc Chi
+Bính (ô "Người của giỗ này"), để ngày âm tự khớp ngày mất trong hồ sơ.</p>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — phải chọn giỗ TRONG chi của truongchi, không phải giỗ bất kỳ</span>
+  <p style="margin-bottom:0">
+    Bản trước chỉ bảo "tìm một sự kiện Giỗ thường". Bấm thật 24–26/09: bốn giỗ thường có sẵn trong
+    dữ liệu mẫu đều thuộc <strong>Ngành Trưởng của một chi khác, ngoài Chi Bính</strong>, nên
+    <code>truongchi</code> bấm "Lưu" nhận <strong><code>403</code></strong> (ngoài phạm vi) —
+    <em>trước khi</em> máy chủ kịp đối chiếu ngày giỗ. Ca này khi ấy đỏ vì phạm vi chi, không phải
+    vì luật ngày giỗ, và người chấm không phân biệt được hai lý do. Bản trước viết thế vì giả định
+    dữ liệu mẫu có giỗ ở mọi chi.
+  </p>
+</div>
 <span class="nhan">Các bước</span>
 <ol class="buoc">
   <li>Bấm "Sửa" trên sự kiện giỗ thường đó.</li>
@@ -1755,11 +2166,118 @@ riêng). Mở <code>/events</code>, tìm một sự kiện loại "Giỗ thườ
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
   <li>Danh sách hiện đúng loại: Nhắc giỗ / Sự kiện dòng họ / Yêu cầu đính chính / Hệ thống.</li>
+  <li>Lời nhắc giỗ viết <strong>có dấu</strong> đầy đủ, dạng "Còn 7 ngày tới Giỗ …" (hoặc 3, 1 ngày),
+    nội dung dạng "Ngày dd/mm/yyyy dương lịch (… âm lịch)". Thấy chữ không dấu kiểu "Con 7 ngay toi
+    Gio …" là <strong>KHÔNG ĐẠT</strong>. (Không có lời nhắc nào trong hộp thư thì dựng bằng
+    <a href="#NT-ADMIN-02">NT-ADMIN-02</a> trước.)</li>
   <li>Lọc "Chưa đọc" chỉ còn các mục chưa đọc; số đếm trên chuông thông báo giảm sau khi đánh dấu
     đã đọc.</li>
 </ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — thêm điều kiện "có dấu": lời nhắc giỗ từng viết không dấu</span>
+  <p style="margin-bottom:0">
+    Bấm thật 24–26/09: lời nhắc tới hộp thư dạng "Con 7 ngay toi Gio …", "Ngay 16/09/2026 duong
+    lich". Chuỗi ấy được viết không dấu theo thói quen của dòng log (log trong dự án cố ý ASCII) —
+    đó là lý do của bản trước, và nó hợp lý cho log, không hợp lý cho chữ người dùng đọc. Kịch bản
+    cũ chỉ chấm loại thông báo và bộ lọc, nên không bắt được.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TV-18">
+<h3><span class="ma-so">NT-TV-18</span> — Ô lọc Chi/Ngành trên Tìm kiếm nay tải được, và bộ đếm đã qua lọc riêng tư <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Ô lọc <strong>"Chi / Ngành"</strong> trên <code>/search</code> (và cùng nguồn dữ liệu với ô lọc ở
+  <code>/events</code>, form tạo sự kiện, và <code>/vinh-danh</code>) gọi
+  <code>Query.branches</code> qua GraphQL. Trường ấy có khai trong <code>schema.graphqls</code>
+  nhưng <strong>chưa từng có resolver</strong> — chính chú thích đầu tệp schema tự thú điều đó. Hậu
+  quả là một dạng "hỏng thầm lặng" đúng kiểu tài liệu này lo ngại nhất:
+  <code>useBranches()</code> trả về rỗng, ô lọc hiện placeholder "Mọi chi/ngành" và
+  <strong>không một dòng nào để chọn</strong> — không báo lỗi, không đỏ, trông y hệt một dòng họ
+  không có chi nào. Kịch bản này xác nhận ô lọc nay tải được, và nhân tiện chứng minh một bất biến
+  quan trọng hơn: bộ đếm đi kèm mỗi chi (<code>memberCount</code>) đã đi qua đúng bộ lọc riêng tư,
+  không phải một con số đếm thẳng trên bảng <code>person</code>.
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">Đăng nhập <code>thanhvien</code>. Mở <code>/search</code>.</p>
+<span class="nhan">Các bước — phần 1: ô lọc tải được (bấm tay)</span>
+<ol class="buoc">
+  <li>Bấm mở ô lọc <strong>"Chi / Ngành"</strong>.</li>
+  <li>Gõ "Bính" vào ô tìm trong danh sách xổ xuống.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi của phần 1</span>
+<ul class="ket-qua">
+  <li>Danh sách xổ xuống có đủ mọi chi/ngành của dòng họ (không rỗng), thụt đầu dòng theo cấp bậc
+    (ngành thụt sâu hơn chi cha của nó).</li>
+  <li>Mỗi ngành hiện <strong>tên đủ đường nhánh</strong>, dạng <strong>"Chi Bính › Ngành Út"</strong>
+    — không phải "Ngành Út" trơn. Bốn chi đều có "Ngành Út", nên tên trơn là bốn dòng giống hệt
+    nhau không phân biệt được.</li>
+  <li>Gõ "Bính" lọc còn đúng "Chi Bính" <strong>và cả ba ngành con</strong> của nó ("Chi Bính ›
+    Ngành Trưởng", "Chi Bính › Ngành Thứ", "Chi Bính › Ngành Út"). Chỉ ra "Chi Bính" mà mất ba ngành
+    là KHÔNG ĐẠT.</li>
+  <li>Chọn "Chi Bính" thì danh sách kết quả tìm kiếm chỉ còn người thuộc Chi Bính.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — tên đủ đường nhánh; gõ tên chi phải ra cả ngành con</span>
+  <p style="margin-bottom:0">
+    Bấm thật 24–26/09: danh sách hiện "Ngành Út" bốn lần, và gõ "Bính" chỉ ra "Chi Bính" — ba ngành
+    con biến mất vì tên của chúng không chứa chữ "Bính". Bản trước viết "gõ Bính lọc còn Chi Bính và
+    ba ngành con" vì người viết nhìn thấy thụt đầu dòng và ngầm hiểu ngành "thuộc" chi — nhưng bộ lọc
+    chỉ so chữ, không nhìn thụt đầu dòng. Nay nhãn mang cả đường nhánh nên cả hai vấn đề cùng hết.
+  </p>
+</div>
+<span class="nhan">Các bước — phần 2: bộ đếm đã qua lọc riêng tư (kiểm bằng mạng/<code>curl</code>)</span>
+<p class="mo-ta">
+  Phần này không hiện trên giao diện (<code>memberCount</code> được nạp về nhưng chưa vẽ ra chỗ nào
+  trên <code>/search</code>), nên phải đọc thẳng phản hồi GraphQL — mở tab Network của công cụ nhà
+  phát triển khi làm phần 1, hoặc gọi tay bằng <code>curl</code>:
+</p>
+<ol class="buoc">
+  <li>Lấy access token của <code>thanhvien</code> và của <code>hoidong</code> (lệnh
+    <code>curl</code> ở <code>TAI-KHOAN-THU-NGHIEM.md</code>).</li>
+  <li>Với mỗi token, gọi <code>POST /api/v1/graphql</code>,
+    <code>Content-Type: application/json</code>, thân
+    <code>{"query":"query { branches { path memberCount } }"}</code>.</li>
+  <li>Đối chiếu <code>memberCount</code> của <strong>Chi Ất</strong>
+    (<code>ho_nguyen_dinh.chi_at</code>) giữa hai lượt gọi.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi của phần 2</span>
+<ul class="ket-qua">
+  <li><code>memberCount</code> của <code>hoidong</code> cho Chi Ất
+    <strong>LỚN HƠN</strong> của <code>thanhvien</code> cho cùng chi đó — đo được ngay hôm 23/09:
+    <code>hoidong</code> thấy <strong>399</strong>, <code>thanhvien</code> thấy <strong>397</strong>.
+    Con số cụ thể sẽ đổi theo dữ liệu của ngày kiểm; điều phải đúng là <strong>bất đẳng thức</strong>,
+    không phải hai con số này.</li>
+  <li><strong>Vì sao lệch:</strong> Chi Ất đang có hai nhân khẩu <strong>đã xoá mềm</strong>
+    (<code>is_deleted = true</code>). Luật hiển thị của <code>PrivacyTierService</code> là một
+    nhân khẩu đã xoá mềm chỉ "tồn tại" với vai <strong>toàn dòng họ</strong> (Hội đồng/Admin) —
+    <code>thanhvien</code> (vai <code>MEMBER</code>, không toàn họ) không được biết bản ghi ấy còn
+    tồn tại, kể cả dưới dạng một con số vô danh trong bộ đếm.</li>
+  <li>Nếu hai số bằng nhau: đó là <strong>KHÔNG ĐẠT</strong> — nghĩa là bộ đếm đang cộng thẳng trên
+    bảng <code>person</code> mà bỏ qua bước hỏi quyền xem từng người, đúng thứ rò rỉ mà
+    <code>BranchQueryService.memberCounts</code> (đọc javadoc của nó: "một bộ đếm cũng tiết lộ") cố
+    ý tránh.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">23/09 — kịch bản MỚI: trước đây ô lọc này không có gì để kiểm</span>
+  <p style="margin-bottom:0">
+    Trước bản vá, phần 1 của kịch bản này không dựng lại được: danh sách xổ xuống luôn rỗng với mọi
+    tài khoản, nên không có "hành vi đúng" nào để đối chiếu — chỉ có một khoảng trống im lặng. Bản
+    vá thêm <code>BranchGraphQlController</code> + <code>BranchQueryService</code> mới tạo ra được
+    hành vi có nghĩa để viết kịch bản này. Cùng nguồn dữ liệu này còn nuôi ô lọc trên
+    <code>/events</code> (xem ghi chú ở NT-TV-08) và ô "Phạm vi" khi tạo việc họ (xem ghi chú ở
+    NT-TC-13) — cả ba đều đã tải được từ cùng một bản vá, không cần kiểm riêng từng nơi thêm lần
+    nữa.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT (cả hai phần)</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
   <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
 </div>
@@ -1769,7 +2287,7 @@ riêng). Mở <code>/events</code>, tìm một sự kiện loại "Giỗ thườ
 <div class="khung">
   <p class="nhan">Mục lục phần D</p>
   <ul>
-    <li><a href="#NT-TC-01">01 · Vào /quan-ly, thấy đủ năm mục</a></li>
+    <li><a href="#NT-TC-01">01 · Vào /quan-ly, thấy đủ sáu mục</a></li>
     <li><a href="#NT-TC-02">02 · Duyệt đơn "nhận mình" hợp lệ</a></li>
     <li><a href="#NT-TC-03">03 · Duyệt đơn "chưa có trong phả" — tạo nhân khẩu mới</a></li>
     <li><a href="#NT-TC-04">04 · Từ chối đơn kèm lý do</a></li>
@@ -1784,11 +2302,14 @@ riêng). Mở <code>/events</code>, tìm một sự kiện loại "Giỗ thườ
     <li><a href="#NT-TC-13">13 · Sự kiện phạm vi một chi không lộ sang chi khác <span class="chip chip-cabien">CA BIÊN</span></a></li>
     <li><a href="#NT-TC-14">14 · Không tạo được sự kiện cấp cả dòng họ</a></li>
     <li><a href="#NT-TC-15">15 · Nhập liệu Excel — tải mẫu rồi tải lên</a></li>
+    <li><a href="#NT-TC-16">16 · Tải Excel hỏng: thiếu tệp / sai <code>Content-Type</code> trả đúng mã <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TC-17">17 · Cấp lại mật khẩu trong chi mình — dựng dữ liệu, chính chủ nhận thông báo <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-TC-18">18 · Cấp lại mật khẩu bị chặn: khác chi · tự cấp · đã có email <span class="chip chip-cabien">CA BIÊN</span></a></li>
   </ul>
 </div>
 
 <div class="kich-ban" id="NT-TC-01">
-<h3><span class="ma-so">NT-TC-01</span> — Vào <code>/quan-ly</code>, thấy đủ năm mục</h3>
+<h3><span class="ma-so">NT-TC-01</span> — Vào <code>/quan-ly</code>, thấy đủ sáu mục</h3>
 <span class="nhan">Mục đích</span>
 <p class="mo-ta">Kiểm lối vào phần quản lý — chức năng có nhưng không có lối vào là bằng như chưa có.</p>
 <span class="nhan">Chuẩn bị</span>
@@ -1801,12 +2322,22 @@ riêng). Mở <code>/events</code>, tìm một sự kiện loại "Giỗ thườ
 </ol>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
-  <li>Thấy đúng <strong>năm</strong> mục: "Đơn xin vào phả", "Phát mã và phát lời mời", "Duyệt bài
-    viết", "Duyệt báo cáo ảnh/video", <strong>"Nhập liệu ban đầu"</strong>.</li>
+  <li>Thấy đúng <strong>sáu</strong> mục: "Đơn xin vào phả", "Phát mã và phát lời mời", "Duyệt bài
+    viết", "Duyệt báo cáo ảnh/video", "Nhập liệu ban đầu",
+    <strong>"Cấp lại liên kết đặt mật khẩu"</strong> (ô cuối, mở
+    <code>/quan-ly/cap-lai-mat-khau</code> — xem <a href="#NT-TC-17">NT-TC-17</a>).</li>
   <li>Nếu có đơn đang chờ, huy hiệu số trên biểu tượng nhóm ở thanh đầu trang khớp với số đơn thật.
-    <em>Lưu ý:</em> số ấy đếm <strong>riêng đơn tự nhận</strong>, không phải tổng cả năm hàng chờ —
+    <em>Lưu ý:</em> số ấy đếm <strong>riêng đơn tự nhận</strong>, không phải tổng các hàng chờ khác —
     thấy "2" trong khi còn ba bài chờ duyệt là đúng, không phải sai.</li>
 </ul>
+<div class="sua">
+  <span class="nhan-sua">26/09 — năm mục thành SÁU: ô "Cấp lại liên kết đặt mật khẩu"</span>
+  <p style="margin-bottom:0">
+    Bản 22/09 đếm năm ô, và bản 23/09 cố ý giữ con số năm vì lúc ấy cấp lại mật khẩu chỉ gọi được
+    bằng <code>curl</code> — "chưa có màn hình riêng". Nay màn ấy đã có và nằm ở ô thứ sáu, nên
+    thấy năm ô mới là KHÔNG ĐẠT. "Nhập liệu ban đầu" vì thế không còn là ô cuối cùng.
+  </p>
+</div>
 <div class="sua">
   <span class="nhan-sua">22/09 — bốn mục thành NĂM, và lối vào trên máy tính nay chắc chắn có</span>
   <p style="margin-bottom:0">
@@ -2018,20 +2549,65 @@ khác (tên huý, tên thường gọi) — bộ dò trùng phải chạy trư�
 <p class="mo-ta">Bài lên trang chủ là tiếng nói của cả dòng họ — phải qua duyệt, ghi rõ ai duyệt và
 lúc nào.</p>
 <span class="nhan">Chuẩn bị</span>
-<p class="mo-ta">Có sẵn bài "Đang chờ duyệt" từ NT-TV-10 (gửi bởi <code>thanhvien</code>). Đăng nhập
-<code>truongchi</code>. Mở <code>/quan-ly/bai-viet</code>.</p>
+<p class="mo-ta">Có sẵn <strong>hai</strong> bài "Đang chờ duyệt" của <code>thanhvien</code> — gửi hai
+lần theo NT-TV-10. Đăng nhập <code>truongchi</code>. Mở <code>/quan-ly/bai-viet</code>.</p>
 <span class="nhan">Các bước</span>
 <ol class="buoc">
-  <li>Tìm bài của <code>thanhvien</code>.</li>
+  <li>Tìm bài thứ nhất của <code>thanhvien</code>. Đếm các nút trên thẻ bài.</li>
   <li>Bấm "Duyệt".</li>
   <li>Mở <code>/bai-viet</code>, tìm bài vừa duyệt.</li>
+  <li>Quay lại hàng chờ, ở bài thứ hai bấm "Trả lại". Để trống ô "Vì sao trả lại bài này?".</li>
+  <li>Gõ lý do, ví dụ "Xin ghi rõ năm mất của cụ rồi gửi lại.", bấm "Xác nhận trả lại".</li>
+  <li>Đăng nhập <code>thanhvien</code> ở trình duyệt khác, mở "Bài của tôi", mở bài vừa bị trả lại.</li>
 </ol>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
-  <li>Bài chuyển trạng thái "Đã đăng", biến mất khỏi hàng chờ.</li>
-  <li>Bài xuất hiện trên <code>/bai-viet</code> công khai và trên trang chủ (khối "Bài mới"), có
-    dòng "Duyệt bởi {truongchi} lúc {ngày giờ}".</li>
+  <li>Bước 1: trên thẻ bài có <strong>đúng hai nút "Duyệt" và "Trả lại"</strong>. Không có nút nào để
+    người duyệt sửa nội dung bài — thấy "Sửa nhẹ rồi đăng" hay "Lưu &amp; Duyệt" là
+    <strong>KHÔNG ĐẠT</strong> (tính năng đã bị bỏ khỏi thiết kế, xem khối dưới).</li>
+  <li>Bước 2–3: bài chuyển trạng thái "Đã đăng", biến mất khỏi hàng chờ; xuất hiện trên
+    <code>/bai-viet</code> và trên trang chủ (khối "Bài mới") <strong>với người đã đăng nhập</strong>,
+    có dòng "Duyệt bởi {truongchi} lúc {ngày giờ}". (Khách không đọc được bài — xem
+    <a href="#NT-KHACH-01">NT-KHACH-01</a>; "công khai" ở bản trước nay nghĩa là "cả họ".)</li>
+  <li>Bước 4: nút "Xác nhận trả lại" <strong>bấm không được</strong> khi ô lý do trống; bài vẫn ở
+    hàng chờ.</li>
+  <li>Bước 5: bài rời hàng chờ.</li>
+  <li>Bước 6: bài nằm ở trạng thái "Nháp", màn soạn có tiêu đề "Bài đã được trả lại để sửa" và hiện
+    <strong>nguyên văn</strong> lý do đã gõ ở bước 5. Nội dung bài <strong>y nguyên</strong> như lúc
+    <code>thanhvien</code> gửi — không ai ngoài tác giả đã sửa nó.</li>
 </ul>
+<div class="sua">
+  <span class="nhan-sua">26/09 (chiều) — CHỦ DỰ ÁN QUYẾT: BỎ HẲN "Sửa nhẹ rồi đăng"</span>
+  <p>
+    Người duyệt chỉ có hai việc: Duyệt, hoặc Trả lại kèm lý do. Bài cần sửa một chữ thì trả lại và ghi
+    rõ chữ nào. Design 07 §2 và tài liệu 08 §6.3 đã sửa theo. Kịch bản này vì thế bỏ hẳn nhánh "sửa nhẹ"
+    và thêm bước 4–6 để kiểm đúng nửa "trả lại" mà tên kịch bản vẫn hứa từ đầu.
+  </p>
+  <p style="margin-bottom:0">
+    <strong>Lý do của bên thua</strong> (cho người sau muốn mở lại): một bài chỉ sai một năm sinh mà
+    phải đi một vòng trả lại – sửa – gửi lại – duyệt lại là chậm, và với người viết cao tuổi mỗi lần bị
+    trả lại là một lần nản. <strong>Vì sao vẫn bỏ:</strong> sửa bài của người khác rồi đăng dưới tên
+    người ấy là đặt vào miệng họ một câu họ chưa viết; làm cho an toàn cần quyền sửa riêng, nhật ký "ai
+    sửa gì trên bài của ai" và báo cho tác giả — không thứ nào có, và backend chỉ cho tác giả gọi
+    <code>PATCH /posts/{id}</code>.
+  </p>
+</div>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 (sáng) — "Sửa nhẹ rồi đăng" đã ẨN · CHỜ BA QUYẾT — <em>đã quyết, xem khối trên; giữ lại làm lịch sử</em></span>
+  <p>
+    Design 07 §2 hứa người duyệt có nút "Sửa nhẹ rồi đăng" (sửa tại chỗ rồi "Lưu &amp; Duyệt"), và
+    tài liệu 08 §6.3 (bản 3) đã tả nó theo lời hứa ấy. Bấm thật 24–26/09: lời hứa ấy
+    <strong>không có lối nào dưới nó</strong> — hợp đồng và backend chỉ cho <strong>tác giả</strong>
+    gọi <code>PATCH /posts/{id}</code>, nên người duyệt không có cách nào lưu một bản sửa. Nút đã
+    được ẩn để không hứa điều máy chủ không làm.
+  </p>
+  <p style="margin-bottom:0">
+    <strong>Đây là việc BA phải quyết, không phải việc sửa mã:</strong> hoặc mở quyền sửa cho người
+    duyệt (kèm ghi nhật ký "ai sửa gì trên bài của ai" và báo cho tác giả — sửa bài của người khác
+    rồi đăng dưới tên họ là chuyện nhạy cảm), hoặc bỏ tính năng khỏi design 07 §2. Không chấm
+    KHÔNG ĐẠT vì thiếu nút này.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -2182,6 +2758,17 @@ chỉ trên nhãn.</p>
   <li><code>truongchi.at</code> <strong>không thấy</strong> sự kiện "Họp Chi Bính nghiệm thu" ở bất
     kỳ bộ lọc nào (không phải việc của Chi Ất, không phải việc cấp dòng họ).</li>
 </ul>
+<div class="sua canh">
+  <span class="nhan-sua">23/09 — bước 3 (chọn "Chi Bính") từng KHÔNG bấm được với BẤT KỲ Trưởng chi nào</span>
+  <p style="margin-bottom:0">
+    Ô "Một chi/ngành" → tên chi ở bước 3 lấy danh sách từ cùng <code>Query.branches</code> chưa có
+    resolver mà <a href="#NT-TV-18">NT-TV-18</a> đã vá — và hậu quả ở đúng màn này nặng hơn một ô
+    lọc rỗng: <strong>phạm vi là trường bắt buộc để tạo việc họ</strong>, nên trước bản vá không một
+    Trưởng chi nào tạo được sự kiện nào cả, dù loại việc gì. Nếu kịch bản này trước đây từng chấm
+    ĐẠT, phải xem lại — không có chi nào để chọn ở ô "Một chi/ngành" thì bước 3 không thực hiện
+    được, và bước 4 ("Điền ngày âm, bấm Tạo") cũng không tới lượt.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
@@ -2277,9 +2864,15 @@ xem bảng <code>canImport</code> trong <code>TAI-KHOAN-THU-NGHIEM.md</code>).</
   <li>Không gõ gì vào trang Nhân khẩu — nó đã rỗng sẵn. (Bản trước bảo "xoá các dòng ví dụ tô
     nền khác màu trên trang Nhân khẩu"; các dòng ấy nằm ở trang "Ví dụ" riêng và <strong>phải giữ
     nguyên</strong> — trang ấy không được đọc khi tải lên.)</li>
+  <li>Đọc trang <strong>Hướng dẫn</strong>: tìm dòng nói số người <strong>đã có mã</strong> và số
+    người <strong>chưa có mã</strong> trong Chi Bính.</li>
   <li>Quay lại trang web, bấm "Tải tệp đã điền lên", chọn Chi Bính và chính tệp mẫu (rỗng, chỉ để
     kiểm luồng đọc file — không phải để commit dữ liệu thật).</li>
   <li>Bấm "Tải lên và đối soát".</li>
+  <li><strong>Phần ghi vào phả (chỉ làm trên môi trường thử):</strong> điền 2–3 dòng nhân khẩu mới
+    vào trang Nhân khẩu (chép khuôn từ trang Ví dụ, đổi tên và mã), tải lên, xử lý hết lỗi / mục cần
+    xem lại / cặp nghi trùng, bấm "Duyệt và ghi … người vào phả" rồi "Ghi vào phả".
+    <strong>Không đóng trang</strong> — ngồi nhìn màn hình tới khi nó dừng.</li>
 </ol>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
@@ -2290,9 +2883,308 @@ xem bảng <code>canImport</code> trong <code>TAI-KHOAN-THU-NGHIEM.md</code>).</
     phả</strong> — đúng lời hứa "Tải lên chưa phải là duyệt."</li>
   <li>Không thấy cột điện thoại, thư điện tử, địa chỉ hay ảnh trong mẫu (người còn sống tự khai
     phần của mình ở bước 5, không điền hộ).</li>
+  <li><strong>Trang Hướng dẫn</strong> nói rõ hai con số của chi: bao nhiêu người <strong>đã có
+    mã</strong> và bao nhiêu người <strong>chưa có mã</strong> — để Trưởng chi biết lần này phải sửa
+    trên dòng đã có hay phải đánh mã mới. Tệp có đúng <strong>5 trang</strong>; các dòng ví dụ nằm ở
+    trang <strong>Ví dụ</strong>, trang Nhân khẩu giao xuống rỗng.</li>
+  <li><strong>Phần ghi vào phả:</strong> sau khi bấm "Ghi vào phả", màn hình
+    <strong>tự theo dõi tới khi có kết cục</strong> — dừng ở <strong>COMMITTED</strong> (đã ghi,
+    có nút "Gỡ toàn bộ lô này") hoặc <strong>FAILED</strong> (kèm lý do). Màn hình
+    <strong>đứng yên ở "chờ duyệt"</strong> trong khi lô đã có kết cục là
+    <strong>KHÔNG ĐẠT</strong>. Tải lại trang thì trạng thái hiện ra phải khớp trạng thái vừa thấy.</li>
+  <li><strong>Lỗi phải lộ ở bước kiểm, không phải lúc ghi.</strong> Thêm vào tệp một dòng
+    <strong>dâu/rể</strong> (không Mã cha, không Mã mẹ, có ở trang Hôn phối) và <strong>điền ô
+    Đời</strong>. Ngay sau "Tải lên và đối soát", khối "lỗi phải sửa" hiện
+    <strong>"Dâu/rể không khai Đời — xoá ô Đời"</strong> ở đúng dòng ấy, cột <strong>Đời</strong>,
+    câu lỗi nói rõ quy ước và cách sửa ("xoá ô Đời ở dòng N — đời của dâu/rể sẽ suy từ vợ/chồng");
+    nút "Duyệt và ghi" <strong>khoá</strong>. Xoá ô Đời, tải lại → lỗi biến mất. Màn đối soát báo
+    "Không còn lỗi phải sửa" rồi lô vẫn <strong>FAILED sau khi bấm ghi</strong> là
+    <strong>KHÔNG ĐẠT</strong>. Trang Hướng dẫn của tệp mẫu có mục <strong>"Dâu/rể — ĐỂ TRỐNG ô
+    Đời"</strong>.</li>
 </ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — lỗi của lô Excel lộ ở bước KIỂM, không phải lúc GHI</span>
+  <p>
+    <strong>Bấm thật 24/09:</strong> hai dòng dâu/rể có khai Đời → màn đối soát báo "Không còn lỗi
+    phải sửa", người dùng bấm "Ghi vào phả", lô nhận <code>202</code> rồi <code>FAILED</code> với
+    <code>IMP_UNDECIDED_INLAW_DOI</code>. Nguyên nhân: lượt soát trước khi ghi
+    (<code>CommitPreflight</code> — ba ca Hội đồng chưa chốt, vòng lặp thứ tự ghi, mã Hôn phối /
+    kế tự không tìm thấy, gộp không áp dụng được) <strong>chỉ chạy lúc ghi</strong>, không chạy
+    trong bước kiểm. <strong>Đã sửa:</strong> cùng lượt soát ấy (<code>ImportPreflight</code>) nay
+    chạy ở cuối bước kiểm, khi kiểm lại, và sau mỗi quyết định nghi trùng; sáu mã của nó là lỗi
+    chặn như mọi lỗi chặn khác. Bước ghi vẫn chạy lại nó làm lưới thứ hai (dữ liệu có thể đổi
+    giữa hai bước). Quy ước "dâu/rể <strong>không</strong> khai Đời" vẫn là quy ước tạm, chờ Hội
+    đồng Tộc biểu chốt.
+  </p>
+  <p style="margin-bottom:0">
+    Một hệ quả nhìn thấy được: mã kế tự không có trong tệp <strong>và</strong> không có trong phả
+    của chi trước là <em>cảnh báo</em> ở bước kiểm nhưng bị <em>chặn</em> lúc ghi; nay nó là
+    <strong>lỗi chặn</strong> ngay ở bước kiểm (vẫn kèm gợi ý mã gần giống). Mã kế tự có trong phả
+    mà không có trong tệp thì vẫn chỉ là cảnh báo.
+  </p>
+</div>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — hai chỗ thêm: con số trên trang Hướng dẫn, và màn phải theo tới kết cục</span>
+  <p>
+    <strong>Màn ghi vào phả từng đứng ở "chờ duyệt" trong khi lô đã hỏng.</strong> Bấm thật
+    24–26/09: bấm "Ghi vào phả", lô chạy nền và kết thúc ở FAILED, nhưng màn hình cứ hiện "chờ
+    duyệt" — người dùng tưởng còn phải đợi. Bản trước không có bước ghi
+    vào phả vì nó cố ý chỉ tải tệp mẫu rỗng ("không phải để commit dữ liệu thật") — lý do hợp lý
+    để giữ dữ liệu mẫu sạch, nhưng nó bỏ trống đúng chặng dễ hỏng nhất. Nay có một phần riêng, chỉ
+    làm trên môi trường thử; ghi xong có thể gỡ lô (tài liệu 08 §7.5).
+  </p>
+  <p style="margin-bottom:0">
+    <strong>Trang Hướng dẫn nay nêu số người đã có mã / chưa có mã trong chi</strong> — để từ lần
+    nhập thứ hai Trưởng chi biết mẫu đã mang sẵn bao nhiêu người. Bản trước không chấm điều này vì
+    trang Hướng dẫn lúc ấy chưa nêu con số nào. Còn "dòng ví dụ ở trang Ví dụ" thì bản 22/09 đã sửa (xem ghi chú ở bước 4); nhắc lại ở
+    đây vì tài liệu 08 §7.2 bản 3 vẫn còn tả sai chỗ ấy.
+  </p>
+</div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-16">
+<h3><span class="ma-so">NT-TC-16</span> — Tải Excel hỏng: thiếu tệp / sai <code>Content-Type</code> trả đúng mã, không phải 500 <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Đây là <strong>ca có hậu quả nhìn thấy được ngoài đời</strong>, theo đúng chữ của người sửa nó:
+  <code>ImportBatchController.upload</code> khai <code>consumes = multipart/form-data</code> +
+  <code>@RequestPart("file")</code>, nên hai lỗi client hay gặp nhất ở đúng màn nhập liệu này —
+  <strong>thiếu tệp</strong> và <strong>sai <code>Content-Type</code></strong> — từng rơi vào một
+  bộ bắt-tất và trả về <strong>500</strong>. Người vận hành đọc 500 là "máy chủ hỏng" rồi gọi người
+  trực, trong khi lỗi hoàn toàn nằm ở phía client. Ca này không bấm qua nút bấm được — nút "Tải tệp
+  đã điền lên" của <code>/nhap-lieu</code> tự chặn hai lỗi này ở phía trình duyệt trước khi gửi đi
+  (xem khối 23/09 bên dưới) — nên phải gọi thẳng API, đúng như một client thứ hai (ứng dụng di động,
+  script tự động) sẽ làm nếu gọi sai.
+</p>
+<div class="sua canh">
+  <span class="nhan-sua">23/09 — kịch bản MỚI, ghim một hồi quy đã xảy ra thật rồi được thu hồi</span>
+  <p>
+    Bản vá đưa <code>GlobalExceptionHandler</code> lên ưu tiên cao hơn bộ xử lý của Spring
+    (22/09, để giành lại lỗi kiểm thân yêu cầu — xem khối đầu phần F) đã vô tình giữ lại một
+    <code>@ExceptionHandler(Exception.class)</code> bắt-tất trong chính advice ưu tiên cao ấy.
+    Spring dừng ở advice <strong>đầu tiên</strong> có bất kỳ phương thức nào khớp, nên nó nuốt luôn
+    toàn bộ danh sách ngoại lệ khung — sáu lớp lỗi client thành <code>500</code> hết, không riêng gì
+    hai lớp ở màn Excel. Bản vá 23/09 thu hồi bằng cách bỏ hẳn handler bắt-tất khỏi advice ưu tiên
+    cao, tách nó sang một lớp riêng (<code>UnexpectedErrorHandler</code>) ở
+    <code>LOWEST_PRECEDENCE</code>. Kiểu hỏng này nay <strong>không còn biểu diễn được</strong>:
+    khai trùng một <code>@ExceptionHandler</code> trong lớp con là lỗi lúc khởi động, không phải một
+    thay đổi hành vi âm thầm.
+  </p>
+  <p style="margin-bottom:0">
+    Ca này thay cho việc chỉ tin lời "đã sửa" — đã đo lại trực tiếp trên hệ đang chạy hôm nay bằng
+    hai lệnh <code>curl</code> dưới đây trước khi viết các bước.
+  </p>
+</div>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Lấy access token của <code>truongchi</code> (lệnh <code>curl</code> lấy token ở
+  <code>TAI-KHOAN-THU-NGHIEM.md</code>). Cần <code>branchId</code> của Chi Bính — lấy bằng
+  <code>GET /api/v1/import/branches</code> kèm token đó, đọc <code>id</code> của dòng
+  <code>"Chi Bính"</code> (<code>canImport: true</code>).
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li><strong>Thiếu <code>Content-Type</code> đúng dạng:</strong> gọi
+    <code>POST /api/v1/import/batches?branchId=&lt;id Chi Bính&gt;</code> kèm
+    <code>Authorization: Bearer &lt;token&gt;</code>, gửi một thân bất kỳ nhưng
+    <strong>không</strong> theo dạng <code>multipart/form-data</code> (ví dụ
+    <code>curl --data-raw "khong-phai-multipart"</code>, không thêm cờ <code>-F</code>).</li>
+  <li><strong>Thiếu phần tên <code>file</code>:</strong> gọi lại đúng endpoint ấy, lần này đúng
+    dạng multipart nhưng <strong>không</strong> đính tệp — ví dụ <code>curl -F
+    "branchId=&lt;id Chi Bính&gt;"</code> mà không có <code>-F "file=@..."</code>.</li>
+  <li>Đọc mã trạng thái HTTP và trường <code>code</code> trong thân trả về của cả hai lượt gọi.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Bước 1:</strong> trả về <code>415</code> (không phải <code>500</code>), thân RFC 7807
+    với <code>code: VALIDATION_FAILED</code> và tiêu đề "Kiểu nội dung không được hỗ trợ".</li>
+  <li><strong>Bước 2:</strong> trả về <code>400</code> (không phải <code>500</code>), thân RFC 7807
+    với <code>code: VALIDATION_FAILED</code>.
+    <br><em>Ghi chú cho người chấm:</em> trường <code>detail</code> ở ca này hiện ra nguyên văn
+    tiếng Anh của Spring ("Required part 'file' is not present.") — một khiếm khuyết nhỏ, đáng báo
+    lại, nhưng <strong>không</strong> làm hỏng phán quyết của ca này: điều cần chấm là mã trạng thái
+    và <code>code</code>, không phải câu chữ của <code>detail</code>.</li>
+  <li>Không có lượt gọi nào ở trên trả về <code>500</code>.</li>
+</ul>
+<div class="sua">
+  <span class="nhan-sua">23/09 — vì sao không bấm được hai lỗi này qua nút bấm thật</span>
+  <p style="margin-bottom:0">
+    Đã đọc <code>import-upload-screen.tsx</code>: nút "Tải tệp đã điền lên" tự chặn cả hai ở phía
+    trình duyệt trước khi gửi — chưa chọn tệp thì báo <code>needFile</code> ngay, và ô chọn tệp giới
+    hạn <code>accept=".xlsx,..."</code>. Trình duyệt cũng luôn tự đặt đúng
+    <code>Content-Type: multipart/form-data</code> khi gửi một biểu mẫu có tệp, nên không có thao
+    tác chuột nào tạo ra được lượt gọi thiếu nó. Hai lỗi này chỉ lộ ra với một client gọi thẳng API —
+    đúng nhóm mà bản vá muốn bảo vệ, và đúng lý do ca này phải chạy bằng <code>curl</code>.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT (cả hai bước)</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-17">
+<h3><span class="ma-so">NT-TC-17</span> — Cấp lại mật khẩu cho người trong chi mình: dựng dữ liệu, cấp, chính chủ nhận thông báo, liên kết chỉ dùng một lần <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Tính năng <strong>mới</strong> (<code>V21</code>): các cụ đăng ký bằng <strong>số điện thoại</strong>
+  (không có địa chỉ thư) trước đây quên mật khẩu là hết đường — Keycloak chỉ tự phục hồi được bằng
+  thư điện tử. <code>POST /api/v1/password-resets</code> mở lối ấy cho Trưởng chi/Hội đồng, dùng lại
+  đúng cơ chế liên kết một lần của luồng mời. Màn hình của nó là
+  <code>/quan-ly/cap-lai-mat-khau</code> — ô thứ sáu trên trang "Quản lý dòng họ"
+  (<a href="#NT-TC-01">NT-TC-01</a>) — và kịch bản này <strong>bấm qua màn ấy</strong>, không cần
+  <code>curl</code>.
+  <br>Đánh đổi trung tâm của tính năng, nói thẳng như javadoc của nó: <strong>người cấp NHÌN THẤY
+  liên kết</strong>, nên trong 30 phút họ đặt được mật khẩu của người kia. Lớp bảo vệ duy nhất là
+  <strong>chính chủ luôn được báo</strong> — bước 7 dưới đây kiểm đúng lớp bảo vệ ấy, không phải một
+  chi tiết phụ.
+</p>
+<span class="nhan">Chuẩn bị — dựng một tài khoản ĐĂNG KÝ BẰNG SỐ ĐIỆN THOẠI, đã duyệt</span>
+<p class="mo-ta">
+  Sáu tài khoản thử nghiệm có sẵn <strong>đều có địa chỉ thư</strong> (tra được qua Keycloak Admin
+  Console), nên không tài khoản nào trong số đó cấp lại được — quy tắc "phải KHÔNG có email" ở
+  <a href="#NT-TC-18">NT-TC-18</a> sẽ chặn ngay. Phải dựng một tài khoản mới, đăng ký bằng
+  <strong>số điện thoại</strong>, rồi cho nó đi hết luồng tự nhận + được duyệt, để nó có
+  <code>status = ACTIVE</code> và một chi thật:
+</p>
+<ol class="buoc">
+  <li>Ở <code>/dang-ky</code>, gõ mã mời dòng họ hợp lệ (như NT-MOI-01), rồi ở bước lập tài khoản gõ
+    một <strong>số điện thoại</strong> vào ô "Thư điện tử hoặc số điện thoại" — ví dụ
+    <code>0987000101</code> (không trùng số của ai đã có trong dữ liệu mẫu). Đặt mật khẩu như
+    NT-MOI-03.</li>
+  <li>Đăng nhập bằng tài khoản vừa tạo, trên <code>/tree</code> chọn một người <strong>còn sống ở
+    Chi Bính</strong>, chưa ai gắn (không phải <code>thanhvien</code>/<code>truongchi</code>), bấm
+    "Đây là tôi", gửi đơn như NT-MOI-07.</li>
+  <li>Đăng nhập <code>truongchi</code>, duyệt đơn ấy như NT-TC-02.</li>
+</ol>
+<p class="mo-ta">
+  Ghi lại tên chính xác của người vừa được gắn.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Đăng nhập <code>truongchi</code>. "Quản lý thành viên" → ô <strong>"Cấp lại liên kết đặt mật
+    khẩu"</strong>. Ở ô <strong>"Ai quên mật khẩu?"</strong> gõ tên người vừa dựng; đọc từng dòng
+    gợi ý và dòng nhỏ dưới danh sách. Chọn đúng người, gõ ghi chú (ví dụ "cụ gọi điện"), bấm
+    <strong>"Cấp liên kết"</strong>.</li>
+  <li>Đọc khối kết quả: liên kết, dòng "Có hiệu lực tới …", dòng "Chính chủ đã được báo…". Chép
+    liên kết.</li>
+  <li>Đăng nhập lại bằng tài khoản số điện thoại vừa dựng (mật khẩu cũ), mở
+    <code>/notifications</code>.</li>
+  <li>Mở liên kết vừa chép ở <strong>một trình duyệt khác</strong> (hoặc cửa sổ ẩn danh, không đăng
+    nhập), đặt mật khẩu mới, ví dụ <code>NghiemThu2026!</code>.</li>
+  <li>Mở lại <strong>đúng liên kết ấy lần thứ hai</strong>, thử đặt một mật khẩu khác.</li>
+  <li>Đăng nhập bằng tài khoản số điện thoại và mật khẩu <strong>mới</strong> vừa đặt ở bước 4.</li>
+  <li><strong>Mỗi lượt cấp mới thu hồi lượt trước:</strong> về lại màn cấp, cấp liên kết A cho cùng
+    người, rồi cấp tiếp liên kết B. Mở liên kết <strong>A</strong> ở trình duyệt khác.</li>
+  <li><strong>Trần mười lượt một giờ:</strong> tiếp tục cấp cho cùng người (hoặc người khác trong
+    chi) tới khi tổng số lượt cấp của <code>truongchi</code> trong giờ này đạt 10, rồi bấm "Cấp liên
+    kết" lượt thứ 11.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Bước 1:</strong> ô chọn người chỉ gợi ý người còn sống <strong>trong phạm vi chi của
+    <code>truongchi</code></strong>; mỗi dòng hiện <strong>cả đường nhánh</strong> (chi › ngành) để
+    phân biệt người trùng tên; nếu có người khớp tên ở chi khác thì có dòng báo
+    "{n} người khớp tên ở chi khác không hiện ở đây — ông/bà chỉ chọn được người trong chi mình được
+    giao." (không nêu tên họ).</li>
+  <li><strong>Bước 2:</strong> thấy tiêu đề "Đã cấp — liên kết chỉ hiện đúng lần này", dòng
+    "Liên kết dành cho {tên}" đúng người vừa dựng, hạn khoảng 30 phút tính từ lúc bấm. Màn hình
+    <strong>không</strong> hiện số điện thoại đăng nhập (định danh Keycloak) của người ấy.</li>
+  <li><strong>Bước 3:</strong> hộp thư có một thông báo <strong>SYSTEM</strong> mới, đúng câu:
+    "<code>truongchi</code> vừa cấp một liên kết đặt lại mật khẩu cho tài khoản của bạn. Liên kết có
+    hiệu lực tới {giờ}. Nếu bạn không yêu cầu việc này, hãy báo ngay Hội đồng Tộc biểu và đổi mật
+    khẩu." với tiêu đề "Có người vừa cấp liên kết đặt lại mật khẩu cho tài khoản của bạn" —
+    <strong>đây là toàn bộ lớp bảo vệ của tính năng</strong>, đừng bỏ qua bước này dù chỉ kiểm
+    nhanh bước 1.</li>
+  <li><strong>Bước 4:</strong> đặt mật khẩu thành công, chuyển sang màn "Xong rồi — mật khẩu đã
+    đặt" (giống NT-MOI-03).</li>
+  <li><strong>Bước 5 — ca quan trọng nhất của kịch bản:</strong> liên kết đã <strong>hỏng</strong>
+    (máy chủ trả <code>410</code>; màn hình hiện "Liên kết đặt mật khẩu không còn dùng được"),
+    không đặt được mật khẩu lần hai dù còn trong hạn 30 phút. Nếu bước này thành công thì Trưởng
+    chi giữ được quyền đặt lại mật khẩu người khác bất cứ lúc nào — báo <strong>KHÔNG ĐẠT</strong>
+    ngay lập tức, đây là mức <strong>chặn phát hành (blocker)</strong>.</li>
+  <li><strong>Bước 6:</strong> đăng nhập được bằng mật khẩu đặt ở bước 4 — xác nhận toàn luồng nối
+    thông từ đầu tới cuối, không chỉ dừng ở việc thấy liên kết.</li>
+  <li><strong>Bước 7:</strong> liên kết <strong>A</strong> đã <strong>không còn dùng được</strong>
+    ngay khi B được cấp — hai liên kết không được cùng mở một tài khoản (màn cấp cũng nói trước:
+    "Nếu cấp lại lần nữa, liên kết này mất tác dụng ngay…").</li>
+  <li><strong>Bước 8:</strong> lượt thứ 11 trong một giờ bị từ chối (<code>429</code>) với đúng
+    câu: "Ông/bà vừa cấp nhiều liên kết liên tiếp trong một giờ. Xin chờ rồi thử lại." Không có
+    liên kết nào được đúc ra ở lượt ấy, và chính chủ không nhận thêm thông báo nào cho lượt ấy.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — bỏ câu "chưa có màn hình riêng"; kịch bản đi qua màn hình thật</span>
+  <p>
+    <strong>Bản trước viết:</strong> "Chưa có màn hình riêng cho tính năng này — kiểm bằng
+    <code>curl</code>". Đúng ở ngày 23/09: <code>POST /api/v1/password-resets</code> chạy được
+    nhưng không một màn hình nào gọi tới, và tài liệu 08 §6.9 còn phải bảo Trưởng chi nhờ người vận
+    hành chạy lệnh hộ.
+  </p>
+  <p style="margin-bottom:0">
+    Nay màn <code>/quan-ly/cap-lai-mat-khau</code> đã có và <strong>đã bấm trọn luồng</strong> ngày
+    24–26/09: cấp → mở liên kết ở trình duyệt khác → đặt mật khẩu → dùng lại lần 2 nhận
+    <code>410</code> → đăng nhập bằng mật khẩu mới. Hai điều trước chỉ nằm trong javadoc nay có bước
+    chấm riêng: trần 10 lượt/giờ (lượt 11 nhận <code>429</code>) và "lượt mới thu hồi lượt trước".
+    Muốn kiểm thẳng API thì lệnh <code>curl</code> của bản trước vẫn đúng
+    (<code>201</code>, thân có <code>url</code>/<code>expiresAt</code>/<code>grant.target.displayName</code>,
+    không có định danh Keycloak) — nhưng nó không còn là đường chính.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-TC-18">
+<h3><span class="ma-so">NT-TC-18</span> — Cấp lại mật khẩu bị chặn: khác chi · tự cấp · tài khoản đã có email <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Ba luật chặn của <code>PasswordResetGrantService.issue</code>, kiểm bằng chính sáu tài khoản có
+  sẵn — <strong>không cần</strong> dựng dữ liệu như NT-TC-17, vì cả ba luật này đều được kiểm
+  <em>trước</em> phép kiểm "không có email" (thứ tự đọc trong javadoc của hàm: phạm vi chi → tự cấp
+  → trạng thái tài khoản → có email hay không).
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Lấy access token của <code>truongchi</code> (Chi Bính) và <code>truongchi.at</code> (Chi Ất). Cần
+  <code>personId</code> của <code>thanhvien</code> (Chi Bính) — mở hồ sơ của <code>thanhvien</code>,
+  lấy UUID trên thanh địa chỉ.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li><strong>Khác chi:</strong> gọi <code>POST /api/v1/password-resets</code> với token của
+    <code>truongchi.at</code> (Chi Ất), thân <code>{"personId": "&lt;personId của thanhvien&gt;"}</code>
+    — <code>thanhvien</code> thuộc Chi Bính, ngoài phạm vi của <code>truongchi.at</code>.</li>
+  <li><strong>Tự cấp:</strong> gọi lại với token của <code>truongchi</code>, thân
+    <code>{"personId": "&lt;personId của chính truongchi&gt;"}</code>.</li>
+  <li><strong>Đã có email:</strong> gọi lại với token của <code>truongchi</code>, thân
+    <code>{"personId": "&lt;personId của thanhvien&gt;"}</code> — cùng chi, không tự cấp, nhưng
+    <code>thanhvien</code> có địa chỉ thư trong Keycloak.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Bước 1:</strong> <code>403</code>, <code>code: BRANCH_SCOPE_VIOLATION</code> —
+    <strong>không</strong> phải <code>422</code> hay bất kỳ mã nào gợi ý về tình trạng tài khoản của
+    <code>thanhvien</code>; người gọi sai phạm vi không có quyền biết thêm gì về đích.</li>
+  <li><strong>Bước 2:</strong> <code>403</code>, <code>code: SELF_PASSWORD_RESET_FORBIDDEN</code>.
+    Đây là luồng quên-mật-khẩu-của-chính-mình, đi đường khác (Keycloak "Quên mật khẩu" nếu có email,
+    hoặc gọi người khác cấp).</li>
+  <li><strong>Bước 3:</strong> <code>422</code>, <code>code: PASSWORD_RESET_NOT_ALLOWED</code>.
+    <code>thanhvien</code> tự lấy lại mật khẩu được bằng "Quên mật khẩu" ở màn đăng nhập — mở thêm
+    một đường cấp-hộ cho người đã có đường tự phục hồi chỉ thêm một lối tấn công.</li>
+  <li>Không lượt gọi nào ở trên tạo ra một liên kết nào (không có ai nhận được thông báo cấp lại mật
+    khẩu sau ba bước này).</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT (cả ba bước)</span>
   <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
   <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
 </div>
@@ -2309,6 +3201,8 @@ xem bảng <code>canImport</code> trong <code>TAI-KHOAN-THU-NGHIEM.md</code>).</
     <li><a href="#NT-HD-05">05 · Tạo sự kiện cấp cả dòng họ</a></li>
     <li><a href="#NT-HD-06">06 · Đọc số điện thoại "Riêng tư" của một thành viên</a></li>
     <li><a href="#NT-HD-07">07 · Vì sao không dùng <code>admin.giapha</code> để kiểm mục 06</a></li>
+    <li><a href="#NT-HD-08">08 · Cấp lại mật khẩu — vai toàn họ cũng không tự cấp được cho chính mình <span class="chip chip-cabien">CA BIÊN</span></a></li>
+    <li><a href="#NT-HD-09">09 · Tranh chấp một nhân khẩu — đơn bị đóng theo nhận lý do có dấu, nói việc cần làm</a></li>
   </ul>
 </div>
 
@@ -2504,6 +3398,94 @@ nên nó không cô lập được câu hỏi "vai Hội đồng, một mình n�
 </div>
 </div>
 
+<div class="kich-ban" id="NT-HD-08">
+<h3><span class="ma-so">NT-HD-08</span> — Cấp lại mật khẩu: vai toàn họ cũng không tự cấp được cho chính mình <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Luật "không ai tự cấp cho chính mình" ở <a href="#NT-TC-18">NT-TC-18</a> là luật về
+  <strong>chính chủ</strong>, không phải luật về <strong>phạm vi</strong> — một bộ kiểm tầm thường
+  dễ giả định rằng vai toàn họ (không bị chặn bởi ranh giới chi) thì cũng được miễn trừ luôn quy tắc
+  này. <code>PasswordResetGrantService</code> nói rõ ngược lại: phép kiểm tự-cấp chạy
+  <strong>sau</strong> phép kiểm phạm vi và áp cho <strong>mọi vai</strong>, không có ngoại lệ.
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Lấy access token của <code>hoidong</code>. Cần <code>personId</code> của chính
+  <code>hoidong</code> (mở hồ sơ của <code>hoidong</code>, lấy UUID trên thanh địa chỉ).
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gọi <code>POST /api/v1/password-resets</code> với token của <code>hoidong</code>, thân
+    <code>{"personId": "&lt;personId của chính hoidong&gt;"}</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><code>403</code>, <code>code: SELF_PASSWORD_RESET_FORBIDDEN</code> — <strong>giống hệt</strong>
+    kết quả của <code>truongchi</code> tự cấp ở NT-TC-18 bước 2. Phạm vi toàn họ không mở thêm một
+    ngoại lệ nào cho luật này.</li>
+  <li>Không có liên kết nào được đúc ra — một liên kết đúc rồi vứt đi vẫn là một liên kết đã tồn tại.</li>
+</ul>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-HD-09">
+<h3><span class="ma-so">NT-HD-09</span> — Tranh chấp một nhân khẩu: đơn bị đóng theo nhận lý do có dấu, nói việc cần làm tiếp</h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  <a href="#NT-TC-06">NT-TC-06</a> chấm phía <em>người duyệt</em>: thấy cả hai đơn, được cảnh báo
+  "duyệt đơn này là từ chối các đơn kia". Ca này chấm phía <em>người thua</em> — người không được
+  chọn. Họ không có mặt lúc duyệt, không biết có người khác cùng nhận, và chỉ có đúng một câu để
+  hiểu chuyện gì đã xảy ra: lý do ghi ở mục "Trưởng chi trả lời". Câu ấy phải đọc được, và phải nói
+  họ làm gì tiếp — không được lộ tên người thắng.
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Đã dựng hai đơn cùng nhận một nhân khẩu ở <a href="#NT-MOI-14">NT-MOI-14</a>, và
+  <code>hoidong</code> đã <strong>duyệt một trong hai</strong> ở <a href="#NT-TC-06">NT-TC-06</a>
+  bước 3. Biết tài khoản nào là đơn <em>không</em> được duyệt.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Đăng nhập tài khoản có đơn <strong>không</strong> được duyệt. Mở
+    <code>/nhan-dien/cho-duyet</code>.</li>
+  <li>Đọc trạng thái đơn và mục "Trưởng chi trả lời".</li>
+  <li>Đọc dòng số lần gửi còn lại.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li>Đơn ở trạng thái "Đã từ chối".</li>
+  <li>Mục "Trưởng chi trả lời" có <strong>đúng câu, có dấu đầy đủ</strong>: "Ô này đã được gắn cho
+    một người khác cùng nhận, sau khi Trưởng chi đối chiếu. Nếu ông/bà tin đây đúng là mình, xin gọi
+    Trưởng chi của chi ấy để hỏi lại, hoặc tìm lại đúng ô của mình trên phả đồ."</li>
+  <li>Câu <strong>không</strong> chứa tên hay định danh của người được duyệt.</li>
+  <li>Thấy câu không dấu kiểu "Nhan khau nay da duoc ghep voi mot don khac…" là
+    <strong>KHÔNG ĐẠT</strong>.</li>
+  <li>Ghi vào ô Ghi chú: số lần gửi còn lại có bị trừ vì lần đóng theo này không. <em>Tài liệu
+    chưa chốt đáp án cho điểm này, nên không chấm</em> — người thua không làm gì sai, nhưng đơn của
+    họ được đóng bằng đúng đường "từ chối", mà trần ở <a href="#NT-MOI-13">NT-MOI-13</a> đếm số lần
+    bị từ chối. Đây là điểm chờ BA quyết; con số thấy được là dữ liệu cho quyết định ấy.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — kịch bản MỚI, từ đợt bấm thật</span>
+  <p style="margin-bottom:0">
+    Bấm thật 24–26/09 (tiếp NT-TC-06): người thua đọc thấy "Nhan khau nay da duoc ghep voi mot don
+    khac…" — không dấu, cụt, không nói việc cần làm. Câu ấy được viết không dấu theo thói quen của
+    chuỗi log, vì người viết nghĩ nó là thông điệp kỹ thuật; thật ra nó hiện nguyên văn cho người
+    dùng. NT-TC-06 không bắt được vì nó chỉ chấm đến lúc "đơn còn lại tự chuyển sang Đã từ chối",
+    không mở màn của người thua.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
 <h2 id="f-chuaduyet">F. Tài khoản chưa gắn phả (<code>chuaduyet</code>)</h2>
 <p>
   Đây là trạng thái có thật, không phải một lỗi: tài khoản Keycloak tồn tại và đăng nhập được,
@@ -2529,13 +3511,26 @@ nên nó không cô lập được câu hỏi "vai Hội đồng, một mình n�
     <li><strong><code>chuaduyet</code> và một tài khoản NT-MOI giống hệt nhau.</strong> Đã đo song
       song, cùng ba kết quả: <code>/api/v1/me</code> → <code>200</code> với
       <code>linkedToTree: false</code>; <code>/api/v1/notifications</code> → <code>403
-      ACCOUNT_NOT_LINKED</code>; <code>/api/v1/me/person</code> → <code>409
+      ACCOUNT_NOT_LINKED</code>; <code>/api/v1/me/person</code> → <code>403
       ACCOUNT_NOT_PROVISIONED</code>. Phần F vì vậy <em>không</em> kiểm một vai thứ bảy — nó kiểm
       lại đúng vai của phần B bằng một tài khoản dựng sẵn, và đó vẫn là việc đáng làm.</li>
     <li>Mã lỗi thật cho "chưa ghép vào phả" là <code>ACCOUNT_NOT_LINKED</code> (403), không phải
       <code>ACCOUNT_NOT_PROVISIONED</code> như NT-CHUA-02 đang ghi.
-      <code>ACCOUNT_NOT_PROVISIONED</code> (409) dành cho <code>/me/person</code>.</li>
+      <code>ACCOUNT_NOT_PROVISIONED</code> (403 — xem ghi chú 23/09 dưới) dành cho
+      <code>/me/person</code>.</li>
   </ul>
+  <p style="margin-bottom:0">
+    <strong>23/09 — cập nhật: <code>409</code> đã biến mất, đừng đi tìm nó nữa.</strong> Bản trước
+    của khối này (và của NT-CHUA-02) còn ghi "hợp đồng nói 403 nhưng
+    <code>GlobalExceptionHandler</code> còn trả 409 ở đường <code>/me/person</code>, đừng chấm theo
+    mã HTTP". Đã đo lại trên hệ đang chạy (xem lệnh <code>curl</code> ở NT-CHUA-02): cả
+    <code>/me/person</code> lẫn hai guard kia nay đều trả đúng <strong>403</strong> — không còn
+    đường nào trả <code>409</code> cho mã lỗi này.
+    <code>GlobalExceptionHandler.accountNotProvisioned()</code> đã đổi hẳn sang <code>403</code>
+    (lý lẽ đầy đủ nằm ngay trong javadoc của hàm đó). Lời khuyên "so theo <code>code</code>, đừng so
+    mã HTTP" vẫn đúng và vẫn nên theo, nhưng nay là một thói quen tốt chứ không còn là thứ bắt buộc
+    để né một lệch pha có thật.
+  </p>
 </div>
 
 <div class="kich-ban" id="NT-CHUA-01">
@@ -2613,10 +3608,11 @@ dụng cần biết "đây là ai trong phả".</p>
 <h3><span class="ma-so">NT-CHUA-02</span> — Thử gửi đề nghị đính chính</h3>
 <span class="nhan">Mục đích</span>
 <p class="mo-ta">Mọi chức năng cần phạm vi chi phải từ chối <strong>tử tế</strong>, nói rõ việc cần
-làm — không phải một mã lỗi trần trụi ném vào mặt người dùng. Mã thật tuỳ lối gọi:
-<code>403 ACCOUNT_NOT_LINKED</code> (hộp thư), <code>409 ACCOUNT_NOT_PROVISIONED</code>
-(<code>/me/person</code>), và — sau bản vá 22/09 — <code>403 ACCOUNT_NOT_ACTIVE</code> khi
-<em>gửi</em> một đề nghị đính chính.</p>
+làm — không phải một mã lỗi trần trụi ném vào mặt người dùng. Mã thật tuỳ lối gọi, và từ bản vá
+23/09 <strong>cả ba đều là 403</strong>: <code>403 ACCOUNT_NOT_LINKED</code> (hộp thư),
+<code>403 ACCOUNT_NOT_PROVISIONED</code> (<code>/me/person</code> — trước 23/09 đường này còn trả
+<code>409</code>, xem khối 23/09 ở đầu phần F), và — sau bản vá 22/09 —
+<code>403 ACCOUNT_NOT_ACTIVE</code> khi <em>gửi</em> một đề nghị đính chính.</p>
 <div class="sua canh">
   <span class="nhan-sua">22/09 — LỖ HỔNG ĐÃ TÌM RA Ở ĐÂY, và đã vá</span>
   <p style="margin-bottom:0">
@@ -2666,11 +3662,14 @@ làm — không phải một mã lỗi trần trụi ném vào mặt người d�
     dùng bộ khoá <code>auth.accountState.notProvisioned.*</code>, tức ba câu đã trích ở trên.
   </p>
   <p style="margin-bottom:0">
-    <strong>Về mã HTTP:</strong> chủ dự án đã chốt <code>403</code> (xem tài liệu 06 §7.1) — hợp
-    đồng ghi 403 và hai guard đã trả 403; <code>GlobalExceptionHandler</code> còn trả
-    <code>409</code> và đang được sửa. <strong>Đừng chấm theo mã HTTP</strong>: giao diện rẽ nhánh
-    theo <code>code</code>, nên màn hình đúng ở cả hai. Nếu có mở công cụ nhà phát triển, xin ghi
-    lại mã thấy được vào ô ghi chú để đối chiếu với đợt sửa ấy.
+    <strong>Về mã HTTP — nay đã thống nhất, đừng còn đi tìm 409:</strong> chủ dự án đã chốt
+    <code>403</code> (xem tài liệu 06 §7.1), và bản vá 23/09 đã sửa nốt chỗ lệch pha cuối cùng —
+    <code>GlobalExceptionHandler.accountNotProvisioned()</code> nay trả đúng <code>403</code>, khớp
+    với hợp đồng và với hai guard kia. Đã đo lại bằng <code>curl</code> trên hệ đang chạy:
+    <code>GET /api/v1/me/person</code> của <code>chuaduyet</code> trả <code>403</code> kèm
+    <code>code: ACCOUNT_NOT_PROVISIONED</code>. Lời khuyên "giao diện rẽ nhánh theo
+    <code>code</code>, đừng so mã HTTP" (<code>contracts/README</code> §3) vẫn là thói quen đúng khi
+    gọi API tay, nhưng nay không còn một lệch pha thật nào để nó phải che nữa.
   </p>
 </div>
 <div class="bang-cham">
@@ -2725,13 +3724,24 @@ chặn nhầm.</p>
 </ol>
 <span class="nhan">Kết quả mong đợi</span>
 <ul class="ket-qua">
-  <li>Thấy đủ <strong>năm</strong> mục như <code>hoidong</code>: đơn xin vào phả, phát mã/lời mời,
-    duyệt bài viết, duyệt báo cáo ảnh, <strong>nhập liệu ban đầu</strong> — không mục nào bị ẩn.</li>
+  <li>Thấy đủ <strong>sáu</strong> mục như <code>hoidong</code>: đơn xin vào phả, phát mã/lời mời,
+    duyệt bài viết, duyệt báo cáo ảnh, nhập liệu ban đầu, <strong>cấp lại liên kết đặt mật
+    khẩu</strong> — không mục nào bị ẩn.</li>
   <li>Mục "Quản lý thành viên" cũng có trên thanh đầu trang, như với Trưởng chi và Hội đồng.</li>
 </ul>
 <div class="sua">
   <span class="nhan-sua">22/09 — bốn thành năm, cùng lý do với NT-TC-01</span>
   <p style="margin-bottom:0">Ô "Nhập liệu ban đầu" mới được thêm vào trang này.</p>
+</div>
+<div class="sua">
+  <span class="nhan-sua">26/09 — năm thành SÁU, cùng lý do với NT-TC-01</span>
+  <p style="margin-bottom:0">
+    Ô "Cấp lại liên kết đặt mật khẩu" (<code>/quan-ly/cap-lai-mat-khau</code>) được thêm vào. Bản
+    23/09 giữ con số năm vì lúc ấy tính năng này chỉ gọi được bằng <code>curl</code>.
+    <em>Ghi chú cho người chấm:</em> <code>admin.giapha</code> mang cả <code>ADMIN</code> lẫn
+    <code>COUNCIL</code> nên thấy ô này là đương nhiên — ca này không chứng minh được vai
+    <code>ADMIN</code> một mình có thấy hay không (cùng lý do với <a href="#NT-HD-07">NT-HD-07</a>).
+  </p>
 </div>
 <div class="bang-cham">
   <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
@@ -2794,8 +3804,136 @@ lý phải là Admin kỹ thuật, không phải Hội đồng — kiểm đư�
 </div>
 </div>
 
+<div class="kich-ban" id="NT-ADMIN-04">
+<h3><span class="ma-so">NT-ADMIN-04</span> — Năm lớp lỗi client còn lại trả đúng mã, không phải 500 <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Phần này ghim năm trong sáu lớp lỗi client của cùng hồi quy đã thu hồi ngày 23/09 (lớp thứ sáu —
+  thiếu tệp/sai <code>Content-Type</code> ở màn Excel — đã kiểm riêng ở <a href="#NT-TC-16">NT-TC-16</a>,
+  vì nó có hậu quả cụ thể đáng tách ra). Cả năm lớp dưới đây đều là lỗi <strong>hoàn toàn của
+  client</strong> (thân JSON hỏng, tham số sai kiểu, thiếu tham số bắt buộc, <code>Accept</code>
+  không phục vụ được, sai HTTP method) — không endpoint nghiệp vụ nào trong sản phẩm cố ý tạo ra
+  chúng, nên chọn năm đường bất kỳ đủ để chạm khung Spring là đủ, không cần gắn với một màn hình cụ
+  thể nào.
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Lấy access token của <code>thanhvien</code> (dùng cho hai bước cần đăng nhập). Ba bước còn lại
+  không cần token.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li><strong>Thân JSON hỏng:</strong> <code>POST /api/v1/person-claims/existing</code> kèm token,
+    <code>Content-Type: application/json</code>, thân cố ý cụt:
+    <code>{"code": </code> (thiếu dấu đóng).</li>
+  <li><strong>Tham số sai kiểu:</strong> <code>GET /api/v1/public/persons/khong-phai-uuid</code>
+    (không cần token — đường công khai).</li>
+  <li><strong>Thiếu tham số bắt buộc:</strong> <code>GET /api/v1/public/persons/search</code>
+    không kèm <code>q</code> (không cần token).</li>
+  <li><strong><code>Accept</code> không phục vụ được:</strong>
+    <code>GET /api/v1/public/persons/search?q=nguyen</code> kèm header
+    <code>Accept: application/xml</code> (không cần token).</li>
+  <li><strong>Sai HTTP method:</strong> <code>POST /actuator/health</code> (endpoint này chỉ nhận
+    <code>GET</code>; không cần token).</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Bước 1:</strong> <code>400</code>, <code>code: VALIDATION_FAILED</code> —
+    <strong>không phải</strong> <code>500</code>.</li>
+  <li><strong>Bước 2:</strong> <code>400</code>, <code>code: VALIDATION_FAILED</code>. Trường
+    <code>detail</code> nêu tên tham số ("id") nhưng <strong>không lặp lại</strong> chuỗi
+    <code>khong-phai-uuid</code> vừa gõ — mặc định của Spring sẽ nhắc lại nguyên văn giá trị gửi lên
+    cả trong thân lỗi lẫn log, và với một trường ngày sinh/điện thoại gõ nhầm thì đó là một đường rò
+    Tầng 3 trông như một cải tiến trải nghiệm.</li>
+  <li><strong>Bước 3:</strong> <code>400</code>, <code>code: VALIDATION_FAILED</code>.</li>
+  <li><strong>Bước 4:</strong> <code>406</code>. Thân phản hồi ở đây có thể rỗng — đúng theo RFC
+    9110 §15.5.7: khi chính <code>Accept</code> không phục vụ được thì cố dựng thêm một thân theo
+    một kiểu khác chỉ đệ quy vô ích, nên đừng chấm KHÔNG ĐẠT chỉ vì thân trống ở riêng bước này.</li>
+  <li><strong>Bước 5:</strong> <code>405</code>.</li>
+  <li>Không có bước nào ở trên trả về <code>500</code> hay một trang lỗi không có <code>code</code>.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">23/09 — kịch bản MỚI, ghim một hồi quy đã xảy ra thật rồi được thu hồi trong cùng ngày</span>
+  <p style="margin-bottom:0">
+    Sáu lớp lỗi này từng đúng và chỉ trả về mã đúng <strong>trước</strong> bản vá 22/09 nâng
+    <code>GlobalExceptionHandler</code> lên ưu tiên cao hơn bộ xử lý mặc định của Spring (để giành
+    lại lỗi kiểm thân yêu cầu — xem khối 22/09 ở phần B). Bản vá ấy vô tình giữ một
+    <code>@ExceptionHandler(Exception.class)</code> bắt-tất trong chính advice ưu tiên cao đó; Spring
+    dừng ở advice đầu tiên khớp nên nó nuốt luôn cả sáu lớp lỗi khung thành <code>500</code>. Suốt
+    thời gian ấy 2771 ca kiểm tự động vẫn xanh, vì không ca nào ghim chiều "không phải 500". Bản vá
+    23/09 sửa bằng cách bỏ handler bắt-tất khỏi advice ưu tiên cao, tách nó sang lớp riêng
+    (<code>UnexpectedErrorHandler</code>) ở mức ưu tiên thấp nhất — và khai trùng một
+    <code>@ExceptionHandler</code> trong lớp con nay là <strong>lỗi lúc khởi động</strong>, không
+    còn là một hồi quy có thể lặng lẽ tái diễn.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT (cả năm bước)</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
+<div class="kich-ban" id="NT-ADMIN-05">
+<h3><span class="ma-so">NT-ADMIN-05</span> — Giới hạn tần suất dò mã không lách được bằng <code>X-Forwarded-For</code> <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span>
+<p class="mo-ta">
+  Mã dòng họ được bảo vệ bằng bốn chốt, trong đó có <strong>giới hạn tần suất</strong> ở
+  <code>/clan-invites/lookup</code>: gõ sai quá nhiều lần thì bị tạm dừng, để không ai dò mã bằng
+  máy. Bộ đếm ấy đếm theo địa chỉ người gọi. Nếu máy chủ tin header
+  <code>X-Forwarded-For</code> do chính client gửi lên, kẻ dò chỉ cần đổi header mỗi lượt là có một
+  bộ đếm mới — chốt ấy thành vô dụng mà mọi phép thử bằng trình duyệt vẫn xanh (trình duyệt không
+  bao giờ tự gửi header này). Ca biên kỹ thuật, chạy bằng <code>curl</code>, không cần token.
+</p>
+<span class="nhan">Chuẩn bị</span>
+<p class="mo-ta">
+  Một cửa sổ dòng lệnh. Chờ đủ lâu sau các kịch bản đăng ký khác (hoặc khởi động lại backend) để bộ
+  đếm của máy mình về 0. Gọi thẳng backend ở cổng 8088 (<code>http://localhost:8088/api/v1/…</code>),
+  không qua proxy nào.
+</p>
+<span class="nhan">Các bước</span>
+<ol class="buoc">
+  <li>Gọi <code>POST /api/v1/clan-invites/lookup</code>,
+    <code>Content-Type: application/json</code>, mã bịa đặt <strong>trong thân</strong> (không phải
+    trên đường dẫn — hợp đồng cố ý để mã ngoài access log), ví dụ
+    <code>{"code": "ZZZZZ-00000"}</code> (tên trường theo <code>RedeemClanInviteRequest</code> trong
+    <code>contracts/openapi.yaml</code>). Gọi <strong>10 lần liên tiếp</strong>, ghi mã trạng thái
+    từng lần.</li>
+  <li>Gọi lần thứ 11, cùng mã bịa. Ghi mã trạng thái.</li>
+  <li>Gọi lần thứ 12, cùng mã bịa, <strong>kèm</strong> header
+    <code>X-Forwarded-For: 203.0.113.77</code>. Ghi mã trạng thái.</li>
+  <li>(Nên làm) Lặp bước 3 với một địa chỉ khác, ví dụ <code>X-Forwarded-For: 198.51.100.9</code>.</li>
+</ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul class="ket-qua">
+  <li><strong>Bước 1:</strong> mười lượt đều là "không tìm thấy mã" (<code>404</code>) — mã sai
+    thật, không có gì bất thường.</li>
+  <li><strong>Bước 2:</strong> <code>429</code> — bộ đếm đã chặn. Giao diện dịch mã này thành "Xin
+    thử lại sau ít phút" (tài liệu 08 §8.1).</li>
+  <li><strong>Bước 3 và 4:</strong> <strong>vẫn <code>429</code></strong>. Nhận <code>404</code> ở
+    đây là <strong>KHÔNG ĐẠT</strong>, mức <strong>chặn phát hành</strong>: nghĩa là một header tự
+    khai đã cho kẻ dò một bộ đếm mới, và giới hạn tần suất không còn giới hạn gì.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">26/09 — kịch bản MỚI: trước bản vá, bước 3 trả 404 (bộ đếm bị lách)</span>
+  <p style="margin-bottom:0">
+    Đo 24–26/09: sau khi bị chặn <code>429</code>, chỉ cần thêm <code>X-Forwarded-For</code> là lượt
+    kế tiếp trả <code>404</code> như chưa từng bị chặn. Không kịch bản nào trước đây chạm tới điều
+    này vì mọi ca về mã mời đều bấm qua trình duyệt, và NT-KHACH-08 chỉ kiểm rằng gõ sai
+    <em>không</em> bị chặn ngay. Khi triển khai sau một reverse proxy thật, header này chỉ được tin
+    nếu do proxy của chính mình gắn — đó là việc cấu hình hạ tầng, ghi lại ở đây để người dựng môi
+    trường production không mở lại lỗ này.
+  </p>
+</div>
+<div class="bang-cham">
+  <span class="dat"><span class="o-vuong"></span>ĐẠT</span>
+  <span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span>
+  <span class="ghichu-dong">Ghi chú:<span class="duong"></span></span>
+</div>
+</div>
+
 <p class="chan-trang" style="margin-top:40px; color:var(--chu-nhat); font-size:13px; border-top:1px solid var(--vien); padding-top:12px;">
-  Tài liệu 09 · 67 kịch bản (15 ca biên) trên bảy vai · mọi câu chữ trích dẫn lấy nguyên văn từ
+  Tài liệu 09 · 79 kịch bản (25 ca biên) trên bảy vai · rà lại sau đợt bấm thật 24–26/09/2026 · mọi câu chữ trích dẫn lấy nguyên văn từ
   <code>frontend/messages/vi.json</code> tại thời điểm viết · <a href="#muc-luc" class="top-link">↑ về mục lục</a>
 </p>
 

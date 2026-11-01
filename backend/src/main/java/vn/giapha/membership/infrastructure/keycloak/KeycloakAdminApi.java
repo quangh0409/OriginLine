@@ -244,6 +244,56 @@ public class KeycloakAdminApi {
     }
 
     // -------------------------------------------------------------------------------------
+    // Vai trò cấp realm
+    // -------------------------------------------------------------------------------------
+
+    /**
+     * Gắn vai realm {@code roleName} cho người dùng {@code userId}; đã có thì không làm gì.
+     *
+     * <h2>Vì sao đọc vai qua {@code role-mappings/realm/available} chứ không qua {@code /roles}</h2>
+     * {@code POST role-mappings/realm} đòi <b>biểu diễn đầy đủ</b> của vai (có {@code id}), không
+     * nhận mỗi cái tên. Lối hiển nhiên để lấy nó — {@code GET /roles/{name}} — cần quyền
+     * {@code view-realm}, tức là mở rộng quyền của tài khoản dịch vụ ra khỏi
+     * {@code manage-users}. Danh sách "vai còn gắn được" của chính người dùng ấy thì nằm gọn trong
+     * {@code manage-users}, và nó trả đúng biểu diễn cần gửi lại. Không thêm một quyền nào.
+     *
+     * @throws IdentityProviderException khi realm không có vai ấy, hoặc Keycloak từ chối
+     */
+    public void addRealmRole(String userId, String roleName) {
+        String base = properties.adminRealmUri() + "/users/" + userId + "/role-mappings/realm";
+        HttpResponse<String> mapped = send(get(base), "doc vai realm cua nguoi dung");
+        requireStatus(mapped, "doc vai realm cua nguoi dung", HTTP_OK);
+        for (JsonNode role : readTree(mapped.body())) {
+            if (roleName.equals(role.path("name").asText())) {
+                return;
+            }
+        }
+        HttpResponse<String> available = send(get(base + "/available"),
+                "doc vai realm con gan duoc");
+        requireStatus(available, "doc vai realm con gan duoc", HTTP_OK);
+        ObjectNode wanted = null;
+        for (JsonNode role : readTree(available.body())) {
+            if (roleName.equals(role.path("name").asText())) {
+                wanted = (ObjectNode) role;
+                break;
+            }
+        }
+        if (wanted == null) {
+            throw new IdentityProviderException("Realm khong co vai " + roleName
+                    + " (hoac tai khoan dich vu khong duoc gan vai ay)");
+        }
+        ArrayNode body = objectMapper.createArrayNode();
+        body.add(wanted);
+        HttpResponse<String> response = send(
+                request(base)
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(body.toString(),
+                                StandardCharsets.UTF_8)),
+                "gan vai realm");
+        requireStatus(response, "gan vai realm", HTTP_NO_CONTENT);
+    }
+
+    // -------------------------------------------------------------------------------------
     // Nội bộ
     // -------------------------------------------------------------------------------------
 
@@ -312,9 +362,9 @@ public class KeycloakAdminApi {
             if (moTa == null || moTa.isBlank()) {
                 moTa = node.path("errorMessage").asText(null);
             }
-            return moTa == null || moTa.isBlank() ? "Mat khau khong hop le" : moTa;
+            return moTa == null || moTa.isBlank() ? "Mật khẩu không hợp lệ" : moTa;
         } catch (IOException ex) {
-            return "Mat khau khong hop le";
+            return "Mật khẩu không hợp lệ";
         }
     }
 
@@ -322,22 +372,22 @@ public class KeycloakAdminApi {
     private static String vietHoaLoiMatKhau(String key) {
         return switch (key) {
             case "invalidPasswordMinLengthMessage" ->
-                    "Mat khau phai dai it nhat 8 ky tu. Hay them vai chu nua.";
-            case "invalidPasswordMinDigitsMessage" -> "Mat khau phai co it nhat mot chu so.";
-            case "invalidPasswordMinLowerCaseCharsMessage" -> "Mat khau phai co it nhat mot chu thuong.";
-            case "invalidPasswordMinUpperCaseCharsMessage" -> "Mat khau phai co it nhat mot chu hoa.";
+                    "Mật khẩu phải dài ít nhất 8 ký tự. Hãy thêm vài chữ nữa.";
+            case "invalidPasswordMinDigitsMessage" -> "Mật khẩu phải có ít nhất một chữ số.";
+            case "invalidPasswordMinLowerCaseCharsMessage" -> "Mật khẩu phải có ít nhất một chữ thường.";
+            case "invalidPasswordMinUpperCaseCharsMessage" -> "Mật khẩu phải có ít nhất một chữ hoa.";
             case "invalidPasswordMinSpecialCharsMessage" ->
-                    "Mat khau phai co it nhat mot ky tu dac biet, vi du ! hoac #.";
+                    "Mật khẩu phải có ít nhất một ký tự đặc biệt, ví dụ ! hoặc #.";
             case "invalidPasswordNotUsernameMessage" ->
-                    "Mat khau khong duoc trung voi ten dang nhap. Hay chon chuoi khac.";
+                    "Mật khẩu không được trùng với tên đăng nhập. Hãy chọn chuỗi khác.";
             case "invalidPasswordNotEmailMessage" ->
-                    "Mat khau khong duoc trung voi dia chi email. Hay chon chuoi khac.";
+                    "Mật khẩu không được trùng với địa chỉ email. Hãy chọn chuỗi khác.";
             case "invalidPasswordHistoryMessage" ->
-                    "Mat khau nay da dung truoc day. Hay chon mot mat khau chua tung dung.";
+                    "Mật khẩu này đã dùng trước đây. Hãy chọn một mật khẩu chưa từng dùng.";
             case "invalidPasswordBlacklistedMessage" ->
-                    "Mat khau nay qua pho bien nen de bi doan. Hay chon chuoi khac.";
+                    "Mật khẩu này quá phổ biến nên dễ bị đoán. Hãy chọn chuỗi khác.";
             case "invalidPasswordRegexPatternMessage" ->
-                    "Mat khau chua dung dang ma dong ho quy dinh.";
+                    "Mật khẩu chưa đúng dạng mà dòng họ quy định.";
             default -> null;
         };
     }

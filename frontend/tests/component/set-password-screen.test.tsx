@@ -112,8 +112,13 @@ describe("đặt mật khẩu thành công", () => {
     expect(panel.textContent).toContain("mật khẩu đã đặt");
     // Không phải "Thành công." rồi thôi: màn này nói trước CÓ GÌ ở bên kia.
     expect(panel.textContent).toContain("phả đồ dòng họ");
-    expect(panel.textContent).toContain("danh xưng");
-    expect(panel.textContent).toContain("nhắc ngày giỗ");
+    expect(panel.textContent).toContain("ngày giỗ");
+    // Màn này phục vụ ba luồng qua cùng một token — lời mời cá nhân, đăng ký bằng mã DÒNG HỌ
+    // (tài khoản CHƯA gắn ai, phải chờ duyệt) và cấp lại mật khẩu — mà không biết mình đang ở
+    // luồng nào. Bấm thật 24/09 ở luồng mã dòng họ: màn này hứa "không phải chờ ai duyệt" và
+    // "người đang sống trong chi mình", rồi trang chủ ngay sau đó báo "đang chờ duyệt".
+    expect(panel.textContent).not.toContain("không phải chờ ai duyệt");
+    expect(panel.textContent).not.toContain("đang sống");
   });
 
   it("bước kế tiếp là ĐĂNG NHẬP, và nó quay về phả đồ chứ không về chính trang này", async () => {
@@ -154,12 +159,30 @@ describe("410 — liên kết hết hạn là ca BÌNH THƯỜNG, không phải 
 
     // Điều quan trọng nhất: không phải làm lại từ đầu.
     expect(panel.textContent).toContain("vẫn còn nguyên");
-    expect(panel.textContent).toContain("không phải xin lại mã mời");
+    // 26/09: bản đầu ghim "không phải xin lại mã mời". Câu ấy đúng với LỜI MỜI CÁ NHÂN nhưng
+    // sai với hai luồng còn lại đi qua cùng màn này (mã dòng họ, cấp lại mật khẩu) — nhóm A đo
+    // được người đăng ký bằng mã dòng họ đọc thấy một câu về "mã mời" họ chưa từng cầm. Khoá
+    // `expiredAccountSafe` nay trung tính cho cả ba luồng; ca này ghim ý "không làm lại từ đầu".
+    expect(panel.textContent).toContain("không phải làm lại từ đầu");
     // Vì sao — một lý do người thường hiểu được, không phải mã lỗi.
     expect(panel.textContent).toContain("ba mươi phút");
     // Việc cần làm: một con người, và một quy trình có thật ở đầu bên kia.
-    expect(panel.textContent).toContain("gọi cho người đã mời");
-    expect(panel.textContent).toContain("mật khẩu tạm");
+    //
+    // BẢN ĐẦU của hai dòng này ghim "gọi cho người đã mời" và "mật khẩu tạm".
+    // Cả hai nay SAI SỰ THẬT, và sai theo hai cách khác nhau:
+    //
+    //   · "người đã mời" hẹp hơn thực tế — từ khi có `POST /password-resets`,
+    //     TRƯỞNG CHI cấp lại được liên kết cho người trong chi mình, kể cả khi
+    //     không phải người đã mời. Ghim câu cũ là dạy một cụ gọi nhầm người.
+    //   · "mật khẩu tạm" mô tả một cơ chế CHƯA BAO GIỜ TỒN TẠI ở bản chạy thật:
+    //     không ai đặt mật khẩu hộ rồi đọc qua điện thoại. Thứ được cấp là một
+    //     LIÊN KẾT dùng một lần, hạn ba mươi phút, để chính chủ tự đặt — và đó
+    //     là cả điểm của thiết kế: mật khẩu không đi qua tai người thứ ba.
+    //
+    // Nên ca này nay ghim đúng hai tính chất ấy thay vì hai chuỗi cũ.
+    expect(panel.textContent).toContain("Trưởng chi");
+    expect(panel.textContent).toContain("tự đặt mật khẩu");
+    expect(panel.textContent).not.toContain("mật khẩu tạm");
   });
 
   it("có lối đi tiếp — khối liên hệ người mời, và lối đăng nhập cho ca 'đã đặt rồi'", async () => {

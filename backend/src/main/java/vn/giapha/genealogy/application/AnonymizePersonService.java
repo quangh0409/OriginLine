@@ -66,10 +66,10 @@ public class AnonymizePersonService {
     public PersonView anonymize(UUID personId, String reason) {
         CallerContext caller = privacy.caller();
         Person person = persons.byId(PersonId.of(personId)).orElseThrow(() -> new NotFoundException(
-                GenealogyProblemCodes.NOT_FOUND, "Khong tim thay nhan khau voi dinh danh " + personId));
+                GenealogyProblemCodes.NOT_FOUND, "Không tìm thấy nhân khẩu với định danh " + personId));
         if (!caller.isSelf(personId) && !caller.isAdmin()) {
             throw new ForbiddenException(GenealogyProblemCodes.FORBIDDEN,
-                    "Chi chinh chu the hoac Quan tri he thong duoc yeu cau an danh hoa");
+                    "Chỉ chính chủ thể hoặc Quản trị hệ thống được yêu cầu ẩn danh hoá");
         }
 
         Map<String, Object> before = person.auditSnapshot();

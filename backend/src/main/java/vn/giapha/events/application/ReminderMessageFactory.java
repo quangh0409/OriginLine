@@ -13,6 +13,14 @@ import vn.giapha.shared.vo.LunarDate;
 /**
  * Dựng tiêu đề và nội dung của một lượt nhắc, <b>song ngữ VI/EN</b>.
  *
+ * <h2>Có dấu, không phải ASCII (sửa 24/09)</h2>
+ * Chuỗi ở đây từng viết KHÔNG DẤU — "Con 7 ngay toi Gio ...", "Ngay 16/09/2026 duong lich" —
+ * theo thói quen của dòng log (log trong dự án cố ý ASCII). Nhưng đây là chữ NGƯỜI DÙNG đọc, trong
+ * trung tâm thông báo và trên màn hình khoá qua Web Push; cả hai kênh đều hiển thị Unicode đầy
+ * đủ, và dự án không có kênh SMS nào cần bảng mã GSM 7-bit. Một lời nhắc giỗ không dấu, đặt cạnh
+ * tên cụ có dấu, là thứ đầu tiên người lớn tuổi nhìn thấy mỗi sáng. Nếu mai kia thêm SMS, bỏ dấu ở
+ * adapter của kênh ấy, không phải ở đây.
+ *
  * <h2>Ba quyết định về nội dung</h2>
  * <ol>
  *   <li><b>Nói rõ khi ngày bị lệch.</b> Nếu ngày âm chép trong gia phả không tồn tại năm nay và
@@ -52,10 +60,10 @@ public class ReminderMessageFactory {
 
         StringBuilder vi = new StringBuilder();
         StringBuilder en = new StringBuilder();
-        vi.append("Ngay ").append(SOLAR.format(due)).append(" duong lich");
+        vi.append("Ngày ").append(SOLAR.format(due)).append(" dương lịch");
         en.append("On ").append(SOLAR.format(due));
         if (actualLunar != null) {
-            vi.append(" (").append(lunarVi(actualLunar)).append(" am lich)");
+            vi.append(" (").append(lunarVi(actualLunar)).append(" âm lịch)");
             en.append(" (lunar ").append(actualLunar.day()).append('/').append(actualLunar.month())
                     .append(actualLunar.leapMonth() ? " leap" : "").append(')');
         }
@@ -63,7 +71,7 @@ public class ReminderMessageFactory {
         en.append('.');
 
         if (event.location() != null && !event.location().isBlank()) {
-            vi.append(" Dia diem: ").append(event.location()).append('.');
+            vi.append(" Địa điểm: ").append(event.location()).append('.');
             en.append(" Venue: ").append(event.location()).append('.');
         }
 
@@ -96,19 +104,19 @@ public class ReminderMessageFactory {
         if (same) {
             return null;
         }
-        return "Nam nay khong co " + lunarVi(expected) + " nen gio duoc tinh vao "
-                + lunarVi(actual) + " am lich.";
+        return "Năm nay không có " + lunarVi(expected) + " nên giỗ được tính vào "
+                + lunarVi(actual) + " âm lịch.";
     }
 
     private static String lunarVi(LunarDate lunar) {
-        return "ngay " + lunar.day() + " thang " + lunar.month() + (lunar.leapMonth() ? " nhuan" : "");
+        return "ngày " + lunar.day() + " tháng " + lunar.month() + (lunar.leapMonth() ? " nhuận" : "");
     }
 
     private static String countdownVi(int offsetDays) {
         return switch (offsetDays) {
-            case 0 -> "Hom nay la";
-            case 1 -> "Ngay mai la";
-            default -> "Con " + offsetDays + " ngay toi";
+            case 0 -> "Hôm nay là";
+            case 1 -> "Ngày mai là";
+            default -> "Còn " + offsetDays + " ngày tới";
         };
     }
 
@@ -139,18 +147,18 @@ public class ReminderMessageFactory {
 
     private static String typeLabel(EventType type) {
         return switch (type) {
-            case GIO -> "gio";
-            case GIO_TO -> "gio To";
-            case TE_LE -> "te le";
-            case TIEU_TUONG -> "gio dau";
-            case DAI_TUONG -> "gio het";
-            case TAO_MO -> "chap ma";
-            case KHANH_THANH -> "le khanh thanh";
-            case HOP_HO -> "buoi hop ho";
-            case SINH_NHAT -> "sinh nhat";
-            case MUNG_THO -> "le mung tho";
-            case CUOI_HOI -> "le cuoi";
-            case KHAC -> "su kien dong ho";
+            case GIO -> "giỗ";
+            case GIO_TO -> "giỗ Tổ";
+            case TE_LE -> "tế lễ";
+            case TIEU_TUONG -> "giỗ đầu";
+            case DAI_TUONG -> "giỗ hết";
+            case TAO_MO -> "chạp mả";
+            case KHANH_THANH -> "lễ khánh thành";
+            case HOP_HO -> "buổi họp họ";
+            case SINH_NHAT -> "sinh nhật";
+            case MUNG_THO -> "lễ mừng thọ";
+            case CUOI_HOI -> "lễ cưới";
+            case KHAC -> "sự kiện dòng họ";
         };
     }
 }

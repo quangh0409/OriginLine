@@ -29,7 +29,7 @@ public record PersonId(UUID value) implements ValueObject {
         try {
             return new PersonId(UUID.fromString(value));
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("PersonId khong hop le: " + value, ex);
+            throw new IllegalArgumentException("PersonId không hợp lệ: " + value, ex);
         }
     }
 

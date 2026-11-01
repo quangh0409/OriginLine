@@ -73,11 +73,11 @@ public class BranchScopeGuard {
             }
             log.warn("Tu choi ghi ngoai pham vi: app_user {} nham chi {}", appUserId, target);
             throw new ForbiddenException(MembershipProblemCodes.BRANCH_SCOPE_VIOLATION,
-                    "Tai khoan khong co quyen tren pham vi chi/nganh cua doi tuong nay");
+                    "Tài khoản không có quyền trên phạm vi chi/ngành của đối tượng này");
         }
         throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
-                "Chi Truong chi (trong pham vi duoc giao), Hoi dong Toc bieu hoac Quan tri he thong "
-                        + "duoc thao tac tren du lieu nay");
+                "Chỉ Trưởng chi (trong phạm vi được giao), Hội đồng Tộc biểu hoặc Quản trị hệ thống "
+                        + "được thao tác trên dữ liệu này");
     }
 
     /**
@@ -90,7 +90,7 @@ public class BranchScopeGuard {
     public void requireReviewAccess(MemberScope caller, BranchPath target) {
         if (!caller.role().canReview()) {
             throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
-                    "Chi Truong chi, Hoi dong Toc bieu hoac Quan tri he thong duoc duyet yeu cau dinh chinh");
+                    "Chỉ Trưởng chi, Hội đồng Tộc biểu hoặc Quản trị hệ thống được duyệt yêu cầu đính chính");
         }
         requireWriteAccess(caller, target);
     }
@@ -108,7 +108,7 @@ public class BranchScopeGuard {
     private void requireClanWide(boolean clanWide, String what) {
         if (!clanWide) {
             throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
-                    "Chi Hoi dong Toc bieu hoac Quan tri he thong duoc " + what);
+                    "Chỉ Hội đồng Tộc biểu hoặc Quản trị hệ thống được " + what);
         }
     }
 
@@ -122,7 +122,7 @@ public class BranchScopeGuard {
     public void requireSystemAdmin(MemberScope caller, String what) {
         if (!caller.isSystemAdmin()) {
             throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
-                    "Chi Quan tri he thong duoc " + what);
+                    "Chỉ Quản trị hệ thống được " + what);
         }
     }
 
@@ -139,7 +139,7 @@ public class BranchScopeGuard {
     private void requireProvisionedAccount(boolean guest, java.util.UUID appUserId) {
         if (guest || appUserId == null) {
             throw new ForbiddenException(MembershipProblemCodes.ACCOUNT_NOT_PROVISIONED,
-                    "Tai khoan chua duoc khoi tao trong he thong, hay dang nhap lai");
+                    "Tài khoản chưa được khởi tạo trong hệ thống, hãy đăng nhập lại");
         }
     }
 
@@ -216,8 +216,8 @@ public class BranchScopeGuard {
     private void requireLinkedToTree(java.util.UUID personId, String what) {
         if (personId == null) {
             throw new ForbiddenException(MembershipProblemCodes.ACCOUNT_NOT_ACTIVE,
-                    "Tai khoan chua duoc duyet vao pha nen chua " + what + " duoc."
-                            + " Hay tu nhan minh tren pha do va cho Truong chi duyet.");
+                    "Tài khoản chưa được duyệt vào phả nên chưa " + what + " được."
+                            + " Hãy tự nhận mình trên phả đồ và chờ Trưởng chi duyệt.");
         }
     }
 
@@ -250,7 +250,7 @@ public class BranchScopeGuard {
     public void requireReviewAccess(MemberScopeView caller, BranchPath target) {
         if (!vaiCuaNguoiGoi(caller).canReview()) {
             throw new ForbiddenException(MembershipProblemCodes.FORBIDDEN,
-                    "Chi Truong chi, Hoi dong Toc bieu hoac Quan tri he thong duoc duyet noi dung nay");
+                    "Chỉ Trưởng chi, Hội đồng Tộc biểu hoặc Quản trị hệ thống được duyệt nội dung này");
         }
         requireWriteAccess(caller, target);
     }

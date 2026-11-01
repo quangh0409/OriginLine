@@ -89,10 +89,11 @@ class UpdatePersonLifeStatusTest {
         assertThat(ban.changedFields()).containsExactlyInAnyOrder("isAlive", "death");
         assertThat(ban.before()).containsEntry("isAlive", true).containsEntry("deathYear", null);
         assertThat(ban.after()).containsEntry("isAlive", false).containsEntry("deathYear", 2024);
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThat(ban.note())
                 .as("nhat ky phai noi ro viec chuyen sang 'da mat' la do HE THONG suy ra, "
                         + "khong phai do nguoi nhap lieu tuyen bo")
-                .contains("Suy dien");
+                .contains("Suy diễn");
     }
 
     @Test
@@ -103,7 +104,7 @@ class UpdatePersonLifeStatusTest {
 
         assertThat(fx.audit.cuoiCung().note())
                 .contains("Theo bia mộ tại từ đường chi Giáp")
-                .contains("Suy dien");
+                .contains("Suy diễn");
     }
 
     @Test

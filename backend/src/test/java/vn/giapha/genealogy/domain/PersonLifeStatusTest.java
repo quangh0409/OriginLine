@@ -104,9 +104,10 @@ class PersonLifeStatusTest {
     void doiThuPhaiTuMotTroLen() {
         Person person = PersonFixtures.nam("Nguyễn Văn Ba");
 
+        // 26/09/2026: thong diep nay di thang ra `detail` cua Problem nen da viet lai CO DAU; phep ghim doi theo, y nghia khong doi.
         assertThatThrownBy(() -> person.placeInGeneration(0))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Thuy to");
+                .hasMessageContaining("Thuỷ tổ");
         assertThatThrownBy(() -> person.placeInGeneration(-3))
                 .isInstanceOf(IllegalArgumentException.class);
 

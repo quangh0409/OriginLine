@@ -62,7 +62,7 @@ public class PublicVisibilityGuard {
 
     /** Thông điệp 404 dùng chung: giống hệt nhau cho "không có thật" và "không được phép biết". */
     private static final String NOT_FOUND_MESSAGE =
-            "Khong tim thay nhan khau cong khai voi dinh danh ";
+            "Không tìm thấy nhân khẩu công khai với định danh ";
 
     // =====================================================================================
     // Hồ sơ đơn lẻ

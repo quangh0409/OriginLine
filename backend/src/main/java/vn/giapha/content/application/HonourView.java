@@ -48,6 +48,21 @@ public record HonourView(UUID id,
                          long version,
                          boolean canReview) {
 
+    /**
+     * Bản cho <b>Khách</b>: chỉ nội dung công bố của một vinh danh người đã khuất.
+     *
+     * <p>Bỏ {@code reviewedBy} (khoá tài khoản — Khách không có lý do gì để đối chiếu nhật ký, và
+     * một khoá tài khoản ổn định là thứ để dò), bỏ tên người duyệt (người duyệt là người còn sống),
+     * bỏ {@code rejectReason}. {@code reviewedAt} ở lại: "đã duyệt ngày nào" không nói gì về ai.</p>
+     */
+    public static HonourView forGuest(Honour honour, String personDisplayName, UUID branchId,
+                                      String branchName) {
+        return new HonourView(honour.id(), honour.personId(), personDisplayName, honour.kind(),
+                honour.title(), honour.year(), honour.issuer(), honour.description(),
+                honour.status(), branchId, branchName, null, null, honour.reviewedAt(), null,
+                honour.createdAt(), honour.updatedAt(), honour.version(), false);
+    }
+
     public static HonourView of(Honour honour, String personDisplayName,
                                 String reviewerDisplayName, UUID branchId, String branchName,
                                 boolean canReview) {

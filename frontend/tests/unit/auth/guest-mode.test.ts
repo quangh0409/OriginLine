@@ -195,13 +195,15 @@ describe("khách xem lịch giỗ và hộp thư", () => {
     expect(page.page.totalElements).toBe(page.items.length);
   });
 
-  it("hộp thư của khách là rỗng — chưa đăng nhập thì không sở hữu hộp thư nào", async () => {
+  // Bản trước ghim "hộp thư của khách là rỗng" (200) — sự thật của MOCK. Máy thật trả 401
+  // UNAUTHENTICATED (đo 24/09); mock nay trả đúng như vậy, và màn hộp thư nói "cần đăng nhập".
+  it("khách hỏi hộp thư nhận 401 — chưa đăng nhập thì không sở hữu hộp thư nào", async () => {
     setDevRole("guest");
 
-    const inbox = await notificationsApi.list({ size: 50 });
-
-    expect(inbox.items).toHaveLength(0);
-    expect(inbox.unreadCount).toBe(0);
+    await expect(notificationsApi.list({ size: 50 })).rejects.toMatchObject({
+      status: 401,
+      code: "UNAUTHENTICATED",
+    });
   });
 });
 

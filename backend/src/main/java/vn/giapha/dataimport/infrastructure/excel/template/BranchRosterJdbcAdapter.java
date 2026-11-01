@@ -155,11 +155,21 @@ public class BranchRosterJdbcAdapter implements BranchRosterPort {
             return jdbc.queryForObject("""
                     SELECT b.id, b.name, b.path::text AS path,
                            (SELECT count(*) FROM person_external_ref r
-                             WHERE r.branch_id = b.id AND r.code_system = :system) AS so_nguoi
+                             WHERE r.branch_id = b.id AND r.code_system = :system) AS so_nguoi,
+                           -- Nguoi cua CA CAY chi (ltree <@) chua xoa mem ma KHONG mang ma Excel.
+                           -- Truoc day trang Huong dan chi dem nguoi co ma, nen voi Chi Binh (hang
+                           -- tram nguoi nhap tu truoc) no in "Da co san trong pha: 0 nguoi ... Day la
+                           -- lan nhap dau cua chi — ban khai tu dau": mot loi moi khai lai ca chi.
+                           (SELECT count(*) FROM person p
+                              JOIN branch pb ON pb.id = p.primary_branch_id
+                             WHERE pb.path <@ b.path AND p.is_deleted = FALSE
+                               AND NOT EXISTS (SELECT 1 FROM person_external_ref r2
+                                                WHERE r2.person_id = p.id
+                                                  AND r2.code_system = :system)) AS chua_co_ma
                       FROM branch b WHERE b.id = :branchId
                     """, params(branchId), (rs, i) -> new Chi(
                     rs.getObject("id", UUID.class), rs.getString("name"), rs.getString("path"),
-                    rs.getLong("so_nguoi")));
+                    rs.getLong("so_nguoi"), rs.getLong("chua_co_ma")));
         } catch (EmptyResultDataAccessException ex) {
             return null;
         }

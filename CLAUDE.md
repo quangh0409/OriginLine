@@ -90,7 +90,9 @@ KinshipResolver, LcaService) · `calendar` (LunarConverter, SolarTerm) · `event
 (Event, ReminderPlan, ReminderJob) · `notification` (Channel, Provider port,
 NotificationLog) · `membership` (AppUser, Role, BranchAssignment, ChangeRequest) ·
 `heritage` (HeritageItem, Hall, Grave, MediaAsset) · `fund` (FundAccount, Donation) ·
-`reporting` (read models) · `audit` (AuditLog) · `shared` (VOs, security, exceptions).
+`reporting` (read models) · `audit` (AuditLog) · `clan` (ClanProfile, ClanReadiness —
+"Khởi tạo dòng họ"; `clan_profile` is row one of the future multi-clan `clan` table) ·
+`shared` (VOs, security, exceptions).
 
 Contexts talk through public application services or internal domain events — never
 by reaching into another context's repository.
@@ -180,6 +182,22 @@ cd infra && docker compose up -d --wait postgres rabbitmq redis minio
 | `frontend/` | `npm run dev:mock` | Runs against MSW mocks, no backend needed |
 | `frontend/` | `npm run typecheck` / `npm run lint` | Both must be green |
 
+> ⚠️ **On this dev box, port 8080 is NOT the backend** — `httpd.exe` (an Apache service)
+> holds it and answers 404 to everything. The backend therefore runs on **8088**
+> (`SERVER_PORT=8088`) with the Docker Postgres on **55432** (`DB_URL`). Next.js bakes
+> `NEXT_PUBLIC_API_BASE_URL` into the bundle **at build time** — setting it at `next start`
+> does nothing — and `http.ts` silently falls back to `http://localhost:8080` when it is
+> missing. That fallback once produced a bug that looked nothing like a port mismatch:
+> every API call got Apache's 404, `useMe()` errored, and the post-writing gate told a
+> user who had *just logged in* that they needed to log in. **When running against the
+> real backend, always use `npm run build:nghiem-thu` / `npm run start:nghiem-thu`** with
+> `NEXT_PUBLIC_API_BASE_URL=http://localhost:8088`; both run
+> `frontend/scripts/kiem-dia-chi-backend.mjs`, which refuses to proceed when the variable
+> is missing, the backend is not `UP` there, or the bundle in `.next/` was baked with a
+> different origin. Then, before reporting "BE and FE are up", log in for real in a
+> browser (Playwright, `thanhvien/giapha123`) and walk one flow — `curl` returning 200 on
+> a page proves nothing about a client-side crash.
+
 Flyway migrations live in `backend/src/main/resources/db/migration` and own the entire
 schema. `infra/init/` only installs extensions at `initdb` time — do not put tables there.
 
@@ -225,13 +243,14 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   representable state, so the old unwritten "remember to call `canSee()` first" rule is
   now held by the compiler. `meta.visibleTier` is a summary derived from the filter
   result; never branch on it to predict which fields are present.
-- **Flyway runs `V1..V21`.** Keep this line current — it is the first thing an agent
+- **Flyway runs `V1..V23`.** Keep this line current — it is the first thing an agent
   reads before picking a version number, and a stale range here means two people take
   the same number and Flyway aborts with *"Found more than one migration with version
   N"*. Roughly: `V1..V7` core · `V8` per-field privacy · `V9..V13` import · `V14`
   duplicate decisions · `V15..V16` invitations + claims · `V17` posts/honours + the
   sixth privacy group · `V18`/`V20` manual events · `V19` media · `V21` password-reset
-  grant.
+  grant · `V22` re-accents old giỗ reminders already in `notification_inbox` · `V23` clan profile (singleton `clan_profile`, plus
+  `clan_profile_seed_from_branches()` which back-fills a running install from its `ltree` root).
 - **`registrationAllowed` in the realm is `false` ON PURPOSE — do not "fix" it.**
   Self-registration happens at `/dang-ky` in the app, not on Keycloak's own page, and
   the reason is written in `infra/keycloak/themes/giapha/login/theme.properties`:
@@ -239,7 +258,7 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   created there never pass through `ClanInviteRedeemer` and never land in the
   redemption ledger — which silently defeats the use-counter, the single most important
   of the four gates the clan-wide code depends on.
-- **Test status.** Backend `mvn test` → **2742 tests, 0 failures, 0 errors, 1 skipped**
+- **Test status.** Backend `mvn test` → **2865 tests, 0 failures, 0 errors, 1 skipped**
   (the skip is `InvitationKeycloakLiveIT`, which needs a real Keycloak plus a
   provisioner secret and is opt-in),
   including Testcontainers integration tests against real Postgres + AGE — among them the
@@ -247,14 +266,19 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   together), the per-field privacy matrix (5 groups × 3 scopes × 4 viewer kinds), the
   legacy-privacy migration proving it discloses nothing new, and the full import pipeline
   driven **only through HTTP** (no test writes to a table to get past a gate).
-  Frontend: **1880 vitest** with **4 deliberate reds** (2 Dâu/Rể badge hexes and 2
+  Frontend: **2007 vitest** with **4 deliberate reds** (2 Dâu/Rể badge hexes and 2
   `accent` contrast cases, all awaiting a Hội đồng ruling — CI pins this set exactly, so
   an extra red *or* one of these turning green fails the gate), `tsc` and `next lint`
   clean, `next build` green, **134 Playwright E2E** across desktop-chromium and Pixel 5.
 - **Cross-context calls go through named interfaces, per type, never per package.**
-  `genealogy` exposes exactly 11 types in 3 facades — `"do-trung"` (duplicate/taboo
-  screening), `"ghi-pha"` (bulk write), `"loc-rieng-tu"` (privacy-filtered disclosure) —
-  plus the `domain.event` package. `genealogy.application` itself is **not** a named
+  `genealogy` exposes exactly 13 types in 4 facades — `"do-trung"` (duplicate/taboo
+  screening), `"ghi-pha"` (bulk write), `"loc-rieng-tu"` (privacy-filtered disclosure),
+  `"goc-dong-ho"` (`ClanRootService`/`ClanRootView`: create/rename/relabel the `DONG_HO` root
+  branch — the only branch-write path in the app, used by `clan`) — plus the `domain.event`
+  package. `kinship` exposes one facade, `"bo-luat-dong-ho"` (`ClanRuleSetService`/
+  `ClanRuleSetView`: align the CLAN-scope rule set to the clan's region without touching the
+  council's own rules). `membership → clan` is inverted like `membership → genealogy`:
+  `membership.application.ClanNameProvider`, implemented in `clan.infrastructure.membership`. `genealogy.application` itself is **not** a named
   interface: `Person`, `PersonRepository` and `PrivacyTierService` stay inside. Widen this
   surface only with a reason you can state; each widening is individually reasonable and
   together they erase the boundary.
@@ -327,4 +351,7 @@ Track against the W/F workstreams in `.claude/plan-giai-doan-1.html`.
   data", or guests read a living relative's phone number off an ancestor's profile.
 - **`Map.copyOf` throws NPE on null values.** It silently broke the whole change-request
   flow, because a freshly submitted request always has `reviewerId == null`.
+- **Chuỗi đi ra người dùng phải có dấu; chuỗi log không bắt buộc.** That includes domain
+  exception messages that end up in `detail`. Text-coupled branches to keep in step:
+  `"tự duyệt"` in `PostService`/`HonourService`, `"dia chi thu"` in FE `password-reset.ts`.
 

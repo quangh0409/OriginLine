@@ -59,6 +59,20 @@ public record PersonLens(Map<UUID, DisclosedPerson> byId) {
         return person != null && person.vinhDanhHienDuoc();
     }
 
+    /**
+     * Nhân khẩu này <b>đã khuất</b> và người gọi được biết họ tồn tại.
+     *
+     * <p>Lối đọc của Khách dựa vào đây như một chốt <i>thứ hai</i> sau SQL: {@code genealogy} vốn
+     * đã không trả người còn sống cho Khách, nhưng "vốn đã" là một bất biến ở context khác — nếu
+     * một ngày bộ lọc ấy nới ra (ví dụ một nhóm trường mở cho {@code CLAN} bị hiểu nhầm thành "mở
+     * cho mọi người"), phép kiểm này vẫn giữ Khách ngoài người sống. Fail-closed: vắng mặt là
+     * {@code false}.</p>
+     */
+    public boolean deceased(UUID personId) {
+        DisclosedPerson person = tra(personId);
+        return person != null && !person.conSong();
+    }
+
     /** Người gọi có được biết nhân khẩu này tồn tại không. */
     public boolean visible(UUID personId) {
         return tra(personId) != null;

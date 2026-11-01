@@ -70,8 +70,8 @@ public final class Honour {
         this.kind = Objects.requireNonNull(kind, "Honour.kind khong duoc null");
         this.title = requireTitle(title);
         this.year = rangeCheckYear(year);
-        this.issuer = truncateCheck(issuer, MAX_ISSUER_LENGTH, "Noi cap");
-        this.description = truncateCheck(description, MAX_DESCRIPTION_LENGTH, "Mo ta");
+        this.issuer = truncateCheck(issuer, MAX_ISSUER_LENGTH, "Nơi cấp");
+        this.description = truncateCheck(description, MAX_DESCRIPTION_LENGTH, "Mô tả");
         this.status = status == null ? ContentStatus.PENDING : status;
         this.createdBy = Objects.requireNonNull(createdBy, "Honour.createdBy khong duoc null");
         this.reviewedBy = reviewedBy;
@@ -83,7 +83,7 @@ public final class Honour {
         this.version = version;
         if (this.status == ContentStatus.DRAFT) {
             throw new IllegalArgumentException(
-                    "Vinh danh khong co trang thai DRAFT; xem ContentStatus");
+                    "Vinh danh không có trạng thái DRAFT; xem ContentStatus");
         }
     }
 
@@ -180,7 +180,7 @@ public final class Honour {
         requireNotDeleted();
         if (status.isFinal()) {
             throw new IllegalStateException(
-                    "Vinh danh da o trang thai " + status + ", khong sua lai duoc");
+                    "Vinh danh đã ở trạng thái " + status + ", không sửa lại được");
         }
         if (newKind != null) {
             this.kind = newKind;
@@ -192,11 +192,11 @@ public final class Honour {
             this.year = requireFreshYear(newYear);
         }
         if (newIssuer != null) {
-            this.issuer = truncateCheck(blankToNull(newIssuer), MAX_ISSUER_LENGTH, "Noi cap");
+            this.issuer = truncateCheck(blankToNull(newIssuer), MAX_ISSUER_LENGTH, "Nơi cấp");
         }
         if (newDescription != null) {
             this.description = truncateCheck(blankToNull(newDescription),
-                    MAX_DESCRIPTION_LENGTH, "Mo ta");
+                    MAX_DESCRIPTION_LENGTH, "Mô tả");
         }
         if (status == ContentStatus.PUBLISHED) {
             this.status = ContentStatus.PENDING;
@@ -229,7 +229,7 @@ public final class Honour {
         Objects.requireNonNull(reviewerUserId, "reviewerUserId khong duoc null khi tu choi vinh danh");
         requireNotSelfReview(reviewerUserId);
         if (reason == null || reason.isBlank()) {
-            throw new IllegalArgumentException("Tu choi vinh danh phai kem ly do");
+            throw new IllegalArgumentException("Từ chối vinh danh phải kèm lý do");
         }
         this.status = ContentStatus.WITHDRAWN;
         this.reviewedBy = reviewerUserId;
@@ -301,13 +301,13 @@ public final class Honour {
         requireNotDeleted();
         if (status != ContentStatus.PENDING) {
             throw new IllegalStateException(
-                    "Chi duyet duoc vinh danh o trang thai PENDING; ban ghi nay dang o " + status);
+                    "Chỉ duyệt được vinh danh ở trạng thái PENDING; bản ghi này đang ở " + status);
         }
     }
 
     private void requireNotDeleted() {
         if (deleted) {
-            throw new IllegalStateException("Vinh danh da bi go, khong thao tac lai duoc");
+            throw new IllegalStateException("Vinh danh đã bị gỡ, không thao tác lại được");
         }
     }
 
@@ -321,18 +321,18 @@ public final class Honour {
      */
     private void requireNotSelfReview(UUID reviewerUserId) {
         if (reviewerUserId.equals(createdBy)) {
-            throw new IllegalStateException("Khong duoc tu duyet vinh danh do chinh minh khai");
+            throw new IllegalStateException("Không được tự duyệt vinh danh do chính mình khai");
         }
     }
 
     private static String requireTitle(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Tieu de vinh danh khong duoc rong");
+            throw new IllegalArgumentException("Tiêu đề vinh danh không được rỗng");
         }
         String trimmed = value.trim();
         if (trimmed.length() > MAX_TITLE_LENGTH) {
-            throw new IllegalArgumentException("Tieu de vinh danh toi da " + MAX_TITLE_LENGTH
-                    + " ky tu");
+            throw new IllegalArgumentException("Tiêu đề vinh danh tối đa " + MAX_TITLE_LENGTH
+                    + " ký tự");
         }
         return trimmed;
     }
@@ -350,8 +350,8 @@ public final class Honour {
             return null;
         }
         if (value < MIN_YEAR || value > MAX_YEAR) {
-            throw new IllegalArgumentException("Nam vinh danh phai nam trong khoang "
-                    + MIN_YEAR + "-" + MAX_YEAR + " (nhan duoc " + value + ")");
+            throw new IllegalArgumentException("Năm vinh danh phải nằm trong khoảng "
+                    + MIN_YEAR + "-" + MAX_YEAR + " (nhận được " + value + ")");
         }
         return value;
     }
@@ -370,7 +370,7 @@ public final class Honour {
     private static Integer requireFreshYear(Integer value) {
         Integer checked = rangeCheckYear(value);
         if (checked != null && checked > Year.now().getValue() + 1) {
-            throw new IllegalArgumentException("Nam vinh danh khong duoc xa hon nam sau");
+            throw new IllegalArgumentException("Năm vinh danh không được xa hơn năm sau");
         }
         return checked;
     }
@@ -378,7 +378,7 @@ public final class Honour {
     private static String truncateCheck(String value, int max, String what) {
         String trimmed = blankToNull(value);
         if (trimmed != null && trimmed.length() > max) {
-            throw new IllegalArgumentException(what + " toi da " + max + " ky tu");
+            throw new IllegalArgumentException(what + " tối đa " + max + " ký tự");
         }
         return trimmed;
     }

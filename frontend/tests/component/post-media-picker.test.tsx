@@ -171,30 +171,37 @@ describe("MediaPicker — chọn tệp, kiểm trước khi gọi mạng, alt b�
       {
         id: "m1",
         kind: "IMAGE",
+        contentType: "image/png",
+        sizeBytes: 1024,
+        durationMs: null,
         url: "data:image/png;base64,AAAA",
         alt: "Ảnh một",
-        order: 0,
-        createdAt: "2026-01-01T00:00:00.000Z",
+        position: 0,
       },
       {
         id: "m2",
         kind: "IMAGE",
+        contentType: "image/png",
+        sizeBytes: 1024,
+        durationMs: null,
         url: "data:image/png;base64,BBBB",
         alt: "Ảnh hai",
-        order: 1,
-        createdAt: "2026-01-01T00:00:00.000Z",
+        position: 1,
       },
     ];
 
-    let capturedOrder: string[] | null = null;
+    // Hợp đồng thật: KHÔNG có `PATCH .../media/order` riêng — sắp lại thứ tự
+    // đi qua CHÍNH điểm cuối gắn tệp (`PUT /posts/{id}/media`), gửi lại toàn
+    // bộ `mediaIds` theo thứ tự mới. Xem `useReorderMedia`.
+    let capturedIds: string[] | null = null;
     server.use(
-      http.patch(`${API_BASE_URL}/api/v1/posts/test-reorder-post/media/order`, async ({ request }) => {
-        const body = (await request.json()) as { order: string[] };
-        capturedOrder = body.order;
+      http.put(`${API_BASE_URL}/api/v1/posts/test-reorder-post/media`, async ({ request }) => {
+        const body = (await request.json()) as { mediaIds: string[] };
+        capturedIds = body.mediaIds;
         return HttpResponse.json(
           {
             id: "test-reorder-post",
-            media: capturedOrder.map((id, i) => ({ ...media.find((m) => m.id === id)!, order: i })),
+            media: capturedIds.map((id, i) => ({ ...media.find((m) => m.id === id)!, position: i })),
             version: 2,
           },
           { headers: { ETag: '"v2"' } }
@@ -218,6 +225,6 @@ describe("MediaPicker — chọn tệp, kiểm trước khi gọi mạng, alt b�
     expect(firstMoveRight).toHaveFocus();
     await user.keyboard("{Enter}");
 
-    await waitFor(() => expect(capturedOrder).toEqual(["m2", "m1"]));
+    await waitFor(() => expect(capturedIds).toEqual(["m2", "m1"]));
   });
 });

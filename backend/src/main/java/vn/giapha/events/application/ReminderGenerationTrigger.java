@@ -73,7 +73,7 @@ public class ReminderGenerationTrigger {
 
         if (!runLock.tryLock()) {
             throw new ReminderGenerationBusyException(
-                    "Dang co mot luot sinh lich nhac chay do dang, thu lai sau khi luot do ket thuc.");
+                    "Đang có một lượt sinh lịch nhắc chạy dở dang, thử lại sau khi lượt đó kết thúc.");
         }
         try {
             log.info("Sinh lich nhac CHAY TAY: nguoi goi={} ngay tham chieu={}{}",
@@ -91,9 +91,9 @@ public class ReminderGenerationTrigger {
     private static void requireWithinDrift(LocalDate reference, LocalDate today) {
         long drift = Math.abs(ChronoUnit.DAYS.between(today, reference));
         if (drift > MAX_DRIFT_DAYS) {
-            throw new IllegalArgumentException("referenceDate=" + reference + " lech " + drift
-                    + " ngay so voi hom nay (" + today + "); chi cho phep toi da " + MAX_DRIFT_DAYS
-                    + " ngay ve moi phia.");
+            throw new IllegalArgumentException("referenceDate=" + reference + " lệch " + drift
+                    + " ngày so với hôm nay (" + today + "); chỉ cho phép tối đa " + MAX_DRIFT_DAYS
+                    + " ngày về mỗi phía.");
         }
     }
 }

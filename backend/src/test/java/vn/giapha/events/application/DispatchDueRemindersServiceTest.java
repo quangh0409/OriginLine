@@ -206,8 +206,8 @@ class DispatchDueRemindersServiceTest {
         service().dispatchDueAt(BAY_GIO, HOM_NAY);
 
         NotificationMessage message = publisher.forChannel(Channel.INAPP).get(0);
-        assertThat(message.title()).contains("Ngay mai la");
-        assertThat(message.body()).contains("20/10/2026").contains("am lich");
+        assertThat(message.title()).contains("Ngày mai là");
+        assertThat(message.body()).contains("20/10/2026").contains("âm lịch");
         assertThat(message.deepLink()).startsWith("/events/");
     }
 }

@@ -76,13 +76,13 @@ public class PublicSearchController {
         String term = query.trim();
         if (term.length() < properties.getMinQueryLength()) {
             throw new IllegalArgumentException(String.format(Locale.ROOT,
-                    "Tu khoa tim kiem cong khai phai co it nhat %d ky tu",
+                    "Từ khoá tìm kiếm công khai phải có ít nhất %d ký tự",
                     properties.getMinQueryLength()));
         }
         if (page > properties.getMaxSearchPage()) {
             throw new IllegalArgumentException(String.format(Locale.ROOT,
-                    "Cong thong tin cong khai chi tra toi trang %d; hay thu hep tu khoa"
-                            + " hoac dang nhap de tra cuu day du",
+                    "Cổng thông tin công khai chỉ trả tới trang %d; hãy thu hẹp từ khoá"
+                            + " hoặc đăng nhập để tra cứu đầy đủ",
                     properties.getMaxSearchPage()));
         }
 

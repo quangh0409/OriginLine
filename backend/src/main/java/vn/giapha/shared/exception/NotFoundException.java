@@ -18,6 +18,6 @@ public class NotFoundException extends DomainException {
     public static NotFoundException of(String resource, Object id) {
         return new NotFoundException(
                 resource.toLowerCase() + ".not-found",
-                "Khong tim thay " + resource + " voi dinh danh '" + id + "'");
+                "Không tìm thấy " + resource + " với định danh '" + id + "'");
     }
 }

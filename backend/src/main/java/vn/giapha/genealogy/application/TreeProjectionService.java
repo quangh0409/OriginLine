@@ -79,7 +79,7 @@ public class TreeProjectionService {
         CallerContext caller = privacy.caller();
         if (query.includeDeleted() && !caller.role().isClanWide()) {
             throw new ForbiddenException(GenealogyProblemCodes.FORBIDDEN,
-                    "Chi Hoi dong Toc bieu hoac Quan tri he thong duoc xem ban ghi da xoa mem");
+                    "Chỉ Hội đồng Tộc biểu hoặc Quản trị hệ thống được xem bản ghi đã xoá mềm");
         }
 
         boolean fromCache = false;
@@ -104,7 +104,7 @@ public class TreeProjectionService {
         if (!people.containsKey(query.rootId())) {
             // Gốc không hiển thị được: không tiết lộ rằng nó tồn tại.
             throw new NotFoundException(GenealogyProblemCodes.NOT_FOUND,
-                    "Khong tim thay nhan khau goc cua pha do");
+                    "Không tìm thấy nhân khẩu gốc của phả đồ");
         }
         Set<UUID> bloodline = new LinkedHashSet<>(people.keySet());
 

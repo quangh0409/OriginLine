@@ -82,7 +82,7 @@ public class KinshipController {
                 .orElse(false);
         if (!allowed) {
             throw new ForbiddenException("FORBIDDEN",
-                    "Chi Hoi dong Toc bieu (COUNCIL) hoac ADMIN duoc ep bo luat khi tra danh xung");
+                    "Chỉ Hội đồng Tộc biểu (COUNCIL) hoặc ADMIN được ép bộ luật khi tra danh xưng");
         }
     }
 

@@ -213,7 +213,7 @@ public class PersonController {
      */
     private UpdatePersonRequest readBody(JsonNode body) {
         if (body == null || !body.isObject()) {
-            throw new IllegalArgumentException("Than yeu cau PATCH phai la mot object JSON");
+            throw new IllegalArgumentException("Thân yêu cầu PATCH phải là một object JSON");
         }
         try {
             UpdatePersonRequest request = objectMapper.treeToValue(body, UpdatePersonRequest.class);
@@ -223,7 +223,7 @@ public class PersonController {
             }
             return request;
         } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
-            throw new IllegalArgumentException("Than yeu cau khong hop le: " + ex.getOriginalMessage(), ex);
+            throw new IllegalArgumentException("Thân yêu cầu không hợp lệ: " + ex.getOriginalMessage(), ex);
         }
     }
 
@@ -249,7 +249,7 @@ public class PersonController {
     private Long parseIfMatch(String ifMatch) {
         if (ifMatch == null || ifMatch.isBlank()) {
             throw new PreconditionRequiredException(
-                    "Thieu header If-Match; hay lay ETag tu GET /persons/{id} truoc khi sua");
+                    "Thiếu header If-Match; hãy lấy ETag từ GET /persons/{id} trước khi sửa");
         }
         String value = ifMatch.trim();
         if (value.startsWith("W/")) {
@@ -259,7 +259,7 @@ public class PersonController {
         try {
             return Long.parseLong(value);
         } catch (NumberFormatException ex) {
-            throw new PreconditionRequiredException("If-Match khong hop le: " + ifMatch);
+            throw new PreconditionRequiredException("If-Match không hợp lệ: " + ifMatch);
         }
     }
 

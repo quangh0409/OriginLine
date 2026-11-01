@@ -66,7 +66,7 @@ public final class MediaReport {
         String trimmed = note == null ? "" : note.strip();
         if (reason == ReportReason.KHAC && trimmed.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Chon ly do \"Khac\" thi phai noi ro la chuyen gi — nguoi duyet khong doan duoc.");
+                    "Chọn lý do \"Khác\" thì phải nói rõ là chuyện gì — người duyệt không đoán được.");
         }
         if (trimmed.length() > MAX_NOTE_LENGTH) {
             trimmed = trimmed.substring(0, MAX_NOTE_LENGTH);
@@ -94,7 +94,7 @@ public final class MediaReport {
 
     private void requireOpen() {
         if (status != ReportStatus.OPEN) {
-            throw new IllegalStateException("Don bao go nay da dong o trang thai " + status);
+            throw new IllegalStateException("Đơn báo gỡ này đã đóng ở trạng thái " + status);
         }
     }
 

@@ -34,11 +34,17 @@ export interface CorrectionDiffProps {
  */
 export function CorrectionDiff({ payload, payloadFields, person }: CorrectionDiffProps) {
   const t = useTranslations("correction");
-  const keys = Object.keys(payload).length > 0 ? Object.keys(payload).sort() : payloadFields;
+  // Khoá bắt đầu bằng `_` là khoá ĐIỀU KHIỂN (`_baseVersion` — mốc phiên bản máy chủ tự đóng vào
+  // mọi đề nghị sửa), không phải trường hồ sơ. Máy chủ đã loại chúng khỏi `payloadFields` theo
+  // đúng luật này (`CorrectionPayload.fieldKeys`); đọc thẳng `Object.keys(payload)` thì mốc ấy
+  // hiện lên thành một dòng "_BASEVERSION · Đề nghị sửa thành 0" trên thẻ của người gửi lẫn người
+  // duyệt — đo được bằng trình duyệt thật ngày 24/09.
+  const fieldKeys = Object.keys(payload).filter((key) => !key.startsWith("_"));
+  const keys = fieldKeys.length > 0 ? fieldKeys.sort() : payloadFields;
 
   if (keys.length === 0) return null;
 
-  const payloadHidden = Object.keys(payload).length === 0 && payloadFields.length > 0;
+  const payloadHidden = fieldKeys.length === 0 && payloadFields.length > 0;
 
   return (
     <div className="flex flex-col gap-2">

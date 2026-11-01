@@ -171,6 +171,12 @@ tags:
       **chữ ký byte** của nó. Bucket riêng tư — lối đọc duy nhất là một URL ký lại sau khi kiểm
       quyền, nên **một khoá không phải giấy thông hành**.
       / Object storage: presigned direct upload, server-side byte-signature verification.
+  - name: clan
+    description: |-
+      **Hồ sơ & khởi tạo dòng họ** (V23). Một bản cài = một dòng họ; hồ sơ này là **dòng đầu tiên
+      của bảng `clan`** khi hệ thống phục vụ nhiều dòng họ. Màn khởi tạo **chỉ System Admin**;
+      bản công khai (`/public/clan-profile`) khách đọc được.
+      / Clan profile and onboarding; admin-only except the public read.
   - name: graphql
     description: Điểm vào GraphQL cho cây lồng sâu. / GraphQL entry point.
 
@@ -270,9 +276,9 @@ paths:
                     title: Trùng tên húy bậc trên
                     status: 409
                     detail: >-
-                      Ten huy vua nhap trung ten huy cua 1 bac tren (trung nguyen van). Vi ly do
-                      rieng tu, than loi khong neu danh tinh bac tren: mo ho so theo
-                      ancestorPersonId de xem phan minh duoc phep xem. Xac nhan de van ghi.
+                      Tên huý vừa nhập trùng tên huý của 1 bậc trên (trùng nguyên văn). Vì lý do
+                      riêng tư, thân lỗi không nêu danh tính bậc trên: mở hồ sơ theo
+                      ancestorPersonId để xem phần mình được phép xem. Xác nhận để vẫn ghi.
                     instance: /api/v1/persons
                     code: KY_HUY_CONFLICT
                     traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
@@ -289,10 +295,10 @@ paths:
                     title: Nghi trùng nhân khẩu
                     status: 409
                     detail: >-
-                      Nghi trung voi 1 ho so da co trong gia pha - diem cao nhat 80, khop o: trung
-                      ho ten du dau, trung nam sinh, cung chi. Vi ly do rieng tu, than loi khong
-                      neu danh tinh: mo tung ho so theo personId de xem phan minh duoc phep xem.
-                      Xac nhan neu day la nguoi khac.
+                      Nghi trùng với 1 hồ sơ đã có trong gia phả - điểm cao nhất 80, khớp ở: trùng
+                      họ tên đủ dấu, trùng năm sinh, cùng chi. Vì lý do riêng tư, thân lỗi không
+                      nêu danh tính: mở từng hồ sơ theo personId để xem phần mình được phép xem.
+                      Xác nhận nếu đây là người khác.
                     instance: /api/v1/persons
                     code: DUPLICATE_PERSON_SUSPECTED
                     traceId: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
@@ -1564,6 +1570,20 @@ paths:
         vì đó là thứ người dùng nhìn trên lịch.
 
         Sự kiện gắn với người còn sống (ví dụ mừng thọ) tuân thủ phân tầng: Khách không thấy.
+
+        ### Khách (không token) — mở từ 26/09/2026, CHỈ phần về người đã khuất
+
+        Khách nhận `200` với tập đã lọc, không `401`. Một sự kiện hiện với Khách khi và chỉ khi:
+
+        - loại **không** phải `SINH_NHAT` · `MUNG_THO` · `CUOI_HOI`; **và**
+        - nếu gắn nhân khẩu: nhân khẩu ấy **đã khuất** (không nạp được chủ thể ⇒ ẩn, fail-closed);
+        - nếu **không** gắn nhân khẩu: là một lễ cúng tổ tiên (`GIO_TO` · `GIO_HO` · `GIO_CHI` ·
+          `CHAP_MA` · `TIEU_TUONG` · `DAI_TUONG` · `GIO_THUONG`).
+          `HOP_HO`, `KHANH_THANH`, `KHAC` không gắn ai bị ẩn — `title`/`location`/`description` là
+          chữ tự do, và hệ thống không đọc được chữ tự do để biết nó nhắc tới người còn sống nào.
+
+        Đặt mọi nhóm riêng tư ở `CLAN` **không** mở gì cho Khách: "cả họ" là người đã đăng nhập.
+        `page.totalElements` của Khách đếm **sau** bộ lọc này.
       security:
         - bearerAuth: []
         - {}
@@ -1813,15 +1833,16 @@ paths:
         ra) thì `nextOccurrenceSolar`, `nextOccurrenceLunarYear` và `daysUntil` đều là `null` —
         backend **không** trả một ngày trong quá khứ rồi gọi nó là "sắp tới".
 
-        Sự kiện đã xóa mềm, và sự kiện gắn với người **còn sống** khi người gọi là Khách,
-        đều trả `404` — không phải `403`, vì `403` đã xác nhận rằng id đó tồn tại.
+        Sự kiện đã xóa mềm, và sự kiện Khách không được thấy (cùng luật với `GET /events`: người
+        còn sống, loại về người sống, việc không gắn ai mà không phải lễ cúng tổ tiên), đều trả
+        `404` — không phải `403`, vì `403` đã xác nhận rằng id đó tồn tại.
 
-        > **Giai đoạn 1:** chuỗi bảo mật bắt buộc đăng nhập cho mọi `/api/v1/**` ngoài
-        > `/api/v1/public/**`, nên khách vãng lai nhận `401` trước khi luật phân tầng kịp chạy.
-        > Luật "Khách không thấy người còn sống" vẫn được cài đặt ở tầng ứng dụng và sẽ có hiệu lực
-        > ngay khi cổng thông tin công khai mở endpoint này.
+        **Mở cho Khách từ 26/09/2026** (trước đó chuỗi bảo mật trả `401` trước khi luật phân tầng
+        kịp chạy). `ETag` vẫn là `version` và thân phản hồi **giống nhau với mọi người gọi đã được
+        thấy nó** — nên không có ca 304 trao nhầm thân của vai này cho vai khác.
       security:
         - bearerAuth: []
+        - {}
       parameters:
         - $ref: '#/components/parameters/AcceptLanguage'
         - name: id
@@ -2716,6 +2737,10 @@ paths:
 
         Hai lượt chạy trên cùng một tệp cho **danh sách giống hệt nhau**, kể cả thứ tự.
 
+        Lượt kiểm gồm bộ luật **và** lượt soát trước khi ghi (sáu mã, xem `ImportIssueCode`), chạy
+        trên tập dòng sau khi áp các quyết định gộp hiện hành. Nhờ vậy `status = VALIDATED` không
+        hứa điều bước ghi sẽ không giữ.
+
         Lô đã chốt (`COMMITTED` / `SUPERSEDED`) trả `422 IMP_BATCH_CLOSED`.
       security:
         - bearerAuth: []
@@ -2998,6 +3023,15 @@ paths:
         bấm đại trở thành sự thật trong phả. Nhưng nếu nó mở khoá nút duyệt thì nó lập tức thành nút
         "cho tôi qua" và cả cơ chế dò trùng thành trang trí.
 
+        ### Quyết định chạy lại lượt soát trước khi ghi
+
+        Lượt soát (sáu mã, xem `ImportIssueCode`) chạy trên tập dòng **sau khi gộp**, nên mỗi quyết
+        định chạy lại nó và `batch` trong phản hồi mang `blockingCount`, `status`, `canApprove`
+        mới. Hai chiều: gộp một dòng chép trùng không Mã cha **gỡ** được `IMP_UNDECIDED_INLAW_DOI`
+        của nó (lô trở lại `VALIDATED` nếu đó là lỗi chặn cuối cùng); để riêng dòng ấy thì lỗi còn
+        nguyên; một nhóm gộp dính hai hồ sơ trong phả **sinh ra** `IMP_MERGE_NOT_APPLICABLE`. Bộ
+        luật không chạy lại — nó chỉ đọc tệp thô, thứ một quyết định không đổi được.
+
         ### Quyết định sống sót qua các lần kiểm lại
 
         Kiểm lại (`POST /validate`) **không** xoá quyết định của những cặp không đổi: bắt quyết lại 40
@@ -3181,13 +3215,15 @@ paths:
 
         **Cổng nằm ở máy chủ dù giao diện đã ẩn nút.** Nút bị ẩn không phải là một phép kiểm.
 
-        ### Điều kiện thứ năm không đi ra bằng HTTP
+        ### Điều kiện thứ năm không đi ra bằng HTTP — và bình thường không bao giờ gặp
 
-        Ngay trước khi ghi còn một lượt soát nữa (`IMP_COMMIT_BLOCKED`): lô chạm một ca mà quy ước
-        của dòng họ chưa trả lời. Lượt ấy chạy ở **luồng nền**, nên nó **không** thành mã HTTP của
+        Ngay trước khi ghi, lượt soát trước khi ghi chạy **lại** (`IMP_COMMIT_BLOCKED`). Cùng lượt ấy
+        đã chạy ở cuối bước kiểm và sau mỗi quyết định nghi trùng, nên một lô qua được cổng thì
+        bình thường cũng qua được lượt này; nó còn đó làm **lưới thứ hai**, vì dữ liệu có thể đổi
+        giữa hai bước. Lượt ấy chạy ở **luồng nền**, nên nó **không** thành mã HTTP của
         `POST /commit` mà thành `status = FAILED` kèm `failureReason`, đọc qua `/commit-progress`;
-        danh sách vấn đề được ghi lại vào `import_issue` và nạp bằng `GET /issues`. **Chưa một dòng
-        nào vào phả** khi điều đó xảy ra.
+        các vấn đề được **ghép** vào `import_issue` (cảnh báo cũ giữ nguyên, `blockingCount` đếm
+        lại) và nạp bằng `GET /issues`. **Chưa một dòng nào vào phả** khi điều đó xảy ra.
       security:
         - bearerAuth: []
       parameters:
@@ -4874,6 +4910,10 @@ paths:
       description: |-
         `DRAFT → PENDING`. **Chỉ tác giả.** Bài ở trạng thái khác ⇒ `409 CONTENT_CLOSED`.
 
+        **Đây là cửa đòi thân bài.** Nháp được phép rỗng thân (xem `CreatePostRequest`); gửi một
+        nháp thân rỗng (hoặc chỉ khoảng trắng) ⇒ `422 VALIDATION_FAILED`, bài ở lại `DRAFT`. Hai mã
+        dẫn tới hai việc khác nhau: `409` là "tải lại xem trạng thái", `422` là "viết thêm vài dòng".
+
         Lý do trả lại của lượt trước **bị xoá ở bước này**: nó nói về bản cũ, và để nguyên thì màn
         duyệt sẽ hiện một lời phê không còn đúng với thứ người duyệt đang đọc.
       parameters:
@@ -4903,6 +4943,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/ContentConflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -5094,6 +5136,21 @@ paths:
         **Hệ quả cần biết khi dựng giao diện:** duyệt một vinh danh của người còn sống **chưa bật
         công tắc** thì nó *vẫn không hiện ra với ai* ngoài chính chủ và Hội đồng. Đó không phải
         lỗi — quyền công bố nằm ở chủ thể, còn quyền duyệt chỉ nói "bản ghi này có thật".
+
+        ### Khách (không token) — mở từ 26/09/2026, CHỈ người đã khuất
+
+        Khách nhận `200` với **chỉ** bản ghi `PUBLISHED` của nhân khẩu **đã khuất**, chưa xoá mềm.
+        Người còn sống không bao giờ có mặt — kể cả khi chính họ mở nhóm `honour` (hay mọi nhóm)
+        cho `CLAN`: "cả họ" là người đã đăng nhập, không phải người lạ cầm đường dẫn.
+
+        - `status` khác `PUBLISHED` ⇒ trang rỗng (không `403`: `403` xác nhận hàng đợi tồn tại).
+        - `reviewedBy`, `reviewedByDisplayName`, `rejectReason` luôn `null`; `canReview` luôn `false`.
+        - **Khác lối thành viên:** `page.totalElements` của Khách đếm **đúng** — bộ lọc người đã
+          khuất chạy trong SQL, vì một tổng đếm trước lọc sẽ tự nói "có N vinh danh của người
+          sống".
+      security:
+        - bearerAuth: []
+        - {}
       parameters:
         - $ref: '#/components/parameters/AcceptLanguage'
         - name: personId
@@ -5209,6 +5266,12 @@ paths:
       description: |-
         Dữ liệu cho badge. **`0` nghĩa là "không có gì trong phạm vi của tôi"**, không phải "thấy
         tất".
+
+        **Vẫn đòi đăng nhập** dù `GET /honours` và `GET /honours/{id}` đã mở cho Khách: đường này
+        khớp mẫu `/honours/{id}` nên chuỗi bảo mật đóng nó tường minh trước. Hàng đợi duyệt không
+        phải việc của người lạ.
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: OK
@@ -5239,6 +5302,14 @@ paths:
         **Ba lý do dùng chung một mã trạng thái là chủ ý**: `404` ở đây nghĩa "với anh, bản ghi này
         không tồn tại", và phân biệt "bị giấu" với "không có" chính là mẩu thông tin mà BA v2 §10
         bảo vệ.
+
+        **Khách (không token), từ 26/09/2026:** `200` chỉ với bản ghi `PUBLISHED` của người đã
+        khuất; mọi ca khác `404`. Thân phản hồi của Khách bỏ `reviewedBy`/`reviewedByDisplayName`/
+        `rejectReason` — `Vary: Authorization` + `no-store` giữ nguyên, nên hai thân khác nhau cho
+        cùng một `ETag` không bao giờ bị cache trao nhầm.
+      security:
+        - bearerAuth: []
+        - {}
       parameters:
         - $ref: '#/components/parameters/AcceptLanguage'
         - name: id
@@ -6050,6 +6121,277 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ---------------------------------------------------------------------------
+  # HỒ SƠ & KHỞI TẠO DÒNG HỌ / CLAN PROFILE & ONBOARDING (V23)
+  # ---------------------------------------------------------------------------
+  /public/clan-profile:
+    get:
+      tags: [clan, public]
+      operationId: getPublicClanProfile
+      summary: Hồ sơ công khai của dòng họ / Public clan profile
+      description: |-
+        Tên và thông tin chung của dòng họ cho **khách** (không cần token) — trang chủ, tiêu đề,
+        thư mời.
+
+        **Chưa khởi tạo ⇒ `200 {"initialized": false}`**, các trường khác **vắng** (không phải
+        `null`). Không phải `404`: một bản cài mới là trạng thái bình thường, và trang chủ gọi
+        endpoint này ở mọi lần mở.
+
+        Không có dữ liệu của người đang sống nào ở đây: tên họ, từ đường, thuỷ tổ, ngày giỗ tổ.
+      security:
+        - {}
+      responses:
+        '200':
+          description: Hồ sơ (hoặc `initialized = false`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanProfilePublicDto'
+              examples:
+                chuaKhoiTao:
+                  summary: Bản cài chưa khởi tạo
+                  value: { initialized: false }
+                daKhoiTao:
+                  summary: Đã khởi tạo
+                  value:
+                    initialized: true
+                    name: Họ Nguyễn Đình
+                    shortName: Nguyễn Đình
+                    rootBranchPath: ho_nguyen_dinh
+                    region: BAC
+                    ancestralHall: { name: Từ đường họ Nguyễn Đình, address: Đông Ngạc, Hà Nội }
+                    ancestorName: Nguyễn Đình Công
+                    gioTo: { lunarDay: 12, lunarMonth: 3 }
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/clan-profile:
+    get:
+      tags: [clan]
+      operationId: getClanProfile
+      summary: Hồ sơ dòng họ (quản trị) / Clan profile (admin)
+      description: |-
+        **Chỉ System Admin (`ADMIN`).** Hồ sơ công khai cộng `createdAt`, `updatedAt`, `version`,
+        và header `ETag` = `version` — đem theo vào `If-Match` của `PUT`.
+
+        Chưa có hồ sơ ⇒ `404` `code: CLAN_NOT_INITIALIZED`: giao diện mở thẳng biểu mẫu khởi tạo.
+
+        Bản cài đã chạy trước V23 (dữ liệu mẫu họ Nguyễn Đình) **đã có sẵn** một hồ sơ tự điền từ
+        chi gốc — nên không rơi vào `404`; xem `readiness` để biết còn phải bấm Lưu một lần.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Hồ sơ.
+          headers:
+            ETag:
+              description: '`"<version>"` — khoá lạc quan, dùng lại ở `If-Match`.'
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanProfileDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: 'Chưa khởi tạo — `code: CLAN_NOT_INITIALIZED`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    put:
+      tags: [clan]
+      operationId: putClanProfile
+      summary: Khởi tạo hoặc sửa hồ sơ dòng họ / Create or replace the clan profile
+      description: |-
+        **Chỉ System Admin.** Chưa có hồ sơ ⇒ **tạo** (`201`, không cần `If-Match`). Đã có ⇒
+        **thay trọn vẹn** (`200`), **bắt buộc `If-Match`** — y như `PATCH /persons/{id}`: thiếu /
+        sai dạng ⇒ `412 PRECONDITION_REQUIRED`; lệch phiên bản ⇒ `409 OPTIMISTIC_LOCK_CONFLICT`.
+
+        **Ngữ nghĩa PUT:** trường tuỳ chọn vắng mặt là **xoá** giá trị đang có. Giao diện luôn gửi
+        cả biểu mẫu.
+
+        **Một lượt lưu làm bốn việc trong MỘT transaction** — hỏng một thì không việc nào vào:
+        1. ghi hồ sơ;
+        2. dựng (hoặc đổi tên/vùng) **chi gốc** `DONG_HO` có `path = rootBranchPath` — tên chi gốc
+           luôn đồng bộ theo `name`;
+        3. tạo hoặc **nối lại** bộ luật danh xưng **tầng `CLAN`** gắn chi gốc: cha kế thừa là bộ
+           `REGION` **đang bật** của `region`, không có thì bộ `DEFAULT` (lối miền Bắc). **Nếu Hội
+           đồng đã tự khai luật ở tầng `CLAN` thì những luật ấy KHÔNG bị ghi đè** — chỉ cha kế thừa
+           đổi. Bật một bộ `REGION` về sau thì lưu lại hồ sơ một lần để nối lại;
+        4. ghi `audit_log` (hồ sơ, chi gốc, bộ luật).
+
+        **`rootBranchPath` bị khoá khi phả đã có nhân khẩu** (kể cả đã xoá mềm) ⇒
+        `409 CLAN_ROOT_LOCKED`. Khi phả chưa có ai, đổi nhãn gốc đổi luôn `path` của **cả cây chi
+        con** (`cu.x.y → moi.x.y`). Lần khởi tạo đầu trên một cây đã có **đúng một** gốc khác nhãn
+        thì gốc ấy được nhận về (đổi nhãn) chứ không dựng gốc thứ hai; cây có **nhiều** gốc mà
+        không gốc nào khớp ⇒ `409 CLAN_ROOT_LOCKED`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: If-Match
+          in: header
+          required: false
+          description: |-
+            `"<version>"` hoặc `W/"<version>"` lấy từ `ETag`. **Bắt buộc khi hồ sơ đã tồn tại.**
+          schema: { type: string }
+          example: '"3"'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClanProfileWrite'
+      responses:
+        '200':
+          description: Đã thay hồ sơ.
+          headers:
+            ETag:
+              description: Phiên bản mới.
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanProfileDto'
+        '201':
+          description: Đã khởi tạo dòng họ.
+          headers:
+            ETag:
+              description: Phiên bản đầu tiên (`"0"`).
+              schema: { type: string }
+            Location:
+              description: '`/api/v1/admin/clan-profile`'
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanProfileDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: |-
+            Phân nhánh theo `code`:
+            * `CLAN_ROOT_LOCKED` — đổi `rootBranchPath` khi phả đã có nhân khẩu (hoặc cây có nhiều gốc);
+            * `OPTIMISTIC_LOCK_CONFLICT` — hồ sơ đã đổi kể từ `ETag` gửi lên; tải lại rồi sửa tiếp.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          description: |-
+            `VALIDATION_FAILED` — ví dụ `rootBranchPath` không phải **một** nhãn `[a-z0-9_]{1,64}`,
+            `region` ngoài `BAC|TRUNG|NAM`, từ đường có địa chỉ mà không có tên, `gioTo` thiếu một
+            vế, hoặc nhãn gốc mới đã thuộc về một chi khác (kể cả chi đã xoá mềm).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /admin/clan-profile/readiness:
+    get:
+      tags: [clan]
+      operationId: getClanReadiness
+      summary: Dòng họ còn thiếu bước khởi tạo nào / Clan onboarding readiness
+      description: |-
+        **Chỉ System Admin.** Năm bước theo thứ tự cố định — `profile`, `council`, `import`,
+        `invite`, `done`. Bước sau **không** bị khoá bởi bước trước; thứ tự chỉ là gợi ý.
+        Mỗi `hint` là câu **tiếng Việt có dấu** nói việc cần làm tiếp — giao diện hiện nguyên văn.
+
+        * `profile.done` = có hồ sơ **và** chi gốc **và** bộ luật tầng `CLAN`. Hồ sơ tự điền ở
+          V23 có hai điều đầu nhưng chưa có điều thứ ba ⇒ `hint` bảo bấm Lưu một lần.
+        * `council.count` = số **tài khoản** đang giữ vai `COUNCIL`.
+        * `persons.count` = nhân khẩu chưa xoá mềm; `branches.count` = chi/ngành **dưới** gốc,
+          không tính chính chi gốc.
+        * `inviteCodes.active` = mã mời dòng họ còn dùng được (chưa hết hạn, chưa thu hồi, chưa hết
+          lượt).
+        * `kinshipRuleSet.customized` = Hội đồng đã tự khai luật riêng ở tầng `CLAN`.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Bảng sẵn sàng.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClanReadinessDto'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/clan-profile/council-accounts:
+    post:
+      tags: [clan]
+      operationId: createCouncilAccount
+      summary: Lập tài khoản Hội đồng Tộc biểu / Create a clan council account
+      description: |-
+        **Chỉ System Admin** — Hội đồng không tự lập thêm Hội đồng.
+
+        Lập tài khoản Keycloak (hoặc nhận lại tài khoản mồ côi của một lần bấm hỏng trước đó), gắn
+        **vai realm `COUNCIL`**, dựng `app_user` `ACTIVE` (gắn `personId` nếu có) cùng một dòng
+        phân công `COUNCIL` **toàn dòng họ**, ghi `audit_log`, và trả **liên kết đặt mật khẩu một
+        lần** — cùng loại liên kết, cùng màn `/dat-mat-khau`, cùng endpoint
+        `POST /invitations/set-password` với luồng mời. Không có cơ chế mới.
+
+        `loginId` là **số điện thoại Việt Nam hoặc email** — cùng luật với
+        `POST /clan-invites/register`.
+
+        **`setPasswordUrl` chỉ xuất hiện ở phản hồi này** — không lưu, không ghi log, không có
+        endpoint đọc lại. Trao tận tay.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCouncilAccountRequest'
+      responses:
+        '201':
+          description: Đã lập tài khoản.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouncilAccountCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: '`personId` không tồn tại — `code: NOT_FOUND`.'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: |-
+            Phân nhánh theo `code`:
+            * `IDENTITY_ALREADY_REGISTERED` — định danh đã có tài khoản (có chủ); hãy cấp vai Hội
+              đồng cho tài khoản sẵn có ở màn phân quyền;
+            * `PERSON_ALREADY_LINKED` — nhân khẩu đã có tài khoản;
+            * `VALIDATION_FAILED` — `loginId` không phải email/số điện thoại, nhân khẩu đã khuất
+              hoặc đã xoá mềm.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Không nói chuyện được với Keycloak (`IDENTITY_PROVIDER_UNAVAILABLE`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
 # =============================================================================
 # COMPONENTS
 # =============================================================================
@@ -6426,7 +6768,18 @@ components:
         - IMP_BATCH_CLOSED
         - IMP_COMMIT_BLOCKED
         - IMP_ROLLBACK_REFUSED
+        # --- clan: ho so & khoi tao dong ho (V23) ---
+        - CLAN_NOT_INITIALIZED
+        - CLAN_ROOT_LOCKED
       x-code-notes:
+        CLAN_NOT_INITIALIZED: |-
+          `404` ở `GET /admin/clan-profile`: bản cài chưa có hồ sơ dòng họ. Không phải "đường dẫn
+          sai" — giao diện mở thẳng biểu mẫu **Khởi tạo dòng họ**. (Khách thì không bao giờ gặp mã
+          này: `/public/clan-profile` trả `200 {"initialized": false}`.)
+        CLAN_ROOT_LOCKED: |-
+          `409`: đổi `rootBranchPath` khi phả đã có nhân khẩu (kể cả đã xoá mềm), hoặc khởi tạo trên
+          một cây có nhiều gốc mà không gốc nào khớp. Nhãn gốc là tiền tố của mọi chi và mọi phạm vi
+          phân quyền; đổi nó sau khi đã nhập người là đổi địa chỉ của cả dòng họ.
         VALIDATION_FAILED: Sai kiểu, thiếu trường bắt buộc, vi phạm ràng buộc — xem `errors[]`.
         BRANCH_SCOPE_VIOLATION: Đủ vai trò nhưng đối tượng ngoài `ltree` scope được giao.
         KY_HUY_CONFLICT: Trùng tên húy bậc trên — ghi đè được bằng `confirmTabooOverride`.
@@ -9906,6 +10259,19 @@ components:
 
         Lỗi chặn là **mâu thuẫn nội tại** của dữ liệu: chắc chắn sai, và chỉ ra được sai ở đâu.
         Cảnh báo là **nghi ngờ**: máy không đủ căn cứ, chỉ người mở sổ ra mới trả lời được.
+
+        ### Sáu mã của lượt soát trước khi ghi — đều là lỗi chặn
+
+        `IMP_UNDECIDED_INLAW_DOI` · `IMP_UNDECIDED_ADOPTION` · `IMP_UNDECIDED_LIFE_STATUS` ·
+        `IMP_COMMIT_CYCLE` · `IMP_COMMIT_REF_NOT_FOUND` · `IMP_MERGE_NOT_APPLICABLE`. Chúng do
+        **cùng một lượt soát** mà bước ghi chạy lại ngay trước khi ghi, nhưng lượt ấy chạy **ở cuối
+        bước kiểm** (`POST /import/batches`, `POST /validate`) và **sau mỗi quyết định nghi trùng**,
+        nên chúng về qua `GET /issues` như mọi lỗi chặn khác và giữ `canApprove = false`.
+
+        Trước 24/09 (NT-TC-15) lượt ấy chỉ chạy lúc ghi: màn đối soát báo "không còn lỗi phải sửa",
+        lô nhận `202` rồi `FAILED`. Nguyên tắc từ đó: **một lô `VALIDATED` là lô mà bước ghi, với dữ
+        liệu không đổi, sẽ nhận.** Tiền tố `IMP_COMMIT_` là dấu vết lịch sử, giữ nguyên để không vỡ
+        dữ liệu đã lưu.
       enum:
         - IMP_PARENT_NOT_FOUND
         - IMP_CYCLE
@@ -9934,6 +10300,11 @@ components:
         - IMP_MISSING_PLACE_CODE
         - IMP_HEIR_TARGET_NOT_FOUND
         - IMP_MERGE_NOT_APPLICABLE
+        - IMP_UNDECIDED_INLAW_DOI
+        - IMP_UNDECIDED_ADOPTION
+        - IMP_UNDECIDED_LIFE_STATUS
+        - IMP_COMMIT_CYCLE
+        - IMP_COMMIT_REF_NOT_FOUND
       x-issue-notes:
         IMP_SELF_PARENT: Một dòng khai chính nó là cha/mẹ của chính nó.
         IMP_LUNAR_DATE_UNPARSEABLE: Ô Ngày mất âm không đọc được thành ngày âm (ngày 31, tháng 13…).
@@ -9951,8 +10322,9 @@ components:
           trong phả đồ nhưng không bao giờ được nhắc giỗ, mà nhắc giỗ là lý do dòng họ mở ứng dụng.
         IMP_GIO_DAY_30: Ngày giỗ là 30 mà không rõ năm; tháng thiếu không có ngày 30, giỗ sẽ trôi về 29.
         IMP_MERGE_NOT_APPLICABLE: |-
-          **Lỗi chặn, sinh lúc kiểm lại sau khi có quyết định gộp** — không phải lỗi của tệp, mà là
-          hệ quả của một chuỗi quyết định.
+          **Lỗi chặn, sinh ngay khi quyết định gộp được ghi** (và lại ở mỗi lần kiểm lại) — không
+          phải lỗi của tệp, mà là hệ quả của một chuỗi quyết định. Phản hồi của
+          `POST .../decision` đã mang `blockingCount` mới; danh sách đọc lại qua `GET /issues`.
 
           Các quyết định `MERGED` được gom theo **nhóm liên thông**: A≡B cộng B≡C thì A, B, C là
           một người. Khi một nhóm như vậy lại dính tới **hai `person` KHÁC NHAU đã có trong phả**,
@@ -9968,8 +10340,29 @@ components:
         IMP_UNKNOWN_PLACE_CODE: Mã tỉnh/quốc gia không có trong danh mục `place_division`.
         IMP_MISSING_PLACE_CODE: Có nguyên quán bằng chữ nhưng không có mã tỉnh — dòng này không vào được báo cáo dân số.
         IMP_HEIR_TARGET_NOT_FOUND: |-
-          Mã người được kế tự không tìm thấy. Là **cảnh báo** chứ không phải lỗi chặn: kế tự là quan
-          hệ thêm, không phải cạnh giữ cây.
+          Mã người được kế tự không tìm thấy **trong tệp**. Là **cảnh báo** khi mã ấy có trong phả
+          của chi (kế tự là quan hệ thêm, không phải cạnh giữ cây — lý do ban đầu của mức cảnh báo).
+          Khi mã không có ở đâu cả thì bước ghi chặn, nên cảnh báo này được **thay** bằng lỗi chặn
+          `IMP_COMMIT_REF_NOT_FOUND` ở cùng ô, mang theo `goiY` — không bao giờ cả hai cùng lúc.
+        IMP_UNDECIDED_INLAW_DOI: |-
+          Dâu/rể (không Mã cha, không Mã mẹ, có mặt ở trang Hôn phối) mà **khai Đời ≥ 2**. Quy ước
+          hiện hành, **chờ Hội đồng Tộc biểu chốt**: dâu/rể **không** khai Đời — chưa rõ con số ấy
+          là đời của vợ/chồng hay đời trong họ gốc. Cách sửa: xoá ô Đời ở dòng ấy; đời suy từ
+          vợ/chồng khi ghi. `field = "Đời"`. Vợ Thuỷ tổ khai Đời 1 không bị chặn.
+        IMP_UNDECIDED_ADOPTION: |-
+          Con nuôi của một người **trong họ**: mẫu chỉ chở được một cặp Mã cha / Mã mẹ, nên ghi cha
+          nuôi là mất cha ruột khỏi phả. Chờ Hội đồng chốt. `field = "Quan hệ"`.
+        IMP_UNDECIDED_LIFE_STATUS: |-
+          Trống cả ô Còn sống lẫn Ngày mất âm — không biết còn sống hay đã mất, và hệ thống không
+          đoán. `field = "Còn sống"`.
+        IMP_COMMIT_CYCLE: |-
+          Không sắp được thứ tự ghi (cha mẹ trước con, dâu/rể sau vợ/chồng). Không lặp lại khi bộ
+          luật đã báo `IMP_CYCLE` cho cùng lô; hay gặp nhất là vòng đi qua trang Hôn phối, hoặc do
+          một quyết định gộp. `sheet = LO`, `context.ma` là danh sách mã kẹt.
+        IMP_COMMIT_REF_NOT_FOUND: |-
+          Mã ở trang Hôn phối (`field` = `Mã chồng` / `Mã vợ`) hoặc mã kế tự (`field` = `Kế tự cho
+          ai (Mã)`) không có trong tệp, cũng không có trong phả của chi. `context.maKhongTimThay`,
+          và `goiY` khi có. Bản lưu cũ có thể mang khoá `ma` thay cho `maKhongTimThay`.
 
     ImportIssue:
       type: object
@@ -10023,11 +10416,11 @@ components:
 
             | Khoá | Kiểu | Với mã nào | Nội dung |
             |---|---|---|---|
-            | `goiY` | `string[]` | `IMP_PARENT_NOT_FOUND`, `IMP_HEIR_TARGET_NOT_FOUND` | Mã gần giống, đã xếp theo độ gần. **Do máy chủ tính** — client chỉ thấy phần dữ liệu đã tải về nên sẽ gợi ý sai đúng lúc người ta tin nhất. |
+            | `goiY` | `string[]` | `IMP_PARENT_NOT_FOUND`, `IMP_HEIR_TARGET_NOT_FOUND`, `IMP_COMMIT_REF_NOT_FOUND` | Mã gần giống, đã xếp theo độ gần. **Do máy chủ tính** — client chỉ thấy phần dữ liệu đã tải về nên sẽ gợi ý sai đúng lúc người ta tin nhất. |
             | `chuoi` | `string[]` | `IMP_CYCLE` | Đường đi thật của vòng lặp, **đã đóng kín**: `["AT-05-012","AT-04-003","AT-05-012"]`. |
             | `cacDong` | `int[]` | `IMP_DUP_CODE`, `IMP_SPOUSE_ORDER_CONFLICT` | Các số dòng cùng dính. Là **mảng**, không phải một số. |
             | `doiKhai` / `doiSuyRa` | `int` | `IMP_GENERATION_MISMATCH` | Đời người nhập gõ / đời hệ thống suy ra. |
-            | `maKhongTimThay` | `string` | `IMP_PARENT_NOT_FOUND` | Mã không phân giải được. |
+            | `maKhongTimThay` | `string` | `IMP_PARENT_NOT_FOUND`, `IMP_HEIR_TARGET_NOT_FOUND`, `IMP_COMMIT_REF_NOT_FOUND` | Mã không phân giải được. |
             | `nghiNgo` | `object[]` | `IMP_SUSPECT_DUPLICATE` | Xem ghi chú riêng tư bên dưới. |
             | `tenHuy`, `bacTrenId` | `string` | `IMP_TABOO_COLLISION` | Tên huý va chạm, và **khoá** của bậc trên. |
 
@@ -11703,7 +12096,14 @@ components:
         **Không có trường ảnh ở đây:** tệp được gắn bằng một lệnh riêng
         (`PUT /api/v1/posts/{id}/media`) sau khi đã tải lên qua `/api/v1/media`. Nhồi khoá tệp vào
         lệnh tạo nháp nghĩa là bắt người viết chọn xong ảnh trước khi gõ được chữ đầu tiên.
-      required: [title, body]
+
+        **Chỉ `title` là bắt buộc (đổi 24/09/2026).** Đây là lượt tạo *nháp*, và màn soạn gửi nó
+        ngay khi người viết rời ô tiêu đề — trước khi có chữ nào ở thân bài; bộ chọn ảnh chỉ mở khi
+        đã có nháp. Bản trước đòi `required: [title, body]` và mỗi người viết mới nhận `400` ngay ô
+        đầu tiên. Lý do của bản trước — "bài không có thân thì không phải bài" — không bị bỏ mà
+        **chuyển chỗ**: `POST /posts/{id}/submit` từ chối thân rỗng bằng `422 VALIDATION_FAILED`,
+        nên không bài nào tới tay người duyệt hay lên trang chủ với thân rỗng.
+      required: [title]
       properties:
         title:
           type: string
@@ -11712,9 +12112,10 @@ components:
           examples: ['Họp mặt dòng họ đầu xuân Bính Ngọ']
         body:
           type: string
-          minLength: 1
           maxLength: 200000
+          default: ''
           description: |-
+            **Được rỗng hoặc vắng mặt** ở bản nháp (đọc thành `""`); bắt buộc có chữ khi gửi duyệt.
             Trần 200.000 ký tự. Rộng có chủ ý — một cụ chép lại cả một đoạn gia phả giấy có thể gõ
             rất dài, và cắt ngắn bằng một ràng buộc ở tầng CSDL nghĩa là bài bị từ chối **sau khi**
             người ta đã gõ xong.
@@ -11732,8 +12133,8 @@ components:
           maxLength: 250
         body:
           type: string
-          minLength: 1
           maxLength: 200000
+          description: '`""` hợp lệ — nháp được phép rỗng thân; luật "phải có thân" ở `/submit`.'
 
     ReviewContentRequest:
       type: object
@@ -12354,3 +12755,193 @@ components:
             Tệp **đã xác nhận**, do chính người gọi tải lên, và phải là **ảnh**. Nhận `mediaId` thay
             vì một chuỗi khoá làm ràng buộc "tệp phải đã tồn tại thật trên kho và đã được backend
             nhìn thấy" trở thành một sự thật của kiểu, không phải một dòng ghi chú.
+
+    # -------------------------------------------------------------------------
+    # HỒ SƠ & KHỞI TẠO DÒNG HỌ / CLAN PROFILE (V23)
+    # -------------------------------------------------------------------------
+    ClanRegion:
+      type: string
+      enum: [BAC, TRUNG, NAM]
+      description: |-
+        Vùng xưng hô của dòng họ. Quyết định bộ luật danh xưng tầng `CLAN` kế thừa từ bộ `REGION`
+        đang bật của vùng ấy (không có thì bộ `DEFAULT` — lối miền Bắc).
+
+    ClanAncestralHall:
+      type: object
+      title: Từ đường / Ancestral hall
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 200 }
+        address: { type: string, maxLength: 500 }
+
+    ClanGioTo:
+      type: object
+      title: Ngày giỗ tổ (âm lịch) / Clan founder's death anniversary (lunar)
+      required: [lunarDay, lunarMonth]
+      properties:
+        lunarDay: { type: integer, minimum: 1, maximum: 30 }
+        lunarMonth: { type: integer, minimum: 1, maximum: 12 }
+
+    ClanProfilePublicDto:
+      type: object
+      title: Hồ sơ dòng họ — công khai / Public clan profile
+      description: |-
+        `initialized = false` ⇒ **mọi trường khác vắng mặt**. `initialized = true` ⇒ `name`,
+        `rootBranchPath`, `region` luôn có; các trường tuỳ chọn vắng khi chưa khai.
+      required: [initialized]
+      properties:
+        initialized: { type: boolean }
+        name: { type: string, maxLength: 120 }
+        shortName: { type: string, maxLength: 60 }
+        rootBranchPath:
+          type: string
+          pattern: '^[a-z0-9_]{1,64}$'
+          description: Nhãn `ltree` gốc — `slug` của chi gốc `DONG_HO`, tiền tố của mọi `branch.path`.
+        region:
+          $ref: '#/components/schemas/ClanRegion'
+        ancestralHall:
+          $ref: '#/components/schemas/ClanAncestralHall'
+        ancestorName: { type: string, maxLength: 200, description: Tên thuỷ tổ. }
+        foundedNote: { type: string, maxLength: 2000 }
+        gioTo:
+          $ref: '#/components/schemas/ClanGioTo'
+
+    ClanProfileDto:
+      title: Hồ sơ dòng họ — quản trị / Clan profile (admin)
+      allOf:
+        - $ref: '#/components/schemas/ClanProfilePublicDto'
+        - type: object
+          required: [createdAt, updatedAt, version]
+          properties:
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            version:
+              type: integer
+              format: int64
+              description: Cùng giá trị với header `ETag`.
+
+    ClanProfileWrite:
+      type: object
+      title: Ghi hồ sơ dòng họ / Write clan profile
+      description: Ngữ nghĩa **PUT** — trường tuỳ chọn vắng mặt là xoá giá trị đang có.
+      required: [name, region, rootBranchPath]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        shortName: { type: string, maxLength: 60 }
+        region:
+          $ref: '#/components/schemas/ClanRegion'
+        rootBranchPath:
+          type: string
+          pattern: '^[a-z0-9_]{1,64}$'
+          description: |-
+            **Một** nhãn `ltree` (chữ thường không dấu, số, gạch dưới). Không đổi được khi phả đã
+            có nhân khẩu — `409 CLAN_ROOT_LOCKED`.
+          example: ho_nguyen_dinh
+        ancestralHall:
+          $ref: '#/components/schemas/ClanAncestralHall'
+        ancestorName: { type: string, maxLength: 200 }
+        foundedNote: { type: string, maxLength: 2000 }
+        gioTo:
+          $ref: '#/components/schemas/ClanGioTo'
+
+    ClanReadinessStepKey:
+      type: string
+      enum: [profile, council, import, invite, done]
+
+    ClanReadinessDto:
+      type: object
+      title: Bảng sẵn sàng của dòng họ / Clan onboarding readiness
+      required: [profile, rootBranch, kinshipRuleSet, council, persons, branches, inviteCodes, steps]
+      properties:
+        profile:
+          type: object
+          required: [done]
+          properties:
+            done: { type: boolean }
+            name: { type: string }
+        rootBranch:
+          type: object
+          required: [done]
+          properties:
+            done: { type: boolean }
+            path: { type: string }
+        kinshipRuleSet:
+          type: object
+          required: [done, customized]
+          properties:
+            done: { type: boolean }
+            region:
+              $ref: '#/components/schemas/ClanRegion'
+            customized:
+              type: boolean
+              description: Hội đồng đã tự khai luật riêng ở tầng `CLAN`.
+        council:
+          type: object
+          required: [done, count]
+          properties:
+            done: { type: boolean }
+            count: { type: integer }
+        persons:
+          type: object
+          required: [count]
+          properties:
+            count: { type: integer, format: int64 }
+        branches:
+          type: object
+          required: [count]
+          properties:
+            count:
+              type: integer
+              format: int64
+              description: Chi/ngành dưới gốc, không tính chính chi gốc.
+        inviteCodes:
+          type: object
+          required: [active]
+          properties:
+            active: { type: integer }
+        steps:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items:
+            type: object
+            required: [key, done, hint]
+            properties:
+              key:
+                $ref: '#/components/schemas/ClanReadinessStepKey'
+              done: { type: boolean }
+              hint:
+                type: string
+                description: Câu tiếng Việt có dấu nói việc cần làm tiếp — hiện nguyên văn.
+
+    CreateCouncilAccountRequest:
+      type: object
+      title: Lập tài khoản Hội đồng Tộc biểu / Create council account
+      required: [displayName, loginId]
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 120 }
+        loginId:
+          type: string
+          maxLength: 254
+          description: Số điện thoại Việt Nam **hoặc** email — cùng luật với `/clan-invites/register`.
+          example: toc.truong@example.vn
+        personId:
+          type: string
+          format: uuid
+          description: Nhân khẩu **còn sống**, chưa có tài khoản, để gắn ngay. Vắng = gắn sau.
+
+    CouncilAccountCreated:
+      type: object
+      title: Tài khoản Hội đồng vừa lập / Council account created
+      required: [appUserId, keycloakSub, role, setPasswordUrl, setPasswordExpiresAt]
+      properties:
+        appUserId: { type: string, format: uuid }
+        keycloakSub: { type: string }
+        role:
+          type: string
+          enum: [COUNCIL]
+        setPasswordUrl:
+          type: string
+          format: uri
+          description: Liên kết **một lần** tới `/dat-mat-khau` — chỉ xuất hiện ở phản hồi này.
+        setPasswordExpiresAt: { type: string, format: date-time }

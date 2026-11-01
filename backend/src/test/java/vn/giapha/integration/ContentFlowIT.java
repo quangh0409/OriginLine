@@ -320,6 +320,47 @@ class ContentFlowIT extends AbstractIntegrationTest {
         }
 
         @Test
+        @DisplayName("Nháp chỉ có tiêu đề tạo được (201, kèm updatedAt); gửi duyệt khi thân rỗng thì 422")
+        void nhapChiTieuDe_taoDuoc_guiDuyetThi422() throws Exception {
+            // Đúng yêu cầu màn soạn gửi khi người viết gõ tiêu đề rồi rời ô — trước 24/09/2026
+            // yêu cầu này nhận 400 trên `body` và bộ chọn ảnh khoá tới khi có thân bài.
+            MvcResult taoNhap = mockMvc.perform(post("/api/v1/posts")
+                            .with(thanhVienBinh())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"title": "Họp họ cuối năm", "body": ""}
+                                    """))
+                    .andReturn();
+            assertThat(taoNhap.getResponse().getStatus())
+                    .as("nhap chi co tieu de phai tao duoc: %s", chuoiThan(taoNhap))
+                    .isEqualTo(201);
+            assertThat(than(taoNhap).hasNonNull("updatedAt"))
+                    .as("updatedAt do CSDL dat phai duoc doc lai sau INSERT — thieu no man soan"
+                            + " khong hien duoc 'Da luu nhap luc …'")
+                    .isTrue();
+            UUID postId = UUID.fromString(than(taoNhap).get("id").asText());
+
+            MvcResult guiRong = mockMvc.perform(post("/api/v1/posts/" + postId + "/submit")
+                    .with(thanhVienBinh())).andReturn();
+            assertThat(guiRong.getResponse().getStatus()).isEqualTo(422);
+            assertThat(ma(guiRong)).isEqualTo("VALIDATION_FAILED");
+
+            MvcResult sua = mockMvc.perform(patch("/api/v1/posts/" + postId)
+                            .with(thanhVienBinh())
+                            .header(HttpHeaders.IF_MATCH, "\"0\"")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"body": "Xin các chi báo số người về dự."}
+                                    """))
+                    .andReturn();
+            assertThat(sua.getResponse().getStatus()).isEqualTo(200);
+            assertThat(than(sua).get("updatedAt").asText())
+                    .as("updatedAt sau PATCH phai la gia tri MOI trigger vua dat, khong phai gia tri cu")
+                    .isNotEqualTo(than(taoNhap).get("updatedAt").asText());
+            guiDuyet(thanhVienBinh(), postId);
+        }
+
+        @Test
         @DisplayName("Gỡ bài là XOÁ MỀM: hàng ở lại, chỉ đổi trạng thái")
         void goBai_laXoaMem() throws Exception {
             UUID postId = taoVaGuiDuyet(thanhVienBinh(), "Bài sẽ bị gỡ");

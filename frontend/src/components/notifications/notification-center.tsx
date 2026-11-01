@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { Alert, Empty, Pagination, Segmented, Select, Skeleton, Tag } from "antd";
 import { useTranslations } from "next-intl";
-import { useMarkNotificationRead, useNotifications } from "@/hooks/use-notifications";
+import {
+  useInboxAccess,
+  useMarkNotificationRead,
+  useNotifications,
+} from "@/hooks/use-notifications";
 import { ApiError } from "@/lib/api/http";
 import { colorVars } from "@/styles/tokens";
 import { NotificationItem } from "./notification-item";
@@ -45,6 +49,10 @@ export function NotificationCenter() {
     size: PAGE_SIZE,
   });
   const markRead = useMarkNotificationRead();
+  // Khách: không hỏi máy chủ (xem `useInboxAccess`) — nên lời mời đăng nhập phải đến từ đây,
+  // không còn từ một `401`. Thiếu nhánh này thì khách thấy "chưa có thông báo nào": một hộp thư
+  // rỗng giả vờ, đúng thứ bộ test "khách vãng lai" cấm.
+  const access = useInboxAccess();
 
   const items = data?.items ?? [];
   const total = data?.page.totalElements ?? 0;
@@ -90,8 +98,26 @@ export function NotificationCenter() {
       {/* Tài khoản đã đăng nhập nhưng chưa ghép với nhân khẩu nào thì hộp thư đương nhiên
           trống. Đó không phải sự cố, và cũng không được để thành một màn hình trắng: người dùng
           cần biết phải hỏi ai để được ghép, nếu không họ sẽ tưởng hệ thống nuốt mất nhắc giỗ. */}
+      {/* Khách: máy thật trả `401 UNAUTHENTICATED`. Đó là luật, không phải sự cố — trước đây
+          nhánh này rơi vào dải đỏ "Không tải được thông báo" (mock phục vụ khách một hộp thư
+          rỗng `200` nên không bộ kiểm nào thấy). Thanh tab đáy mời MỌI vai vào đây, kể cả khách. */}
+      {access === "guest" ? (
+        <Alert
+          type="info"
+          showIcon
+          message={t("signInRequired")}
+          description={t("signInRequiredHint")}
+        />
+      ) : null}
       {isError &&
-        (error instanceof ApiError && error.code === "ACCOUNT_NOT_LINKED" ? (
+        (error instanceof ApiError && error.code === "UNAUTHENTICATED" ? (
+          <Alert
+            type="info"
+            showIcon
+            message={t("signInRequired")}
+            description={t("signInRequiredHint")}
+          />
+        ) : error instanceof ApiError && error.code === "ACCOUNT_NOT_LINKED" ? (
           <Alert
             type="info"
             showIcon
@@ -102,9 +128,9 @@ export function NotificationCenter() {
           <Alert type="error" showIcon message={t("loadError")} />
         ))}
 
-      {isLoading && <Skeleton active paragraph={{ rows: 5 }} />}
+      {(isLoading || access === "loading") && <Skeleton active paragraph={{ rows: 5 }} />}
 
-      {!isLoading && !isError && items.length === 0 && (
+      {access === "member" && !isLoading && !isError && items.length === 0 && (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={<span className="text-text-muted">{t("empty")}</span>}

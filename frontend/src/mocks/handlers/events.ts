@@ -111,7 +111,7 @@ function branchRefById(branchId: string): BranchRef | undefined {
  */
 function visibleToCaller(event: EventDto, role: MockRole): boolean {
   const person = event.person;
-  if ((person?.isAlive ?? false) && !canSeeLivingPersons(role)) return false;
+  if (!canSeeLivingPersons(role)) return visibleToGuest(event);
 
   if (event.eventType === "SINH_NHAT") {
     if (!person) return false;
@@ -127,6 +127,32 @@ function visibleToCaller(event: EventDto, role: MockRole): boolean {
   }
 
   return true;
+}
+
+/** Lễ cúng tổ tiên — mã API, khớp `EventType.isAncestralRite()` qua `EventTypeApiMapper`. */
+const GUEST_ANCESTRAL_TYPES: ReadonlySet<string> = new Set([
+  "GIO_THUONG",
+  "GIO_TO",
+  "GIO_HO",
+  "GIO_CHI",
+  "TIEU_TUONG",
+  "DAI_TUONG",
+  "CHAP_MA",
+]);
+
+/** Loại mà chủ thể là người còn sống — khớp `EventType.isAboutLivingPerson()`. */
+const LIVING_SUBJECT_TYPES: ReadonlySet<string> = new Set(["SINH_NHAT", "MUNG_THO", "CUOI_HOI"]);
+
+/**
+ * Khách thấy gì — khớp `GuestEventPolicy` của máy chủ (quyết định 26/09/2026:
+ * chỉ phần về người đã khuất). Gắn người ⇒ người ấy phải đã khuất; không gắn
+ * ai ⇒ chỉ lễ cúng tổ tiên, vì `title`/`location`/`note` của một việc "Họp
+ * họ" hay "Khác" là chữ tự do có thể nhắc tên người sống.
+ */
+function visibleToGuest(event: EventDto): boolean {
+  if (LIVING_SUBJECT_TYPES.has(event.eventType)) return false;
+  if (event.person) return event.person.isAlive === false;
+  return GUEST_ANCESTRAL_TYPES.has(event.eventType);
 }
 
 function notFound(instance: string) {

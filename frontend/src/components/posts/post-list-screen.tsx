@@ -5,6 +5,8 @@ import { Alert, Button, Empty, Skeleton } from "antd";
 import { useTranslations } from "next-intl";
 import { EditOutlined, FileTextOutlined } from "@ant-design/icons";
 import { useMe } from "@/hooks/use-me";
+import { useSignedIn } from "@/lib/auth/use-signed-in";
+import { MembersOnlyNotice } from "@/components/auth/members-only-notice";
 import { Link } from "@/i18n/navigation";
 import { colorVars } from "@/styles/tokens";
 import { usePostsList } from "./queries";
@@ -22,11 +24,67 @@ const PAGE_SIZE = 10;
  * Gọi `status: "PUBLISHED"` tường minh, không bỏ trống tham số. Bỏ trống có
  * nghĩa khác hẳn ở tầng dưới (`PostJpaRepository.VISIBLE_TO_CALLER`): nó còn
  * trả về nháp/bài chờ duyệt của chính người gọi, đúng cho hàng chờ soạn
- * nhưng sai cho một trang công khai như trang này.
+ * nhưng sai cho một trang chung như trang này.
+ *
+ * <h2>Khách: KHÔNG gọi `/posts` (26/09/2026)</h2>
+ * `/posts` đòi đăng nhập — cố ý, và quyết định 26/09 giữ nguyên: mỗi bài mang
+ * tên tác giả là một người đang sống. Bản trước vẫn gọi rồi nhận `401`, và màn
+ * in "Chưa tải được danh sách bài viết" — sai nguyên nhân (không có gì hỏng) và
+ * sai việc cần làm (thử lại bao nhiêu lần cũng vậy). Nay phiên được hỏi ở TRÌNH
+ * DUYỆT trước (`useSignedIn`); khách thấy {@link MembersOnlyNotice} và không
+ * một lượt gọi nào được phát. Phần có truy vấn nằm ở thành phần CON, nên hook
+ * của nó chỉ chạy khi thật sự được dựng.
  */
 export function PostListScreen() {
+  const signedIn = useSignedIn();
+  return (
+    <div className="space-y-4">
+      <PostListHeader />
+      {signedIn === null && <Skeleton active paragraph={{ rows: 6 }} />}
+      {signedIn === false && <MembersOnlyNotice />}
+      {signedIn === true && <PostListBody />}
+    </div>
+  );
+}
+
+function PostListHeader() {
   const t = useTranslations("posts.list");
+  // `useMe` tự trả hồ sơ khách mà không gọi mạng khi chưa đăng nhập (xem `probeSignedIn`).
   const me = useMe();
+  return (
+    <header className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1 className="m-0 font-serif text-2xl font-bold text-text-main">{t("title")}</h1>
+        <p className="m-0 mt-1 text-than text-text-muted">{t("lead")}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {Boolean(me.data?.linkedToTree) && (
+          <Link
+            href="/bai-viet/cua-toi"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border px-4 text-than font-semibold no-underline"
+            style={{ borderColor: colorVars.primary, color: colorVars.primary, background: colorVars.bgCard }}
+          >
+            <FileTextOutlined aria-hidden />
+            <span>{t("myPosts")}</span>
+          </Link>
+        )}
+        {/* Hiện cả với khách, cùng lý do với trang chủ: cửa thật nằm ở `<PostWriteGate>`
+            trên màn soạn bài, nơi giải thích vì sao. */}
+        <Link
+          href="/bai-viet/moi"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border px-4 text-than font-semibold no-underline"
+          style={{ background: colorVars.primary, color: colorVars.bgCard, borderColor: colorVars.primary }}
+        >
+          <EditOutlined aria-hidden />
+          <span>{t("writeAction")}</span>
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+function PostListBody() {
+  const t = useTranslations("posts.list");
   const [page, setPage] = useState(0);
 
   const query = usePostsList({ status: "PUBLISHED", page, size: PAGE_SIZE });
@@ -34,34 +92,7 @@ export function PostListScreen() {
   const pageMeta = query.data?.page;
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="m-0 font-serif text-2xl font-bold text-text-main">{t("title")}</h1>
-          <p className="m-0 mt-1 text-than text-text-muted">{t("lead")}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {Boolean(me.data?.linkedToTree) && (
-            <Link
-              href="/bai-viet/cua-toi"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border px-4 text-than font-semibold no-underline"
-              style={{ borderColor: colorVars.primary, color: colorVars.primary, background: colorVars.bgCard }}
-            >
-              <FileTextOutlined aria-hidden />
-              <span>{t("myPosts")}</span>
-            </Link>
-          )}
-          <Link
-            href="/bai-viet/moi"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border px-4 text-than font-semibold no-underline"
-            style={{ background: colorVars.primary, color: colorVars.bgCard, borderColor: colorVars.primary }}
-          >
-            <EditOutlined aria-hidden />
-            <span>{t("writeAction")}</span>
-          </Link>
-        </div>
-      </header>
-
+    <>
       {query.isPending && <Skeleton active paragraph={{ rows: 6 }} />}
       {query.isError && <Alert type="error" showIcon message={t("loadFailed")} />}
 
@@ -90,6 +121,6 @@ export function PostListScreen() {
           </Button>
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -82,7 +82,7 @@ public class InviteThrottle {
             log.warn("Chan tra ma moi: {} lan that bai trong {} phut tu mot nguoi goi",
                     failures, window.toMinutes());
             throw new TooManyAttemptsException(
-                    "Da thu ma moi qua nhieu lan, hay doi roi thu lai hoac goi Truong chi",
+                    "Đã thử mã mời quá nhiều lần, hãy đợi rồi thử lại hoặc gọi Trưởng chi",
                     window.toSeconds());
         }
     }

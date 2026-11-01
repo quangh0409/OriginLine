@@ -71,9 +71,9 @@ final class LifeStatusResolver {
         if (aliveGiven && Boolean.TRUE.equals(aliveChange.value())) {
             if (deathGiven && deathChange.value() != null) {
                 throw new DomainException(GenealogyProblemCodes.VALIDATION_FAILED,
-                        "Body vua khai isAlive=true vua gui ngay mat - hai dieu nay khong the cung "
-                                + "dung. Bao mat thi bo isAlive (hoac gui isAlive=false); dinh chinh "
-                                + "'that ra con song' thi dua 'death' vao clearFields.");
+                        "Body vừa khai isAlive=true vừa gửi ngày mất - hai điều này không thể cùng "
+                                + "đúng. Báo mất thì bỏ isAlive (hoặc gửi isAlive=false); đính chính "
+                                + "'thật ra còn sống' thì đưa 'death' vào clearFields.");
             }
             return new Target(true, null, false);
         }

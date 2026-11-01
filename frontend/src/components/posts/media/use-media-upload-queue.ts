@@ -4,13 +4,13 @@ import { useCallback, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/http";
 import {
   mediaApi,
-  readMediaMeta,
+  readVideoDurationSeconds,
   validateMediaFile,
   type MediaKind,
   type MediaPolicy,
   type MediaRejectReason,
 } from "@/lib/api/media";
-import { useConfirmMediaUpload } from "../queries";
+import { useConfirmAndAttachMedia } from "../queries";
 
 export type PendingMediaStatus =
   | "uploading"
@@ -33,8 +33,12 @@ export interface PendingMediaItem {
   rejectReason?: MediaRejectReason;
   /** Chỉ có khi `rejectReason === "NAMED_FORMAT"` — khoá dịch `heic`/`gif`/`mov`/`mkv`. */
   namedFormatKey?: string;
-  /** Gắn sau khi `requestUpload` trả lời — cần cho bước xác nhận. */
-  uploadId?: string;
+  /**
+   * Khoá của phiếu/tệp trên kho media (`UploadTicket.mediaId`) — gắn sau khi
+   * `requestUploadTicket` trả lời. Cần cho bước xác nhận VÀ bước gắn vào bài
+   * (cùng một khoá cho cả hai, khác bản trước dùng `uploadId` riêng).
+   */
+  mediaId?: string;
 }
 
 let seq = 0;
@@ -64,7 +68,7 @@ function nextLocalId(): string {
  *   có ─────────────────────────► "rejected" (reason "DURATION", KHÔNG gọi mạng)
  *    │ không / không đọc được
  *    ▼
- * "uploading" (xin URL đã ký rồi PUT thẳng lên kho, có tiến trình %)
+ * "uploading" (xin phiếu, PUT thẳng lên kho, có tiến trình %)
  *    │
  *    ├─ lỗi mạng/máy chủ (kể cả máy chủ từ chối vì đọc thời lượng thật ra khác)
  *    │     ──────────────────────────────────────────────► "error" (có nút thử lại)
@@ -73,19 +77,23 @@ function nextLocalId(): string {
  *    │                                    │
  *   có                                  không
  *    ▼                                    ▼
- * "needsAlt" (chờ người dùng gõ)      "confirming" ──► xác nhận xong: BIẾN MẤT khỏi hàng đợi này —
- *    │ (gõ xong, gọi confirmItem)                        item giờ sống trong `post.media` (nguồn thật)
+ * "needsAlt" (chờ người dùng gõ)      "confirming" ──► xác nhận + gắn xong: BIẾN MẤT khỏi hàng
+ *    │ (gõ xong, gọi confirmItem)                        đợi này — item giờ sống trong `post.media`
  *    ▼
  * "confirming" ──────────────────────────────────────► như trên
  * ```
+ * "confirming" gộp HAI lời gọi thật (`POST /media/{id}/confirm` rồi
+ * `PUT /posts/{id}/media`) — xem {@link useConfirmAndAttachMedia}. Hợp đồng
+ * thật tách hai bước này (xác nhận trả một tệp trần trụi, chưa gắn vào bài),
+ * khác bản trước tưởng một lượt xác nhận là xong.
  *
  * <h2>Một tệp hỏng KHÔNG được chặn các tệp còn lại</h2>
  * Mỗi tệp có `localId`, tiến trình và lỗi riêng; `addFiles` xử từng tệp độc
  * lập, không có `Promise.all` nào khiến một `reject` kéo cả lô xuống.
  *
  * <h2>Vì sao hook này không tự giữ "đã xong"</h2>
- * Ngay khi `confirmUpload` thành công, tệp đã là một phần tử thật của
- * `post.media` trong cache React Query (xem `useConfirmMediaUpload`) — giữ
+ * Ngay khi xác nhận + gắn thành công, tệp đã là một phần tử thật của
+ * `post.media` trong cache React Query (xem `useConfirmAndAttachMedia`) — giữ
  * thêm một bản sao "đã xong" ở đây là hai nguồn sự thật cho cùng một tệp.
  */
 export function useMediaUploadQueue(
@@ -94,7 +102,7 @@ export function useMediaUploadQueue(
   policy: MediaPolicy | undefined
 ) {
   const [items, setItems] = useState<PendingMediaItem[]>([]);
-  const confirmMutation = useConfirmMediaUpload(postId ?? "");
+  const confirmAndAttach = useConfirmAndAttachMedia(postId ?? "");
   const abortControllers = useRef<Map<string, AbortController>>(new Map());
 
   const patch = useCallback((localId: string, changes: Partial<PendingMediaItem>) => {
@@ -111,25 +119,21 @@ export function useMediaUploadQueue(
     abortControllers.current.delete(localId);
   }, []);
 
+  // Giữ một bản tham chiếu luôn mới để các callback bên dưới đọc được
+  // `mediaId`/`alt` mới nhất mà không phải đưa toàn bộ `items` vào dependency
+  // array (thứ đổi liên tục khi tiến trình % cập nhật).
+  const itemsRef = useRef<PendingMediaItem[]>([]);
+  itemsRef.current = items;
+
   const runConfirm = useCallback(
-    async (
-      localId: string,
-      kind: MediaKind,
-      alt: string,
-      width?: number,
-      height?: number,
-      durationSeconds?: number
-    ) => {
+    async (localId: string, kind: MediaKind, alt: string) => {
       patch(localId, { status: "confirming", errorMessage: undefined });
       try {
         const item = itemsRef.current.find((it) => it.localId === localId);
-        if (!item?.uploadId) throw new Error("Chưa có mã lượt tải lên.");
-        await confirmMutation.mutateAsync({
-          uploadId: item.uploadId,
+        if (!item?.mediaId) throw new Error("Chưa có mã tệp trên kho.");
+        await confirmAndAttach.mutateAsync({
+          mediaId: item.mediaId,
           alt: kind === "IMAGE" ? alt.trim() : undefined,
-          width,
-          height,
-          durationSeconds: kind === "VIDEO" ? durationSeconds : undefined,
         });
         // Thành công — bỏ khỏi hàng đợi cục bộ, `post.media` giờ là nguồn thật.
         setItems((prev) => {
@@ -138,50 +142,42 @@ export function useMediaUploadQueue(
           return prev.filter((it) => it.localId !== localId);
         });
       } catch (caught) {
+        const terminal = terminalRejection(caught);
+        if (terminal) {
+          patch(localId, terminal);
+          return;
+        }
         patch(localId, {
           status: kind === "IMAGE" && !alt.trim() ? "needsAlt" : "error",
           errorMessage: describeError(caught),
         });
       }
     },
-    [confirmMutation, patch]
+    [confirmAndAttach, patch]
   );
-
-  // Giữ một bản tham chiếu luôn mới để các callback bên dưới đọc được
-  // `uploadId`/`alt` mới nhất mà không phải đưa toàn bộ `items` vào
-  // dependency array (thứ đổi liên tục khi tiến trình % cập nhật).
-  const itemsRef = useRef<PendingMediaItem[]>([]);
-  itemsRef.current = items;
 
   const uploadOne = useCallback(
     async (localId: string, file: File, kind: MediaKind) => {
       const controller = new AbortController();
       abortControllers.current.set(localId, controller);
       try {
-        const meta = await readMediaMeta(file, kind);
         // Trần thời lượng video — CHẶN TRƯỚC KHI GỌI MẠNG. Đọc không được thì
         // để máy chủ quyết (nó đọc thật từ phần đầu tệp và từ chối nếu hỏng).
-        if (
-          kind === "VIDEO" &&
-          policy &&
-          meta?.durationSeconds !== undefined &&
-          meta.durationSeconds > policy.video.maxDurationSeconds
-        ) {
-          patch(localId, { status: "rejected", rejectReason: "DURATION" });
-          return;
+        // Không có ý nghĩa gì với ẢNH — `MediaAssetDto` không mang kích
+        // thước, nên không còn lý do đọc chúng trước ở client.
+        if (kind === "VIDEO" && policy) {
+          const durationSeconds = await readVideoDurationSeconds(file);
+          if (durationSeconds !== null && durationSeconds > policy.maxVideoDurationSeconds) {
+            patch(localId, { status: "rejected", rejectReason: "DURATION" });
+            return;
+          }
         }
         if (!postId) throw new Error("Chưa có bản nháp để đính kèm tệp.");
-        const upload = await mediaApi.requestUpload(postId, {
-          kind,
-          fileName: file.name,
-          contentType: file.type,
-          sizeBytes: file.size,
-        });
-        patch(localId, { uploadId: upload.uploadId });
+        const ticket = await mediaApi.requestUploadTicket({ kind, sizeBytes: file.size });
+        patch(localId, { mediaId: ticket.mediaId });
         await mediaApi.putToStorage(
-          upload.uploadUrl,
+          ticket.uploadUrl,
           file,
-          upload.uploadHeaders,
           (event) => patch(localId, { progress: Math.round((event.loaded / event.total) * 100) }),
           controller.signal
         );
@@ -191,9 +187,14 @@ export function useMediaUploadQueue(
           patch(localId, { status: "needsAlt", progress: 100 });
           return;
         }
-        await runConfirm(localId, kind, alt, meta?.width, meta?.height, meta?.durationSeconds);
+        await runConfirm(localId, kind, alt);
       } catch (caught) {
         if (caught instanceof DOMException && caught.name === "AbortError") return;
+        const terminal = terminalRejection(caught);
+        if (terminal) {
+          patch(localId, terminal);
+          return;
+        }
         patch(localId, { status: "error", errorMessage: describeError(caught) });
       } finally {
         abortControllers.current.delete(localId);
@@ -304,13 +305,62 @@ export function useMediaUploadQueue(
   };
 }
 
+/**
+ * Máy chủ từ chối DỨT KHOÁT (tệp đã bị xoá khỏi kho — xem `/media/{id}/confirm` trong hợp đồng):
+ * chuyển thẻ sang "rejected", KHÔNG phải "error".
+ *
+ * <h2>Vì sao không để "error" như trước</h2>
+ * "error" hiện nút "Thử lại", và thử lại đúng tệp ấy chắc chắn nhận lại đúng lời từ chối ấy —
+ * một nút hứa điều không làm được. Nghiệm thu bằng trình duyệt thật (24/09/2026) còn thấy lỗi thứ
+ * hai: với `MEDIA_TOO_LONG` thẻ hiện nguyên `detail` của máy chủ, vốn là câu KHÔNG DẤU ("Doan video
+ * dai 200 giay…") và không có bản tiếng Anh. Trần thời lượng/dung lượng đã có câu thiết kế sẵn
+ * trong `posts.media.rejected.*` (kèm cách chữa), nên hai mã ấy đi về đúng lý do `DURATION`/`SIZE`
+ * — cùng câu mà phép kiểm phía client hiện khi nó tự bắt được trước khi tải lên.
+ *
+ * `MEDIA_BAD_SIGNATURE` giữ `detail` của máy chủ: chỉ máy chủ biết tệp THẬT là gì (HEIC mang đuôi
+ * `.jpg`, GIF đổi tên…), và câu ấy đã kèm cách sửa cho từng định dạng.
+ */
+function terminalRejection(caught: unknown): Partial<PendingMediaItem> | null {
+  if (!(caught instanceof ApiError)) return null;
+  switch (caught.code) {
+    case "MEDIA_TOO_LONG":
+      return { status: "rejected", rejectReason: "DURATION", errorMessage: undefined };
+    case "MEDIA_TOO_LARGE":
+      return { status: "rejected", rejectReason: "SIZE", errorMessage: undefined };
+    case "MEDIA_BAD_SIGNATURE":
+      return {
+        status: "rejected",
+        rejectReason: "SERVER",
+        errorMessage: caught.problem?.detail ?? undefined,
+      };
+    default:
+      return null;
+  }
+}
+
 function describeError(caught: unknown): string {
   if (caught instanceof ApiError) {
-    if (caught.code === "VALIDATION_FAILED") {
-      return caught.problem?.detail ?? "Máy chủ từ chối tệp này.";
+    switch (caught.code) {
+      case "MEDIA_TOO_LARGE":
+        return caught.problem?.detail ?? "Tệp vượt quá dung lượng cho phép.";
+      case "VALIDATION_FAILED":
+        return caught.problem?.detail ?? "Máy chủ từ chối tệp này.";
+      case "MEDIA_BAD_SIGNATURE":
+        return caught.problem?.detail ?? "Định dạng tệp không đúng như đã khai — thử chọn lại tệp.";
+      case "MEDIA_TOO_LONG":
+        return caught.problem?.detail ?? "Video dài quá trần cho phép.";
+      case "MEDIA_DURATION_UNKNOWN":
+        return caught.problem?.detail ?? "Không đọc được thời lượng video — tệp có thể đã hỏng, thử một tệp khác.";
+      case "MEDIA_NOT_UPLOADED":
+      case "MEDIA_TICKET_CLOSED":
+        return "Phiếu tải lên đã hết hạn hoặc tệp chưa thật sự tới kho. Xin thử lại từ đầu.";
+      case "MEDIA_NOT_OWNED":
+        return "Phiếu tải lên này không phải của bạn.";
+      case "MEDIA_STORAGE_UNAVAILABLE":
+        return "Kho tệp đang không phản hồi. Xin thử lại sau ít phút.";
+      default:
+        return caught.problem?.title ?? "Không tải lên được. Xin thử lại.";
     }
-    if (caught.status === 413) return "Tệp vượt quá dung lượng cho phép.";
-    return caught.problem?.title ?? "Không tải lên được. Xin thử lại.";
   }
   if (caught instanceof Error) return caught.message;
   return "Không tải lên được. Xin thử lại.";

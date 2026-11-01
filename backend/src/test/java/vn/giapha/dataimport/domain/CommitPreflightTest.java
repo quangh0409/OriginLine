@@ -70,7 +70,11 @@ class CommitPreflightTest {
         assertThat(issues).singleElement().satisfies(i -> {
             assertThat(i.code()).isEqualTo(IssueCode.IMP_UNDECIDED_INLAW_DOI);
             assertThat(i.rowNo()).isEqualTo(2);
-            assertThat(i.message()).contains("dâu/rể", "để trống ô Đời");
+            assertThat(i.field()).isEqualTo("Đời");
+            // Quy uoc (dang cho Hoi dong) va cach sua phai nam ngay trong cau — nguoi doc la
+            // Truong chi, khong phai lap trinh vien.
+            assertThat(i.message()).contains("dâu/rể KHÔNG khai Đời", "xoá ô Đời ở dòng 2",
+                    "suy từ vợ/chồng", "Hội đồng Tộc biểu");
         });
     }
 

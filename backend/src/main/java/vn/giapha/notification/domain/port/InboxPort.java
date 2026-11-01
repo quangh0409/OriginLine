@@ -66,8 +66,8 @@ public interface InboxPort {
             try {
                 return valueOf(raw.trim().toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException ex) {
-                throw new IllegalArgumentException("Tham so status khong hop le: " + raw
-                        + " (cho phep ALL, UNREAD, READ)");
+                throw new IllegalArgumentException("Tham số status không hợp lệ: " + raw
+                        + " (cho phép ALL, UNREAD, READ)");
             }
         }
     }

@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thiết kế bước 2 — Nhiều dòng họ trên một bản cài — Hệ Thống Quản Lý Gia Phả &amp; Cổng Thông Tin Dòng Họ</title>
+<style>
+  /* Khung lấy từ tài liệu 09 (kịch bản nghiệm thu) để hai tài liệu đọc cùng một nhịp:
+     cùng bảng màu, cùng khối "sua" cho lý do của bên thua, cùng thẻ kịch bản NT-.
+     Tệp TỰ CHỨA — không tải phông, không tải CSS từ mạng. */
+  :root {
+    --nen: #fbf7ee;
+    --nen-the: #ffffff;
+    --vien: #ddd0b8;
+    --vien-dam: #b99a63;
+    --chu: #2c2418;
+    --chu-nhat: #6b6152;
+    --do: #7a2e2e;
+    --do-nen: #f6e6e0;
+    --xanh: #2f5d43;
+    --xanh-nen: #e3f0e6;
+    --vang: #8a6d16;
+    --vang-nen: #fbf0d0;
+    --xam-nen: #f0ece0;
+    --lam: #1d4ed8;
+    --lam-nen: #eaf0fb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--nen);
+    color: var(--chu);
+    font-family: "Segoe UI", "Be Vietnam Pro", Arial, sans-serif;
+    line-height: 1.55;
+    font-size: 15.5px;
+  }
+  .trang { max-width: 1040px; margin: 0 auto; padding: 28px 22px 80px; }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  h2 { font-size: 21px; margin: 40px 0 4px; padding-top: 10px; border-top: 3px solid var(--vien-dam); }
+  h2 .en, h3 .en { font-weight: 400; font-style: italic; color: var(--chu-nhat); font-size: 0.72em; }
+  h3 { font-size: 17px; margin: 26px 0 6px; }
+  h4 { font-size: 15.5px; margin: 18px 0 4px; }
+  .phu-de { color: var(--chu-nhat); margin: 0 0 18px; }
+  a { color: var(--do); }
+  code { background: var(--xam-nen); border-radius: 3px; padding: 1px 5px; font-size: 0.92em; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 18px; background: var(--nen-the); font-size: 14px; }
+  th, td { border: 1px solid var(--vien); padding: 6px 9px; text-align: left; vertical-align: top; }
+  th { background: var(--xam-nen); }
+  .khung {
+    background: var(--nen-the); border: 1px solid var(--vien); border-radius: 8px;
+    padding: 14px 18px; margin: 12px 0;
+  }
+  .khung > :last-child { margin-bottom: 0; }
+  .khung-canhbao { border-color: var(--vien-dam); background: var(--vang-nen); }
+  .khung-do { border-color: #c98b8b; background: var(--do-nen); }
+  .nhan { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--chu-nhat); margin: 0 0 4px; font-weight: 700; }
+  .toc { columns: 2; column-gap: 30px; font-size: 14px; }
+  .toc a { display: block; margin: 2px 0; }
+  .en-inline { color: var(--chu-nhat); font-style: italic; }
+  .ma { font-family: "Consolas", monospace; color: var(--do); font-weight: 700; white-space: nowrap; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+  .tag-must { background: var(--do-nen); color: #9b1c1c; border: 1px solid #e7b7b3; }
+  .tag-should { background: var(--vang-nen); color: #8a5a00; border: 1px solid #ecd39a; }
+  .tag-could { background: var(--lam-nen); color: var(--lam); border: 1px solid #b8c8ee; }
+  .tag-wont { background: var(--xam-nen); color: var(--chu-nhat); border: 1px solid var(--vien); }
+  .chip {
+    display: inline-block; font-size: 11.5px; font-weight: 700; border-radius: 4px;
+    padding: 2px 7px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.02em;
+  }
+  .chip-cabien { background: var(--do-nen); color: var(--do); }
+  /* Khối "sua" — cùng quy ước với tài liệu 09: ghi QUYẾT ĐỊNH và LÝ DO CỦA BÊN THUA.
+     Bên thua được viết ra đầy đủ, vì người đọc sau cần biết phương án kia có lý ở đâu —
+     để khi hoàn cảnh đổi, họ biết phải xét lại đúng chỗ nào. */
+  .sua {
+    margin: 10px 0 14px; padding: 9px 13px; border-left: 3px solid var(--xanh);
+    background: var(--xanh-nen); border-radius: 0 4px 4px 0; font-size: 14.5px;
+  }
+  .sua.canh { border-left-color: #b8860b; background: var(--vang-nen); }
+  .sua > :first-child { margin-top: 0; }
+  .sua > :last-child { margin-bottom: 0; }
+  .sua .nhan-sua {
+    display: block; font-weight: 700; font-size: 12.5px; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--xanh); margin-bottom: 4px;
+  }
+  .sua.canh .nhan-sua { color: #8a6100; }
+  .so-do {
+    background: #1e2430; color: #e2e8f0; font-family: Consolas, Monaco, monospace;
+    font-size: 12.5px; line-height: 1.5; padding: 14px 16px; border-radius: 6px;
+    overflow-x: auto; white-space: pre; margin: 10px 0 16px;
+  }
+  .kich-ban {
+    background: var(--nen-the); border: 1px solid var(--vien); border-radius: 10px;
+    padding: 14px 18px 16px; margin: 14px 0 22px; break-inside: avoid; page-break-inside: avoid;
+  }
+  .kich-ban h3 { margin: 0 0 8px; font-size: 16.5px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .ma-so { font-family: "Consolas", monospace; color: var(--do); font-weight: 700; }
+  .kich-ban .nhan { margin-top: 10px; }
+  .kich-ban ol, .kich-ban ul { margin: 4px 0 0; padding-left: 22px; }
+  .kich-ban li { margin: 3px 0; }
+  .kich-ban p { margin: 2px 0 0; }
+  .bang-cham {
+    margin-top: 12px; border: 1px dashed var(--vien-dam); border-radius: 8px;
+    padding: 8px 14px; display: flex; gap: 26px; align-items: center; flex-wrap: wrap;
+    background: var(--xam-nen);
+  }
+  .o-vuong { display: inline-block; width: 15px; height: 15px; border: 2px solid var(--chu); margin-right: 6px; vertical-align: -2px; }
+  .dat .o-vuong { border-color: var(--xanh); }
+  .khongdat .o-vuong { border-color: var(--do); }
+  .ghichu-dong { flex: 1 1 220px; display: flex; align-items: center; gap: 6px; }
+  .ghichu-dong .duong { flex: 1; border-bottom: 1px solid var(--chu-nhat); height: 18px; }
+  .lien-quan { font-size: 13px; color: var(--chu-nhat); margin-top: 6px; }
+  ol.cau-hoi > li { margin: 8px 0; }
+  .nho { font-size: 13px; }
+  @media print {
+    body { background: #fff; font-size: 12px; }
+    .trang { max-width: none; padding: 0 14px; }
+    a[href^="#"]::after { content: ""; }
+    .kich-ban, table, .sua { break-inside: avoid; page-break-inside: avoid; }
+    h2 { break-before: page; }
+    h2:first-of-type { break-before: auto; }
+    .so-do { background: #fff; color: #000; border: 1px solid #999; }
+  }
+</style>
+</head>
+<body>
+<div class="trang">
+
+<h1>Thiết kế bước 2 — Nhiều dòng họ trên một bản cài</h1>
+<p class="phu-de">
+  Tài liệu <strong>10</strong> · BA + TDD bổ sung · <strong>viết 26/09/2026</strong> ·
+  trạng thái: <strong>BẢN THIẾT KẾ CHỜ CHỦ DỰ ÁN DUYỆT — chưa được viết một dòng mã nào theo tài
+  liệu này.</strong><br>
+  <span class="en-inline">Step 2 design — multiple clans (tenants) on one installation. BA + TDD
+  supplement, pending owner approval. No code may be written against it before approval.</span>
+</p>
+
+<div class="khung">
+  <span class="nhan">Nguồn và thứ tự ưu tiên</span>
+  <p style="margin:0">
+    Viết trên hiện trạng mã ngày 26/09/2026: Flyway <code>V1..V21</code> (chưa có <code>V22</code>/<code>V23</code>
+    trong kho), <code>backend/src/main/java/vn/giapha/**</code>, <code>infra/keycloak/realm-giapha.json</code>,
+    <code>contracts/openapi.yaml</code>. Bước 1 ("Khởi tạo dòng họ", bảng <code>clan_profile</code> một dòng) đang được
+    dựng song song và <strong>chưa có trong kho</strong> — mọi chỗ tài liệu này dựa vào bước 1 đều dựa vào
+    <em>hợp đồng</em> đã công bố (<code>GET /public/clan-profile</code>, <code>GET/PUT /admin/clan-profile</code>,
+    <code>GET /admin/clan-profile/readiness</code>, <code>POST /admin/clan-profile/council-accounts</code>),
+    không dựa vào cột cụ thể. Chỗ nào giả định về cột của <code>clan_profile</code> đều ghi rõ là giả định.
+    Thứ tự ưu tiên khi lệch: TDD v1.0 → BA v2.0 → tài liệu này; nhưng tài liệu này <em>đề xuất sửa</em> một số
+    mục của cả hai (liệt kê ở <a href="#s12">§12</a>) — chúng chưa được sửa, và sẽ không được sửa trước khi
+    bản thiết kế được duyệt.
+  </p>
+</div>
+
+<div class="khung khung-do">
+  <span class="nhan">Cảnh báo — đọc trước mọi thứ khác</span>
+  <p>
+    <strong>Việc di trú dữ liệu sang mô hình nhiều dòng họ (<a href="#s8">§8</a>) phải chạy xong TRƯỚC khi
+    dòng họ thứ hai nhập dữ liệu thật.</strong> Lý do là số học, không phải thận trọng: phép điền
+    <code>clan_id</code> cho dữ liệu cũ chỉ đúng khi cả kho <em>chỉ có một</em> dòng họ — "mọi dòng
+    hiện có thuộc dòng họ duy nhất". Khi dòng họ thứ hai đã ghi vào cùng cây <code>ltree</code> gốc
+    <code>goc</code>, cùng đồ thị <code>giapha_graph</code>, cùng bảng <code>app_user</code>, thì không còn
+    một luật nào suy ra được hàng nào của ai; phải tách tay từng người, và một lần tách sai là dữ liệu
+    của người còn sống của họ này hiện ra trong họ kia.
+  </p>
+  <p style="margin-bottom:0">
+    Cùng lý do ấy, <strong>phán quyết của Hội đồng về quyền xoá của dâu/rể sau ly hôn</strong> (việc đang
+    chờ ghi ở <code>CLAUDE.md</code>) vẫn phải có trước khi dòng họ thứ hai nhập — ở mô hình nhiều họ, một
+    dâu/rể có thể có mặt ở <em>hai</em> dòng họ trên cùng bản cài (<a href="#s4-9">§4.9</a>), và câu hỏi
+    "ai có quyền xoá" trở thành câu hỏi của hai bên kiểm soát dữ liệu chứ không phải một.
+  </p>
+</div>
+
+<h2 id="muc-luc" style="border-top:none">Mục lục</h2>
+<div class="toc">
+  <a href="#s0">0. Tóm tắt cho người duyệt</a>
+  <a href="#s1">1. Mục tiêu, phạm vi, ngoài phạm vi</a>
+  <a href="#s2">2. Thuật ngữ — "toàn dòng họ" đổi nghĩa</a>
+  <a href="#s3">3. Yêu cầu chức năng &amp; phi chức năng (FR-5.x, NFR-9..14)</a>
+  <a href="#s4">4. Mô hình dữ liệu</a>
+  <a href="#s5">5. Định danh &amp; phân quyền</a>
+  <a href="#s6">6. Màn "Quản lý các dòng họ"</a>
+  <a href="#s7">7. Riêng tư &amp; pháp lý</a>
+  <a href="#s8">8. Kế hoạch di trú từ bản một dòng họ</a>
+  <a href="#s9">9. Phân tích tác động lên yêu cầu &amp; bộ kiểm hiện có</a>
+  <a href="#s10">10. Ước lượng, thứ tự làm, rủi ro</a>
+  <a href="#s11">11. Tiêu chí nghiệm thu — NT-DH-01…18</a>
+  <a href="#s12">12. Đề xuất sửa BA v2 / TDD (chưa sửa)</a>
+  <a href="#s13">13. Ma trận truy vết</a>
+  <a href="#s14">14. Câu hỏi chờ chủ dự án quyết</a>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="s0">0. Tóm tắt cho người duyệt <span class="en">Executive summary</span></h2>
+<p>
+  Bước 2 biến bản cài từ "một dòng họ" thành "nhiều dòng họ cùng chạy, không thấy nhau". Về kỹ thuật
+  đây là <strong>đa thuê bao (multi-tenant) trên một lược đồ chung</strong>: mỗi hàng dữ liệu nghiệp vụ
+  mang <code>clan_id</code>, mỗi truy vấn lọc theo nó, và Postgres có lưới chặn thứ hai (RLS) cho các
+  bảng chứa dữ liệu người còn sống. Chín quyết định thiết kế, mỗi cái có ghi lý do của phương án thua ở
+  mục tương ứng:
+</p>
+<table>
+  <tr><th style="width:4%">#</th><th style="width:36%">Quyết định (khuyến nghị)</th><th>Phương án thua</th><th style="width:10%">Mục</th></tr>
+  <tr><td>Q1</td><td>Một lược đồ chung, cột <code>clan_id</code></td><td>Một schema Postgres cho mỗi dòng họ</td><td><a href="#s4-1">§4.1</a></td></tr>
+  <tr><td>Q2</td><td>Một <code>app_user</code> thuộc đúng <strong>một</strong> dòng họ; dâu/rể cần vào hai họ thì dùng <strong>hai tài khoản</strong></td><td>Một tài khoản hai vai, chọn họ khi đăng nhập</td><td><a href="#s4-9">§4.9</a></td></tr>
+  <tr><td>Q3</td><td>Gốc <code>ltree</code> = mã dòng họ (<code>clan.code</code>), mã bất biến</td><td>Giữ gốc chung <code>goc</code>, lọc bằng cột</td><td><a href="#s4-3">§4.3</a></td></tr>
+  <tr><td>Q4</td><td>Một đồ thị AGE chung, đỉnh mang <code>clan_id</code>, cạnh không bao giờ vượt họ</td><td>Một đồ thị AGE cho mỗi dòng họ</td><td><a href="#s4-6">§4.6</a></td></tr>
+  <tr><td>Q5</td><td>Một realm Keycloak; claim <code>clan</code> là <em>gợi ý</em>, <code>app_user.clan_id</code> là chân lý</td><td>Một realm cho mỗi dòng họ; hoặc tin claim tuyệt đối</td><td><a href="#s5-1">§5.1</a></td></tr>
+  <tr><td>Q6</td><td><code>SYSADMIN</code> toàn hệ thống <strong>không đọc</strong> dữ liệu nghiệp vụ; muốn đọc phải mở <strong>phiên hỗ trợ</strong> được Hội đồng họ ấy duyệt, ghi nhật ký từng lượt đọc</td><td>SYSADMIN đọc được mọi thứ như <code>ADMIN</code> hôm nay</td><td><a href="#s5-2">§5.2</a></td></tr>
+  <tr><td>Q7</td><td>Lọc ở tầng repository là lớp chính; <strong>RLS Postgres là lưới</strong> trên các bảng có dữ liệu người sống</td><td>Chỉ repository; hoặc chỉ RLS</td><td><a href="#s5-5">§5.5</a></td></tr>
+  <tr><td>Q8</td><td>Khách chọn dòng họ bằng <strong>mã trên đường dẫn</strong> (<code>/vi/ho/&lt;mã&gt;</code>, <code>/api/v1/public/clans/{code}/…</code>)</td><td>Tên miền con cho mỗi họ</td><td><a href="#s5-7">§5.7</a></td></tr>
+  <tr><td>Q9</td><td>Hội đồng của mỗi họ là <strong>bên kiểm soát</strong> dữ liệu họ ấy; chủ dự án (SYSADMIN) là <strong>bên xử lý</strong></td><td>Chủ dự án là bên kiểm soát cho mọi họ (như hôm nay)</td><td><a href="#s7">§7</a></td></tr>
+</table>
+<p>
+  <strong>Chi phí ước lượng:</strong> 86 người-ngày (khoảng 70–110), chia hai đợt; đợt 2a (nền tảng + di trú
+  + tạo được dòng họ thứ hai) là điều kiện để dòng họ thứ hai vào — <a href="#s10">§10</a>.
+  <strong>Mười lăm câu hỏi</strong> chờ chủ dự án quyết ở <a href="#s14">§14</a>; bốn câu đầu chặn việc bắt tay
+  làm.
+</p>
+
+<!-- ================================================================== -->
+<h2 id="s1">1. Mục tiêu, phạm vi, ngoài phạm vi <span class="en">Goals &amp; scope</span></h2>
+<h3>Mục tiêu</h3>
+<ol>
+  <li>Một bản cài phục vụ <strong>N dòng họ</strong>; mỗi dòng họ có phả đồ, danh xưng, lịch giỗ, bài viết,
+    vinh danh, tài khoản, Hội đồng, mã mời của riêng mình — và <strong>không một byte dữ liệu nghiệp vụ nào
+    đi được từ họ này sang họ kia</strong> (NFR-9, đo được).</li>
+  <li>Người vận hành (SYSADMIN) tạo, tạm khoá, mở khoá, xuất dữ liệu, xoá một dòng họ và chỉ định Hội đồng
+    của nó <strong>mà không cần — và không được — đọc dữ liệu người trong họ</strong>.</li>
+  <li>Bản cài một dòng họ đang chạy chuyển sang mô hình mới bằng một lần di trú có kiểm, có đường lui.</li>
+</ol>
+<h3>Trong phạm vi</h3>
+<ul>
+  <li>Bảng <code>clan</code> và vòng đời dòng họ; <code>clan_id</code> trên các bảng nghiệp vụ; gốc <code>ltree</code> theo mã họ.</li>
+  <li>Claim <code>clan</code> trong JWT; vai <code>SYSADMIN</code>; định nghĩa lại "toàn dòng họ"; phiên hỗ trợ.</li>
+  <li>Màn "Quản lý các dòng họ" (<code>/[locale]/he-thong/dong-ho</code>) và các endpoint <code>/api/v1/sys/**</code>.</li>
+  <li>Cổng khách theo dòng họ; cache, tìm kiếm, nhắc giỗ, media, nhật ký tách theo dòng họ.</li>
+  <li>Di trú dữ liệu bản một họ; bộ kiểm "không rò giữa hai họ".</li>
+</ul>
+<h3>Ngoài phạm vi (đợt này) <span class="en">— Out of scope</span></h3>
+<ul>
+  <li><strong>Một tài khoản đăng nhập vào nhiều dòng họ</strong> (Q2 thua) — ghi lại để xét ở đợt sau nếu nhu cầu đo được.</li>
+  <li><strong>Liên kết thông gia giữa hai họ trên cùng bản cài</strong> (FR-1.9, COULD): đợt này cạnh quan hệ
+    <em>không bao giờ</em> vượt họ. Dâu nhà A về họ B là một nhân khẩu trong phả B và (nếu họ A ghi) một nhân
+    khẩu khác trong phả A — hai bản ghi, hai bên kiểm soát.</li>
+  <li>Tên miền riêng, giao diện đăng nhập riêng, logo riêng cho mỗi họ (Q8 thua).</li>
+  <li>Tính tiền / hạn ngạch theo dòng họ; tự đăng ký một dòng họ mới từ ngoài (chỉ SYSADMIN tạo).</li>
+  <li>Chuyển một nhân khẩu hoặc một chi từ họ này sang họ khác.</li>
+  <li>Xuất GEDCOM (FR-1.7 chưa làm) — xuất dữ liệu đợt này là gói JSON + media, <a href="#s6-3">§6.3</a>.</li>
+</ul>
+
+<!-- ================================================================== -->
+<h2 id="s2">2. Thuật ngữ — "toàn dòng họ" đổi nghĩa <span class="en">Glossary</span></h2>
+<table>
+  <tr><th style="width:22%">Thuật ngữ</th><th>Nghĩa trong tài liệu này</th></tr>
+  <tr><td><strong>Dòng họ</strong> (clan · tenant)</td><td>Đơn vị cách ly dữ liệu. Một hàng <code>clan</code>, một chi gốc
+    <code>branch_kind = 'DONG_HO'</code>, một Hội đồng, một bên kiểm soát dữ liệu. Không đồng nghĩa với "họ"
+    theo tên: hai dòng họ Nguyễn khác làng là hai <code>clan</code>.</td></tr>
+  <tr><td><strong>Mã dòng họ</strong> (<code>clan.code</code>)</td><td>Chuỗi <code>^[a-z][a-z0-9_]{2,31}$</code>, duy nhất trên bản
+    cài, <strong>bất biến</strong> sau khi tạo; là nhãn gốc <code>ltree</code> và là thứ khách gõ trên đường dẫn. Ví dụ
+    <code>nguyen_dinh_dong_ngac</code>.</td></tr>
+  <tr><td><strong>Toàn dòng họ</strong></td><td><strong>Đổi nghĩa.</strong> Hôm nay: "không lọc gì" — mọi nơi
+    <code>isClanWide()</code> trả <code>true</code> là bỏ mệnh đề <code>WHERE</code> phạm vi. Từ bước 2: "<em>toàn bộ dòng họ
+    của tôi</em>" — tức <code>WHERE clan_id = :clanIdCuaToi</code>, không bao giờ rộng hơn. Không còn vai nào trong
+    ứng dụng có phạm vi "mọi dòng họ" đối với dữ liệu nghiệp vụ.</td></tr>
+  <tr><td><strong>SYSADMIN</strong> (quản trị hệ thống)</td><td>Vai kỹ thuật toàn bản cài: tạo/khoá/xoá dòng họ, vận hành
+    máy chủ. <strong>Không thuộc dòng họ nào</strong>, không có <code>app_user</code>, không đọc dữ liệu nghiệp vụ ngoài
+    phiên hỗ trợ.</td></tr>
+  <tr><td><strong>Quản trị dòng họ</strong> (<code>ADMIN</code>)</td><td>Vai <code>ADMIN</code> hôm nay, <strong>thu hẹp về một dòng họ</strong>:
+    người vận hành phần mềm cho riêng họ ấy (gạt hộ công tắc riêng tư theo quy ước ba vế, 08 §9.2). Do Hội đồng họ ấy
+    chỉ định.</td></tr>
+  <tr><td><strong>Phiên hỗ trợ</strong> (support session)</td><td>Quyền đọc có thời hạn (≤ 60 phút), gắn một dòng họ, một lý
+    do, được một thành viên Hội đồng họ ấy duyệt, mọi lượt đọc ghi <code>audit_log</code>.</td></tr>
+  <tr><td><strong>Bên kiểm soát / Bên xử lý</strong></td><td>Thuật ngữ của Nghị định 13/2023/NĐ-CP: bên quyết định mục
+    đích và phương tiện xử lý dữ liệu cá nhân / bên xử lý thay mặt bên kiểm soát theo hợp đồng. <a href="#s7">§7</a>.</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="s3">3. Yêu cầu chức năng &amp; phi chức năng <span class="en">Requirements</span></h2>
+<p class="nho">Mã tiếp nối hệ mã BA v2: bốn module của BA v2 dùng <code>FR-1.x</code>…<code>FR-4.x</code>, NFR tới <code>NFR-8</code>.
+Bước 2 là <strong>Module 5</strong>. Ưu tiên MoSCoW; <span class="tag tag-must">MUST</span> nghĩa là dòng họ thứ hai
+<em>không được</em> vào nếu thiếu. Mỗi yêu cầu có tiêu chí nghiệm thu (AC) kiểm được; kịch bản bấm tay ở <a href="#s11">§11</a>.</p>
+
+<h3>Module 5 — Nhiều dòng họ trên một bản cài <span class="en">Multi-clan installation</span></h3>
+<table>
+  <tr><th style="width:7%">Mã</th><th style="width:7%">Ưu tiên</th><th style="width:34%">Yêu cầu</th><th style="width:20%">Lý do</th><th>Tiêu chí nghiệm thu</th></tr>
+  <tr><td class="ma">FR-5.1</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Bảng <code>clan</code> với vòng đời <code>PROVISIONING → ACTIVE ⇄ SUSPENDED → PENDING_DELETION → PURGED</code>.
+      <span class="en-inline">Clan entity with an explicit lifecycle.</span></td>
+    <td>Mọi quyết định cách ly cần một thực thể để trỏ vào.</td>
+    <td>Chuyển trạng thái ngoài bảng ở <a href="#s6-4">§6.4</a> trả <code>409 CLAN_STATE_TRANSITION_INVALID</code>; mỗi lần chuyển có một dòng <code>audit_log</code>.</td></tr>
+  <tr><td class="ma">FR-5.2</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Mọi hàng dữ liệu nghiệp vụ thuộc <strong>đúng một</strong> dòng họ: cột <code>clan_id</code> (hoặc suy được qua đúng một FK) trên mọi bảng liệt kê ở <a href="#s4-2">§4.2</a>.
+      <span class="en-inline">Every business row belongs to exactly one clan.</span></td>
+    <td>Không có chủ thì không lọc được.</td>
+    <td>Sau di trú, truy vấn kiểm §8.4 trả 0 hàng <code>clan_id IS NULL</code> trên mọi bảng NOT NULL; ghi một hàng thiếu <code>clan_id</code> bị CSDL từ chối.</td></tr>
+  <tr><td class="ma">FR-5.3</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Không quan hệ nào vượt dòng họ: hai đầu cạnh <code>relationship</code>/AGE, chi cha–con, nhân khẩu–chi, phân công–chi… cùng <code>clan_id</code> — ép bằng trigger CSDL.
+      <span class="en-inline">No cross-clan reference.</span></td>
+    <td>Một cạnh vượt họ là một đường duyệt cây dẫn sang họ khác.</td>
+    <td><code>INSERT</code> một cạnh <code>PARENT_BIO</code> giữa hai người khác họ bị từ chối với lỗi <code>CROSS_CLAN_REFERENCE</code>; đếm cạnh AGE vượt họ = 0 (§8.4).</td></tr>
+  <tr><td class="ma">FR-5.4</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Nhãn gốc <code>ltree</code> của mọi chi = <code>clan.code</code>; <code>clan.code</code> bất biến.
+      <span class="en-inline">ltree root label equals the clan code.</span></td>
+    <td>Phép <code>&lt;@</code> của RBAC tự dừng ở biên dòng họ; không phép kiểm nào phải nhớ thêm điều kiện.</td>
+    <td>Mọi <code>branch.path</code> có <code>subpath(path,0,1) = clan.code</code>; <code>UPDATE clan SET code</code> bị trigger chặn.</td></tr>
+  <tr><td class="ma">FR-5.5</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Một <code>app_user</code> thuộc đúng một dòng họ (<code>app_user.clan_id NOT NULL</code>); một danh tính Keycloak ứng với tối đa một <code>app_user</code>.
+      <span class="en-inline">One account, one clan.</span></td>
+    <td>Biên cách ly đặt ở lúc phát token, không ở một tham số client gửi lên (§4.9).</td>
+    <td>Tạo tài khoản thứ hai cho cùng <code>keycloak_sub</code> ở họ khác → <code>409 ACCOUNT_ALREADY_IN_CLAN</code>.</td></tr>
+  <tr><td class="ma">FR-5.6</td><td><span class="tag tag-must">MUST</span></td>
+    <td>JWT mang claim <code>clan</code> (mã dòng họ) từ thuộc tính người dùng Keycloak chỉ admin sửa được; backend <strong>đối chiếu</strong> claim với <code>app_user.clan_id</code>.
+      <span class="en-inline">JWT clan claim, cross-checked against the database.</span></td>
+    <td>Claim để giao diện và định tuyến; CSDL để quyết quyền.</td>
+    <td>Claim ≠ họ của <code>app_user</code> → <code>403 CLAN_MISMATCH</code> + audit; người dùng không tự sửa được thuộc tính <code>clan</code> ở trang tài khoản Keycloak.</td></tr>
+  <tr><td class="ma">FR-5.7</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Vai <code>SYSADMIN</code> tách khỏi <code>ADMIN</code>/<code>COUNCIL</code>; <code>SYSADMIN</code> không có <code>app_user</code>, không đọc/ghi dữ liệu nghiệp vụ ngoài phiên hỗ trợ.
+      <span class="en-inline">System admin separated from clan roles.</span></td>
+    <td>Chức danh dòng tộc và vai kỹ thuật tách bạch (BA v2 §3); ở nhiều họ, người vận hành đứng ngoài <em>mọi</em> họ.</td>
+    <td>Token SYSADMIN gọi <code>GET /persons/{id}</code> không có phiên hỗ trợ → <code>403 SUPPORT_SESSION_REQUIRED</code>; gọi <code>/api/v1/sys/**</code> → 2xx.</td></tr>
+  <tr><td class="ma">FR-5.8</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Phiên hỗ trợ: SYSADMIN xin, một thành viên Hội đồng họ ấy duyệt; hạn ≤ 60 phút; chỉ đọc; mỗi lượt đọc hồ sơ ghi <code>READ_SENSITIVE</code>; Hội đồng nhận thông báo khi mở và khi đóng.
+      <span class="en-inline">Council-approved, time-boxed, audited support access.</span></td>
+    <td>Hiện thực ba vế của quy ước 08 §9.2 cho người đứng ngoài dòng họ.</td>
+    <td>NT-DH-12. Phiên hết hạn → lượt gọi kế tiếp 403; không có lối nào để SYSADMIN tự duyệt.</td></tr>
+  <tr><td class="ma">FR-5.9</td><td><span class="tag tag-must">MUST</span></td>
+    <td>"Toàn dòng họ" = toàn bộ dòng họ của người gọi; mọi truy vấn lọc theo <code>clan_id</code> của người gọi; tra theo id ngoài họ trả <code>404</code>, không <code>403</code>.
+      <span class="en-inline">"Clan-wide" means "my clan", never "all clans".</span></td>
+    <td>403 tự xác nhận bản ghi có thật — cùng luật "khách nhìn người sống" hôm nay.</td>
+    <td>Ma trận NFR-9: Hội đồng họ A gọi mọi endpoint với id thuộc họ B → 100% là 404 hoặc danh sách không chứa id ấy.</td></tr>
+  <tr><td class="ma">FR-5.10</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Danh xưng theo tầng <code>DEFAULT → REGION → CLAN → BRANCH</code>: tầng CLAN/BRANCH gắn <code>clan_id</code>, Hội đồng chỉ sửa tầng của họ mình; tầng DEFAULT/REGION <strong>dùng chung, khoá ở runtime</strong>.
+      <span class="en-inline">Kinship rule tiers per clan; shared tiers locked.</span></td>
+    <td>Hôm nay Hội đồng sửa được REGION (<code>RuleAdminService</code> chỉ khoá DEFAULT) — ở nhiều họ, đó là họ A đổi danh xưng của họ B.</td>
+    <td>Hội đồng A sửa tầng REGION → <code>403 SHARED_RULE_SET_LOCKED</code>; sửa CLAN của A không đổi kết quả tra của B (NT-DH-15).</td></tr>
+  <tr><td class="ma">FR-5.11</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Mã mời (dòng họ và cá nhân) gắn <code>clan_id</code>; tài khoản lập bằng mã mang họ của mã, không của lựa chọn nào khác.
+      <span class="en-inline">Invites are clan-bound.</span></td>
+    <td>Mã mời dòng họ là ranh giới an toàn thật (V16): nó phải quyết luôn cả dòng họ.</td>
+    <td>Đăng ký bằng mã họ A → <code>app_user.clan_id</code> = A, claim <code>clan</code> = mã A (NT-DH-08).</td></tr>
+  <tr><td class="ma">FR-5.12</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Cổng khách theo dòng họ: mọi đọc của khách đi qua <code>/api/v1/public/clans/{code}/…</code>; dòng họ không <code>ACTIVE</code> → 404.
+      <span class="en-inline">Guest portal is per clan.</span></td>
+    <td>Khách không có token để suy ra họ; mã trên đường dẫn là cách duy nhất không mơ hồ và không cache sai.</td>
+    <td>Khách ở <code>/vi/ho/A</code> tìm tên một cụ đã khuất của họ B → không có kết quả (NT-DH-06).</td></tr>
+  <tr><td class="ma">FR-5.13</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Màn "Quản lý các dòng họ" — danh sách: tên, mã, vùng, trạng thái, số nhân khẩu, Hội đồng, ngày tạo. Chỉ số đếm, không dữ liệu cá nhân.
+      <span class="en-inline">Clan list for SYSADMIN, aggregates only.</span></td>
+    <td>Người vận hành cần biết họ nào đang sống, họ nào mất Hội đồng.</td>
+    <td>NT-DH-01; phản hồi <code>GET /sys/clans</code> không chứa trường nào thuộc bảng <code>person</code>/<code>person_name</code>.</td></tr>
+  <tr><td class="ma">FR-5.14</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Tạo dòng họ mới bằng cách chạy lại trình khởi tạo bước 1 <em>cho dòng họ ấy</em>: mã + tên + vùng → hồ sơ → tài khoản Hội đồng đầu tiên → kiểm sẵn sàng → kích hoạt.
+      <span class="en-inline">Create clan via the step-1 wizard.</span></td>
+    <td>Một đường khởi tạo, không hai: hai đường cho một việc là hai chỗ để lệch.</td>
+    <td>NT-DH-02, NT-DH-03.</td></tr>
+  <tr><td class="ma">FR-5.15</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Tạm khoá / mở khoá một dòng họ, có lý do; hiệu lực ≤ 60 giây; tạm khoá dừng đăng nhập nghiệp vụ, cổng khách, mã mời, nhắc giỗ của họ ấy — không đụng họ khác.
+      <span class="en-inline">Suspend / resume.</span></td>
+    <td>Sự cố rò mã mời, tranh chấp trong họ, không thanh toán — cần một nút dừng không làm mất dữ liệu.</td>
+    <td>NT-DH-09, NT-DH-10.</td></tr>
+  <tr><td class="ma">FR-5.16</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Chỉ định / thu hồi Hội đồng của một dòng họ; không thu hồi được thành viên Hội đồng cuối cùng còn hiệu lực; kèm số hiệu văn bản quyết định của dòng họ.
+      <span class="en-inline">Appoint / revoke the council.</span></td>
+    <td>Chỉ định Hội đồng là trao quyền đọc mọi dữ liệu người sống của họ ấy — phải có căn cứ của chính dòng họ.</td>
+    <td>NT-DH-11; thu hồi người cuối → <code>409 LAST_COUNCIL_MEMBER</code>.</td></tr>
+  <tr><td class="ma">FR-5.17</td><td><span class="tag tag-should">SHOULD</span></td>
+    <td>Xuất toàn bộ dữ liệu một dòng họ (JSON theo bảng + media + bản kê SHA-256) theo yêu cầu của Hội đồng họ ấy; chỉ người yêu cầu tải được; liên kết hết hạn sau 72 giờ.
+      <span class="en-inline">Per-clan export to the controller.</span></td>
+    <td>Quyền mang dữ liệu đi của bên kiểm soát; điều kiện để xoá được.</td>
+    <td>NT-DH-13; gói chỉ chứa hàng của họ ấy; SYSADMIN gọi tải → 403.</td></tr>
+  <tr><td class="ma">FR-5.18</td><td><span class="tag tag-should">SHOULD</span></td>
+    <td>Xoá dòng họ = xoá mềm có ân hạn 30 ngày (khôi phục được); hết ân hạn mới tới bước tiêu huỷ theo quyết định ở câu hỏi 7 (<a href="#s14">§14</a>).
+      <span class="en-inline">Soft delete with grace period.</span></td>
+    <td>Luật xoá mềm của dự án + quyền được xoá của chủ thể; hai luật ấy kéo ngược nhau ở đây.</td>
+    <td>NT-DH-14.</td></tr>
+  <tr><td class="ma">FR-5.19</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Nhắc giỗ, thông báo, hộp thư: người nhận luôn cùng họ với sự kiện; sự kiện cấp họ chỉ tới người của họ ấy; họ không <code>ACTIVE</code> thì job nhắc ghi <code>SKIPPED</code>.
+      <span class="en-inline">Reminders never cross clans.</span></td>
+    <td>Một lời nhắc giỗ gửi nhầm họ là lộ tên người đã khuất <em>và</em> danh sách người nhận.</td>
+    <td>NT-DH-18.</td></tr>
+  <tr><td class="ma">FR-5.20</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Cache (cây, danh xưng), tìm kiếm FTS, dò trùng, sàng lọc đơn tự nhận mình tách theo dòng họ.
+      <span class="en-inline">Caches, search and duplicate screening are clan-scoped.</span></td>
+    <td>Dò trùng hôm nay quét <em>mọi</em> nhân khẩu theo tên — ở nhiều họ, đó là gợi ý một người sống của họ khác.</td>
+    <td>NT-DH-05, NT-DH-16.</td></tr>
+  <tr><td class="ma">FR-5.21</td><td><span class="tag tag-should">SHOULD</span></td>
+    <td>Nhật ký theo dòng họ: <code>audit_log.clan_id</code>; Hội đồng đọc nhật ký họ mình; SYSADMIN đọc nhật ký hệ thống (<code>clan_id IS NULL</code>) và nhật ký vòng đời dòng họ, không đọc nhật ký nghiệp vụ.
+      <span class="en-inline">Clan-scoped audit trail.</span></td>
+    <td><code>before</code>/<code>after</code> của nhật ký chứa dữ liệu nghiệp vụ.</td>
+    <td>Hội đồng A lọc <code>/audit-logs</code> không thấy hàng của B.</td></tr>
+  <tr><td class="ma">FR-5.22</td><td><span class="tag tag-must">MUST</span></td>
+    <td>Di trú bản một họ sang mô hình mới: điền <code>clan_id</code>, đổi gốc <code>ltree</code>, gắn <code>clan_id</code> lên đỉnh AGE; có kiểm sau di trú và đường lui.
+      <span class="en-inline">Single-clan to multi-clan migration.</span></td>
+    <td><a href="#s8">§8</a>.</td>
+    <td>NT-DH-17.</td></tr>
+  <tr><td class="ma">FR-5.23</td><td><span class="tag tag-wont">WON'T (đợt này)</span></td>
+    <td>Một danh tính đăng nhập vào nhiều dòng họ; liên kết thông gia giữa hai họ.</td>
+    <td>§1 ngoài phạm vi.</td>
+    <td>—</td></tr>
+</table>
+
+<h3 id="s3-nfr">Yêu cầu phi chức năng <span class="en">Non-functional</span></h3>
+<table>
+  <tr><th style="width:7%">Mã</th><th style="width:16%">Nhóm</th><th>Yêu cầu (có số)</th><th style="width:30%">Cách đo</th></tr>
+  <tr><td class="ma">NFR-9</td><td>Cách ly dữ liệu</td>
+    <td><strong>0</strong> phản hồi 2xx chứa một id, một tên, hay một số đếm thuộc dòng họ khác, trên <strong>100%</strong> operation của
+      <code>contracts/openapi.yaml</code> × 5 loại người gọi (khách, thành viên, Trưởng chi, Hội đồng, SYSADMIN không phiên hỗ trợ).</td>
+    <td>Bộ kiểm tích hợp sinh tự động từ <code>operationId</code>, chạy trên hai dòng họ mẫu (mục §7.3); là một cổng CI bắt buộc.</td></tr>
+  <tr><td class="ma">NFR-10</td><td>Hiệu năng</td>
+    <td>Không thoái lui NFR-1: điều hướng → thẻ người đầu tiên ≤ 2000 ms (trung vị 7 lần, bản build sản xuất); LCA/danh xưng &lt; 500 ms; đo với
+      <strong>2 dòng họ × 1.506 nhân khẩu</strong> và <strong>10 dòng họ × 5.000 nhân khẩu</strong> (quy mô mục tiêu — chờ câu hỏi 10).</td>
+    <td>Cùng phép đo đã dùng cho NFR-1 (807 ms / 750 ms); thêm <code>EXPLAIN ANALYZE</code> cho năm truy vấn nóng nhất.</td></tr>
+  <tr><td class="ma">NFR-11</td><td>Kịp thời của tạm khoá</td>
+    <td>Tạm khoá có hiệu lực với mọi request nghiệp vụ trong <strong>≤ 60 giây</strong>, không phụ thuộc hạn token (900 giây).</td>
+    <td>NT-DH-09 đo bằng đồng hồ.</td></tr>
+  <tr><td class="ma">NFR-12</td><td>Kiểm toán SYSADMIN</td>
+    <td><strong>100%</strong> lượt đọc hồ sơ nhân khẩu trong phiên hỗ trợ có một hàng <code>READ_SENSITIVE</code>; <strong>100%</strong> thao tác
+      <code>/sys/**</code> có một hàng audit; không có cấu hình tắt được hai điều trên.</td>
+    <td>Kiểm tích hợp đếm hàng audit = số lượt gọi.</td></tr>
+  <tr><td class="ma">NFR-13</td><td>Di trú</td>
+    <td>Di trú bản một họ (1.509 hàng <code>person</code>) chạy ≤ 10 phút; có bản sao lưu ngay trước; đường lui đã diễn tập trên bản sao,
+      khôi phục ≤ 30 phút.</td>
+    <td>Diễn tập ghi biên bản trước ngày chạy thật (§8.5).</td></tr>
+  <tr><td class="ma">NFR-14</td><td>Riêng tư mặc định</td>
+    <td>Dòng họ mới tạo ra ở trạng thái <code>PROVISIONING</code>: cổng khách trả 404, không ai ngoài Hội đồng được chỉ định đăng nhập
+      được, cho tới khi SYSADMIN kích hoạt sau khi <code>readiness</code> xanh.</td>
+    <td>NT-DH-02 bước kiểm cổng khách trước kích hoạt.</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="s4">4. Mô hình dữ liệu <span class="en">Conceptual &amp; physical data model</span></h2>
+
+<h3 id="s4-1">4.1 Bảng <code>clan</code> và quan hệ với <code>clan_profile</code> của bước 1</h3>
+<p>
+  <code>clan</code> giữ <strong>danh tính và vòng đời</strong>; <code>clan_profile</code> (bước 1) giữ <strong>thông tin hiển thị</strong>.
+  Quan hệ 1–1: <code>clan_profile</code> đổi khoá chính thành <code>clan_id</code> (FK → <code>clan.id</code>). Nhờ vậy hợp đồng bước 1
+  <code>GET/PUT /admin/clan-profile</code> giữ nguyên nghĩa — "hồ sơ dòng họ <em>của tôi</em>" — chỉ đổi cách tìm ra dòng ấy (từ
+  <code>clan_id</code> của người gọi thay vì "dòng duy nhất").
+</p>
+<div class="so-do">clan
+  id                    UUID PK
+  code                  VARCHAR(32)  NOT NULL UNIQUE   -- ^[a-z][a-z0-9_]{2,31}$, BẤT BIẾN (trigger)
+  status                VARCHAR(20)  NOT NULL          -- PROVISIONING|ACTIVE|SUSPENDED|PENDING_DELETION|PURGED
+  region                VARCHAR(10)  NOT NULL          -- BAC|TRUNG|NAM — chọn bộ REGION cha của tầng CLAN
+  root_branch_id        UUID UNIQUE  FK branch(id)     -- chi gốc branch_kind='DONG_HO', path = code
+  is_default_public     BOOLEAN NOT NULL DEFAULT FALSE -- '/' của khách chuyển thẳng về họ này (tối đa 1 dòng TRUE)
+  suspended_at / suspended_reason
+  deletion_requested_at / purge_after                  -- ân hạn: purge_after = requested + 30 ngày
+  created_by_operator   UUID FK sys_operator(id)
+  created_at / updated_at / version
+clan_profile          -- của bước 1; PK đổi thành clan_id FK clan(id) ON DELETE RESTRICT
+sys_operator          -- id, keycloak_sub UNIQUE, display_name, created_at — SYSADMIN, KHÔNG phải app_user
+support_session       -- id, clan_id, operator_id, reason, status(PENDING|OPEN|CLOSED|DENIED|EXPIRED),
+                      --   requested_at, approved_by (app_user, COUNCIL cùng họ), opened_at, expires_at, closed_at
+clan_export           -- id, clan_id, requested_by (app_user COUNCIL), object_key, sha256, row_counts JSONB,
+                      --   status(QUEUED|RUNNING|READY|EXPIRED|FAILED), expires_at</div>
+<p class="nho"><strong>Giả định về bước 1:</strong> <code>clan_profile</code> có một khoá chính riêng và các cột hiển thị (tên, vùng, lời giới
+thiệu, người liên hệ). Nếu bước 1 đã đặt <code>region</code> ở <code>clan_profile</code>, bước 2 <em>chuyển</em> nó sang <code>clan</code> (vùng quyết
+định bộ luật danh xưng — đó là danh tính, không phải hiển thị) và để lại một view tương thích.</p>
+
+<div class="sua canh">
+  <span class="nhan-sua">Q1 — Bên thua: một schema Postgres cho mỗi dòng họ</span>
+  <p><strong>Nó có lý ở đâu:</strong> cách ly mạnh nhất có được mà không phải thêm máy — một truy vấn quên lọc
+    <em>không thể</em> đọc sang họ khác vì bảng của họ khác không nằm trong <code>search_path</code>; xoá một họ là
+    <code>DROP SCHEMA</code>; xuất một họ là <code>pg_dump -n</code>.</p>
+  <p style="margin-bottom:0"><strong>Vì sao thua:</strong> (1) Flyway phải chạy N lần cho N schema, và một lần chạy dở dang để lại
+    các họ ở các phiên bản lược đồ khác nhau; (2) AGE: <code>LOAD 'age'</code> + <code>search_path</code> đã là cái bẫy tốn thời
+    gian thật (README §4) — nhân nó lên theo schema là nhân cái bẫy; (3) <code>place_division</code>, <code>role</code>, bộ luật
+    DEFAULT/REGION là dữ liệu dùng chung, phải chép N bản hoặc để ở schema chung và quay lại đúng vấn đề lọc; (4) JPA cần
+    đổi <code>search_path</code> theo request trên một pool dùng chung — lỗi ở đó rò <em>cả bảng</em>, không phải một hàng.
+    Quy mô mục tiêu (hàng chục họ, hàng vạn nhân khẩu) không cần mức cách ly ấy; RLS (Q7) cho gần bằng lưới chặn với một
+    phần chi phí. Xét lại nếu một dòng họ đòi cô lập vật lý bằng hợp đồng.</p>
+</div>
+
+<h3 id="s4-2">4.2 <code>clan_id</code> ở đâu — từng bảng</h3>
+<p class="nho">Ba cách: <strong>Cột</strong> — có cột <code>clan_id</code> riêng; <strong>Suy</strong> — không có cột, họ suy qua đúng một FK NOT NULL;
+<strong>Chung</strong> — dữ liệu dùng chung mọi họ, không mang họ. Cột được chọn khi: (a) hàng có thể không có chi/nhân khẩu để suy (sự kiện cấp họ,
+phân công toàn họ, mã mời dòng họ), hoặc (b) bảng chứa dữ liệu người sống và cần RLS không phải JOIN, hoặc (c) bảng được tra <em>trước</em> khi
+biết người gọi (tra mã mời). Mọi cột <code>clan_id</code> là <code>UUID NOT NULL REFERENCES clan(id)</code> trừ khi ghi khác.</p>
+<table>
+  <tr><th style="width:19%">Bảng (migration gốc)</th><th style="width:9%">Cách</th><th style="width:9%">Null?</th><th style="width:25%">Chỉ mục mới / đổi</th><th>Ghi chú, ràng buộc cùng họ</th></tr>
+  <tr><td><code>branch</code> (V2)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, path)</code> btree; giữ <code>ux_branch_path</code> toàn cục</td><td>Gốc path = <code>clan.code</code>; <code>parent_id</code> cùng họ (trigger).</td></tr>
+  <tr><td><code>person</code> (V2)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, is_alive) WHERE NOT is_deleted</code>; <code>(clan_id, generation)</code></td><td><code>primary_branch_id</code> NULL vẫn được (chưa gắn chi) — nhưng <code>clan_id</code> thì không. RLS.</td></tr>
+  <tr><td><code>person_name</code> (V2, V6)</td><td>Cột (dư thừa)</td><td>NOT NULL</td><td><code>(clan_id, name_unaccented varchar_pattern_ops)</code>; GIN trigram giữ nguyên (xem §5.6)</td><td>Trigger ép = <code>person.clan_id</code>. Dư thừa có chủ ý: FTS và RLS không phải JOIN. RLS.</td></tr>
+  <tr><td><code>relationship</code> (V2)</td><td>Cột</td><td>NOT NULL</td><td>Tiền tố <code>clan_id</code> không cần — tra theo <code>from/to_person_id</code></td><td>Trigger: <code>from</code>, <code>to</code> cùng <code>clan_id</code> của hàng. Cạnh AGE ghi cùng giao dịch (§4.6).</td></tr>
+  <tr><td><code>kinship_rule_set</code> (V3)</td><td>Cột</td><td><strong>NULL được</strong></td><td><code>UNIQUE NULLS NOT DISTINCT (clan_id, code)</code> thay <code>ux_kinship_rule_set_code</code>; <code>UNIQUE (clan_id) WHERE scope='CLAN' AND is_active</code></td><td>CHECK: <code>scope IN ('CLAN','BRANCH') ⇔ clan_id IS NOT NULL</code>. DEFAULT/REGION dùng chung (§4.7).</td></tr>
+  <tr><td><code>kinship_rule</code> (V3)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>rule_set_id</code>.</td></tr>
+  <tr><td><code>event</code> (V4)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, event_type) WHERE NOT is_deleted</code></td><td>Sự kiện cấp họ không có chi, không có người → không suy được. <code>person_id</code>, <code>target_branch_id</code> cùng họ.</td></tr>
+  <tr><td><code>reminder_job</code> (V4)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>event_id</code>; bộ phát JOIN <code>event</code> → <code>clan.status</code>.</td></tr>
+  <tr><td><code>notification_log</code> (V4)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, status, channel)</code></td><td>Đối soát, DLQ theo họ.</td></tr>
+  <tr><td><code>notification_inbox</code> (V4)</td><td>Cột</td><td>NOT NULL</td><td>Giữ chỉ mục theo người nhận</td><td>Trigger = họ của <code>recipient_person_id</code>. Chứa tên người đã khuất trong câu chữ → RLS.</td></tr>
+  <tr><td><code>push_subscription</code> (V4)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>app_user_id</code>.</td></tr>
+  <tr><td><code>app_user</code> (V5)</td><td>Cột</td><td>NOT NULL</td><td>Giữ <code>ux_app_user_keycloak_sub</code> <strong>toàn cục</strong> — đó chính là FR-5.5</td><td><code>person_id</code> cùng họ. RLS. SYSADMIN không có hàng ở đây.</td></tr>
+  <tr><td><code>role</code> (V5)</td><td>Chung</td><td>—</td><td>Thêm <code>'SYSADMIN'</code> vào <code>ck_role_code</code></td><td>Danh mục.</td></tr>
+  <tr><td><code>branch_assignment</code> (V5)</td><td>Cột</td><td>NOT NULL</td><td>Đổi <code>ux_branch_assignment</code> thành <code>(app_user_id, role_id, COALESCE(branch_id, clan_id))</code></td><td><code>branch_id IS NULL</code> nay nghĩa là "toàn bộ dòng họ <code>clan_id</code>". Trigger: <code>clan_id</code> = họ của <code>app_user</code> = họ của <code>branch</code>.</td></tr>
+  <tr><td><code>change_request</code> (V5)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, status, created_at DESC)</code></td><td><code>CREATE_PERSON</code> không có <code>person_id</code> → cần cột. <code>payload</code> có dữ liệu người sống → RLS.</td></tr>
+  <tr><td><code>audit_log</code> (V5)</td><td>Cột</td><td><strong>NULL được</strong></td><td><code>(clan_id, at DESC)</code></td><td>NULL = hành động hệ thống (SYSADMIN, job). Bảng chỉ ghi thêm — cột thêm bằng <code>ALTER ... ADD COLUMN</code>, điền bằng một lệnh <code>UPDATE</code> duy nhất <em>trong migration</em> với trigger chặn UPDATE tạm tắt (§8.2 bước 3).</td></tr>
+  <tr><td><code>place_division</code> (V9)</td><td>Chung</td><td>—</td><td>—</td><td>Danh mục tỉnh/quốc gia pháp quy.</td></tr>
+  <tr><td><code>import_batch</code> (V9)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>branch_id NOT NULL</code>. <code>ux_import_batch_committed_file (branch_id, sha)</code> đã tự đúng theo họ.</td></tr>
+  <tr><td><code>import_person_row</code>, <code>import_marriage_row</code>, <code>import_issue</code> (V9), <code>import_commit_entry</code> (V11), <code>import_duplicate_pair</code> (V14)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>batch_id</code>. <code>import_duplicate_pair.existing_person_id</code>: trigger cùng họ với lô — đây là chốt của FR-5.20.</td></tr>
+  <tr><td><code>person_external_ref</code> (V9)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>branch_id</code>; khoá <code>(code_system, branch_id, external_code)</code> đã đúng theo họ, <strong>không cần đổi</strong>.</td></tr>
+  <tr><td><code>import_branch_target</code> (V13)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>branch_id</code>.</td></tr>
+  <tr><td><code>invitation</code> (V15)</td><td>Cột</td><td>NOT NULL</td><td>Giữ <code>ux_invitation_code_hash</code> toàn cục</td><td>Tra theo băm mã <em>trước</em> đăng nhập → cần họ ngay. <code>person_id</code> cùng họ.</td></tr>
+  <tr><td><code>invitation_attempt</code> (V15)</td><td>Chung</td><td>—</td><td>—</td><td>Giới hạn tần suất theo người gọi, không theo họ — cố ý: kẻ dò mã không được thêm ngưỡng bằng cách đổi họ.</td></tr>
+  <tr><td><code>clan_invite_code</code> (V16)</td><td>Cột</td><td>NOT NULL</td><td>Giữ <code>ux_clan_invite_code_hash</code> toàn cục; <code>ix_clan_invite_open</code> thêm tiền tố <code>clan_id</code></td><td>Mã không trỏ vào ai → chỉ cột mới nói được mã của họ nào.</td></tr>
+  <tr><td><code>clan_invite_redemption</code> (V16)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>code_id</code>; trigger: họ của <code>app_user</code> = họ của mã.</td></tr>
+  <tr><td><code>person_claim</code> (V16)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, status)</code></td><td>Đơn <code>NEW_PERSON</code> không có <code>person_id</code>. <code>phone</code> là Tầng 3 → RLS. <code>screening</code> chỉ chứa id cùng họ.</td></tr>
+  <tr><td><code>post</code> (V17)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, published_at DESC) WHERE status='PUBLISHED'</code> thay <code>ix_post_feed</code></td><td>Bảng tin là của một họ. RLS.</td></tr>
+  <tr><td><code>honour</code> (V17)</td><td>Cột (dư thừa)</td><td>NOT NULL</td><td>Tiền tố <code>clan_id</code> cho <code>ix_honour_kind</code></td><td>Trigger = <code>person.clan_id</code>. Lối khách đọc theo họ không JOIN. RLS.</td></tr>
+  <tr><td><code>media_asset</code> (V19)</td><td>Cột</td><td>NOT NULL</td><td><code>(clan_id, status)</code></td><td>Đường dọn và xuất dữ liệu theo họ. Khoá đối tượng <em>mới</em> có tiền tố <code>c/&lt;clan_id&gt;/</code>; khoá cũ không đổi tên (§8.2).</td></tr>
+  <tr><td><code>media_link</code>, <code>media_report</code> (V19)</td><td>Suy</td><td>—</td><td>—</td><td>Qua <code>media_id</code>. Chủ sở hữu đa hình → kiểm cùng họ ở tầng ứng dụng (<code>ContentMediaLinker</code>, <code>SetPersonAvatarService</code>).</td></tr>
+  <tr><td><code>password_reset_grant</code> (V21)</td><td>Cột</td><td>NOT NULL</td><td>—</td><td>Trigger = họ của <code>target_app_user_id</code> = họ của <code>issued_by</code>.</td></tr>
+  <tr><td><code>clan_profile</code> (bước 1)</td><td>PK = <code>clan_id</code></td><td>NOT NULL</td><td>—</td><td>§4.1.</td></tr>
+  <tr><td>Đỉnh AGE <code>giapha_graph."Person"</code> (V7)</td><td>Thuộc tính</td><td>bắt buộc</td><td>Chỉ mục biểu thức trên <code>properties-&gt;'clan_id'</code></td><td>§4.6.</td></tr>
+</table>
+<p class="nho">Tổng: 19 bảng thêm cột (17 NOT NULL, 2 được NULL: <code>kinship_rule_set</code>, <code>audit_log</code>), 1 bảng đổi khoá, 14 bảng suy, 3 bảng chung, 4 bảng mới (<code>clan</code>, <code>sys_operator</code>,
+<code>support_session</code>, <code>clan_export</code>), cộng đỉnh AGE. Hàm trigger dùng chung: <code>giapha_assert_same_clan(tbl, col, id, expected_clan)</code>
+ném <code>CROSS_CLAN_REFERENCE</code> (SQLSTATE riêng để tầng ứng dụng dịch thành Problem Details).</p>
+
+<div class="sua canh">
+  <span class="nhan-sua">Bên thua: chỉ suy <code>clan_id</code> qua khoá ngoại, không bao giờ lặp lại</span>
+  <p style="margin-bottom:0"><strong>Nó có lý ở đâu:</strong> một sự thật một chỗ — không có trigger giữ hai cột khớp nhau, không có "khi lệch tin
+    bên nào". <strong>Vì sao thua ở năm bảng</strong> (<code>person_name</code>, <code>honour</code>, <code>notification_inbox</code>, <code>password_reset_grant</code>,
+    <code>notification_log</code>): chính sách RLS phải là một phép so trên hàng, không phải một <code>EXISTS</code> sang bảng khác — RLS có
+    truy vấn con chạy trên <em>mọi</em> hàng của mọi truy vấn FTS, và nó đi qua chính bảng cha cũng đang bị RLS lọc. Cái giá được trả bằng
+    trigger ép bằng nhau; giá trị cột không bao giờ được ghi từ tầng ứng dụng.</p>
+</div>
+
+<h3 id="s4-3">4.3 <code>ltree</code>: gốc = mã dòng họ</h3>
+<ul>
+  <li>Hôm nay chi gốc của dữ liệu mẫu có slug <code>goc</code> (<code>ClanTreeGenerator</code>), nên mọi đường dẫn là <code>goc.chi_at.…</code>.
+    Bước 2: chi gốc của họ có mã <code>nguyen_dinh</code> là <code>nguyen_dinh</code>, cây con là <code>nguyen_dinh.chi_at.…</code>.</li>
+  <li><code>branch.path</code> là cột <code>ltree</code> <strong>duy nhất</strong> trong lược đồ (đã kiểm V1..V21) — các cột "ảnh chụp chi"
+    (<code>post.branch_id</code>, <code>invitation.branch_id</code>…) lưu <code>UUID</code>, không lưu đường dẫn, nên đổi gốc không phải sửa chúng.</li>
+  <li><code>clan.code</code> bất biến vì đổi nó là viết lại mọi đường dẫn của họ ấy <em>và</em> làm cũ mọi <code>BranchPath</code> đang nằm
+    trong cache/phiên. Muốn "đổi tên hiển thị" thì sửa <code>clan_profile</code>.</li>
+  <li><code>ck_branch_path_tail_is_slug</code> giữ nguyên; thêm trigger <code>subpath(path,0,1)::text = clan.code</code>.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">Q3 — Bên thua: giữ gốc chung, chỉ lọc bằng cột <code>clan_id</code></span>
+  <p style="margin-bottom:0"><strong>Nó có lý ở đâu:</strong> không phải viết lại đường dẫn nào lúc di trú. <strong>Vì sao thua:</strong> nếu hai họ có
+    cùng gốc nhãn thì "Trưởng chi của <code>goc.chi_at</code>" là một câu mơ hồ — <code>ux_branch_path</code> (toàn cục) sẽ cấm họ thứ hai có
+    <code>chi_at</code>, hoặc phải đổi thành <code>(clan_id, path)</code> và khi đó mọi phép <code>@&gt;</code>/<code>&lt;@</code> trong
+    <code>MemberScope.managesBranch</code>, <code>BranchScopeJdbcAdapter</code>, lọc hàng chờ duyệt đều phải nhớ kèm <code>clan_id</code>. Gốc khác
+    nhau làm biên dòng họ thành một <em>tính chất của đường dẫn</em>: phép so <code>ltree</code> đúng ở một họ thì tự đúng ở nhiều họ.</p>
+</div>
+
+<h3 id="s4-4">4.4 Ràng buộc duy nhất phải xét lại</h3>
+<table>
+  <tr><th>Chỉ mục</th><th>Hôm nay</th><th>Bước 2</th><th>Vì sao</th></tr>
+  <tr><td><code>ux_kinship_rule_set_code</code></td><td><code>(code)</code></td><td><code>UNIQUE NULLS NOT DISTINCT (clan_id, code)</code></td><td>Hai họ cùng đặt bộ BRANCH <code>CHI_AT</code>.</td></tr>
+  <tr><td>(mới) bộ CLAN</td><td>—</td><td><code>UNIQUE (clan_id) WHERE scope='CLAN' AND is_active</code></td><td>Mỗi họ một bộ CLAN đang dùng.</td></tr>
+  <tr><td><code>ux_branch_assignment</code></td><td><code>COALESCE(branch_id, 0…0)</code></td><td><code>COALESCE(branch_id, clan_id)</code></td><td>"Toàn họ" của hai họ là hai phân công khác nhau.</td></tr>
+  <tr><td><code>ux_app_user_keycloak_sub</code></td><td><code>(keycloak_sub)</code></td><td><strong>Giữ toàn cục</strong></td><td>Chính là FR-5.5. Nếu sau này chọn Q2-thua, đổi thành <code>(clan_id, keycloak_sub)</code>.</td></tr>
+  <tr><td><code>ux_branch_path</code>, <code>ux_*_code_hash</code>, <code>media_asset.object_key</code>, <code>ux_person_external_ref</code>, <code>ux_import_batch_committed_file</code></td><td>toàn cục / theo chi</td><td><strong>Giữ</strong></td><td>Đã đúng theo họ nhờ gốc <code>ltree</code> khác nhau hoặc nhờ chi là của một họ; băm mã phải duy nhất toàn cục để tra được họ từ mã.</td></tr>
+  <tr><td><code>ux_kinship_rule_set_default</code>, <code>_region</code></td><td>toàn cục</td><td><strong>Giữ</strong></td><td>Tầng dùng chung.</td></tr>
+</table>
+
+<h3 id="s4-6">4.6 Đồ thị AGE</h3>
+<ul>
+  <li>Một đồ thị <code>giapha_graph</code>. Đỉnh <code>Person</code> thêm thuộc tính <code>clan_id</code> (chuỗi UUID), đồng bộ bởi
+    <code>AgeTreeGraphAdapter</code> như bốn thuộc tính hiện có (<code>id · gender · generation · is_deleted</code>, V7). Chỉ mục biểu thức như
+    <code>ix_person_node_generation</code>.</li>
+  <li><strong>Bất biến:</strong> không cạnh <code>PARENT</code>/<code>SPOUSE</code>/<code>HEIR</code> nào nối hai đỉnh khác họ. Giữ bằng trigger trên
+    <code>relationship</code> (cạnh AGE và hàng <code>relationship</code> ghi trong cùng giao dịch — đã có kiểm tích hợp cho điều ấy) cộng một job đối
+    soát đếm cạnh vượt họ, báo lỗi ERROR nếu &gt; 0.</li>
+  <li>Mọi truy vấn Cypher bắt đầu từ một đỉnh đã được xác nhận cùng họ với người gọi (tra qua bảng <code>person</code> có lọc); nhờ bất biến trên, duyệt
+    <code>[:PARENT*0..]</code> không thể ra khỏi họ. Vẫn thêm <code>WHERE n.clan_id = $clanId</code> ở truy vấn chiếu cây như lớp thứ hai.</li>
+  <li>LCA (<code>AgeLcaAdapter</code>): hai người khác họ → không có LCA; tầng ứng dụng trả 404 cho người thứ hai <em>trước</em> khi gọi AGE.</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">Q4 — Bên thua: một đồ thị AGE cho mỗi dòng họ</span>
+  <p style="margin-bottom:0"><strong>Nó có lý ở đâu:</strong> cách ly vật lý của cạnh; xoá một họ là <code>drop_graph</code>. <strong>Vì sao thua:</strong>
+    tên đồ thị là đối số đầu của <code>cypher('giapha_graph', …)</code> và đang là hằng số trong mọi adapter; đổi thành tên động theo request là chỗ
+    duy nhất trong hệ thống mà <em>tên đối tượng CSDL</em> được ghép từ dữ liệu người gọi — cần một spike xác nhận AGE nhận tên đồ thị qua tham số
+    ràng buộc, nếu không thì là ghép chuỗi vào câu truy vấn. Thêm: tạo họ mới phải <code>create_graph</code> + tạo nhãn + chỉ mục cạnh
+    (V7 §7.4) lúc chạy, ngoài Flyway. Không đáng khi bất biến "cạnh không vượt họ" đã được CSDL giữ.</p>
+</div>
+
+<h3 id="s4-7">4.7 Danh xưng: <code>kinship_rule_set</code> theo tầng</h3>
+<ul>
+  <li><strong>DEFAULT</strong> (1 bộ, <code>clan_id NULL</code>) và <strong>REGION</strong> (tối đa 3 bộ BẮC/TRUNG/NAM, <code>clan_id NULL</code>) dùng chung mọi họ,
+    <strong>chỉ đổi qua bản phát hành</strong> (<code>R__seed_kinship_rules_default.sql</code> và một seed REGION tương tự). Hôm nay
+    <code>RuleAdminService</code> đã khoá DEFAULT; bước 2 khoá thêm REGION → <code>403 SHARED_RULE_SET_LOCKED</code>.</li>
+  <li><strong>CLAN</strong> (đúng 1 bộ đang dùng mỗi họ): tạo lúc tạo dòng họ, <code>parent_id</code> = bộ REGION của <code>clan.region</code>,
+    <code>branch_id</code> = <code>clan.root_branch_id</code> (giữ nguyên hình dạng <code>ck_rule_set_branch_shape</code> của V3).</li>
+  <li><strong>BRANCH</strong>: như hôm nay, thêm <code>clan_id</code> = họ của chi.</li>
+  <li>Cache danh xưng: vân tay bộ luật (<code>KinshipCacheKeys.fingerprint</code>) đã gồm id của bộ CLAN nên không đụng nhau giữa họ; bước 2 thêm
+    tiền tố <code>clan_id</code> vào khoá để xoá cache <em>theo họ</em> khi Hội đồng sửa luật (hôm nay xoá toàn vùng).</li>
+</ul>
+
+<h3 id="s4-8">4.8 Mã mời</h3>
+<ul>
+  <li><code>clan_invite_code.clan_id</code> quyết định họ của tài khoản sinh ra từ mã. <code>POST /clan-invites/lookup</code> trả tên dòng họ
+    <em>của mã</em> (đã làm vậy — chỉ đổi nguồn tên từ "dòng duy nhất" sang <code>clan_profile</code> của <code>clan_id</code>).</li>
+  <li><code>ClanInviteRedeemer</code> lập người dùng Keycloak với thuộc tính <code>clan</code> = <code>clan.code</code> <strong>đọc từ CSDL</strong>, không từ thân request.</li>
+  <li>Mã của họ đang <code>SUSPENDED</code>/<code>PENDING_DELETION</code> → coi như không dùng được (cùng câu trả lời với mã sai, để không lộ trạng thái họ).</li>
+  <li>Bốn chốt của V16 (hạn · thu hồi · bộ đếm · tần suất) giữ nguyên; bộ đếm tần suất <code>invitation_attempt</code> vẫn chung (§4.2).</li>
+</ul>
+
+<h3 id="s4-9">4.9 Tài khoản thuộc một dòng họ — và người có mặt ở hai họ</h3>
+<p><strong>Quyết định (FR-5.5): một <code>app_user</code> thuộc đúng một dòng họ, và một danh tính Keycloak ứng với tối đa một <code>app_user</code>.</strong></p>
+<p><strong>Ca khó:</strong> bà X là con gái họ A (họ A ghi đầy đủ con gái — FR-1.8) và là dâu họ B; cả hai họ dùng bản cài này. Hai phương án:</p>
+<table>
+  <tr><th style="width:18%"></th><th>(a) Hai tài khoản — <strong>khuyến nghị</strong></th><th>(b) Một tài khoản, hai vai</th></tr>
+  <tr><td>Cách làm</td><td>Hai người dùng Keycloak, hai <code>app_user</code>, mỗi cái mang một họ. Đăng nhập bằng hai định danh khác nhau (ví dụ email cho họ A, số điện thoại cho họ B).</td>
+    <td>Một người dùng Keycloak, hai <code>app_user</code> (<code>UNIQUE (clan_id, keycloak_sub)</code>); sau đăng nhập chọn "đang xem họ nào"; claim <code>clan</code> nhiều giá trị, họ đang chọn gửi kèm mỗi request.</td></tr>
+  <tr><td>Biên cách ly</td><td>Đặt bởi Keycloak lúc phát token. Không tham số nào của client đổi được họ.</td>
+    <td>Đặt bởi một tham số client gửi (tiêu đề/đường dẫn), được backend đối chiếu. Một lỗi ở phép đối chiếu = rò giữa hai họ, và đó là lỗi <em>tệ nhất</em> có thể của bước 2.</td></tr>
+  <tr><td>Hai bên kiểm soát</td><td>Tự nhiên: hai bản ghi, hai Hội đồng, hai nhật ký.</td><td>Một danh tính nối hai tập dữ liệu của hai bên kiểm soát khác nhau — cần căn cứ chia sẻ giữa hai bên.</td></tr>
+  <tr><td>Người dùng</td><td>Hai mật khẩu; với các cụ là gánh nặng thật. Keycloak đặt <code>duplicateEmailsAllowed: false</code> → <strong>không</strong> dùng được cùng một email cho hai tài khoản.</td>
+    <td>Một mật khẩu, một nút đổi họ.</td></tr>
+  <tr><td>Chi phí</td><td>Không thêm gì.</td><td>+ màn chọn họ, + trạng thái "họ đang chọn" trong mọi cache phía client, + ma trận NFR-9 nhân đôi (người gọi hai vai). Ước ~12 người-ngày.</td></tr>
+</table>
+<div class="sua canh">
+  <span class="nhan-sua">Q2 — Khuyến nghị (a); bên thua (b) và vì sao nó có lý</span>
+  <p><strong>Bên thua có lý ở đâu:</strong> dâu/rể là trường hợp <em>thường</em> chứ không hiếm — hai họ cùng làng rất hay thông gia, và bản cài
+    phục vụ một vùng thì càng hay. Bắt một cụ nhớ hai mật khẩu là cái giá thật, trả hằng ngày, bởi đúng nhóm người dùng khó khăn nhất.</p>
+  <p style="margin-bottom:0"><strong>Vì sao vẫn chọn (a) cho đợt này:</strong> lời hứa của bước 2 là NFR-9 "không rò giữa hai họ", và (b) đặt lời hứa ấy lên
+    một tham số do client gửi. Đa số dâu/rể chỉ cần vào <em>một</em> họ (họ nhà chồng/vợ, nơi họ sinh hoạt); người cần cả hai là thiểu số và vẫn làm
+    được. (a) không đóng cửa (b): chỉ cần đổi <code>ux_app_user_keycloak_sub</code> và thêm màn chọn. <strong>Đề xuất:</strong> đếm số yêu cầu "tài khoản
+    thứ hai" trong 3 tháng đầu sau khi có dòng họ thứ hai; vượt 5% số tài khoản thì mở đợt (b). Câu hỏi 2 ở §14.</p>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="s5">5. Định danh &amp; phân quyền <span class="en">Identity &amp; authorisation</span></h2>
+
+<h3 id="s5-1">5.1 Claim <code>clan</code> trong JWT Keycloak</h3>
+<table>
+  <tr><th style="width:24%">Thành phần</th><th>Cấu hình (sửa <code>infra/keycloak/realm-giapha.json</code>)</th></tr>
+  <tr><td>Thuộc tính người dùng</td><td>Thêm <code>clan</code> vào cấu hình user profile khai báo (cạnh <code>maMoiDongHo</code>): <code>permissions.view = ["admin"]</code>,
+    <code>permissions.edit = ["admin"]</code>, <strong>không</strong> <code>"user"</code> — người dùng không thấy và không sửa được ở trang tài khoản; validator pattern
+    <code>^[a-z][a-z0-9_]{2,31}$</code>; không bắt buộc (SYSADMIN không có).</td></tr>
+  <tr><td>Client scope mới <code>giapha-clan</code></td><td>Mapper <code>oidc-usermodel-attribute-mapper</code>: <code>user.attribute = clan</code>, <code>claim.name = clan</code>,
+    <code>jsonType.label = String</code>, access token + id token + introspection = <code>true</code>. Gắn làm <em>default client scope</em> của
+    <code>giapha-frontend</code> và <code>giapha-backend</code>.</td></tr>
+  <tr><td>Vai realm</td><td>Thêm <code>SYSADMIN</code> (mô tả: "Quản trị hệ thống — kỹ thuật, toàn bản cài, không thuộc dòng họ nào"); sửa mô tả <code>ADMIN</code> thành
+    "Quản trị dòng họ — kỹ thuật, trong một dòng họ". <strong>Vai realm chỉ là cổng thô</strong> — ở một realm chung, <code>COUNCIL</code> là một nhãn
+    không mang họ nào; vai thật theo họ nằm ở <code>branch_assignment.clan_id</code>.</td></tr>
+  <tr><td>Client <code>giapha-provisioner</code></td><td>Giữ <code>manage-users</code>. Mọi lối lập người dùng (<code>/clan-invites/register</code>,
+    <code>/invitations/accept</code>, <code>council-accounts</code>) ghi thuộc tính <code>clan</code> từ CSDL.</td></tr>
+  <tr><td>Sự kiện quản trị</td><td>Bật <code>adminEventsEnabled</code> + <code>adminEventsDetailsEnabled</code>: người sửa tay thuộc tính <code>clan</code> trong admin console để lại vết ở Keycloak.</td></tr>
+  <tr><td>Tài khoản mẫu</td><td><code>admin.giapha</code> (hôm nay <code>ADMIN+COUNCIL</code>) tách thành <code>sysadmin</code> (SYSADMIN, không <code>clan</code>) và giữ
+    <code>admin.giapha</code> là ADMIN+COUNCIL của họ mẫu thứ nhất; thêm một bộ tài khoản cho họ mẫu thứ hai để chạy NFR-9.</td></tr>
+</table>
+<p><strong>Backend:</strong> <code>KeycloakRealmRoleConverter</code> đọc thêm claim <code>clan</code> vào <code>CurrentUser</code>. <code>MemberScopeService.currentMemberScope()</code>:
+tìm <code>app_user</code> theo <code>keycloak_sub</code> → nếu claim có mà khác <code>clan.code</code> của <code>app_user</code> → <code>403 CLAN_MISMATCH</code> + ghi audit;
+nếu <code>app_user</code> chưa có → phạm vi rỗng như hôm nay (<code>MemberScope.unlinked</code>) nhưng <strong>có</strong> <code>clanId</code> lấy từ claim (tài khoản vừa
+đăng ký bằng mã họ A, chưa được duyệt, vẫn phải chỉ thấy phả đồ họ A); nếu họ không <code>ACTIVE</code> → <code>403 CLAN_SUSPENDED</code> /
+<code>404</code> tuỳ trạng thái (§6.5). Trạng thái họ được cache trong tiến trình tối đa 30 giây — đủ cho NFR-11.</p>
+<div class="sua canh">
+  <span class="nhan-sua">Q5 — Bên thua (i): một realm Keycloak cho mỗi dòng họ · (ii): tin claim tuyệt đối</span>
+  <p><strong>(i) có lý ở đâu:</strong> cách ly danh tính hoàn toàn; hai họ có thể trùng tên đăng nhập; trang đăng nhập riêng theo họ. <strong>Thua vì:</strong>
+    backend phải chấp nhận N issuer (<code>iss</code> khác nhau), cấu hình resource server động; client <code>giapha-frontend</code>, provisioner, theme
+    <code>giapha</code>, mẫu thư phải nhân N lần; tạo họ mới là tạo realm lúc chạy bằng quyền <code>realm-admin</code> — đúng quyền mà V16/provisioner cố ý
+    <em>không</em> cấp. Xét lại nếu một họ đòi đăng nhập qua nhà cung cấp danh tính của riêng họ.</p>
+  <p style="margin-bottom:0"><strong>(ii) có lý ở đâu:</strong> không phải tra CSDL mỗi request. <strong>Thua vì:</strong> ai có quyền admin console sửa được một
+    thuộc tính và biến một tài khoản họ A thành họ B cho tới khi token hết hạn; và <code>MemberScope</code> đã có sẵn triết lý ngược lại
+    ("cố ý không chỉ tin vào token", javadoc <code>isClanWide()</code>). Tra <code>app_user</code> theo khoá duy nhất vốn đã chạy mỗi request.</p>
+</div>
+
+<h3 id="s5-2">5.2 Mô hình vai sau bước 2</h3>
+<table>
+  <tr><th style="width:15%">Vai</th><th style="width:14%">Phạm vi</th><th style="width:15%">Nguồn sự thật</th><th>Được</th><th>Không được</th></tr>
+  <tr><td><strong>SYSADMIN</strong></td><td>Bản cài</td><td>Vai realm + <code>sys_operator</code></td><td><code>/api/v1/sys/**</code>, <code>/actuator/**</code>, số đếm theo họ, nhật ký hệ thống; đọc dữ liệu nghiệp vụ <em>chỉ</em> trong phiên hỗ trợ đang mở</td>
+    <td>Có <code>app_user</code>; ghi dữ liệu nghiệp vụ (kể cả trong phiên hỗ trợ — phiên chỉ đọc); gạt công tắc riêng tư; tải gói xuất dữ liệu</td></tr>
+  <tr><td><strong>ADMIN</strong> — Quản trị dòng họ</td><td>Một dòng họ</td><td><code>branch_assignment</code> (toàn họ)</td><td>Như <code>ADMIN</code> hôm nay nhưng trong họ mình; gạt hộ công tắc riêng tư theo quy ước ba vế</td>
+    <td>Thấy họ khác; bỏ qua phân công (hôm nay <code>ADMIN</code> toàn họ <em>không cần</em> dòng phân công — §5.4 bỏ ngoại lệ ấy)</td></tr>
+  <tr><td><strong>COUNCIL</strong></td><td>Một dòng họ</td><td><code>branch_assignment</code> (toàn họ)</td><td>Như hôm nay trong họ mình; duyệt phiên hỗ trợ; yêu cầu xuất dữ liệu</td><td>Sửa DEFAULT/REGION; thấy họ khác</td></tr>
+  <tr><td><strong>BRANCH_HEAD</strong></td><td>Chi được giao</td><td><code>branch_assignment</code></td><td>Không đổi</td><td>—</td></tr>
+  <tr><td><strong>MEMBER</strong></td><td>Theo phân quyền</td><td><code>app_user</code></td><td>Không đổi, trong họ mình</td><td>—</td></tr>
+  <tr><td><strong>Khách</strong></td><td>Một dòng họ (chọn bằng mã)</td><td>Đường dẫn</td><td>Người đã khuất, giỗ/lễ cúng tổ tiên và vinh danh của người đã khuất — của họ trên đường dẫn</td><td>Thấy người sống; thấy họ khác</td></tr>
+</table>
+<p class="nho">Chức danh dòng tộc (<code>branch.head_person_id</code>, Tộc trưởng) vẫn tách khỏi vai kỹ thuật như BA v2 §3. Mọi chỗ tìm "chi gốc"
+(<code>ClanTitle</code> nhận diện Tộc trưởng qua chi <code>DONG_HO</code>) phải lấy chi gốc <em>của họ người gọi</em> (<code>clan.root_branch_id</code>). Mẫu phải bỏ:
+<code>DemoAccountAndEventWriter</code> chọn "chi <code>DONG_HO</code> đầu tiên theo <code>ORDER BY path LIMIT 1</code>" — ở nhiều họ câu ấy trả về họ có mã đứng đầu bảng chữ cái.</p>
+<div class="sua canh">
+  <span class="nhan-sua">Q6 — Bên thua: SYSADMIN đọc được mọi thứ, như <code>ADMIN</code> hôm nay</span>
+  <p><strong>Nó có lý ở đâu:</strong> gỡ rối nhanh — "tại sao cụ này không thấy nhắc giỗ" thường cần mở đúng hồ sơ ấy; người vận hành đằng nào cũng có
+    quyền đọc CSDL ở tầng máy chủ, nên chặn ở ứng dụng là "an toàn giả".</p>
+  <p style="margin-bottom:0"><strong>Vì sao thua:</strong> ở một họ, người vận hành đứng ngoài họ nhưng chỉ ngoài <em>một</em> họ, và quy ước ba vế của 08 §9.2
+    đã kiềm lại. Ở N họ, một tài khoản đọc được dữ liệu người sống của N bên kiểm soát là điểm rò lớn nhất của cả hệ thống, và Nghị định 13/2023 đặt bên
+    xử lý dưới hợp đồng của từng bên kiểm soát. Quyền đọc CSDL ở tầng máy chủ là thật — nó được xử lý bằng vận hành (tài khoản CSDL riêng, nhật ký
+    <code>pg_audit</code> nếu Hội đồng đòi), không phải lý do để ứng dụng mở thêm một lối không để lại dấu. Phiên hỗ trợ giữ được việc gỡ rối, chỉ chậm
+    hơn một bước duyệt.</p>
+</div>
+
+<h3 id="s5-3">5.3 <code>CallerContext</code>, <code>MemberScope</code></h3>
+<ul>
+  <li><code>MemberScope</code> (membership) thêm <code>clanId</code>, <code>clanCode</code>, <code>clanStatus</code>; <code>MemberScopeView</code> mang ba trường ấy sang
+    <code>genealogy</code> qua <code>CallerIdentityPort</code> (thêm phương thức <code>currentClan()</code> — hoặc tốt hơn, gộp cổng về một phương thức trả cả gói như
+    javadoc <code>CallerIdentityJdbcAdapter</code> đã đề nghị).</li>
+  <li><code>CallerContext</code> (genealogy) thêm <code>UUID clanId</code> <strong>bắt buộc khác null với mọi người gọi, kể cả khách</strong> (khách lấy từ đường dẫn):
+    <code>CallerContext.guest(clanId)</code> thay <code>guest()</code> không tham số. Không còn trạng thái "người gọi không thuộc họ nào" trong đường đọc dữ
+    liệu nghiệp vụ — giống cách <code>Optional&lt;PersonVisibility&gt;</code> đã làm cho "khách nhìn người sống" không biểu diễn được.</li>
+  <li><strong>Thống nhất hai định nghĩa "toàn họ":</strong> hôm nay <code>CallerRole.isClanWide()</code> (genealogy) chỉ nhìn vai trong token
+    (<code>ADMIN || COUNCIL</code>), còn <code>MemberScope.isClanWide()</code> (membership) đòi thêm dòng phân công cho <code>COUNCIL</code>. Ở một realm chung cho
+    N họ, vai realm <code>COUNCIL</code> gán nhầm cho một tài khoản là tài khoản ấy thành "toàn họ" ở genealogy mà không họ nào trao quyền. Bước 2:
+    <code>CallerContext</code> nhận cờ <code>coversWholeClan</code> từ <code>MemberScopeView</code>; <code>CallerRole.isClanWide()</code> bị xoá.</li>
+  <li>Tra theo id luôn đi qua <code>findByIdInClan(id, clanId)</code> ở repository; không còn phương thức <code>findById</code> trần trên các cổng
+    của dữ liệu nghiệp vụ (kiểm bằng ArchUnit, §5.5).</li>
+</ul>
+
+<h3 id="s5-4">5.4 Mười sáu tệp dùng <code>isClanWide()</code> — việc phải làm ở từng tệp</h3>
+<p class="nho">Mẫu chung: <strong>chỗ nào <code>isClanWide() == true</code> nghĩa là "bỏ lọc", chỗ ấy đổi thành "lọc <code>clan_id = :clanId</code>"</strong>. Đếm ngày 26/09: 27 lần gọi trong 16 tệp.</p>
+<table>
+  <tr><th style="width:36%">Tệp</th><th>Hôm nay</th><th>Bước 2</th></tr>
+  <tr><td><code>membership/domain/MemberScope.java</code> (3)</td><td><code>ADMIN</code> luôn toàn họ, không cần phân công</td><td>Bỏ ngoại lệ <code>ADMIN</code> (lý do cũ — "không ai cấp được phân công đầu tiên" — nay do SYSADMIN chỉ định Hội đồng đảm nhận); thêm <code>clanId</code>; đổi tên thành <code>coversWholeClan()</code> để người đọc không nhầm nghĩa cũ.</td></tr>
+  <tr><td><code>membership/domain/RoleCode.java</code> (1)</td><td><code>ADMIN || COUNCIL</code></td><td>Thêm <code>SYSADMIN</code> với <code>isClanWide() = false</code>, <code>canReview() = false</code>.</td></tr>
+  <tr><td><code>genealogy/application/CallerRole.java</code> (1)</td><td>Theo token</td><td>Xoá <code>isClanWide()</code>; thêm <code>SYSADMIN</code>.</td></tr>
+  <tr><td><code>genealogy/application/GenealogyAccessGuard.java</code> (2)</td><td>Toàn họ → ghi mọi chi</td><td><code>coversWholeClan()</code> + <code>requireSameClan(target)</code>.</td></tr>
+  <tr><td><code>genealogy/application/PrivacyTierService.java</code> (4)</td><td>Toàn họ → xem Tầng 3, xem đã xoá mềm</td><td><code>existsFor</code>: <code>person.clanId ≠ caller.clanId</code> ⇒ không tồn tại (404). Còn lại dùng <code>coversWholeClan()</code>.</td></tr>
+  <tr><td><code>genealogy/application/TreeProjectionService.java</code> (1)</td><td>Cổng <code>includeDeleted</code></td><td>Như trên + khoá cache có <code>clanId</code> (§5.6).</td></tr>
+  <tr><td><code>genealogy/application/PersonSearchService.java</code> (1)</td><td>Cổng <code>includeDeleted</code></td><td>Như trên + SQL lọc họ.</td></tr>
+  <tr><td><code>genealogy/application/DefaultTreeRootResolver.java</code> (1)</td><td>Toàn họ → phạm vi <code>null</code> (= mọi thứ)</td><td>Phạm vi = chi gốc của họ người gọi. <code>null</code> không còn được nghĩa là "mọi thứ".</td></tr>
+  <tr><td><code>genealogy/api/rest/public_/PublicGuestScope.java</code> (1)</td><td>Chú thích về luật khối liên hệ</td><td>Khách mang <code>clanId</code> từ đường dẫn.</td></tr>
+  <tr><td><code>membership/application/ChangeRequestService.java</code> (3)</td><td><code>pendingInScope(…, clanWide)</code>: toàn họ ⇒ không lọc chi</td><td>Truyền <code>clanId</code>; toàn họ ⇒ <code>WHERE clan_id = :clanId</code>.</td></tr>
+  <tr><td><code>membership/application/PersonClaimService.java</code> (2)</td><td>Như trên</td><td>Như trên.</td></tr>
+  <tr><td><code>membership/application/InvitationService.java</code> (1)</td><td>Như trên</td><td>Như trên.</td></tr>
+  <tr><td><code>membership/application/BranchScopeGuard.java</code> (2)</td><td>Toàn họ → ghi mọi chi</td><td>Thêm kiểm cùng họ.</td></tr>
+  <tr><td><code>membership/application/RoleAssignmentService.java</code> (2)</td><td>Toàn họ xem/cấp mọi phân công</td><td>Chỉ trong họ; cấp <code>COUNCIL</code> cho tài khoản họ khác bị chặn bởi trigger + kiểm ứng dụng; lối SYSADMIN chỉ định Hội đồng là lối riêng (<code>/sys/…/council</code>).</td></tr>
+  <tr><td><code>membership/application/MemberScopeView.java</code> (1)</td><td>Chở <code>clanWide</code></td><td>Chở thêm <code>clanId/clanCode/clanStatus</code>.</td></tr>
+  <tr><td><code>demo/writer/DemoAccountAndEventWriter.java</code> (1)</td><td>Chi gốc "<code>DONG_HO</code> đầu tiên"</td><td>Sinh <strong>hai</strong> dòng họ mẫu — không có họ thứ hai thì NFR-9 không có gì để đo.</td></tr>
+</table>
+<p class="nho">Ngoài 16 tệp trên, <strong>58 tệp</strong> chạm CSDL (<code>JdbcTemplate</code>/<code>NamedParameterJdbcTemplate</code>/<code>JpaRepository</code>, đếm 26/09, trong đó 4 tệp demo)
+phải lọc theo họ. Năm chỗ nguy hiểm nhất vì chúng rò <em>tên người sống sang họ khác</em> chứ không chỉ sai số đếm:
+<code>DuplicateCandidateJdbcAdapter</code> (dò trùng nhập Excel), sàng lọc đơn tự nhận mình (<code>person_claim.screening</code>), <code>TabooNameJdbcAdapter</code>
+(kỵ húy — hôm nay đi theo tổ tiên nên an toàn, nhưng có quét theo tên), <code>RecipientDirectoryJdbcAdapter</code> (người nhận thông báo cấp họ),
+<code>InviteeLookupJdbcAdapter</code>.</p>
+
+<h3 id="s5-5">5.5 Lọc ở repository hay RLS Postgres</h3>
+<table>
+  <tr><th style="width:20%">Tiêu chí</th><th>Lọc ở repository (ứng dụng)</th><th>RLS Postgres</th></tr>
+  <tr><td>Khi quên</td><td>Một <code>WHERE</code> thiếu = rò, im lặng</td><td>Thiếu ngữ cảnh = 0 hàng (đóng khi hỏng)</td></tr>
+  <tr><td>Phủ SQL thuần</td><td>Chỉ chỗ nào nhớ viết</td><td>Mọi câu lệnh trên bảng có chính sách</td></tr>
+  <tr><td>AGE / Cypher</td><td>Viết được trong Cypher</td><td>Chưa kiểm AGE tôn trọng RLS trên bảng nhãn — cần spike</td></tr>
+  <tr><td>Job nền nhiều họ (nhắc giỗ 01:30)</td><td>Tự nhiên</td><td>Phải lặp theo họ và đặt ngữ cảnh mỗi vòng, hoặc dùng một vai CSDL <code>BYPASSRLS</code> riêng</td></tr>
+  <tr><td>Vai CSDL</td><td>Không đổi</td><td>Ứng dụng không được là chủ bảng (hoặc <code>FORCE ROW LEVEL SECURITY</code>); Flyway chạy bằng vai chủ; cần tách <code>giapha_owner</code> / <code>giapha_app</code> / <code>giapha_job</code></td></tr>
+  <tr><td>Pool kết nối</td><td>Không ảnh hưởng</td><td><code>SET LOCAL app.clan_id</code> đầu mỗi giao dịch; đọc ngoài giao dịch không có ngữ cảnh → 0 hàng</td></tr>
+  <tr><td>Kiểm thử</td><td>Kiểm được bằng ma trận NFR-9</td><td>Testcontainers phải chạy bằng vai <code>giapha_app</code>, không bằng vai chủ</td></tr>
+</table>
+<p><strong>Khuyến nghị (Q7): cả hai, với vai rõ ràng.</strong> Repository là lớp <em>chính</em> — mọi cổng nhận <code>ClanId</code>, ArchUnit cấm <code>findById</code> trần
+trên cổng dữ liệu nghiệp vụ, ma trận NFR-9 là cổng CI. RLS là <em>lưới</em> trên 11 bảng có dữ liệu người sống hoặc nội dung do người dùng viết:
+<code>person</code>, <code>person_name</code>, <code>app_user</code>, <code>person_claim</code>, <code>change_request</code>, <code>post</code>, <code>honour</code>,
+<code>notification_inbox</code>, <code>invitation</code>, <code>password_reset_grant</code>, <code>media_asset</code>. Chính sách:
+<code>USING (clan_id = nullif(current_setting('app.clan_id', true), '')::uuid)</code>; không đặt ngữ cảnh ⇒ không thấy gì. AGE không thuộc lưới ở đợt này
+(bất biến §4.6 thay thế).</p>
+<div class="sua canh">
+  <span class="nhan-sua">Q7 — Bên thua: chỉ một lớp</span>
+  <p style="margin-bottom:0"><strong>Chỉ repository có lý ở đâu:</strong> rẻ nhất, không đụng vai CSDL, không đụng pool. <strong>Chỉ RLS có lý ở đâu:</strong> một
+    chỗ duy nhất, không phụ thuộc trí nhớ của 58 tệp. <strong>Vì sao cả hai:</strong> repository một mình thì "không rò" dựa vào việc không ai quên một
+    <code>WHERE</code> trong 58 tệp và mọi tệp viết sau này — dự án đã có tiền lệ đắt tiền của loại lỗi "quên một chỗ" (<code>VisibleTier.atLeast()</code>,
+    CLAUDE.md). RLS một mình thì không phủ AGE, và lỗi thiếu ngữ cảnh biểu hiện thành "dữ liệu biến mất" — khó chẩn đoán ở job nền. Chi phí RLS
+    (~4 người-ngày + tách vai CSDL) là khoản bảo hiểm rẻ nhất của cả bước 2. Nếu phải cắt, cắt RLS sang đợt 2b chứ không cắt ma trận NFR-9 (câu hỏi 9).</p>
+</div>
+
+<h3 id="s5-6">5.6 Cache và tìm kiếm tách theo dòng họ</h3>
+<ul>
+  <li><strong>Cây</strong> (<code>RedisTreeCacheAdapter</code>, khoá hiện là <code>giapha:tree:tree:v1:&lt;rootId&gt;:&lt;depth&gt;:&lt;dir&gt;:&lt;max&gt;</code>): đổi thành
+    <code>giapha:tree:&lt;clanId&gt;:v2:…</code>. Id người là UUID toàn cục nên hôm nay không có va chạm khoá; lý do đổi là <strong>xoá theo họ</strong>:
+    <code>evictAll()</code> đang quét <code>giapha:tree:*</code>, tức một lần sửa ở họ A làm lạnh cache của mọi họ. Thêm <code>evictClan(clanId)</code>.</li>
+  <li><strong>Danh xưng</strong> (<code>KinshipCacheKeys</code>): thêm <code>clanId</code> ngay sau <code>v1|</code> → <code>v2|&lt;clanId&gt;|…</code>.</li>
+  <li><strong>Phiên</strong>: backend không trạng thái; không có gì phải tách.</li>
+  <li><strong>Tìm kiếm FTS</strong>: <code>person_name.clan_id</code> (§4.2) + <code>WHERE pn.clan_id = :clanId</code>. Cấu hình <code>vi_unaccent</code> và hàm
+    <code>vn_unaccent</code> dùng chung. Chỉ mục GIN trigram hiện có không kèm được cột <code>uuid</code>; ở quy mô mục tiêu, lọc sau trên GIN đủ nhanh —
+    nếu NFR-10 đo ra thoái lui, thêm <code>btree_gin</code> và chỉ mục <code>(clan_id, name_unaccented gin_trgm_ops)</code>.</li>
+  <li><strong>Giới hạn tần suất khách</strong> (<code>PublicRateLimitFilter</code>): khoá theo <code>(IP, clanCode)</code>.</li>
+</ul>
+
+<h3 id="s5-7">5.7 Khách: chọn dòng họ bằng mã trên đường dẫn</h3>
+<ul>
+  <li>API: toàn bộ bề mặt khách dời về <code>/api/v1/public/clans/{code}/…</code> — <code>profile</code>, <code>tree</code>, <code>persons/search</code>,
+    <code>persons/{id}</code>, <code>events</code>, <code>honours</code>. <code>GET /api/v1/public/**</code> đã <code>permitAll</code> và đã có giới hạn tần suất; giữ
+    <em>một</em> bề mặt khách thay vì hai.</li>
+  <li><strong>Tác động lên quyết định 26/09:</strong> đợt đang làm mở <code>GET /events</code> và <code>GET /honours</code> cho khách ngay trên đường của thành viên
+    (<code>GuestEventPolicy</code>, <code>HonourService.searchForGuest</code>). Ở bước 2 lối khách ấy không biết họ nào; nó chuyển sang
+    <code>/public/clans/{code}/events|honours</code>, dùng lại đúng hai chính sách ấy. Đường của thành viên trở lại đòi token.</li>
+  <li>Frontend: <code>/[locale]/ho/[code]</code> là cửa vào của khách, đặt cookie <code>giapha_ho</code>; các trang khách đọc cookie. Người đã đăng nhập bỏ qua
+    cookie (họ lấy từ token). <code>/</code> của khách: nếu có đúng một họ <code>is_default_public</code> thì chuyển về họ ấy (giữ hành vi của bản một họ); không thì hiện
+    ô "Nhập mã dòng họ".</li>
+  <li><code>GET /public/clan-profile</code> của bước 1 giữ làm bí danh cho họ <code>is_default_public</code>, đánh dấu lỗi thời.</li>
+  <li>Danh sách các dòng họ trên bản cài <strong>không</strong> công khai theo mặc định (câu hỏi 6).</li>
+</ul>
+<div class="sua canh">
+  <span class="nhan-sua">Q8 — Bên thua: tên miền con cho mỗi họ (<code>ho-nguyen.giapha.vn</code>)</span>
+  <p style="margin-bottom:0"><strong>Nó có lý ở đâu:</strong> đẹp, dễ nhớ, mỗi họ "có trang riêng"; cookie tự tách theo tên miền. <strong>Vì sao thua:</strong> Keycloak chỉ
+    nhận ký tự đại diện ở <em>cuối</em> redirect URI, không ở tên máy — mỗi họ mới là một lần sửa client <code>giapha-frontend</code>; cần DNS và chứng chỉ
+    wildcard; PWA đăng ký service worker theo nguồn gốc, nên mỗi họ là một cài đặt PWA riêng. Có thể thêm sau làm lớp trên cùng (tên miền con chuyển
+    về <code>/ho/&lt;mã&gt;</code>) mà không đổi API.</p>
+</div>
+
+<h3 id="s5-8">5.8 Ranh giới module</h3>
+<p>Context mới <code>vn.giapha.clan</code> sở hữu <code>clan</code>, <code>clan_profile</code> (nếu bước 1 đặt nó ở chỗ khác thì dời về đây), <code>sys_operator</code>,
+<code>support_session</code>, <code>clan_export</code>. <code>ClanId</code> (VO) và <code>CurrentClan</code> nằm ở <code>shared</code> để mọi context đọc được mà không phụ thuộc
+<code>clan</code>. Tạo dòng họ phải tạo chi gốc (<code>genealogy</code>) và bộ luật CLAN (<code>kinship</code>): <strong>không</strong> gọi thẳng — <code>clan</code> phát
+<code>ClanProvisioningRequested</code> (gói <code>clan.domain.event</code>, named interface), <code>genealogy</code> và <code>kinship</code> nghe đồng bộ trong cùng giao dịch.
+Gọi thẳng sẽ đẻ ra <code>genealogy → clan → genealogy</code> (khách của genealogy cần tra mã họ) — đúng loại chu trình <code>ModularityTests</code> đã bắt ở
+<code>membership ↔ genealogy</code>.</p>
+
+<!-- ================================================================== -->
+<h2 id="s6">6. Màn "Quản lý các dòng họ" <span class="en">Clan management screen (SYSADMIN)</span></h2>
+<h3 id="s6-1">6.1 Lối vào</h3>
+<p>Đường <code>/[locale]/he-thong/dong-ho</code>. Chỉ vai <code>SYSADMIN</code>. Tài khoản SYSADMIN không có dòng họ nên <strong>không có</strong> phả đồ, tìm kiếm, sự kiện
+trên thanh điều hướng — trang chủ của nó là màn này. Tách khỏi <code>/quan-tri</code> của bước 1 (màn của một dòng họ, cho ADMIN/COUNCIL họ ấy).</p>
+
+<h3 id="s6-2">6.2 Danh sách</h3>
+<table>
+  <tr><th>Cột</th><th>Nguồn</th><th>Ghi chú</th></tr>
+  <tr><td>Tên dòng họ</td><td><code>clan_profile</code></td><td>Tên hiển thị, có dấu.</td></tr>
+  <tr><td>Mã</td><td><code>clan.code</code></td><td>Kèm liên kết cổng khách <code>/vi/ho/&lt;mã&gt;</code> khi <code>ACTIVE</code>.</td></tr>
+  <tr><td>Vùng</td><td><code>clan.region</code></td><td>Bắc / Trung / Nam — quyết bộ danh xưng REGION.</td></tr>
+  <tr><td>Trạng thái</td><td><code>clan.status</code></td><td>Nhãn chữ + màu; <code>PENDING_DELETION</code> kèm "còn N ngày".</td></tr>
+  <tr><td>Số nhân khẩu</td><td>Đếm <code>person</code> <code>is_deleted = FALSE</code></td><td>Một con số; không tách còn sống/đã khuất (câu hỏi "họ này có bao nhiêu người đang sống" không phải việc của bên xử lý). Qua view <code>v_clan_stats</code> do vai <code>giapha_job</code> sở hữu — trả số đếm, không trả hàng.</td></tr>
+  <tr><td>Hội đồng</td><td>Đếm phân công <code>COUNCIL</code> toàn họ còn hiệu lực</td><td>Số người; <strong>0 hiện cảnh báo đỏ</strong> "Chưa có Hội đồng — không ai duyệt được phiên hỗ trợ và xuất dữ liệu". Tên từng người chỉ ở màn chi tiết (§6.3 c).</td></tr>
+  <tr><td>Ngày tạo</td><td><code>clan.created_at</code></td><td>Múi giờ GMT+7.</td></tr>
+</table>
+<p class="nho">Lọc theo trạng thái; tìm theo tên/mã; sắp mặc định theo ngày tạo giảm dần; 50 dòng/trang. Không cột nào đọc từ <code>person_name</code>, <code>app_user.email</code>, số điện thoại.</p>
+
+<h3 id="s6-3">6.3 Luồng</h3>
+<h4>a) Tạo dòng họ mới — chạy lại trình khởi tạo bước 1</h4>
+<div class="so-do">SYSADMIN                 /sys/clans                  clan ctx        genealogy / kinship          Keycloak
+  │ 1. mã, tên, vùng ──────▶ POST                          │                   │                          │
+  │                          kiểm mã (regex, trùng) ──────▶ INSERT clan       │                          │
+  │                                                   status=PROVISIONING      │                          │
+  │                                                   phát ClanProvisioningRequested ─▶ tạo chi gốc     │
+  │                                                          │                   path=code, DONG_HO        │
+  │                                                          │                   tạo bộ CLAN (cha=REGION)  │
+  │                                                   INSERT clan_profile khung  │ (cùng một giao dịch)     │
+  │ ◀── 201 {clanId}  ──────────────────────────────────────┘                   │                          │
+  │ 2. hồ sơ ─────────────▶ PUT /sys/clans/{id}/profile  (dùng lại service bước 1, clanId tường minh)       │
+  │ 3. Hội đồng đầu tiên ─▶ POST /sys/clans/{id}/council-accounts ─────────────────────────────▶ tạo user   │
+  │                          (dùng lại service bước 1)   app_user(clan_id) + phân công COUNCIL   attr clan  │
+  │                                                      liên kết đặt mật khẩu gửi người nhận             │
+  │ 4. kiểm ──────────────▶ GET /sys/clans/{id}/readiness (dùng lại service bước 1)                         │
+  │ 5. kích hoạt ─────────▶ POST /sys/clans/{id}/activate  — chỉ khi readiness xanh ⇒ ACTIVE               │</div>
+<p class="nho">Bước 3: tên và liên hệ của thành viên Hội đồng đầu tiên là dữ liệu cá nhân SYSADMIN <em>nhập</em> theo văn bản của dòng họ — đó là việc của bên xử lý theo
+chỉ dẫn của bên kiểm soát, và được ghi audit. Sau bước này SYSADMIN không còn đọc lại được các trường ấy ngoài tên hiển thị ở §6.3 c.</p>
+
+<h4>b) Tạm khoá / mở khoá</h4>
+<ul>
+  <li><code>POST /sys/clans/{id}/suspend {reason}</code> (lý do bắt buộc, ≥ 10 ký tự) → <code>SUSPENDED</code>. Hệ quả trong ≤ 60 giây: mọi request nghiệp vụ của người
+    họ ấy → <code>403 CLAN_SUSPENDED</code> (giao diện hiện một màn giải thích, có tên người liên hệ của bên xử lý); cổng khách → 404; mã mời → như mã sai; job nhắc
+    giỗ ghi <code>SKIPPED</code> và <strong>không bù</strong> khi mở lại (câu hỏi 12); thông báo tới mọi Hội đồng họ ấy.</li>
+  <li><code>POST /sys/clans/{id}/resume</code> → <code>ACTIVE</code>. Không cần lý do; vẫn audit.</li>
+</ul>
+<h4>c) Chỉ định / thu hồi Hội đồng</h4>
+<ul>
+  <li><code>GET /sys/clans/{id}/council</code>: tên hiển thị + ngày bắt đầu — ghi một hàng audit <code>READ_SENSITIVE</code> (tên người sống).</li>
+  <li><code>POST /sys/clans/{id}/council {appUserId | newAccount, decisionRef}</code>: <code>decisionRef</code> bắt buộc — số hiệu/ngày biên bản họp họ. Tài khoản phải cùng họ
+    (<code>409 CROSS_CLAN_REFERENCE</code>).</li>
+  <li><code>DELETE /sys/clans/{id}/council/{appUserId}?decisionRef=…</code>: thu hồi người cuối cùng còn hiệu lực → <code>409 LAST_COUNCIL_MEMBER</code>.</li>
+  <li>Hội đồng vẫn tự cấp/thu hồi trong họ mình như hôm nay (<code>/branch-assignments</code>); lối SYSADMIN là cho khởi tạo và cho ca "Hội đồng không còn ai".</li>
+</ul>
+<h4>d) Xuất dữ liệu một dòng họ</h4>
+<ul>
+  <li>Khởi phát bởi <strong>một thành viên Hội đồng</strong> họ ấy (<code>POST /api/v1/admin/clan-exports</code>) hoặc bởi SYSADMIN nhân danh một yêu cầu của Hội đồng
+    (<code>POST /sys/clans/{id}/exports {requestedByAppUserId}</code>). Job chạy nền; gói = ZIP gồm một tệp JSON Lines cho mỗi bảng (chỉ hàng của họ ấy), thư mục
+    <code>media/</code>, <code>manifest.json</code> (số hàng từng bảng, SHA-256 từng tệp, phiên bản lược đồ Flyway).</li>
+  <li>Gói nằm ở MinIO <code>exports/&lt;clanId&gt;/&lt;exportId&gt;.zip</code>; liên kết tải là URL ký, gửi vào hộp thư <em>của người yêu cầu</em>, hết hạn 72 giờ; SYSADMIN
+    gọi tải → 403. Audit <code>EXPORT</code> ghi số hàng, không ghi nội dung.</li>
+</ul>
+<h4>e) Xoá (mềm, có ân hạn), khôi phục, tiêu huỷ</h4>
+<ul>
+  <li><code>POST /sys/clans/{id}/deletion {confirmCode, reason, decisionRef}</code>: <code>confirmCode</code> phải gõ lại đúng mã họ; cần có ít nhất một gói xuất
+    <code>READY</code> trong 30 ngày qua (hoặc Hội đồng ghi rõ từ chối nhận). → <code>PENDING_DELETION</code>, <code>purge_after = now + 30 ngày</code>. Hành xử như tạm khoá.</li>
+  <li><code>POST /sys/clans/{id}/restore</code> trong ân hạn → trạng thái trước đó.</li>
+  <li>Hết ân hạn: <strong>không tự tiêu huỷ</strong>. Màn hiện nút "Tiêu huỷ" và chờ quyết định ở câu hỏi 7. Bản thiết kế khuyến nghị: tiêu huỷ = xoá cứng toàn bộ hàng của họ
+    ấy + đối tượng MinIO + đỉnh AGE, giữ lại đúng một hàng <code>clan</code> ở <code>PURGED</code> và các hàng audit <code>clan_id IS NULL</code> về vòng đời. Đây là
+    <strong>ngoại lệ có chủ ý</strong> của luật xoá mềm: luật ấy tồn tại để cây không gãy — khi cả cây đi thì không còn liên kết nào để gãy, còn giữ dữ liệu người sống
+    của một bên kiểm soát đã rời đi là giữ không mục đích.</li>
+</ul>
+<h4>f) Phiên hỗ trợ</h4>
+<ol>
+  <li>SYSADMIN: <code>POST /sys/clans/{id}/support-sessions {reason, minutes ≤ 60}</code> → <code>PENDING</code>; mọi Hội đồng họ ấy nhận thông báo (hộp thư, loại <code>SYSTEM</code>).</li>
+  <li>Một thành viên Hội đồng: <code>POST /api/v1/admin/support-sessions/{sid}/approve</code> hoặc <code>/deny {note}</code>. Không duyệt trong 24 giờ → <code>EXPIRED</code>.</li>
+  <li>Khi <code>OPEN</code>: token SYSADMIN kèm tiêu đề <code>X-Giapha-Support-Session: {sid}</code> đọc được các endpoint <code>GET</code> của họ ấy như một Hội đồng chỉ đọc;
+    mọi <code>GET</code> hồ sơ/danh sách ghi <code>READ_SENSITIVE</code> kèm <code>support_session_id</code>. Mọi phương thức ghi → 403.</li>
+  <li>Đóng (SYSADMIN bấm, hoặc hết giờ): Hội đồng nhận bản tóm tắt — thời lượng, số hồ sơ đã mở, danh sách endpoint.</li>
+</ol>
+
+<h3 id="s6-4">6.4 Máy trạng thái</h3>
+<table>
+  <tr><th>Từ \ Tới</th><th>ACTIVE</th><th>SUSPENDED</th><th>PENDING_DELETION</th><th>PURGED</th></tr>
+  <tr><td>PROVISIONING</td><td><code>activate</code> (readiness xanh)</td><td>—</td><td><code>deletion</code> (bỏ họ tạo dở; không đòi gói xuất)</td><td>—</td></tr>
+  <tr><td>ACTIVE</td><td>—</td><td><code>suspend</code></td><td><code>deletion</code></td><td>—</td></tr>
+  <tr><td>SUSPENDED</td><td><code>resume</code></td><td>—</td><td><code>deletion</code></td><td>—</td></tr>
+  <tr><td>PENDING_DELETION</td><td><code>restore</code> (nếu trước đó ACTIVE)</td><td><code>restore</code> (nếu trước đó SUSPENDED)</td><td>—</td><td><code>purge</code> (sau <code>purge_after</code>, theo câu hỏi 7)</td></tr>
+</table>
+
+<h3 id="s6-5">6.5 Endpoint và mã lỗi</h3>
+<table>
+  <tr><th style="width:44%">Endpoint</th><th>Vai</th><th>Thành công</th></tr>
+  <tr><td><code>GET /api/v1/sys/clans</code></td><td>SYSADMIN</td><td>200 trang danh sách §6.2</td></tr>
+  <tr><td><code>POST /api/v1/sys/clans</code></td><td>SYSADMIN</td><td>201</td></tr>
+  <tr><td><code>GET /api/v1/sys/clans/{id}</code></td><td>SYSADMIN</td><td>200</td></tr>
+  <tr><td><code>PUT /api/v1/sys/clans/{id}/profile</code></td><td>SYSADMIN</td><td>200 (<code>If-Match</code>)</td></tr>
+  <tr><td><code>GET /api/v1/sys/clans/{id}/readiness</code></td><td>SYSADMIN</td><td>200</td></tr>
+  <tr><td><code>POST /api/v1/sys/clans/{id}/activate|suspend|resume|restore</code></td><td>SYSADMIN</td><td>200</td></tr>
+  <tr><td><code>POST /api/v1/sys/clans/{id}/deletion</code> · <code>POST …/purge</code></td><td>SYSADMIN</td><td>202</td></tr>
+  <tr><td><code>GET|POST /api/v1/sys/clans/{id}/council</code> · <code>DELETE …/council/{appUserId}</code> · <code>POST …/council-accounts</code></td><td>SYSADMIN</td><td>200/201/204</td></tr>
+  <tr><td><code>POST /api/v1/sys/clans/{id}/exports</code> · <code>GET …/exports/{eid}</code> (trạng thái, không có liên kết tải)</td><td>SYSADMIN</td><td>202/200</td></tr>
+  <tr><td><code>POST /api/v1/sys/clans/{id}/support-sessions</code> · <code>DELETE /api/v1/sys/support-sessions/{sid}</code></td><td>SYSADMIN</td><td>201/204</td></tr>
+  <tr><td><code>POST /api/v1/admin/support-sessions/{sid}/approve|deny</code> · <code>POST /api/v1/admin/clan-exports</code></td><td>COUNCIL (họ ấy)</td><td>200/202</td></tr>
+  <tr><td><code>GET /api/v1/public/clans/{code}/…</code></td><td>Khách</td><td>200 / 404 nếu không ACTIVE</td></tr>
+</table>
+<table>
+  <tr><th style="width:30%">Mã lỗi (<code>code</code> trong Problem Details)</th><th style="width:8%">HTTP</th><th>Khi nào</th></tr>
+  <tr><td><code>CLAN_CODE_INVALID</code></td><td>422</td><td>Mã sai định dạng hoặc thuộc danh sách cấm (<code>goc</code>, <code>public</code>, <code>sys</code>, <code>admin</code>, <code>api</code>).</td></tr>
+  <tr><td><code>CLAN_CODE_TAKEN</code></td><td>409</td><td>Mã đã có (kể cả họ <code>PURGED</code> — mã không bao giờ được dùng lại).</td></tr>
+  <tr><td><code>CLAN_NOT_FOUND</code></td><td>404</td><td>Id/mã không có — và với khách: họ không <code>ACTIVE</code>.</td></tr>
+  <tr><td><code>CLAN_STATE_TRANSITION_INVALID</code></td><td>409</td><td>Ngoài bảng §6.4.</td></tr>
+  <tr><td><code>CLAN_NOT_READY</code></td><td>409</td><td><code>activate</code> khi readiness chưa xanh; thân lỗi liệt kê hạng mục đỏ.</td></tr>
+  <tr><td><code>CLAN_SUSPENDED</code></td><td>403</td><td>Người của họ đang <code>SUSPENDED</code>/<code>PENDING_DELETION</code> gọi API nghiệp vụ.</td></tr>
+  <tr><td><code>CLAN_MISMATCH</code></td><td>403</td><td>Claim <code>clan</code> ≠ họ của <code>app_user</code>.</td></tr>
+  <tr><td><code>CROSS_CLAN_REFERENCE</code></td><td>409</td><td>Ghi một tham chiếu sang họ khác (trigger hoặc kiểm ứng dụng).</td></tr>
+  <tr><td><code>ACCOUNT_ALREADY_IN_CLAN</code></td><td>409</td><td>Danh tính Keycloak đã có <code>app_user</code> ở một họ.</td></tr>
+  <tr><td><code>LAST_COUNCIL_MEMBER</code></td><td>409</td><td>Thu hồi Hội đồng cuối cùng.</td></tr>
+  <tr><td><code>DECISION_REF_REQUIRED</code></td><td>422</td><td>Thiếu số hiệu văn bản quyết định.</td></tr>
+  <tr><td><code>EXPORT_REQUIRED</code></td><td>409</td><td>Xoá khi chưa có gói xuất 30 ngày gần nhất và chưa ghi từ chối nhận.</td></tr>
+  <tr><td><code>SUPPORT_SESSION_REQUIRED</code></td><td>403</td><td>SYSADMIN gọi API nghiệp vụ không có phiên <code>OPEN</code> của đúng họ.</td></tr>
+  <tr><td><code>SUPPORT_SESSION_READ_ONLY</code></td><td>403</td><td>Phương thức ghi trong phiên hỗ trợ.</td></tr>
+  <tr><td><code>SHARED_RULE_SET_LOCKED</code></td><td>403</td><td>Sửa bộ luật DEFAULT/REGION.</td></tr>
+</table>
+
+<h3 id="s6-6">6.6 Nhật ký</h3>
+<p>Mở rộng <code>ck_audit_log_action</code> (V5) thêm: <code>CLAN_CREATE</code>, <code>CLAN_ACTIVATE</code>, <code>CLAN_SUSPEND</code>, <code>CLAN_RESUME</code>,
+<code>CLAN_DELETE_REQUEST</code>, <code>CLAN_RESTORE</code>, <code>CLAN_PURGE</code>, <code>SUPPORT_SESSION_REQUEST</code>, <code>SUPPORT_SESSION_APPROVE</code>,
+<code>SUPPORT_SESSION_DENY</code>, <code>SUPPORT_SESSION_CLOSE</code>, <code>CLAN_MISMATCH</code>. Dùng lại <code>GRANT_ROLE</code>/<code>REVOKE_ROLE</code> (chỉ định Hội đồng, kèm
+<code>decisionRef</code> ở <code>note</code>), <code>EXPORT</code>, <code>READ_SENSITIVE</code>. Hành động của SYSADMIN có <code>actor_user_id = NULL</code> — cần thêm cột
+<code>actor_operator_id</code> (FK <code>sys_operator</code>) vì SYSADMIN không có <code>app_user</code>. Hàng vòng đời mang <code>clan_id</code> của họ bị tác động
+<em>và</em> hiện được với Hội đồng họ ấy — Hội đồng phải thấy ai đã khoá họ mình.</p>
+
+<!-- ================================================================== -->
+<h2 id="s7">7. Riêng tư &amp; pháp lý <span class="en">Privacy &amp; legal</span></h2>
+<h3 id="s7-1">7.1 Ai là bên kiểm soát, ai là bên xử lý</h3>
+<table>
+  <tr><th style="width:22%"></th><th>Bản một dòng họ (hôm nay, 08 §1)</th><th>Bước 2 — khuyến nghị (Q9)</th></tr>
+  <tr><td>Dữ liệu nghiệp vụ của họ X</td><td>Người vận hành = người chịu trách nhiệm</td><td><strong>Bên kiểm soát:</strong> Hội đồng Tộc biểu họ X, do một người đại diện có tên ký (câu hỏi 8). <strong>Bên xử lý:</strong> chủ dự án (SYSADMIN), theo hợp đồng xử lý dữ liệu với từng họ.</td></tr>
+  <tr><td>Tài khoản vận hành, nhật ký hệ thống, sao lưu</td><td>Người vận hành</td><td>Chủ dự án là bên kiểm soát và xử lý.</td></tr>
+  <tr><td>Khung "người chịu trách nhiệm" ở 08 §1</td><td>Một khung, tên người vận hành</td><td>Hai khung: người đại diện bên kiểm soát <em>của họ mình</em> (hỏi về dữ liệu, xin xoá) và người vận hành (sự cố kỹ thuật). 08 §1 và §9.4 phải viết lại khi phát hành bước 2.</td></tr>
+</table>
+<div class="sua canh">
+  <span class="nhan-sua">Q9 — Bên thua: chủ dự án là bên kiểm soát cho mọi dòng họ</span>
+  <p style="margin-bottom:0"><strong>Nó có lý ở đâu:</strong> một đầu mối pháp lý, đúng tinh thần 08 §1 "trách nhiệm dồn về một chỗ thì còn biết hỏi ai"; Hội đồng
+    các cụ không phải gánh nghĩa vụ pháp lý. <strong>Vì sao thua:</strong> bên kiểm soát là bên <em>quyết định mục đích và phạm vi</em> — ai được vào phả, ai
+    được xem Tầng 3, ghi con gái thế nào — và ở hệ thống này những quyết định ấy thuộc Hội đồng từng họ, không thuộc người vận hành. Gánh trách nhiệm cho
+    quyết định của người khác là nhận rủi ro không kiểm soát được, nhân lên N họ. Hội đồng không phải là pháp nhân — nên câu hỏi 8 hỏi <em>ai</em> ký.</p>
+</div>
+
+<h3 id="s7-2">7.2 Quy ước ba vế (08 §9.2) áp vào SYSADMIN</h3>
+<table>
+  <tr><th style="width:30%">Vế</th><th>Hiện thực ở bước 2</th></tr>
+  <tr><td>1. Chỉ làm theo yêu cầu của chính chủ / bên có thẩm quyền</td><td>SYSADMIN không đọc gì nếu không có phiên hỗ trợ; phiên chỉ mở khi <strong>Hội đồng họ ấy duyệt</strong>. Gạt hộ công tắc riêng tư chuyển hẳn sang Quản trị dòng họ (<code>ADMIN</code> của họ ấy) — SYSADMIN không gạt được kể cả trong phiên (phiên chỉ đọc).</td></tr>
+  <tr><td>2. Mọi lần vào nhật ký, không tắt được</td><td>NFR-12: 100% lượt đọc trong phiên có <code>READ_SENSITIVE</code> gắn <code>support_session_id</code>; không có cờ cấu hình tắt.</td></tr>
+  <tr><td>3. Hội đồng được biết</td><td>Thông báo khi xin, khi mở, khi đóng (kèm tóm tắt). Hàng audit vòng đời họ hiện với Hội đồng (§6.6).</td></tr>
+</table>
+
+<h3 id="s7-3">7.3 Ma trận kiểm "không rò giữa hai dòng họ" (NFR-9)</h3>
+<p>Dữ liệu mẫu: hai dòng họ <strong>A</strong> và <strong>B</strong>, mỗi họ có ít nhất một người đã khuất và một người còn sống <strong>trùng họ tên</strong> với họ kia (để
+tìm kiếm có cái mà rò), một giỗ cấp họ trong 60 ngày tới, một bài đã đăng, một vinh danh người đã khuất và một vinh danh người sống đã bật chia sẻ.</p>
+<table>
+  <tr><th style="width:22%">Người gọi (thuộc A)</th><th>Tra theo id của B</th><th>Danh sách / tìm kiếm</th><th>Ghi tham chiếu sang B</th></tr>
+  <tr><td>Khách ở <code>/public/clans/a</code></td><td>404</td><td>Không chứa id nào của B, kể cả người đã khuất trùng tên</td><td>— (khách không ghi)</td></tr>
+  <tr><td>Thành viên A</td><td>404</td><td>Như trên; số đếm (<code>totalElements</code>) không gồm hàng của B</td><td>409 <code>CROSS_CLAN_REFERENCE</code> hoặc 404</td></tr>
+  <tr><td>Trưởng chi A</td><td>404</td><td>Hàng chờ duyệt không có đơn của B</td><td>như trên</td></tr>
+  <tr><td>Hội đồng A (toàn họ)</td><td>404</td><td>Nhật ký, danh bạ, mã mời, phân công: không hàng nào của B</td><td>như trên</td></tr>
+  <tr><td>SYSADMIN, không phiên</td><td>403 <code>SUPPORT_SESSION_REQUIRED</code> ở mọi họ</td><td>như trái</td><td>403</td></tr>
+  <tr><td>SYSADMIN, phiên OPEN của A</td><td>B: 403; A: 200</td><td>Chỉ A</td><td>403 <code>SUPPORT_SESSION_READ_ONLY</code></td></tr>
+</table>
+<p class="nho">Hiện thực: một kiểm tích hợp đọc <code>contracts/openapi.yaml</code>, với mỗi <code>operationId</code> sinh lời gọi cho từng người gọi, thay mọi tham số id bằng id
+của B, và khẳng định (i) không 2xx trên phép tra theo id, (ii) không id nào của B trong thân phản hồi danh sách (quét mọi chuỗi UUID trong JSON đối chiếu với tập id của B).
+Thêm cột "người gọi của B" cho đối xứng. Cộng với ma trận riêng tư 5 nhóm × 3 mức × 4 loại người gọi hiện có — ma trận ấy chạy lại trên mỗi họ.</p>
+
+<h3 id="s7-4">7.4 Căn cứ pháp lý — cần luật sư xác nhận</h3>
+<p>Tài liệu dự án (BA v2 §10, 08) dẫn Nghị định 13/2023/NĐ-CP. Luật Bảo vệ dữ liệu cá nhân (Luật số 91/2025/QH15) được thông qua năm 2025 và có hiệu lực từ
+01/01/2026 — trước thời điểm bước 2 phát hành. <strong>Bản thiết kế này không kết luận văn bản nào đang điều chỉnh hay nghĩa vụ cụ thể của bên kiểm soát/bên xử lý
+dưới luật mới</strong>; phân vai ở §7.1 là theo khái niệm chung của cả hai văn bản và phải được luật sư xác nhận trước khi ký với dòng họ thứ hai (câu hỏi 8).</p>
+
+<!-- ================================================================== -->
+<h2 id="s8">8. Kế hoạch di trú từ bản một dòng họ <span class="en">Migration plan</span></h2>
+<div class="khung khung-do">
+  <span class="nhan">Điểm không quay lại</span>
+  <p style="margin:0">Đường lui ở §8.3 dùng được <strong>cho tới lúc tạo dòng họ thứ hai</strong>. Sau đó, lui về nghĩa là bỏ dữ liệu của dòng họ thứ hai. Và di trú phải
+  xong <strong>trước</strong> khi dòng họ thứ hai nhập dữ liệu thật — không có đường nào tách hai họ đã trộn trên bản một họ (xem cảnh báo đầu tài liệu).</p>
+</div>
+<h3 id="s8-1">8.1 Điều kiện trước</h3>
+<ol>
+  <li>Bước 1 đã chạy trên bản cài: <code>clan_profile</code> có <strong>đúng một</strong> dòng và readiness xanh. Migration dừng với thông báo rõ nếu 0 hoặc &gt; 1 dòng.</li>
+  <li>Mã cho dòng họ hiện có đã được chủ dự án chọn (câu hỏi 1) và nạp qua placeholder Flyway <code>${giapha.bootstrapClanCode}</code> — <strong>bắt buộc</strong>, không có
+    giá trị mặc định (một mã mặc định như <code>goc</code> sẽ thành nhãn vĩnh viễn trên đường dẫn của khách).</li>
+  <li>Số phiên bản: <code>V(n)…V(n+4)</code>, với <code>n</code> là số kế tiếp <em>sau</em> migration của bước 1. Tra dòng "Flyway runs" của <code>CLAUDE.md</code> ngay trước
+    khi đặt tên tệp — hai người cùng lấy một số thì Flyway dừng.</li>
+  <li>Đóng băng ghi: tạm dừng nhập liệu Excel và job nhắc giỗ trong cửa sổ di trú (≤ 30 phút đã tính cả kiểm).</li>
+  <li>Sao lưu: <code>pg_dump -Fc</code> toàn cơ sở dữ liệu (gồm schema <code>giapha_graph</code>) và ảnh chụp bucket MinIO; kiểm khôi phục được trên máy khác.</li>
+</ol>
+<h3 id="s8-2">8.2 Thứ tự</h3>
+<table>
+  <tr><th style="width:9%">Bước</th><th>Việc</th><th style="width:30%">Vì sao ở vị trí này</th></tr>
+  <tr><td><code>V(n)</code></td><td>Tạo <code>clan</code>, <code>sys_operator</code>, <code>support_session</code>, <code>clan_export</code>; chèn một dòng <code>clan</code> từ <code>clan_profile</code> + placeholder mã; <code>clan_profile</code> thêm <code>clan_id</code>.</td><td>Mọi bước sau trỏ vào dòng này.</td></tr>
+  <tr><td><code>V(n+1)</code></td><td>Thêm <code>clan_id</code> <strong>nullable</strong> cho 19 bảng; <code>UPDATE … SET clan_id = :duyNhat</code>; rồi <code>SET NOT NULL</code> + FK + chỉ mục. <code>audit_log</code>: tắt <code>tg_audit_log_immutable</code> trong migration, điền, bật lại — ghi rõ trong migration và thêm một hàng audit <code>clan_id IS NULL</code> "điền clan_id do di trú".</td><td>Mở rộng trước, siết sau: <code>NOT NULL</code> trên bảng có hàng thì phải điền xong mới đặt được.</td></tr>
+  <tr><td><code>V(n+2)</code></td><td>Đổi gốc <code>ltree</code>: một lệnh <code>UPDATE branch SET path = text2ltree(code) || subpath(path,1)</code> (và <code>slug</code> của chi gốc) trong một câu, để <code>ux_branch_path</code> không va giữa chừng. Gắn <code>clan.root_branch_id</code>. Gắn <code>clan_id</code> vào bộ luật CLAN/BRANCH; tạo bộ CLAN nếu chưa có.</td><td>Sau khi có <code>clan_id</code> để trigger kiểm gốc đọc được.</td></tr>
+  <tr><td><code>V(n+3)</code></td><td>AGE: <code>LOAD 'age'</code>, <code>SET search_path</code> (README §4) rồi <code>MATCH (p:Person) SET p.clan_id = $id</code>; tạo chỉ mục biểu thức.</td><td>Tách riêng vì phiên AGE có bẫy <code>search_path</code>; hỏng ở đây không kéo theo bước quan hệ.</td></tr>
+  <tr><td><code>V(n+4)</code></td><td>Trigger cùng họ; chỉ mục duy nhất mới (§4.4); <code>ck_role_code</code> + <code>ck_audit_log_action</code> mở rộng; tách vai CSDL; bật RLS + chính sách trên 11 bảng.</td><td>Ràng buộc sau cùng: chúng chỉ đúng khi dữ liệu đã đủ. RLS bật cùng bản phát hành với mã đặt <code>app.clan_id</code>.</td></tr>
+  <tr><td>Ngoài Flyway</td><td>Keycloak: nhập realm mới (thuộc tính, scope, vai <code>SYSADMIN</code>); script đặt thuộc tính <code>clan</code> cho mọi người dùng hiện có từ <code>app_user</code>; tạo tài khoản <code>sysadmin</code>.</td><td>Keycloak không do Flyway quản. Người dùng chưa có thuộc tính → đăng nhập được nhưng bị coi là chưa khởi tạo — nên script phải chạy trước khi mở lại cửa.</td></tr>
+  <tr><td>Ngoài Flyway</td><td>Xoá toàn bộ cache Redis <code>giapha:tree:*</code> và vùng <code>kinship</code>.</td><td>Khoá cũ không có họ.</td></tr>
+</table>
+<p class="nho">Media: <strong>không</strong> đổi tên đối tượng cũ trên MinIO. Họ của một tệp là <code>media_asset.clan_id</code>, không phải tiền tố khoá. Đối tượng mới có tiền tố
+<code>c/&lt;clanId&gt;/</code> để xuất và chính sách bucket dễ làm; đổi tên cũ là sao chép + xoá hàng loạt không có đường lui rẻ.</p>
+<h3 id="s8-3">8.3 Đường lui</h3>
+<ul>
+  <li>Flyway bản cộng đồng không có <code>undo</code>. Đường lui chính là <strong>khôi phục bản sao lưu</strong> ở §8.1 bước 5 (NFR-13: ≤ 30 phút) và triển khai lại bản ứng dụng trước.</li>
+  <li>Chuẩn bị thêm một kịch bản SQL "xuôi ngược" (bỏ RLS, bỏ trigger, đổi gốc <code>ltree</code> về <code>goc</code>, bỏ cột <code>clan_id</code>, xoá thuộc tính AGE) — chỉ dùng khi
+    đã có ghi mới sau di trú mà không muốn mất; diễn tập trên bản sao trước ngày chạy.</li>
+  <li>Keycloak: thuộc tính <code>clan</code> thừa vô hại với bản cũ; không cần lui.</li>
+</ul>
+<h3 id="s8-4">8.4 Kiểm sau di trú (đều phải ra đúng con số, không "gần đúng")</h3>
+<ol>
+  <li><code>SELECT count(*) FROM &lt;bảng&gt; WHERE clan_id IS NULL</code> = 0 cho 17 bảng NOT NULL; với <code>kinship_rule_set</code>, chỉ các bộ DEFAULT/REGION được NULL.</li>
+  <li><code>SELECT count(DISTINCT clan_id)</code> = 1 trên mỗi bảng ấy.</li>
+  <li><code>SELECT count(*) FROM person</code> không đổi so với trước (ngày 23/09: 1.509 hàng, 1.506 chưa xoá mềm — đếm lại trước di trú, ghi vào biên bản).</li>
+  <li><code>SELECT count(*) FROM branch WHERE subpath(path,0,1)::text &lt;&gt; :code</code> = 0.</li>
+  <li>Số đỉnh AGE có <code>clan_id</code> = số hàng <code>person</code>; số cạnh vượt họ = 0.</li>
+  <li><code>SELECT count(*) FROM app_user a JOIN person p ON p.id = a.person_id WHERE a.clan_id &lt;&gt; p.clan_id</code> = 0 (và tương tự cho mọi cặp trigger).</li>
+  <li>Keycloak: mọi người dùng có <code>app_user</code> đều có thuộc tính <code>clan</code> = mã.</li>
+  <li>Toàn bộ bộ kiểm backend + frontend xanh (con số tham chiếu CLAUDE.md); bấm lại 10 kịch bản ca biên của tài liệu 09 và NT-DH-17.</li>
+</ol>
+<h3 id="s8-5">8.5 Diễn tập</h3>
+<p>Chạy trọn §8.1–§8.4 trên bản sao dữ liệu thật ít nhất một lần, đo thời gian (NFR-13), rồi chạy §8.3 và kiểm dữ liệu trở về y hệt (so <code>pg_dump</code> theo bảng). Biên bản
+diễn tập là điều kiện để lên lịch chạy thật.</p>
+
+<!-- ================================================================== -->
+<h2 id="s9">9. Phân tích tác động lên yêu cầu &amp; bộ kiểm hiện có <span class="en">Impact analysis</span></h2>
+<table>
+  <tr><th style="width:14%">Yêu cầu hiện có</th><th>Cái gì dịch chuyển</th><th style="width:28%">Bộ kiểm phải đổi</th></tr>
+  <tr><td>FR-1.3a (danh xưng là dữ liệu)</td><td>Tầng CLAN theo <code>clan_id</code>; REGION bị khoá ở runtime — Hội đồng hôm nay sửa được REGION, bước 2 thì không.</td><td>Kiểm <code>RuleAdminService</code> về REGION; kiểm hợp nhất kế thừa với hai họ.</td></tr>
+  <tr><td>FR-1.5 (xoá mềm)</td><td>Tiêu huỷ dòng họ là ngoại lệ đầu tiên (§6.3 e) — chờ câu hỏi 7.</td><td>Kiểm "không lối DELETE nào" phải liệt kê ngoại lệ tường minh.</td></tr>
+  <tr><td>FR-1.8 (con gái)</td><td>Không đổi trong một họ; dâu/rể ở hai họ là hai bản ghi (§4.9).</td><td>—</td></tr>
+  <tr><td>FR-1.9 (thông gia, COULD)</td><td>Bị chặn ở mức CSDL (FR-5.3) trong đợt này.</td><td>—</td></tr>
+  <tr><td>FR-2.2 (nhắc 7/3/1 ngày)</td><td>Bộ sinh nhắc lặp theo họ <code>ACTIVE</code>; người nhận cùng họ.</td><td><code>DispatchDueRemindersServiceTest</code>, kiểm người nhận sự kiện cấp họ.</td></tr>
+  <tr><td>FR-4.1 (RBAC theo chi)</td><td>"Toàn họ" đổi nghĩa (§2); <code>ADMIN</code> mất ngoại lệ không cần phân công.</td><td>Kiểm <code>MemberScope</code>, <code>BranchScopeGuard</code>, <code>GenealogyAccessGuard</code>; mọi fixture dùng <code>ADMIN</code> không kèm phân công.</td></tr>
+  <tr><td>FR-4.4 (tìm kiếm)</td><td>Lọc theo họ; khách tìm trong họ trên đường dẫn.</td><td>Kiểm FTS + kiểm công khai.</td></tr>
+  <tr><td>NFR-1 (hiệu năng)</td><td>Đo lại theo NFR-10.</td><td>Phép đo NFR-1.</td></tr>
+  <tr><td>NFR-3 / BA §10 (riêng tư)</td><td>Thêm chiều "khác họ" vào mọi quyết định hiển thị; SYSADMIN mất quyền đọc Tầng 3 mặc định (BA §10 hàng Tầng 3 ghi "Admin").</td><td>Ma trận riêng tư 5×3×4 thêm loại người gọi "cùng vai, khác họ"; kiểm di trú riêng tư cũ.</td></tr>
+  <tr><td>Quyết định 26/09 — khách đọc <code>/events</code>, <code>/honours</code></td><td>Lối khách dời về <code>/public/clans/{code}/…</code> (§5.7).</td><td>Kiểm của <code>GuestEventPolicy</code>/<code>HonourService</code> giữ nguyên logic, đổi đường gọi; NT-KHACH-01 của 09 đổi đường dẫn.</td></tr>
+  <tr><td>Bước 1 — <code>clan_profile</code></td><td>PK đổi; bốn endpoint giữ hợp đồng, đổi nguồn họ; <code>/public/clan-profile</code> thành bí danh.</td><td>Kiểm của bước 1 chạy lại với hai họ.</td></tr>
+  <tr><td>Kiến trúc module</td><td>Context <code>clan</code> mới; <code>genealogy</code>/<code>kinship</code> nghe sự kiện của nó.</td><td><code>ModularityTests</code>: thêm module, không chu trình.</td></tr>
+  <tr><td>CI</td><td>Cổng mới: ma trận NFR-9. E2E: thêm một tệp spec (ma trận 9 → 10 job).</td><td><code>.github/workflows/ci.yml</code>.</td></tr>
+  <tr><td>Dữ liệu mẫu, tài khoản thử</td><td>Hai họ mẫu; tài khoản <code>sysadmin</code>; <code>admin.giapha</code> không còn là SYSADMIN.</td><td>Tài liệu 09 phần "Dựng môi trường" và <code>TAI-KHOAN-THU-NGHIEM.md</code>; mọi kịch bản NT-ADMIN.</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="s10">10. Ước lượng, thứ tự làm, rủi ro <span class="en">Estimate, sequencing, risks</span></h2>
+<h3>10.1 Ước lượng theo workstream (người-ngày)</h3>
+<table>
+  <tr><th style="width:12%">Mảng</th><th>Hạng mục</th><th style="width:9%">Ước</th><th style="width:9%">Đợt</th></tr>
+  <tr><td rowspan="8">Backend</td><td>Context <code>clan</code>: thực thể, vòng đời, sự kiện khởi tạo, dùng lại service bước 1 với <code>clanId</code> tường minh</td><td>6</td><td>2a</td></tr>
+  <tr><td>Migration <code>V(n)..V(n+4)</code> + trigger cùng họ + AGE + kịch bản kiểm/lui</td><td>5</td><td>2a</td></tr>
+  <tr><td>Lọc theo họ ở ~54 tệp chạm CSDL + 16 tệp <code>isClanWide</code> + ArchUnit</td><td>12</td><td>2a</td></tr>
+  <tr><td><code>CallerContext</code>/<code>MemberScope</code>/claim/<code>CLAN_MISMATCH</code>/<code>SYSADMIN</code>/trạng thái họ</td><td>5</td><td>2a</td></tr>
+  <tr><td>Bề mặt khách <code>/public/clans/{code}/…</code> (dời events/honours) + giới hạn tần suất</td><td>3</td><td>2a</td></tr>
+  <tr><td>Nhắc giỗ/thông báo/cache/danh xưng/mã mời theo họ</td><td>4</td><td>2a</td></tr>
+  <tr><td>RLS + tách vai CSDL</td><td>4</td><td>2a (hoặc 2b — câu hỏi 9)</td></tr>
+  <tr><td>Xuất dữ liệu, xoá/khôi phục/tiêu huỷ, phiên hỗ trợ</td><td>7</td><td>2b</td></tr>
+  <tr><td>Keycloak</td><td>Thuộc tính + scope + mapper + vai; provisioner ghi thuộc tính; script gắn thuộc tính cho người dùng cũ; sự kiện quản trị</td><td>3</td><td>2a</td></tr>
+  <tr><td rowspan="4">Frontend</td><td>Màn "Quản lý các dòng họ": danh sách, trình tạo 5 bước, khoá/mở, Hội đồng</td><td>8</td><td>2a</td></tr>
+  <tr><td>Cửa vào khách <code>/ho/[code]</code>, cookie, <code>/</code> chọn họ; tên họ trên đầu trang; màn <code>CLAN_SUSPENDED</code>/<code>CLAN_MISMATCH</code></td><td>6</td><td>2a</td></tr>
+  <tr><td>Xuất dữ liệu, xoá, phiên hỗ trợ (màn SYSADMIN + ô duyệt của Hội đồng ở <code>/quan-ly</code>)</td><td>3</td><td>2b</td></tr>
+  <tr><td>Song ngữ VI–EN cho mọi câu mới</td><td>2</td><td>2a/2b</td></tr>
+  <tr><td>Hạ tầng</td><td>Vai CSDL, biến môi trường, tiền tố MinIO + bucket <code>exports</code>, sao lưu trước di trú, Redis</td><td>4</td><td>2a</td></tr>
+  <tr><td rowspan="5">Kiểm thử</td><td>Ma trận NFR-9 sinh từ OpenAPI (cổng CI)</td><td>5</td><td>2a</td></tr>
+  <tr><td>Diễn tập di trú + đường lui trên bản sao</td><td>3</td><td>2a</td></tr>
+  <tr><td>E2E: tệp spec mới cho khách hai họ + SYSADMIN</td><td>4</td><td>2a/2b</td></tr>
+  <tr><td>Đo NFR-10 hai quy mô</td><td>2</td><td>2a</td></tr>
+  <tr><td>Bấm tay NT-DH-01…18</td><td>2</td><td>2a/2b</td></tr>
+  <tr><th colspan="2">Tổng (điểm giữa; khoảng tin cậy 70–110)</th><th>86</th><th></th></tr>
+</table>
+<p class="nho">Đợt 2a ≈ 70 người-ngày và là <strong>điều kiện để dòng họ thứ hai vào</strong>: nó gồm di trú, cách ly, tạo được họ mới và tạm khoá. Đợt 2b (≈ 16) gồm xuất,
+xoá, phiên hỗ trợ — trước khi 2b xong, SYSADMIN không có lối đọc dữ liệu nghiệp vụ nào (đóng khi thiếu), và việc xoá một họ không làm được.</p>
+
+<h3>10.2 Rủi ro</h3>
+<table>
+  <tr><th style="width:4%">#</th><th>Rủi ro</th><th style="width:10%">Khả năng / Hậu quả</th><th>Giảm thiểu</th></tr>
+  <tr><td>R1</td><td>Một truy vấn quên lọc họ trong 58 tệp → rò tên người sống sang họ khác</td><td>Cao / Rất nặng</td><td>Ma trận NFR-9 là cổng CI; RLS là lưới; ArchUnit cấm <code>findById</code> trần.</td></tr>
+  <tr><td>R2</td><td>Dòng họ thứ hai nhập dữ liệu trước khi di trú xong</td><td>Trung bình / Không sửa được</td><td>Chặn bằng quy trình: không cấp mã mời cho họ thứ hai trên bản một họ; cảnh báo ở đầu tài liệu và ở <code>CLAUDE.md</code>.</td></tr>
+  <tr><td>R3</td><td>AGE không tương thích RLS hoặc tên đồ thị tham số</td><td>Trung bình / Trung bình</td><td>Không dựa vào: dùng bất biến cạnh + đối soát (§4.6); spike 1 ngày đầu đợt.</td></tr>
+  <tr><td>R4</td><td>Script gắn thuộc tính Keycloak bỏ sót người dùng → họ không đăng nhập được sau di trú</td><td>Trung bình / Nặng</td><td>Kiểm §8.4 bước 7 trước khi mở lại cửa.</td></tr>
+  <tr><td>R5</td><td>Hội đồng một họ "mất hết người" → không ai duyệt phiên hỗ trợ, xuất dữ liệu</td><td>Thấp / Nặng</td><td>Cảnh báo đỏ ở danh sách; lối SYSADMIN chỉ định Hội đồng theo văn bản.</td></tr>
+  <tr><td>R6</td><td>Căn cứ pháp lý đổi (Luật 91/2025) làm §7.1 sai</td><td>Trung bình / Nặng</td><td>Câu hỏi 8; không ký với họ thứ hai trước khi luật sư xác nhận.</td></tr>
+  <tr><td>R7</td><td>Dâu/rể phản đối việc phải có hai tài khoản</td><td>Trung bình / Nhẹ</td><td>Đếm yêu cầu (§4.9); (b) mở được mà không đổi dữ liệu.</td></tr>
+  <tr><td>R8</td><td>Máy phát triển 14 GB không chạy nổi hai họ mẫu + Docker + <code>next dev</code></td><td>Cao / Nhẹ</td><td>Họ mẫu thứ hai nhỏ (≈ 200 người); E2E chạy từng tệp như hiện nay.</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="s11">11. Tiêu chí nghiệm thu — NT-DH-01…18 <span class="en">Acceptance scenarios</span></h2>
+<p class="nho">Cùng khuôn tài liệu 09. Chuẩn bị chung: bản cài đã di trú; hai dòng họ mẫu <strong>A</strong> (dữ liệu mẫu hiện có) và <strong>B</strong> (≈ 200 người) có dữ
+liệu như §7.3; tài khoản <code>sysadmin</code>, bộ tài khoản mẫu của A (như 09) và của B (<code>thanhvien.b</code>, <code>hoidong.b</code>). Ca biên đánh dấu
+<span class="chip chip-cabien">CA BIÊN</span> — bấm trước.</p>
+
+<div class="kich-ban" id="NT-DH-01">
+<h3><span class="ma-so">NT-DH-01</span> — Danh sách dòng họ chỉ có số đếm</h3>
+<span class="nhan">Các bước</span>
+<ol><li>Đăng nhập <code>sysadmin</code>. Trang mở ra là <code>/vi/he-thong/dong-ho</code>.</li><li>Mở công cụ nhà phát triển, xem phản hồi <code>GET /api/v1/sys/clans</code>.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Hai dòng A, B với đủ bảy cột §6.2; số nhân khẩu của A khớp số đếm trước di trú.</li><li>Thân JSON không có trường tên người, email, số điện thoại. Thanh điều hướng không có Phả đồ, Tìm kiếm, Sự kiện.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-02">
+<h3><span class="ma-so">NT-DH-02</span> — Tạo dòng họ C bằng trình khởi tạo, cổng khách đóng tới khi kích hoạt</h3>
+<span class="nhan">Các bước</span>
+<ol><li>Tạo họ mã <code>tran_van_thu</code>, vùng Trung. Điền hồ sơ. Tạo một tài khoản Hội đồng.</li><li>Trước khi kích hoạt, mở cửa sổ ẩn danh <code>/vi/ho/tran_van_thu</code>.</li><li>Xem readiness; kích hoạt; tải lại cửa sổ ẩn danh.</li><li>Người được tạo tài khoản đặt mật khẩu qua liên kết, đăng nhập.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Bước 2: không tìm thấy (404) — không phải trang trống của một họ có thật.</li><li>Kích hoạt khi readiness đỏ → thông báo liệt kê hạng mục đỏ (<code>CLAN_NOT_READY</code>).</li><li>Sau kích hoạt: cổng khách C mở, phả đồ trống. Tài khoản Hội đồng C thấy tên họ C trên đầu trang, không thấy ai của A hay B.</li><li>Tra danh xưng trong C dùng bộ REGION Trung (bộ CLAN của C kế thừa đúng vùng).</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-03">
+<h3><span class="ma-so">NT-DH-03</span> — Mã dòng họ sai hoặc trùng</h3>
+<ol><li>Tạo họ mã <code>Nguyễn Đình</code>; mã <code>ab</code>; mã <code>goc</code>; mã trùng với A.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Ba mã đầu: báo mã không hợp lệ, nêu quy tắc (chữ thường không dấu, số, gạch dưới, 3–32 ký tự, bắt đầu bằng chữ). Mã trùng: báo đã có. Không dòng nào được tạo.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-04">
+<h3><span class="ma-so">NT-DH-04</span> — Hội đồng họ A mở hồ sơ một người họ B <span class="chip chip-cabien">CA BIÊN</span></h3>
+<span class="nhan">Mục đích</span><p>Người có quyền cao nhất trong một họ là người dễ rò sang họ khác nhất, vì hôm nay "toàn họ" nghĩa là "không lọc".</p>
+<ol><li>Đăng nhập <code>hoidong.b</code>, chép id một người còn sống của B từ thanh địa chỉ.</li><li>Đăng nhập <code>hoidong</code> (A) ở trình duyệt khác, dán <code>/vi/persons/&lt;id&gt;</code>.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Màn "không tìm thấy" — giống hệt khi gõ một id bịa. <strong>KHÔNG ĐẠT</strong> nếu thấy "không có quyền" (403): câu ấy xác nhận người đó có thật.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-05">
+<h3><span class="ma-so">NT-DH-05</span> — Tìm kiếm và dò trùng không vượt họ <span class="chip chip-cabien">CA BIÊN</span></h3>
+<ol><li>Đăng nhập thành viên A, tìm đúng họ tên của người còn sống trùng tên ở B (§7.3).</li><li>Đăng nhập Trưởng chi A, tải lên tệp Excel có một dòng trùng tên + năm sinh với người ở B, chạy kiểm.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Bước 1: chỉ người của A. Bước 2: màn dò trùng chỉ gợi ý người của A (hoặc không gợi ý) — <strong>không bao giờ</strong> một người của B.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-06">
+<h3><span class="ma-so">NT-DH-06</span> — Khách của họ A không thấy người đã khuất của họ B</h3>
+<ol><li>Cửa sổ ẩn danh, mở <code>/vi/ho/&lt;mã A&gt;</code>. Tìm tên người đã khuất trùng tên ở B.</li><li>Mở <code>/vi/ho/&lt;mã B&gt;</code>, tìm lại.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Bước 1 chỉ ra người của A; bước 2 chỉ ra người của B. Không bước nào ra người còn sống.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-07">
+<h3><span class="ma-so">NT-DH-07</span> — Claim <code>clan</code> bị sửa tay trong Keycloak <span class="chip chip-cabien">CA BIÊN</span></h3>
+<ol><li>Trong admin console Keycloak, đổi thuộc tính <code>clan</code> của <code>thanhvien</code> (A) thành mã B.</li><li>Đăng nhập <code>thanhvien</code>, mở phả đồ.</li><li>Thử sửa thuộc tính <code>clan</code> từ trang tài khoản của chính <code>thanhvien</code>.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Bước 2: màn báo tài khoản không khớp dòng họ (<code>CLAN_MISMATCH</code>), không thấy dữ liệu của A hay B; có một hàng nhật ký <code>CLAN_MISMATCH</code>; Keycloak có sự kiện quản trị ghi người đã sửa.</li><li>Bước 3: trang tài khoản không hiện ô <code>clan</code>.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-08">
+<h3><span class="ma-so">NT-DH-08</span> — Mã mời quyết định dòng họ</h3>
+<ol><li>Hội đồng B phát một mã dòng họ. Ở <code>/vi/dang-ky</code>, đăng ký bằng mã ấy.</li><li>Đăng nhập tài khoản mới; mở phả đồ.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li>Màn đăng ký nêu tên dòng họ B. Tài khoản mới ở trạng thái chờ duyệt, thấy phả đồ <strong>của B</strong>; đơn tự nhận mình vào hàng chờ của B, không của A.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-09">
+<h3><span class="ma-so">NT-DH-09</span> — Tạm khoá họ B có hiệu lực trong 60 giây, họ A không bị ảnh hưởng <span class="chip chip-cabien">CA BIÊN</span></h3>
+<ol><li><code>thanhvien.b</code> và <code>thanhvien</code> (A) đang mở phả đồ.</li><li><code>sysadmin</code> tạm khoá B, lý do "kiểm thử". Bấm giờ.</li><li>Cả hai tải lại mỗi 10 giây. Khách mở <code>/vi/ho/&lt;mã B&gt;</code>. Thử mã mời của B.</li></ol>
+<span class="nhan">Kết quả mong đợi</span>
+<ul><li><code>thanhvien.b</code> thấy màn "dòng họ đang tạm khoá" trong ≤ 60 giây (ghi số giây đo được). <code>thanhvien</code> (A) không đổi gì. Cổng khách B: không tìm thấy. Mã mời B: như mã sai.</li><li>Hội đồng B có thông báo. Nhật ký có <code>CLAN_SUSPEND</code> kèm lý do.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-10">
+<h3><span class="ma-so">NT-DH-10</span> — Mở khoá họ B</h3>
+<ol><li>Mở khoá B. <code>thanhvien.b</code> tải lại.</li></ol>
+<ul><li>Dùng lại bình thường trong ≤ 60 giây; không mất dữ liệu; nhắc giỗ rơi vào thời gian khoá không được gửi bù (theo câu hỏi 12).</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-11">
+<h3><span class="ma-so">NT-DH-11</span> — Chỉ định, thu hồi Hội đồng; không thu hồi được người cuối</h3>
+<ol><li>Họ C có đúng một Hội đồng. SYSADMIN thu hồi người ấy.</li><li>Chỉ định thêm một người của C, bỏ trống ô số hiệu văn bản; rồi điền.</li><li>Chỉ định một tài khoản của A làm Hội đồng C.</li><li>Thu hồi người đầu tiên.</li></ol>
+<ul><li>Bước 1: từ chối, "không thể thu hồi thành viên Hội đồng cuối cùng". Bước 2: từ chối khi thiếu số hiệu, nhận khi có. Bước 3: từ chối (khác họ). Bước 4: nhận. Nhật ký ghi <code>GRANT_ROLE</code>/<code>REVOKE_ROLE</code> kèm số hiệu.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-12">
+<h3><span class="ma-so">NT-DH-12</span> — SYSADMIN chỉ đọc được dữ liệu trong phiên hỗ trợ đã duyệt <span class="chip chip-cabien">CA BIÊN</span></h3>
+<ol><li><code>sysadmin</code> gọi <code>GET /api/v1/persons/&lt;id người A&gt;</code> (không phiên).</li><li>Xin phiên cho A, 15 phút. <code>hoidong</code> (A) duyệt. Gọi lại; gọi cùng lệnh cho id của B; gọi một <code>PATCH</code>.</li><li>Đóng phiên. Gọi lại.</li></ol>
+<ul><li>Bước 1: 403 "cần phiên hỗ trợ". Bước 2: A 200; B 403; <code>PATCH</code> 403 "phiên chỉ đọc". Bước 3: 403.</li><li>Hội đồng A nhận ba thông báo (xin, mở, đóng — thông báo đóng có số hồ sơ đã mở). Nhật ký có đúng một <code>READ_SENSITIVE</code> cho lượt đọc thành công, kèm mã phiên.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-13">
+<h3><span class="ma-so">NT-DH-13</span> — Xuất dữ liệu họ A tới đúng người yêu cầu</h3>
+<ol><li><code>hoidong</code> (A) yêu cầu xuất. Chờ xong.</li><li><code>sysadmin</code> thử tải gói. <code>hoidong</code> tải gói từ hộp thư, mở <code>manifest.json</code>.</li></ol>
+<ul><li>SYSADMIN: 403. Hội đồng: tải được; số hàng <code>person</code> trong bản kê = số của A; không id nào của B trong gói (tìm một id của B bằng lệnh tìm chuỗi).</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-14">
+<h3><span class="ma-so">NT-DH-14</span> — Xoá mềm và khôi phục trong ân hạn</h3>
+<ol><li>Xoá họ C: gõ sai mã xác nhận; gõ đúng nhưng C chưa có gói xuất; tạo gói xuất rồi xoá.</li><li>Kiểm danh sách; đăng nhập Hội đồng C.</li><li>Khôi phục C.</li></ol>
+<ul><li>Hai lần đầu bị từ chối với lý do tương ứng. Sau khi xoá: danh sách ghi "chờ xoá — còn 30 ngày"; Hội đồng C thấy màn tạm khoá. Khôi phục: C trở lại <code>ACTIVE</code>, đủ dữ liệu.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-15">
+<h3><span class="ma-so">NT-DH-15</span> — Luật danh xưng của họ A không đổi danh xưng của họ B</h3>
+<ol><li>Ghi lại danh xưng giữa hai người cụ thể ở B.</li><li>Hội đồng A ghi đè ở tầng CLAN của A một luật cùng <code>relation_code</code>. Hội đồng A thử sửa bộ REGION.</li><li>Tra lại ở B.</li></ol>
+<ul><li>Sửa REGION bị từ chối (bộ dùng chung). Danh xưng ở B không đổi; ở A đổi theo luật mới.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-16">
+<h3><span class="ma-so">NT-DH-16</span> — Khoá cache mang dòng họ</h3>
+<ol><li>Mở phả đồ ở A và ở B. Chạy <code>redis-cli --scan --pattern 'giapha:tree:*'</code>.</li><li>Sửa một người ở A; quét lại.</li></ol>
+<ul><li>Mỗi khoá có id dòng họ ngay sau tiền tố. Sau bước 2, khoá của A bị xoá, khoá của B còn.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-17">
+<h3><span class="ma-so">NT-DH-17</span> — Di trú giữ nguyên bản một họ <span class="chip chip-cabien">CA BIÊN</span></h3>
+<ol><li>Trước di trú: ghi số nhân khẩu chưa xoá mềm, số còn sống, số chi, và một đường dẫn chi bất kỳ.</li><li>Chạy di trú; chạy tám phép kiểm §8.4.</li><li>Đăng nhập sáu tài khoản mẫu của 09; bấm NT-KHACH-02, NT-MOI-15, NT-TC-01.</li></ol>
+<ul><li>Ba con số bằng trước. Đường dẫn chi đổi đúng nhãn gốc (<code>goc.…</code> → <code>&lt;mã&gt;.…</code>), phần sau giữ nguyên. Tám phép kiểm ra đúng số. Sáu tài khoản đăng nhập được, không ai bị báo "chưa khởi tạo"; ba kịch bản của 09 ĐẠT.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<div class="kich-ban" id="NT-DH-18">
+<h3><span class="ma-so">NT-DH-18</span> — Nhắc giỗ cấp họ của B không tới người của A</h3>
+<ol><li>B có giỗ Tổ cấp họ sau 3 ngày. Chạy <code>POST /api/v1/admin/reminders/generate</code> rồi <code>…/dispatch</code> (bằng quản trị của B).</li><li>Mở chuông thông báo của <code>thanhvien</code> (A) và <code>thanhvien.b</code>.</li></ol>
+<ul><li><code>thanhvien.b</code> có lời nhắc; <code>thanhvien</code> (A) không. Quản trị của A gọi <code>dispatch</code> không phát lời nhắc nào của B.</li></ul>
+<div class="bang-cham"><span class="dat"><span class="o-vuong"></span>ĐẠT</span><span class="khongdat"><span class="o-vuong"></span>KHÔNG ĐẠT</span><span class="ghichu-dong">Ghi chú:<span class="duong"></span></span></div>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="s12">12. Đề xuất sửa BA v2 / TDD — chưa sửa <span class="en">Proposed baseline amendments (not applied)</span></h2>
+<p>Không mục nào dưới đây đã được sửa trong tệp gốc. Chúng được sửa <strong>sau khi bản thiết kế này được duyệt</strong>, mỗi chỗ kèm một khối ghi ngày và lý do như quy ước.</p>
+<table>
+  <tr><th style="width:26%">Tài liệu · mục</th><th>Sửa gì</th></tr>
+  <tr><td>BA v2 §2 Phạm vi</td><td>Thêm "Nhiều dòng họ trên một bản cài (Module 5)" vào trong phạm vi; thêm các mục ngoài phạm vi của §1.</td></tr>
+  <tr><td>BA v2 §3 Vai trò</td><td>Tách "Quản trị hệ thống" thành SYSADMIN (toàn bản cài, không đọc dữ liệu nghiệp vụ) và Quản trị dòng họ (một họ); "toàn dòng họ" = họ của mình.</td></tr>
+  <tr><td>BA v2 §4 Thuật ngữ</td><td>Thêm dòng họ (tenant), mã dòng họ, phiên hỗ trợ, bên kiểm soát/bên xử lý.</td></tr>
+  <tr><td>BA v2 §5</td><td>Thêm Module 5 (FR-5.1…5.23).</td></tr>
+  <tr><td>BA v2 §7</td><td>Thêm NFR-9…NFR-14.</td></tr>
+  <tr><td>BA v2 §8 Mô hình dữ liệu</td><td>Thêm thực thể Clan; mọi thực thể "thuộc một dòng họ".</td></tr>
+  <tr><td>BA v2 §10</td><td>Hàng "Tầng 3 — Admin" đổi thành "Quản trị dòng họ của chính họ ấy; SYSADMIN chỉ trong phiên hỗ trợ"; thêm đoạn bên kiểm soát/bên xử lý; thêm "không lộ giữa các dòng họ".</td></tr>
+  <tr><td>BA v2 §12</td><td>Thêm các quyết định Q1–Q9 sau khi chủ dự án duyệt; ghi lại "không còn câu hỏi mở" không còn đúng.</td></tr>
+  <tr><td>TDD §2 Bounded contexts</td><td>Thêm context <code>clan</code>; ghi quan hệ sự kiện <code>ClanProvisioningRequested</code>.</td></tr>
+  <tr><td>TDD §5 Data dictionary</td><td>Bảng <code>clan</code>, <code>sys_operator</code>, <code>support_session</code>, <code>clan_export</code>; cột <code>clan_id</code> theo §4.2.</td></tr>
+  <tr><td>TDD §6 AGE</td><td>Thuộc tính <code>clan_id</code>, bất biến cạnh không vượt họ.</td></tr>
+  <tr><td>TDD §9 API</td><td><code>/api/v1/sys/**</code>, <code>/api/v1/public/clans/{code}/**</code>; <code>contracts/openapi.yaml</code> tương ứng.</td></tr>
+  <tr><td>TDD §10 Bảo mật</td><td>Claim <code>clan</code>, vai <code>SYSADMIN</code>, RLS, vai CSDL.</td></tr>
+  <tr><td>Tài liệu 08 §1, §9.2, §9.4</td><td>Người chịu trách nhiệm pháp lý: hai khung (bên kiểm soát của họ mình / người vận hành); quy ước ba vế áp cho Quản trị dòng họ.</td></tr>
+  <tr><td>Tài liệu 09</td><td>Phần "Dựng môi trường" (hai họ, tài khoản <code>sysadmin</code>); NT-ADMIN; thêm NT-DH.</td></tr>
+  <tr><td><code>CLAUDE.md</code></td><td>Dòng "Flyway runs"; cảnh báo di trú trước dòng họ thứ hai.</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="s13">13. Ma trận truy vết <span class="en">Traceability matrix</span></h2>
+<table>
+  <tr><th style="width:9%">FR/NFR</th><th style="width:26%">Bảng / cột</th><th style="width:28%">Endpoint / thành phần</th><th style="width:15%">TDD (đề xuất)</th><th>Kịch bản</th></tr>
+  <tr><td>FR-5.1</td><td><code>clan</code></td><td><code>/sys/clans/{id}/activate|suspend|resume|deletion|restore</code></td><td>§5, §9</td><td>NT-DH-02, 09, 10, 14</td></tr>
+  <tr><td>FR-5.2</td><td>19 bảng §4.2</td><td>Mọi repository</td><td>§5</td><td>NT-DH-17 · NFR-9</td></tr>
+  <tr><td>FR-5.3</td><td>trigger <code>giapha_assert_same_clan</code>; AGE</td><td><code>AgeTreeGraphAdapter</code>, job đối soát</td><td>§5, §6</td><td>NT-DH-11 bước 3 · §8.4</td></tr>
+  <tr><td>FR-5.4</td><td><code>branch.path</code>, <code>clan.code</code></td><td><code>BranchPath</code>, <code>MemberScope.managesBranch</code></td><td>§5.3</td><td>NT-DH-03, 17</td></tr>
+  <tr><td>FR-5.5</td><td><code>app_user.clan_id</code>, <code>ux_app_user_keycloak_sub</code></td><td><code>MemberScopeService</code></td><td>§5.6, §10</td><td>NT-DH-08</td></tr>
+  <tr><td>FR-5.6</td><td>—</td><td>Keycloak scope <code>giapha-clan</code>; <code>KeycloakRealmRoleConverter</code></td><td>§10</td><td>NT-DH-07</td></tr>
+  <tr><td>FR-5.7</td><td><code>sys_operator</code>, <code>role</code></td><td><code>SecurityConfig</code>, <code>/sys/**</code>, <code>/actuator/**</code></td><td>§10</td><td>NT-DH-01, 12</td></tr>
+  <tr><td>FR-5.8</td><td><code>support_session</code>, <code>audit_log</code></td><td><code>/sys/clans/{id}/support-sessions</code>, <code>/admin/support-sessions/{sid}/approve|deny</code></td><td>§8, §10</td><td>NT-DH-12</td></tr>
+  <tr><td>FR-5.9</td><td>—</td><td>16 tệp §5.4</td><td>§7, §10</td><td>NT-DH-04 · NFR-9</td></tr>
+  <tr><td>FR-5.10</td><td><code>kinship_rule_set.clan_id</code></td><td><code>RuleAdminService</code>, <code>RuleSetJpaRepository</code>, <code>KinshipCacheKeys</code></td><td>§5.5</td><td>NT-DH-15</td></tr>
+  <tr><td>FR-5.11</td><td><code>clan_invite_code.clan_id</code>, <code>invitation.clan_id</code></td><td><code>/clan-invites/lookup|register</code>, <code>/invitations/accept</code></td><td>§8</td><td>NT-DH-08</td></tr>
+  <tr><td>FR-5.12</td><td>—</td><td><code>/public/clans/{code}/…</code>; <code>/[locale]/ho/[code]</code></td><td>§9</td><td>NT-DH-06</td></tr>
+  <tr><td>FR-5.13</td><td><code>v_clan_stats</code></td><td><code>GET /sys/clans</code>; <code>/he-thong/dong-ho</code></td><td>§9</td><td>NT-DH-01</td></tr>
+  <tr><td>FR-5.14</td><td><code>clan</code>, <code>clan_profile</code>, <code>branch</code>, <code>kinship_rule_set</code></td><td><code>POST /sys/clans</code>, <code>…/profile</code>, <code>…/council-accounts</code>, <code>…/readiness</code></td><td>§8</td><td>NT-DH-02, 03</td></tr>
+  <tr><td>FR-5.15</td><td><code>clan.status</code></td><td><code>…/suspend|resume</code></td><td>§8</td><td>NT-DH-09, 10</td></tr>
+  <tr><td>FR-5.16</td><td><code>branch_assignment</code></td><td><code>/sys/clans/{id}/council</code></td><td>§10</td><td>NT-DH-11</td></tr>
+  <tr><td>FR-5.17</td><td><code>clan_export</code></td><td><code>/admin/clan-exports</code>, <code>/sys/clans/{id}/exports</code></td><td>§8, §11</td><td>NT-DH-13</td></tr>
+  <tr><td>FR-5.18</td><td><code>clan.deletion_requested_at</code>, <code>purge_after</code></td><td><code>…/deletion|restore|purge</code></td><td>§8</td><td>NT-DH-14</td></tr>
+  <tr><td>FR-5.19</td><td><code>event</code>, <code>notification_*</code></td><td><code>GenerateRemindersService</code>, <code>RecipientDirectoryJdbcAdapter</code></td><td>§8.3</td><td>NT-DH-18</td></tr>
+  <tr><td>FR-5.20</td><td><code>person_name.clan_id</code></td><td><code>RedisTreeCacheAdapter</code>, <code>PersonSearchJdbcAdapter</code>, <code>DuplicateCandidateJdbcAdapter</code></td><td>§5.2, §7</td><td>NT-DH-05, 16</td></tr>
+  <tr><td>FR-5.21</td><td><code>audit_log.clan_id</code>, <code>actor_operator_id</code></td><td><code>AuditInterceptor</code>, <code>/audit-logs</code></td><td>§5.6</td><td>NT-DH-09, 11, 12</td></tr>
+  <tr><td>FR-5.22</td><td>mọi bảng</td><td><code>V(n)..V(n+4)</code>, script Keycloak</td><td>§11, §12</td><td>NT-DH-17</td></tr>
+  <tr><td>NFR-9</td><td>—</td><td>Kiểm tích hợp sinh từ OpenAPI</td><td>§12</td><td>NT-DH-04, 05, 06</td></tr>
+  <tr><td>NFR-10</td><td>chỉ mục §4.2</td><td>Phép đo NFR-1</td><td>§11</td><td>—</td></tr>
+  <tr><td>NFR-11</td><td><code>clan.status</code> (cache ≤ 30 s)</td><td><code>MemberScopeService</code></td><td>§10</td><td>NT-DH-09</td></tr>
+  <tr><td>NFR-12</td><td><code>audit_log</code></td><td>Phiên hỗ trợ, <code>/sys/**</code></td><td>§10</td><td>NT-DH-12</td></tr>
+  <tr><td>NFR-13</td><td>—</td><td>Diễn tập §8.5</td><td>§11</td><td>NT-DH-17</td></tr>
+  <tr><td>NFR-14</td><td><code>clan.status</code></td><td>Cổng khách</td><td>§9</td><td>NT-DH-02</td></tr>
+</table>
+
+<!-- ================================================================== -->
+<h2 id="s14">14. Câu hỏi chờ chủ dự án quyết <span class="en">Open decisions</span></h2>
+<p class="nho">Bốn câu đầu <strong>chặn việc bắt tay làm</strong>. Mỗi câu có khuyến nghị; chủ dự án có thể trả lời bằng "đồng ý khuyến nghị".</p>
+<ol class="cau-hoi">
+  <li><strong>Mã của dòng họ đang chạy.</strong> Nó thay nhãn <code>goc</code> vĩnh viễn trên mọi đường dẫn chi và trên địa chỉ của khách (<code>/vi/ho/&lt;mã&gt;</code>), và
+    không đổi được sau này. Khuyến nghị: họ + tên đệm + làng, không dấu, ví dụ <code>nguyen_dinh_dong_ngac</code>.</li>
+  <li><strong>Người có mặt ở hai dòng họ (dâu/rể):</strong> đồng ý "một tài khoản — một dòng họ; ai cần cả hai thì hai tài khoản với hai định danh khác nhau" cho đợt này, và
+    đếm nhu cầu 3 tháng để xét lại (§4.9)?</li>
+  <li><strong>Tài khoản của chính chủ dự án:</strong> đồng ý rằng tài khoản SYSADMIN <em>không</em> là thành viên dòng họ nào — nếu ông/bà cũng là người trong một họ, ông/bà dùng
+    một tài khoản thành viên riêng — và <code>admin.giapha</code> hôm nay trở thành Quản trị dòng họ + Hội đồng của họ đầu tiên?</li>
+  <li><strong>Phiên hỗ trợ:</strong> đồng ý phải có một thành viên Hội đồng họ ấy duyệt trước? Có cần một lối khẩn cấp không cần duyệt (ví dụ sự cố rò dữ liệu đang diễn ra) —
+    nếu có, ai được biết và trong bao lâu? Khuyến nghị: không có lối khẩn cấp ở đợt này.</li>
+  <li><strong>Tầng danh xưng dùng chung:</strong> đồng ý khoá DEFAULT và REGION ở runtime, chỉ đổi qua bản phát hành (hôm nay Hội đồng sửa được REGION)?</li>
+  <li><strong>Lối vào của khách:</strong> đồng ý đường dẫn theo mã (<code>/vi/ho/&lt;mã&gt;</code>) thay vì tên miền con? Danh sách các dòng họ trên bản cài có hiện công khai cho khách
+    không? Khuyến nghị: không.</li>
+  <li><strong>Sau ân hạn xoá (30 ngày — con số có đúng không?):</strong> tiêu huỷ hẳn (xoá cứng toàn bộ dữ liệu của họ, ngoại lệ có chủ ý của luật xoá mềm) hay ẩn danh hoá người
+    sống và giữ phần người đã khuất? Khuyến nghị: tiêu huỷ hẳn, sau khi Hội đồng đã nhận gói xuất.</li>
+  <li><strong>Pháp lý:</strong> Hội đồng Tộc biểu không phải pháp nhân — ai ký hợp đồng xử lý dữ liệu làm bên kiểm soát cho mỗi họ (Tộc trưởng? một người đại diện được họ uỷ
+    quyền)? Cần luật sư xác nhận văn bản đang điều chỉnh (Nghị định 13/2023 hay Luật 91/2025/QH15 có hiệu lực 01/01/2026) và nghĩa vụ của bên xử lý, trước khi ký với dòng họ
+    thứ hai.</li>
+  <li><strong>RLS trong đợt 2a</strong> (khuyến nghị, +4 người-ngày, cần tách vai CSDL) hay dời sang 2b?</li>
+  <li><strong>Quy mô mục tiêu</strong> để chốt NFR-10: bao nhiêu dòng họ, mỗi họ tối đa bao nhiêu nhân khẩu, trong 2 năm tới? Tài liệu đang giả định 10 họ × 5.000.</li>
+  <li><strong>Gói xuất dữ liệu:</strong> JSON theo bảng + media có đủ cho các họ không, hay họ cần bản đọc được bằng người (PDF phả hệ) / GEDCOM? Ai nhận tệp: người yêu cầu hay
+    mọi Hội đồng?</li>
+  <li><strong>Khi tạm khoá:</strong> nhắc giỗ dừng và không gửi bù (khuyến nghị) hay gửi bù khi mở lại? Thành viên thấy lý do tạm khoá hay chỉ thấy "đang tạm khoá, liên hệ …"?</li>
+  <li><strong>Lịch:</strong> dòng họ thứ hai là họ nào và dự kiến nhập dữ liệu thật khi nào? Ngày ấy quyết định đợt 2a phải xong khi nào và ngày chạy di trú.</li>
+  <li><strong>Liên kết thông gia giữa hai họ trên cùng bản cài</strong> (FR-1.9): xác nhận ngoài phạm vi đợt này và bị chặn ở CSDL?</li>
+  <li><strong>Hội đồng được biết gì về SYSADMIN:</strong> ngoài phiên hỗ trợ, Hội đồng có được xem nhật ký vòng đời họ mình (ai khoá, ai chỉ định Hội đồng) không? Khuyến nghị:
+    có (§6.6).</li>
+</ol>
+
+<p class="lien-quan" style="margin-top:30px">Tài liệu 10 · viết 26/09/2026 · không thay đổi BA v2, TDD, 08, 09 ở phần nhiều dòng họ — các đề xuất sửa nằm ở <a href="#s12">§12</a>.</p>
+
+</div>
+</body>
+</html>

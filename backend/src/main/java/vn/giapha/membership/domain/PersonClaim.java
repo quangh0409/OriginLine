@@ -231,7 +231,7 @@ public final class PersonClaim {
             Objects.requireNonNull(createdPerson, "Duyet don NEW_PERSON phai kem nhan khau vua tao");
         } else if (createdPerson != null) {
             throw new IllegalArgumentException(
-                    "Don EXISTING khong tao nhan khau nao — no chi gan tai khoan vao nguoi da co");
+                    "Đơn EXISTING không tạo nhân khẩu nào — nó chỉ gắn tài khoản vào người đã có");
         }
         transition(PersonClaimStatus.APPROVED, reviewer, note, at);
         if (kind.taoNhanKhauKhiDuyet()) {
@@ -242,7 +242,7 @@ public final class PersonClaim {
     /** Từ chối. Lý do là <b>bắt buộc</b> — người gửi có quyền biết vì sao để mà khai lại cho đúng. */
     public void reject(UUID reviewer, String note, Instant at) {
         if (note == null || note.isBlank()) {
-            throw new IllegalArgumentException("Tu choi don phai kem ly do");
+            throw new IllegalArgumentException("Từ chối đơn phải kèm lý do");
         }
         transition(PersonClaimStatus.REJECTED, reviewer, note, at);
     }
@@ -254,7 +254,7 @@ public final class PersonClaim {
     public void cancel(UUID by, Instant at) {
         requireOpen();
         if (!requestedBy.equals(by)) {
-            throw new IllegalStateException("Chi nguoi gui moi duoc rut lai don cua minh");
+            throw new IllegalStateException("Chỉ người gửi mới được rút lại đơn của mình");
         }
         this.status = PersonClaimStatus.CANCELLED;
         this.reviewerId = by;
@@ -273,7 +273,7 @@ public final class PersonClaim {
         requireOpen();
         Objects.requireNonNull(reviewer, "reviewerId khong duoc null khi xu ly don");
         if (reviewer.equals(requestedBy)) {
-            throw new IllegalStateException("Khong duoc tu duyet don do chinh minh gui");
+            throw new IllegalStateException("Không được tự duyệt đơn do chính mình gửi");
         }
         this.status = next;
         this.reviewerId = reviewer;
@@ -284,7 +284,7 @@ public final class PersonClaim {
     private void requireOpen() {
         if (status.isFinal()) {
             throw new IllegalStateException(
-                    "Don da o trang thai cuoi (" + status + "), khong xu ly lai duoc");
+                    "Đơn đã ở trạng thái cuối (" + status + "), không xử lý lại được");
         }
     }
 
@@ -292,30 +292,30 @@ public final class PersonClaim {
     private void requireShape() {
         if (kind == PersonClaimKind.EXISTING) {
             if (personId == null) {
-                throw new IllegalArgumentException("Don EXISTING phai tro toi mot nhan khau co san");
+                throw new IllegalArgumentException("Đơn EXISTING phải trỏ tới một nhân khẩu có sẵn");
             }
             if (relativePersonId != null || declaredName != null) {
                 throw new IllegalArgumentException(
-                        "Don EXISTING khong mang khai bao nguoi moi hay nguoi than");
+                        "Đơn EXISTING không mang khai báo người mới hay người thân");
             }
             return;
         }
         if (personId != null) {
             throw new IllegalArgumentException(
-                    "Don NEW_PERSON KHONG duoc tro toi nhan khau nao luc gui — xem rang buoc 1");
+                    "Đơn NEW_PERSON KHÔNG được trỏ tới nhân khẩu nào lúc gửi — xem ràng buộc 1");
         }
         if (relativePersonId == null || relativeKind == null) {
             throw new IllegalArgumentException(
-                    "Don NEW_PERSON phai chi ra nguoi than da co trong pha (bo, me, hoac vo/chong)");
+                    "Đơn NEW_PERSON phải chỉ ra người thân đã có trong phả (bố, mẹ, hoặc vợ/chồng)");
         }
         if (declaredName == null || declaredName.isBlank()) {
-            throw new IllegalArgumentException("Don NEW_PERSON phai khai ho ten");
+            throw new IllegalArgumentException("Đơn NEW_PERSON phải khai họ tên");
         }
     }
 
     private static String requirePhone(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("Don phai kem so dien thoai de Truong chi goi kiem chung");
+            throw new IllegalArgumentException("Đơn phải kèm số điện thoại để Trưởng chi gọi kiểm chứng");
         }
         return raw.trim();
     }

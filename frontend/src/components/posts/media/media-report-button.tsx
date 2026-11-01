@@ -119,13 +119,13 @@ export function MediaReportButton({ mediaId, open, onOpenChange }: MediaReportBu
 
 /**
  * Một người chỉ mở được MỘT báo cáo đang treo cho mỗi tệp — máy chủ từ chối
- * lượt thứ hai bằng một mã lỗi chung (không có `ProblemCode` riêng cho ràng
- * buộc dữ liệu này), nên câu chữ ở đây nhánh theo `status`/`code` đã có sẵn
- * và rơi về một câu chung đủ dùng khi không khớp gì cụ thể.
+ * lượt thứ hai bằng `409 REPORT_DUPLICATE` (hợp đồng `/media/{mediaId}/reports`).
+ * Nhánh theo `code`, không theo `status`; giữ `status === 409` làm lưới cho
+ * một mã 409 khác chưa biết tới.
  */
 function describeReportError(error: unknown, t: ReturnType<typeof useTranslations>): string {
   if (error instanceof ApiError) {
-    if (error.status === 409) return t("report.alreadyReported");
+    if (error.code === "REPORT_DUPLICATE" || error.status === 409) return t("report.alreadyReported");
     if (error.code === "VALIDATION_FAILED") return error.problem?.detail ?? t("report.failed");
   }
   return t("report.failed");

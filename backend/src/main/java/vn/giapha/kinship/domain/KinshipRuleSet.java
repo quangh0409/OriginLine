@@ -123,7 +123,7 @@ public final class KinshipRuleSet {
         while (current != null) {
             if (++hops > MAX_INHERITANCE_DEPTH) {
                 throw new IllegalStateException(
-                        "Chuoi ke thua kinship_rule_set qua sau hoac co chu trinh tai " + current.code);
+                        "Chuỗi kế thừa kinship_rule_set quá sâu hoặc có chu trình tại " + current.code);
             }
             stack.push(current);
             current = current.parent;

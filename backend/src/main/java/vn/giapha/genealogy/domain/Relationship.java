@@ -40,7 +40,7 @@ public class Relationship {
         this.toPersonId = Objects.requireNonNull(toPersonId, "to khong duoc null");
         this.relType = Objects.requireNonNull(relType, "relType khong duoc null");
         if (fromPersonId.equals(toPersonId)) {
-            throw new IllegalArgumentException("Mot nguoi khong the co quan he voi chinh minh");
+            throw new IllegalArgumentException("Một người không thể có quan hệ với chính mình");
         }
     }
 
@@ -70,10 +70,10 @@ public class Relationship {
     public Relationship spouseOrder(Integer value) {
         if (value != null) {
             if (relType != RelType.SPOUSE) {
-                throw new IllegalArgumentException("spouseOrder chi co nghia voi canh SPOUSE");
+                throw new IllegalArgumentException("spouseOrder chỉ có nghĩa với cạnh SPOUSE");
             }
             if (value < 1) {
-                throw new IllegalArgumentException("spouseOrder bat dau tu 1 (vo ca/chong ca)");
+                throw new IllegalArgumentException("spouseOrder bắt đầu từ 1 (vợ cả/chồng cả)");
             }
         }
         this.spouseOrder = value;
@@ -82,10 +82,10 @@ public class Relationship {
 
     public Relationship heirKind(HeirKind value) {
         if (relType == RelType.HEIR && value == null) {
-            throw new IllegalArgumentException("Canh HEIR bat buoc co heirKind");
+            throw new IllegalArgumentException("Cạnh HEIR bắt buộc có heirKind");
         }
         if (relType != RelType.HEIR && value != null) {
-            throw new IllegalArgumentException("heirKind chi co nghia voi canh HEIR");
+            throw new IllegalArgumentException("heirKind chỉ có nghĩa với cạnh HEIR");
         }
         this.heirKind = value;
         return this;
@@ -93,7 +93,7 @@ public class Relationship {
 
     public Relationship validity(LocalDate from, LocalDate to) {
         if (from != null && to != null && to.isBefore(from)) {
-            throw new IllegalArgumentException("validTo khong duoc truoc validFrom");
+            throw new IllegalArgumentException("validTo không được trước validFrom");
         }
         this.validFrom = from;
         this.validTo = to;
